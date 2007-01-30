@@ -1,6 +1,6 @@
-function [p, stats] = symamd (S, knobs)
+function [p, stats] = symamd2 (S, knobs)
 %SYMAMD Symmetric approximate minimum degree permutation.
-%    P = SYMAMD(S) for a symmetric positive definite matrix S, returns the
+%    P = SYMAMD2(S) for a symmetric positive definite matrix S, returns the
 %    permutation vector p such that S(p,p) tends to have a sparser Cholesky
 %    factor than S.  Sometimes SYMAMD works well for symmetric indefinite
 %    matrices too.  The matrix S is assumed to be symmetric; only the
@@ -8,10 +8,15 @@ function [p, stats] = symamd (S, knobs)
 %    Note that p = amd(S) is much faster and generates comparable orderings.
 %    The ordering is followed by an elimination tree post-ordering.
 %
-%    See also AMD, CCOLAMD, CSYMAMD, CAMD, COLAMD, COLPERM, SYMRCM.
+%    Note that this function is source code for the built-in MATLAB symamd
+%    function.  It has been renamed here to symamd2 to avoid a filename clash.
+%    symamd and symamd2 are identical.
 %
-%    Usage:  P = symamd (S)
-%            [P, stats] = symamd (S, knobs)
+%    See also SYMAMD, AMD, COLAMD, COLAMD2.
+%
+%    Example:
+%            P = symamd2 (S)
+%            [P, stats] = symamd2 (S, knobs)
 %
 %    knobs is an optional one- to two-element input vector.  If S is n-by-n,
 %    then rows and columns with more than max(16,knobs(1)*sqrt(n)) entries are
@@ -20,25 +25,25 @@ function [p, stats] = symamd (S, knobs)
 %    and knobs are printed.  The default is knobs = [10 0].  Note that knobs
 %    differs from earlier versions of symamd.
 %
-%    Type the command "type symamd" for a description of the optional stats
+%    Type the command "type symamd2" for a description of the optional stats
 %    output and for the copyright information.
 %
 %    Authors: S. Larimore and T. Davis, University of Florida.  Developed in
-%       collaboration with J. Gilbert and E. Ng.  Version 2.5.
+%       collaboration with J. Gilbert and E. Ng.
 %
 %    Acknowledgements: This work was supported by the National Science
 %       Foundation, under grants DMS-9504974 and DMS-9803599.
 
 %    Notice:
 %
-%	Copyright (c) 1998-2006, Timothy A. Davis, All Rights Reserved.
+%	Copyright 1998-2006, Timothy A. Davis, All Rights Reserved.
 %
 %       See http://www.cise.ufl.edu/research/sparse/colamd (the colamd.c
 %       file) for the License.
 %
 %    Availability:
 %
-%       The colamd, symamd, amd, ccolamd, and csymamd are available at
+%       colamd, symamd, amd, ccolamd, and csymamd are available at
 %       http://www.cise.ufl.edu/research/sparse
 
 %-------------------------------------------------------------------------------
@@ -46,13 +51,13 @@ function [p, stats] = symamd (S, knobs)
 %-------------------------------------------------------------------------------
 
 if (nargout <= 1 && nargin == 1)
-    p = symamdmex (S) ;
+    p = symamd2mex (S) ;
 elseif (nargout <= 1 && nargin == 2)
-    p = symamdmex (S, knobs) ;
+    p = symamd2mex (S, knobs) ;
 elseif (nargout == 2 && nargin == 1)
-    [p, stats] = symamdmex (S) ;
+    [p, stats] = symamd2mex (S) ;
 elseif (nargout == 2 && nargin == 2)
-    [p, stats] = symamdmex (S, knobs) ;
+    [p, stats] = symamd2mex (S, knobs) ;
 else
     error('MATLAB:symamd:WrongInputOrOutputNumber',...
            'symamd:  incorrect number of input and/or output arguments.') ;

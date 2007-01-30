@@ -3,8 +3,7 @@
 /* ========================================================================== */
 
 /* -----------------------------------------------------------------------------
- * CHOLMOD/MATLAB Module.  Version 1.3.  Copyright (C) 2005-2006,
- * Timothy A. Davis
+ * CHOLMOD/MATLAB Module.  Copyright (C) 2005-2006, Timothy A. Davis
  * The CHOLMOD/MATLAB Module is licensed under Version 2.0 of the GNU
  * General Public License.  See gpl.txt for a text of the license.
  * CHOLMOD is also available under other licenses; contact authors for details.
@@ -18,9 +17,9 @@
  *
  * Usage:
  *
- *	x = cholmod (A, b)
- *	[x stats] = cholmod (A, b, ordering)	% a scalar: 0,-1,-2, or -3
- *	[x stats] = cholmod (A, b, p)		% a permutation vector
+ *	x = cholmod2 (A, b)
+ *	[x stats] = cholmod2 (A, b, ordering)	% a scalar: 0,-1,-2, or -3
+ *	[x stats] = cholmod2 (A, b, p)		% a permutation vector
  *
  * The 3rd argument select the ordering method to use.  If not present or -1,
  * the default ordering strategy is used (AMD, and then try METIS if AMD finds
@@ -88,7 +87,7 @@ void mexFunction
 
     if (nargout > 2 || nargin < 2 || nargin > 3)
     {
-	mexErrMsgTxt ("usage: [x,rcond] = cholmod (A,b,ordering)") ;
+	mexErrMsgTxt ("usage: [x,rcond] = cholmod2 (A,b,ordering)") ;
     }
     n = mxGetM (pargin [0]) ;
     if (!mxIsSparse (pargin [0]) || (n != mxGetN (pargin [0])))

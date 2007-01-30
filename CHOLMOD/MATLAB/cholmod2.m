@@ -1,12 +1,13 @@
-function [x,stats] = cholmod (A, b, ordering)				    %#ok
-%CHOLMOD: Supernodal sparse Cholesky backslash, x = A\b
+function [x,stats] = cholmod2 (A, b, ordering)				    %#ok
+%CHOLMOD2 supernodal sparse Cholesky backslash, x = A\b
 %
-%   x = cholmod (A,b)
+%   Example:
+%   x = cholmod2 (A,b)
 %
 %   Computes the LL' factorization of A(p,p), where p is a fill-reducing
 %   ordering, then solves a sparse linear system Ax=b. A must be sparse,
 %   symmetric, and positive definite).  Uses only the upper triangular part
-%   of A.  A second output, [x,stats]=cholmod(A,b), returns statistics:
+%   of A.  A second output, [x,stats]=cholmod2(A,b), returns statistics:
 %
 %       stats(1)    estimate of the reciprocal of the condition number
 %       stats(2)    ordering used:
@@ -38,4 +39,4 @@ function [x,stats] = cholmod (A, b, ordering)				    %#ok
 %   Copyright 2006, Timothy A. Davis
 %   http://www.cise.ufl.edu/research/sparse
 
-error ('cholmod mexFunction not found\n') ;
+error ('cholmod2 mexFunction not found\n') ;

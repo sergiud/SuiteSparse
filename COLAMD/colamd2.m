@@ -1,15 +1,20 @@
-function [p,stats] = colamd (S, knobs)
-%COLAMD Column approximate minimum degree permutation.
-%    P = COLAMD(S) returns the column approximate minimum degree permutation
+function [p,stats] = colamd2 (S, knobs)
+%COLAMD2 Column approximate minimum degree permutation.
+%    P = COLAMD2(S) returns the column approximate minimum degree permutation
 %    vector for the sparse matrix S.  For a non-symmetric matrix S, S(:,P)
 %    tends to have sparser LU factors than S.  The Cholesky factorization of
 %    S(:,P)'*S(:,P) also tends to be sparser than that of S'*S.  The ordering
 %    is followed by a column elimination tree post-ordering.
 %
-%    See also AMD, CCOLAMD, CSYMAMD, CAMD, SYMAMD, COLPERM, SYMRCM.
+%    Note that this function is the source code for the built-in MATLAB colamd
+%    function.  It has been renamed here to colamd2 to avoid a filename clash.
+%    colamd and colamd2 are identical.
 %
-%    Usage:  P = colamd (S)
-%            [P, stats] = colamd (S, knobs)
+%    See also COLAMD, AMD, SYMAMD, SYMAMD2.
+%
+%    Example:
+%            P = colamd2 (S)
+%            [P, stats] = colamd2 (S, knobs)
 %
 %    knobs is an optional one- to three-element input vector.  If S is m-by-n,
 %    then rows with more than max(16,knobs(1)*sqrt(n)) entries are ignored.
@@ -20,25 +25,25 @@ function [p,stats] = colamd (S, knobs)
 %    printed.  The default is knobs = [10 10 0].  Note that knobs differs from
 %    earlier versions of colamd.
 %
-%    Type the command "type colamd" for a description of the optional stats
+%    Type the command "type colamd2" for a description of the optional stats
 %    output and for the copyright information.
 %
 %    Authors: S. Larimore and T. Davis, University of Florida.  Developed in
-%       collaboration with J. Gilbert and E. Ng.  Version 2.5.
+%       collaboration with J. Gilbert and E. Ng.
 %
 %    Acknowledgements: This work was supported by the National Science
 %       Foundation, under grants DMS-9504974 and DMS-9803599.
 
 %    Notice:
 %
-%	Copyright (c) 1998-2006, Timothy A. Davis, All Rights Reserved.
+%	Copyright 1998-2006, Timothy A. Davis, All Rights Reserved.
 %
 %       See http://www.cise.ufl.edu/research/sparse/colamd (the colamd.c
 %       file) for the License.
 %
 %    Availability:
 %
-%       The colamd, symamd, amd, ccolamd, and csymamd are available at
+%       colamd, symamd, amd, ccolamd, and csymamd are available at
 %       http://www.cise.ufl.edu/research/sparse
 
 %-------------------------------------------------------------------------------
@@ -46,13 +51,13 @@ function [p,stats] = colamd (S, knobs)
 %-------------------------------------------------------------------------------
 
 if (nargout <= 1 && nargin == 1)
-    p = colamdmex (S) ;
+    p = colamd2mex (S) ;
 elseif (nargout <= 1 && nargin == 2)
-    p = colamdmex (S, knobs) ;
+    p = colamd2mex (S, knobs) ;
 elseif (nargout == 2 && nargin == 1)
-    [p, stats] = colamdmex (S) ;
+    [p, stats] = colamd2mex (S) ;
 elseif (nargout == 2 && nargin == 2)
-    [p, stats] = colamdmex (S, knobs) ;
+    [p, stats] = colamd2mex (S, knobs) ;
 else
     error ('MATLAB:colamd:WrongInputOrOutputNumber',...
            'colamd:  incorrect number of input and/or output arguments') ;

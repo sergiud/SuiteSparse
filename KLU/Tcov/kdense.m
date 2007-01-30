@@ -1,3 +1,6 @@
+% KDENSE: test klu for dense matrices
+% Example:
+%   kdense
 
 for n = 2000:2000
     A = sparse (rand (n,n) + n*eye(n)) ;

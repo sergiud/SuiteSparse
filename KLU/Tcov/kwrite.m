@@ -1,5 +1,7 @@
-
-function write (A,b)
+function b = kwrite (A,b)
+% KWRITE: write A and b to a file for KLU
+% Example:
+%   kwrite (A,b)
 
 
 [m n] = size (A) ;

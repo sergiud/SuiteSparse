@@ -60,6 +60,11 @@ check_type_size (_C_double_complex HAVE_C_DOUBLE_COMPLEX BUILTIN_TYPES_ONLY)
 
 source_group ("Generated Files" REGULAR_EXPRESSION ".+_(di|dl|zi|zl)(_.+)?\\.c$")
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
+    _CRT_SECURE_NO_WARNINGS)
+endif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+
 set (AMD_SRCS
   AMD/Source/amd_1.c
   AMD/Source/amd_2.c

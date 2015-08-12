@@ -58,7 +58,7 @@ check_library_exists (m ceil "" HAVE_M)
 set (CMAKE_EXTRA_INCLUDE_FILES complex.h)
 check_type_size (_C_double_complex HAVE_C_DOUBLE_COMPLEX BUILTIN_TYPES_ONLY)
 
-source_group ("Generated Files" REGULAR_EXPRESSION ".+_(di|dl|zi|zl)\\.c$")
+source_group ("Generated Files" REGULAR_EXPRESSION ".+_(di|dl|zi|zl)(_.+)?\\.c$")
 
 set (AMD_SRCS
   AMD/Source/amd_1.c
@@ -868,6 +868,13 @@ macro (set_component_version _COMPONENT _VERSION)
   string (REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)" "\\1" _MAJOR_VERSION
     "${_VERSION}")
   set_target_properties (${_COMPONENT} PROPERTIES SOVERSION ${_MAJOR_VERSION})
+
+  if (WIN32)
+    set_target_properties (${_COMPONENT} PROPERTIES RUNTIME_OUTPUT_NAME
+      ${_COMPONENT}-${_VERSION})
+    set_target_properties (${_COMPONENT} PROPERTIES RUNTIME_OUTPUT_NAME_DEBUG
+      ${_COMPONENT}-debug-${_VERSION})
+  endif (WIN32)
 endmacro (set_component_version)
 
 set_component_version (amd 2.4.1)

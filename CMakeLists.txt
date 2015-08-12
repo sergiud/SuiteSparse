@@ -41,6 +41,7 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include (CMakePackageConfigHelpers)
 include (CPack)
 include (CheckIncludeFile)
+include (CheckLibraryExists)
 include (CheckTypeSize)
 include (GenerateSourceFiles)
 
@@ -52,9 +53,12 @@ if (WITH_TBB)
 endif (WITH_TBB)
 
 check_include_file (complex.h HAVE_COMPLEX_H)
+check_library_exists (m ceil "" HAVE_M)
 
 set (CMAKE_EXTRA_INCLUDE_FILES complex.h)
 check_type_size (_C_double_complex HAVE_C_DOUBLE_COMPLEX BUILTIN_TYPES_ONLY)
+
+source_group ("Generated Files" REGULAR_EXPRESSION ".+_(di|dl|zi|zl)\\.c$")
 
 set (AMD_SRCS
   AMD/Source/amd_1.c
@@ -691,6 +695,8 @@ add_library (klu
   ${KLU_HDRS}
 )
 
+target_link_libraries (klu PUBLIC amd btf colamd)
+
 set (LDL_HDRS
   LDL/Include/ldl.h
 )
@@ -701,11 +707,13 @@ add_library (ldl
   ${LDL_HDRS}
 )
 
-# TODO INSTALL_INTERFACE
 target_include_directories (suitesparseconfig PUBLIC
   "$<INSTALL_INTERFACE:include/SuiteSparse>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>")
-target_link_libraries (suitesparseconfig PUBLIC m)
+
+if (HAVE_M)
+  target_link_libraries (suitesparseconfig PUBLIC m)
+endif (HAVE_M)
 
 if (WITH_TBB AND TBB_FOUND)
   target_include_directories (spqr PUBLIC ${TBB_INCLUDE_DIRS})
@@ -748,6 +756,9 @@ target_include_directories (umfpack PUBLIC
 target_include_directories (klu PUBLIC
   "$<INSTALL_INTERFACE:include/SuiteSparse/KLU>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/Include>")
+target_include_directories (ldl PUBLIC
+  "$<INSTALL_INTERFACE:include/SuiteSparse/LDL>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/LDL/Include>")
 
 target_compile_definitions (cholmod PUBLIC NPARTITION)
 
@@ -759,6 +770,8 @@ target_link_libraries (colamd PUBLIC suitesparseconfig)
 target_link_libraries (cholmod PUBLIC amd camd ccolamd colamd
   suitesparseconfig)
 target_link_libraries (spqr PUBLIC cholmod suitesparseconfig)
+target_link_libraries (klu PUBLIC suitesparseconfig)
+target_link_libraries (ldl PUBLIC suitesparseconfig)
 target_link_libraries (umfpack PUBLIC amd suitesparseconfig)
 
 #add_library (SuiteSparse ${PROJECT_SRCS})

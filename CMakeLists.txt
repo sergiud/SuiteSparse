@@ -49,7 +49,7 @@ find_package (BLAS REQUIRED)
 find_package (LAPACK REQUIRED)
 
 if (WITH_TBB)
-  find_package (TBB)
+  find_package (TBB 3.0)
 endif (WITH_TBB)
 
 check_include_file (complex.h HAVE_COMPLEX_H)

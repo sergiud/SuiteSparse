@@ -45,7 +45,6 @@ include (CheckLibraryExists)
 include (CheckTypeSize)
 include (GenerateSourceFiles)
 
-find_package (BLAS REQUIRED)
 find_package (LAPACK REQUIRED)
 
 if (WITH_TBB)
@@ -562,7 +561,7 @@ add_library (cholmod
 )
 
 target_compile_definitions (cholmod PRIVATE NPARTITION)
-target_link_libraries (cholmod PUBLIC ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES}
+target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES}
   colamd)
 
 add_library (ccolamd
@@ -684,9 +683,8 @@ add_library (umfpack
   ${UMFPACK_HDRS}
 )
 
-target_include_directories (umfpack PUBLIC ${BLAS_INCLUDE_DIRS}
-  ${LAPACK_INCLUDE_DIRS})
-target_link_libraries (umfpack PUBLIC ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} cholmod)
+target_include_directories (umfpack PUBLIC ${LAPACK_INCLUDE_DIRS})
+target_link_libraries (umfpack PUBLIC ${LAPACK_LIBRARIES} cholmod)
 
 set (KLU_HDRS
   KLU/Include/klu.h

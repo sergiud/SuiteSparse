@@ -8,8 +8,12 @@ if (POLICY CMP0054)
   cmake_policy (SET CMP0054 NEW)
 endif (POLICY CMP0054)
 
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 include (CMakeDependentOption)
 include (FeatureSummary)
+
+find_package (METIS 5.0)
 
 option (WITH_FORTRAN "Enables Fortran support" OFF)
 option (WITH_PRINT "Print diagnostic messages" OFF)
@@ -19,7 +23,7 @@ cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD
 in Partition module" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_PARTITION "Enable the Partition module" OFF
-  "WITH_LGPL" OFF)
+  "WITH_LGPL AND METIS_FOUND" ON)
 cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON
   "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)
@@ -71,8 +75,6 @@ set (CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION})
 set (CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION})
 set (CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 set (CPACK_PACKAGE_VERSION ${SHORT_VERSION})
-
-list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include (CMakePackageConfigHelpers)
 include (CPack)
@@ -613,6 +615,11 @@ target_compile_definitions (cholmod PUBLIC BLAS_UNDERSCORE)
 target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES}
   colamd)
 
+if (WITH_PARTITION AND METIS_FOUND)
+  target_include_directories (cholmod SYSTEM PUBLIC ${METIS_INCLUDE_DIR})
+  target_link_libraries (cholmod PUBLIC ${METIS_LIBRARIES})
+endif (WITH_PARTITION AND METIS_FOUND)
+
 add_library (ccolamd
   ${GEN_CCOLAMD_SRCS_DINT}
   ${GEN_CCOLAMD_SRCS_DLONG}
@@ -1004,6 +1011,11 @@ set_package_properties (TBB PROPERTIES
   DESCRIPTION "C++ template library for task parallelism"
   TYPE RECOMMENDED
   PURPOSE "Enables multithreading support for SPQR"
+)
+
+set_package_properties (METIS PROPERTIES
+  URL "http://glaros.dtc.umn.edu/gkhome/views/metis"
+  DESCRIPTION "Serial programs for partitioning graphs, partitioning finite element meshes, and producing fill reducing orderings for sparse matrices"
 )
 
 set_package_properties (GPL PROPERTIES

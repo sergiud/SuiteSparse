@@ -9,13 +9,14 @@ if (POLICY CMP0054)
 endif (POLICY CMP0054)
 
 include (CMakeDependentOption)
+include (FeatureSummary)
 
 option (WITH_FORTRAN "Enables Fortran support" OFF)
 option (WITH_PRINT "Print diagnostic messages" OFF)
 option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 option (WITH_LGPL "Enable GNU LGPL modules" ON)
 cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAND
+cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD
 in Partition module" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_PARTITION "Enable the Partition module" OFF
   "WITH_LGPL" OFF)
@@ -985,3 +986,36 @@ if (WITH_FORTRAN)
 
   target_link_libraries (umf4hb PRIVATE umfpack)
 endif (WITH_FORTRAN)
+
+add_feature_info (GPL WITH_GPL "GNU GPL modules")
+add_feature_info (LGPL WITH_LGPL "GNU LGPL modules")
+add_feature_info (CAMD WITH_CAMD "CAMD, CCOLAMD, CSYMAMD interfaces")
+add_feature_info (Check WITH_CHECK "Check module")
+add_feature_info (Cholesky WITH_CHOLESKY "Cholesky module")
+add_feature_info (Fortran WITH_FORTRAN "Fortran compilation")
+add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
+add_feature_info (Partition WITH_PARTITION "Partition module")
+add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
+add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
+add_feature_info (Threading "WITH_TBB AND TBB_FOUND" "Intel Threading Building Blocks support")
+
+set_package_properties (TBB PROPERTIES
+  URL "https://www.threadingbuildingblocks.org"
+  DESCRIPTION "C++ template library for task parallelism"
+  TYPE RECOMMENDED
+  PURPOSE "Enables multithreading support for SPQR"
+)
+
+set_package_properties (GPL PROPERTIES
+  PURPOSE "Enables modules with the GNU General Public License")
+set_package_properties (LGPL PROPERTIES
+  PURPOSE "Enables modules with the GNU Lesser General Public License")
+set_package_properties (Partition PROPERTIES
+  PURPOSE "Enables the partitioning module requiring METIS")
+
+set_feature_info (BLAS "Basic Linear Algebra Subprograms"
+  "http://www.netlib.org/blas")
+set_feature_info (LAPACK "Linear Algebra PACKage"
+  "http://www.netlib.org/lapack")
+
+feature_summary (WHAT ALL)

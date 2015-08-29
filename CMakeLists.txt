@@ -18,6 +18,7 @@ project (SuiteSparse C CXX)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+include (CheckFunctionExists)
 include (CMakeDependentOption)
 include (FeatureSummary)
 
@@ -78,6 +79,7 @@ set (CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 set (CPACK_PACKAGE_VERSION ${SHORT_VERSION})
 
 include (CMakePackageConfigHelpers)
+include (CMakePushCheckState)
 include (CPack)
 include (CheckIncludeFile)
 include (CheckLibraryExists)
@@ -85,6 +87,15 @@ include (CheckTypeSize)
 include (GenerateSourceFiles)
 
 find_package (LAPACK REQUIRED)
+
+cmake_push_check_state (RESET)
+
+set (CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+
+check_function_exists (sgemm HAVE_BLAS_NO_UNDERSCORE)
+check_function_exists (sgemm_ HAVE_BLAS_UNDERSCORE)
+
+cmake_pop_check_state ()
 
 if (WITH_TBB)
   find_package (TBB 3.0)
@@ -611,8 +622,6 @@ target_include_directories (cholmod PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
 )
 
-target_compile_definitions (cholmod PUBLIC BLAS_UNDERSCORE)
-
 target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES}
   colamd)
 
@@ -774,6 +783,16 @@ add_library (ldl
 target_include_directories (suitesparseconfig PUBLIC
   "$<INSTALL_INTERFACE:include/SuiteSparse>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>")
+
+if (HAVE_BLAS_UNDERSCORE)
+  target_compile_definitions (cholmod PRIVATE BLAS_UNDERSCORE)
+  target_compile_definitions (umfpack PRIVATE BLAS_UNDERSCORE)
+  target_compile_definitions (spqr PRIVATE BLAS_UNDERSCORE)
+elseif (HAVE_BLAS_NO_UNDERSCORE)
+  target_compile_definitions (cholmod PRIVATE BLAS_NO_UNDERSCORE)
+  target_compile_definitions (umfpack PRIVATE BLAS_NO_UNDERSCORE)
+  target_compile_definitions (spqr PRIVATE BLAS_NO_UNDERSCORE)
+endif (HAVE_BLAS_UNDERSCORE)
 
 if (HAVE_M)
   target_link_libraries (suitesparseconfig PUBLIC m)

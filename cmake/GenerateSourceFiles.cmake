@@ -22,8 +22,11 @@ function (generate_source_files PROJECT_SRCS ARGS)
     add_custom_command (OUTPUT ${_NEW_FILE} COMMAND ${CMAKE_COMMAND} -E copy
       ${_ABS_PATH} ${_NEW_FILE} DEPENDS ${_SRC})
 
+    get_property (_COMPILE_DEFINITIONS SOURCE ${_SRC} PROPERTY
+      COMPILE_DEFINITIONS)
+
     set_property (SOURCE ${_NEW_FILE} APPEND PROPERTY COMPILE_DEFINITIONS
-      "${GSF_ARGS_COMPILE_DEFINITIONS}")
+      "${GSF_ARGS_COMPILE_DEFINITIONS};${_COMPILE_DEFINITIONS}")
 
     list (APPEND _GEN_FILES ${_NEW_FILE})
     # Add original source file to the generate list of files. However, exclude

@@ -54,13 +54,24 @@
 /* Use the compiler flag, or uncomment the definition(s), if you want to use
  * one or more non-default installation options: */
 
+#cmakedefine NCAMD
+#cmakedefine NCHECK
+#cmakedefine NCHOLESKY
+#cmakedefine NGPL
+#cmakedefine NMATRIXOPS
+#cmakedefine NMODIFY
+#cmakedefine NPARTITION
+#cmakedefine NPRINT
+#cmakedefine NSUNPERF
+#cmakedefine NSUPERNODAL
+
 /*
 #define NCHECK
 #define NCHOLESKY
 #define NCAMD
 #define NPARTITION
 
-#define NGPL  
+#define NGPL
 #define NMATRIXOPS
 #define NMODIFY
 #define NSUPERNODAL
@@ -71,15 +82,5 @@
 #define LONGBLAS long long
 #define NSUNPERF
 */
-
-/* -------------------------------------------------------------------------- */
-/* if NGPL is defined, disable all GNU GPL Modules */
-/* -------------------------------------------------------------------------- */
-
-#ifdef NGPL
-#define NMATRIXOPS
-#define NMODIFY
-#define NSUPERNODAL
-#endif
 
 #endif

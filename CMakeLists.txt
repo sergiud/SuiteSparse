@@ -8,8 +8,43 @@ if (POLICY CMP0054)
   cmake_policy (SET CMP0054 NEW)
 endif (POLICY CMP0054)
 
+include (CMakeDependentOption)
+
 option (WITH_FORTRAN "Enables Fortran support" OFF)
+option (WITH_PRINT "Print diagnostic messages" OFF)
 option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
+option (WITH_LGPL "Enable GNU LGPL modules" ON)
+cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAND
+in Partition module" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_PARTITION "Enable the Partition module" OFF
+  "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON
+  "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON
+  "WITH_GPL" OFF)
+cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON
+  "WITH_GPL" OFF)
+cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON
+  "WITH_GPL" OFF)
+
+function (check_options)
+  foreach (_OPT ${ARGV})
+    if (NOT DEFINED WITH_${_OPT})
+      message (FATAL_ERROR "Option WITH_${_OPT} is not  defined")
+    endif (NOT DEFINED WITH_${_OPT})
+
+    if (NOT WITH_${_OPT})
+      set (N${_OPT} 1 PARENT_SCOPE)
+    else (NOT WITH_${_OPT})
+      set (N${_OPT} 0 PARENT_SCOPE)
+    endif (NOT WITH_${_OPT})
+  endforeach (_OPT)
+endfunction (check_options)
+
+check_options (CAMD CHECK CHOLESKY GPL MATRIXOPS MODIFY PARTITION PRINT
+  SUPERNODAL)
 
 if (WITH_FORTRAN)
   enable_language (Fortran)
@@ -187,6 +222,14 @@ set (CHOLMOD_SRCS
   #CHOLMOD/Supernodal/t_cholmod_super_solve.c
 )
 
+if (NOT WITH_PARTITION)
+  set_property (SOURCE CHOLMOD/Partition/cholmod_metis.c
+    APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
+endif (NOT WITH_PARTITION)
+
+configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
+
 set (CHOLMOD_HDRS
   CHOLMOD/Include/cholmod.h
   CHOLMOD/Include/cholmod_blas.h
@@ -194,7 +237,7 @@ set (CHOLMOD_HDRS
   CHOLMOD/Include/cholmod_check.h
   CHOLMOD/Include/cholmod_cholesky.h
   CHOLMOD/Include/cholmod_complexity.h
-  CHOLMOD/Include/cholmod_config.h
+  ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h
   CHOLMOD/Include/cholmod_core.h
   CHOLMOD/Include/cholmod_function.h
   CHOLMOD/Include/cholmod_gpu.h
@@ -560,7 +603,12 @@ add_library (cholmod
   ${GEN_CHOLMOD_SRCS_DLONG}
 )
 
-target_compile_definitions (cholmod PRIVATE NPARTITION)
+target_include_directories (cholmod PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
+)
+
+target_compile_definitions (cholmod PUBLIC BLAS_UNDERSCORE)
+
 target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES}
   colamd)
 
@@ -762,8 +810,6 @@ target_include_directories (klu PUBLIC
 target_include_directories (ldl PUBLIC
   "$<INSTALL_INTERFACE:include/SuiteSparse/LDL>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/LDL/Include>")
-
-target_compile_definitions (cholmod PUBLIC NPARTITION)
 
 target_link_libraries (amd PUBLIC suitesparseconfig)
 target_link_libraries (btf PUBLIC suitesparseconfig)

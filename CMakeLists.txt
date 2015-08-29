@@ -8,6 +8,14 @@ if (POLICY CMP0054)
   cmake_policy (SET CMP0054 NEW)
 endif (POLICY CMP0054)
 
+option (WITH_FORTRAN "Enables Fortran support" OFF)
+
+if (WITH_FORTRAN)
+  enable_language (Fortran)
+endif (WITH_FORTRAN)
+
+project (SuiteSparse C CXX)
+
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include (CMakeDependentOption)
@@ -15,7 +23,6 @@ include (FeatureSummary)
 
 find_package (METIS 5.0)
 
-option (WITH_FORTRAN "Enables Fortran support" OFF)
 option (WITH_PRINT "Print diagnostic messages" OFF)
 option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 option (WITH_LGPL "Enable GNU LGPL modules" ON)
@@ -50,12 +57,6 @@ endfunction (check_options)
 
 check_options (CAMD CHECK CHOLESKY GPL MATRIXOPS MODIFY PARTITION PRINT
   SUPERNODAL)
-
-if (WITH_FORTRAN)
-  enable_language (Fortran)
-endif (WITH_FORTRAN)
-
-project (SuiteSparse C CXX)
 
 set (MAJOR_VERSION 4)
 set (MINOR_VERSION 4)

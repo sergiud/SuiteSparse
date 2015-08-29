@@ -29,8 +29,8 @@ option (WITH_LGPL "Enable GNU LGPL modules" ON)
 cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD
 in Partition module" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_PARTITION "Enable the Partition module" OFF
-  "WITH_LGPL AND METIS_FOUND" ON)
+cmake_dependent_option (WITH_PARTITION "Enable the Partition module" ON
+  "WITH_LGPL AND METIS_FOUND" OFF)
 cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON
   "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)

@@ -684,6 +684,10 @@ add_library (spqr
   ${SPQR_HDRS}
 )
 
+if (WITH_TBB AND TBB_FOUND)
+  target_compile_definitions (spqr PRIVATE HAVE_TBB)
+endif (WITH_TBB AND TBB_FOUND)
+
 set (CONFIG_HDRS
   SuiteSparse_config/SuiteSparse_config.h
 )

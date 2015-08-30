@@ -1028,7 +1028,7 @@ add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
 add_feature_info (Partition WITH_PARTITION "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
 add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
-add_feature_info (Threading "WITH_TBB AND TBB_FOUND" "Intel Threading Building Blocks support")
+add_feature_info (Threading WITH_TBB "Intel Threading Building Blocks support")
 
 set_package_properties (TBB PROPERTIES
   URL "https://www.threadingbuildingblocks.org"

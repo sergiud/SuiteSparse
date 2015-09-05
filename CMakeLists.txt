@@ -922,8 +922,11 @@ configure_package_config_file (suitesparse-config.cmake.in
   SuiteSparse_CONFIG_INCLUDE_DIR SuiteSparse_KLU_INCLUDE_DIR
   SuiteSparse_SPQR_INCLUDE_DIR SuiteSparse_UMFPACK_INCLUDE_DIR)
 
+set (SuiteSparse_NAMESPACE SuiteSparse::)
+
 export (TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu ldl
-  suitesparseconfig FILE suitesparse-targets.cmake)
+  suitesparseconfig NAMESPACE ${SuiteSparse_NAMESPACE} FILE
+  suitesparse-targets.cmake)
 export (PACKAGE SuiteSparse)
 
 install (FILES ${AMD_HDRS} DESTINATION ${SuiteSparse_AMD_INCLUDE_DIR})
@@ -937,7 +940,8 @@ install (FILES ${KLU_HDRS} DESTINATION ${SuiteSparse_KLU_INCLUDE_DIR})
 install (FILES ${SPQR_HDRS} DESTINATION ${SuiteSparse_SPQR_INCLUDE_DIR})
 install (FILES ${UMFPACK_HDRS} DESTINATION ${SuiteSparse_UMFPACK_INCLUDE_DIR})
 
-install (EXPORT suitesparse-targets DESTINATION lib/cmake/SuiteSparse)
+install (EXPORT suitesparse-targets NAMESPACE ${SuiteSparse_NAMESPACE}
+  DESTINATION lib/cmake/SuiteSparse)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config-install.cmake
   DESTINATION lib/cmake/SuiteSparse RENAME suitesparse-config.cmake)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config-version.cmake
@@ -963,11 +967,24 @@ set_component_version (btf 1.2.1)
 set_component_version (camd 2.4.1)
 set_component_version (ccolamd 2.9.1)
 set_component_version (cholmod 3.0.6)
+set_component_version (colamd 2.9.1)
 set_component_version (klu 1.3.3)
 set_component_version (ldl 2.2.1)
 set_component_version (spqr 2.0.1)
 set_component_version (suitesparseconfig 4.4.5)
 set_component_version (umfpack 5.7.1)
+
+set_target_properties (amd PROPERTIES EXPORT_NAME AMD)
+set_target_properties (btf PROPERTIES EXPORT_NAME BTF)
+set_target_properties (camd PROPERTIES EXPORT_NAME CAMD)
+set_target_properties (colamd PROPERTIES EXPORT_NAME COLAMD)
+set_target_properties (ccolamd PROPERTIES EXPORT_NAME CCOLAMD)
+set_target_properties (cholmod PROPERTIES EXPORT_NAME CHOLMOD)
+set_target_properties (klu PROPERTIES EXPORT_NAME KLU)
+set_target_properties (ldl PROPERTIES EXPORT_NAME LDL)
+set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
+set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
+set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
 
 set_target_properties (amd btf camd ccolamd colamd cholmod spqr umfpack klu ldl
   suitesparseconfig PROPERTIES POSITION_INDEPENDENT_CODE ON)

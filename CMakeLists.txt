@@ -897,11 +897,6 @@ configure_package_config_file (suitesparse-config.cmake.in
 write_basic_package_version_file (suitesparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
-# install version of suitesparse-config.cmake
-configure_package_config_file (suitesparse-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config-install.cmake
-  INSTALL_DESTINATION lib/cmake/SuiteSparse)
-
 set (SuiteSparse_NAMESPACE SuiteSparse::)
 
 export (TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu ldl
@@ -923,9 +918,9 @@ install (FILES ${UMFPACK_HDRS} DESTINATION ${SuiteSparse_UMFPACK_INCLUDE_DIR})
 
 install (EXPORT suitesparse-targets NAMESPACE ${SuiteSparse_NAMESPACE}
   DESTINATION lib/cmake/SuiteSparse)
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config-install.cmake
-  DESTINATION lib/cmake/SuiteSparse RENAME suitesparse-config.cmake)
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config-version.cmake
+install (FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config-version.cmake
   DESTINATION lib/cmake/SuiteSparse
   COMPONENT Development)
 

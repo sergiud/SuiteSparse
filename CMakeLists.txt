@@ -238,7 +238,13 @@ set (CHOLMOD_SRCS
 )
 
 if (NOT WITH_PARTITION)
-  set_property (SOURCE CHOLMOD/Partition/cholmod_metis.c
+  set_property (SOURCE
+    CHOLMOD/Partition/cholmod_camd.c
+    CHOLMOD/Partition/cholmod_ccolamd.c
+    CHOLMOD/Partition/cholmod_csymamd.c
+    CHOLMOD/Partition/cholmod_m.c
+    CHOLMOD/Partition/cholmod_metis.c
+    CHOLMOD/Partition/cholmod_nesdis.c
     APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
 endif (NOT WITH_PARTITION)
 

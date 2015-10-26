@@ -901,6 +901,8 @@ install (TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu ldl
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib)
 
+set (SuiteSparse_NAMESPACE SuiteSparse::)
+
 configure_package_config_file (suitesparse-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config.cmake
   INSTALL_DESTINATION lib/cmake/SuiteSparse)

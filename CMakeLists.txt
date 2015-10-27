@@ -909,8 +909,6 @@ configure_package_config_file (suitesparse-config.cmake.in
 write_basic_package_version_file (suitesparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
-set (SuiteSparse_NAMESPACE SuiteSparse::)
-
 export (TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu ldl
   suitesparseconfig NAMESPACE ${SuiteSparse_NAMESPACE} FILE
   suitesparse-targets.cmake)

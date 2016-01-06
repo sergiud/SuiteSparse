@@ -21,6 +21,7 @@ endif (WITH_FORTRAN)
 project (SuiteSparse C CXX)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set (CMAKE_DEBUG_POSTFIX _debug)
 
 include (CheckFunctionExists)
 include (CMakeDependentOption)

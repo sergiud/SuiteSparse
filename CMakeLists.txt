@@ -65,8 +65,8 @@ check_options (CAMD CHECK CHOLESKY GPL MATRIXOPS MODIFY PARTITION PRINT
   SUPERNODAL)
 
 set (MAJOR_VERSION 4)
-set (MINOR_VERSION 4)
-set (VERSION_PATCH 5)
+set (MINOR_VERSION 5)
+set (VERSION_PATCH 1)
 
 set (SHORT_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
 
@@ -279,7 +279,6 @@ set (CHOLMOD_HDRS
 
 set (CCOLAMD_SRCS
   CCOLAMD/Source/ccolamd.c
-  CCOLAMD/Source/ccolamd_global.c
 )
 
 set (CCOLAMD_HDRS
@@ -288,7 +287,6 @@ set (CCOLAMD_HDRS
 
 set (COLAMD_SRCS
   COLAMD/Source/colamd.c
-  COLAMD/Source/colamd_global.c
 )
 
 set (COLAMD_HDRS
@@ -949,17 +947,17 @@ macro (set_component_version _COMPONENT _VERSION)
   endif (WIN32)
 endmacro (set_component_version)
 
-set_component_version (amd 2.4.1)
-set_component_version (btf 1.2.1)
-set_component_version (camd 2.4.1)
-set_component_version (ccolamd 2.9.1)
-set_component_version (cholmod 3.0.6)
-set_component_version (colamd 2.9.1)
-set_component_version (klu 1.3.3)
-set_component_version (ldl 2.2.1)
-set_component_version (spqr 2.0.1)
-set_component_version (suitesparseconfig 4.4.6)
-set_component_version (umfpack 5.7.1)
+set_component_version (amd 2.4.4)
+set_component_version (btf 1.2.4)
+set_component_version (camd 2.4.4)
+set_component_version (ccolamd 2.9.4)
+set_component_version (cholmod 3.0.9)
+set_component_version (colamd 2.9.4)
+set_component_version (klu 1.3.6)
+set_component_version (ldl 2.2.4)
+set_component_version (spqr 2.0.5)
+set_component_version (suitesparseconfig 4.5.1)
+set_component_version (umfpack 5.7.4)
 
 set_target_properties (amd PROPERTIES EXPORT_NAME AMD)
 set_target_properties (btf PROPERTIES EXPORT_NAME BTF)

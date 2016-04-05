@@ -5,6 +5,9 @@
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Include/cholmod_core.h.
  * Copyright (C) 2005-2013, Univ. of Florida.  Author: Timothy A. Davis
+ * CHOLMOD/Include/cholmod_core.h is licensed under Version 2.1 of the GNU
+ * Lesser General Public License.  See lesser.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * -------------------------------------------------------------------------- */
 
 /* CHOLMOD Core module: basic CHOLMOD objects and routines.
@@ -243,11 +246,11 @@
 
 #define CHOLMOD_HAS_VERSION_FUNCTION
 
-#define CHOLMOD_DATE "Apr 1, 2016"
+#define CHOLMOD_DATE "March 14, 2016"
 #define CHOLMOD_VER_CODE(main,sub) ((main) * 1000 + (sub))
 #define CHOLMOD_MAIN_VERSION 3
-#define CHOLMOD_SUB_VERSION 0
-#define CHOLMOD_SUBSUB_VERSION 10
+#define CHOLMOD_SUB_VERSION 1
+#define CHOLMOD_SUBSUB_VERSION 0
 #define CHOLMOD_VERSION \
     CHOLMOD_VER_CODE(CHOLMOD_MAIN_VERSION,CHOLMOD_SUB_VERSION)
 
@@ -271,20 +274,32 @@
 /* === CUDA BLAS for the GPU ================================================ */
 /* ========================================================================== */
 
-/* The number of OMP threads should typically be set to the number of cores   */
-/* per socket inthe machine being used.  This maximizes memory performance.   */
-#ifndef CHOLMOD_OMP_NUM_THREADS
-#define CHOLMOD_OMP_NUM_THREADS 4
+
+/* header files for GPU processing */
+  #ifdef SUITESPARSE_CUDA
+  #include <cublas_v2.h>
+  #include <cusolverDn.h>
 #endif
 
-/* Define buffering parameters for GPU processing */
-#ifdef GPU_BLAS
-#include <cublas_v2.h>
+
+/* global GPU parameters*/
+#ifdef SUITESPARSE_CUDA
+  #define CHOLMOD_MAX_NUM_GPUS 8			/* max # GPUs */
+  #define CHOLMOD_DEVICE_SUPERNODE_BUFFERS 6		/* # device buffers for root alg. */
+  #define CHOLMOD_HOST_SUPERNODE_BUFFERS 6		/* # host buffers for root alg. */
+  #define CHOLMOD_DEVICE_STREAMS 8			/* # streams for cuBlas,cuSolver overlap */
+#else
+  #define CHOLMOD_MAX_NUM_GPUS 1		    
+  #define CHOLMOD_DEVICE_SUPERNODE_BUFFERS 1  
+  #define CHOLMOD_HOST_SUPERNODE_BUFFERS 1    
+  #define CHOLMOD_DEVICE_STREAMS 1            
 #endif
 
-#define CHOLMOD_DEVICE_SUPERNODE_BUFFERS 6
-#define CHOLMOD_HOST_SUPERNODE_BUFFERS 8
-#define CHOLMOD_DEVICE_STREAMS 2
+/* additional information */
+/*#define CHOLMOD_VERBOSE*/                         /* comment this in for verbose */
+/*#define USE_NVTX*/                            /* comment this in for nvtx markers */
+
+
 
 /* ========================================================================== */
 /* === CHOLMOD objects ====================================================== */
@@ -947,7 +962,11 @@ typedef struct cholmod_common_struct
     /*          -1 if gpu-acceleration is undefined in which case the */
     /*             environment CHOLMOD_USE_GPU will be queried and used. */
     /*             useGPU=-1 is only used by CHOLMOD and treated as 0 by SPQR */
-    int useGPU;
+    int useGPU;			
+    int numGPU;
+    int useHybrid;    		/* useHybrid: hybrid computing (1 to enable, 0 to disable) */
+    int ompNumThreads;   	
+    int partialFactorization;
 
     /* for CHOLMOD: */
     size_t maxGpuMemBytes;
@@ -965,83 +984,46 @@ typedef struct cholmod_common_struct
        the CHOLMOD Common, regardless of whether or not they are compiled
        with the GPU libraries or not */
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
     /* in CUDA, these three types are pointers */
+    #define CHOLMOD_CUSOLVER_HANDLE cusolverDnHandle_t
     #define CHOLMOD_CUBLAS_HANDLE cublasHandle_t
     #define CHOLMOD_CUDASTREAM    cudaStream_t
     #define CHOLMOD_CUDAEVENT     cudaEvent_t
 #else
     /* ... so make them void * pointers if the GPU is not being used */
+    #define CHOLMOD_CUSOLVER_HANDLE void *
     #define CHOLMOD_CUBLAS_HANDLE void *
     #define CHOLMOD_CUDASTREAM    void *
     #define CHOLMOD_CUDAEVENT     void *
 #endif
 
-    CHOLMOD_CUBLAS_HANDLE cublasHandle ;
+    /* cuBlas & cuSolver handles */
+    CHOLMOD_CUBLAS_HANDLE cublasHandle[CHOLMOD_MAX_NUM_GPUS] ;
+    CHOLMOD_CUSOLVER_HANDLE cusolverHandle[CHOLMOD_MAX_NUM_GPUS] ;
 
     /* a set of streams for general use */
-    CHOLMOD_CUDASTREAM    gpuStream[CHOLMOD_HOST_SUPERNODE_BUFFERS];
+    CHOLMOD_CUDASTREAM    gpuStream[CHOLMOD_MAX_NUM_GPUS][CHOLMOD_DEVICE_STREAMS];
 
-    CHOLMOD_CUDAEVENT     cublasEventPotrf [3] ;
-    CHOLMOD_CUDAEVENT     updateCKernelsComplete;
-    CHOLMOD_CUDAEVENT     updateCBuffersFree[CHOLMOD_HOST_SUPERNODE_BUFFERS];
+    /* events for root code */
+    CHOLMOD_CUDAEVENT     cublasEventPotrf[CHOLMOD_MAX_NUM_GPUS][3] ;
+    CHOLMOD_CUDAEVENT     updateCKernelsComplete[CHOLMOD_MAX_NUM_GPUS];
+    CHOLMOD_CUDAEVENT     updateCBuffersFree[CHOLMOD_MAX_NUM_GPUS][CHOLMOD_HOST_SUPERNODE_BUFFERS];
 
-    void *dev_mempool;    /* pointer to single allocation of device memory */
+    /* device memory buffer & size */
+    void *dev_mempool[CHOLMOD_MAX_NUM_GPUS];    	/* pointer to single allocation of device memory */
     size_t dev_mempool_size;
 
-    void *host_pinned_mempool;  /* pointer to single allocation of pinned mem */
+    /* host (pinned) memory buffer & size */
+    void *host_pinned_mempool[CHOLMOD_MAX_NUM_GPUS];  	/* pointer to single allocation of pinned mem */
     size_t host_pinned_mempool_size;
 
+    /* additional buffers */
     size_t devBuffSize;
-    int    ibuffer;
-
-    double syrkStart ;          /* time syrk started */
-
-    /* run times of the different parts of CHOLMOD (GPU and CPU) */
-    double cholmod_cpu_gemm_time ;
-    double cholmod_cpu_syrk_time ;
-    double cholmod_cpu_trsm_time ;
-    double cholmod_cpu_potrf_time ;
-    double cholmod_gpu_gemm_time ;
-    double cholmod_gpu_syrk_time ;
-    double cholmod_gpu_trsm_time ;
-    double cholmod_gpu_potrf_time ;
-    double cholmod_assemble_time ;
-    double cholmod_assemble_time2 ;
-
-    /* number of times the BLAS are called on the CPU and the GPU */
-    size_t cholmod_cpu_gemm_calls ;
-    size_t cholmod_cpu_syrk_calls ;
-    size_t cholmod_cpu_trsm_calls ;
-    size_t cholmod_cpu_potrf_calls ;
-    size_t cholmod_gpu_gemm_calls ;
-    size_t cholmod_gpu_syrk_calls ;
-    size_t cholmod_gpu_trsm_calls ;
-    size_t cholmod_gpu_potrf_calls ;
+    int    ibuffer[CHOLMOD_MAX_NUM_GPUS];
 
 } cholmod_common ;
 
-/* size_t BLAS statistcs in Common: */
-#define CHOLMOD_CPU_GEMM_CALLS      cholmod_cpu_gemm_calls
-#define CHOLMOD_CPU_SYRK_CALLS      cholmod_cpu_syrk_calls
-#define CHOLMOD_CPU_TRSM_CALLS      cholmod_cpu_trsm_calls
-#define CHOLMOD_CPU_POTRF_CALLS     cholmod_cpu_potrf_calls
-#define CHOLMOD_GPU_GEMM_CALLS      cholmod_gpu_gemm_calls
-#define CHOLMOD_GPU_SYRK_CALLS      cholmod_gpu_syrk_calls
-#define CHOLMOD_GPU_TRSM_CALLS      cholmod_gpu_trsm_calls
-#define CHOLMOD_GPU_POTRF_CALLS     cholmod_gpu_potrf_calls
-
-/* double BLAS statistics in Common: */
-#define CHOLMOD_CPU_GEMM_TIME       cholmod_cpu_gemm_time
-#define CHOLMOD_CPU_SYRK_TIME       cholmod_cpu_syrk_time
-#define CHOLMOD_CPU_TRSM_TIME       cholmod_cpu_trsm_time
-#define CHOLMOD_CPU_POTRF_TIME      cholmod_cpu_potrf_time
-#define CHOLMOD_GPU_GEMM_TIME       cholmod_gpu_gemm_time
-#define CHOLMOD_GPU_SYRK_TIME       cholmod_gpu_syrk_time
-#define CHOLMOD_GPU_TRSM_TIME       cholmod_gpu_trsm_time
-#define CHOLMOD_GPU_POTRF_TIME      cholmod_gpu_potrf_time
-#define CHOLMOD_ASSEMBLE_TIME       cholmod_assemble_time
-#define CHOLMOD_ASSEMBLE_TIME2      cholmod_assemble_time2
 
 /* for supernodal analysis */
 #define CHOLMOD_ANALYZE_FOR_SPQR     0
@@ -1260,17 +1242,183 @@ typedef struct cholmod_sparse_struct
 
 } cholmod_sparse ;
 
+
+
+/* structures for holding syrk,gemm,potrf,trsm parameters */
+typedef struct cholmod_syrk_t {
+  double score;
+  SuiteSparse_long d;
+  SuiteSparse_long n;
+  SuiteSparse_long k;
+  SuiteSparse_long lda;
+  SuiteSparse_long ldc;
+  double *A;
+  double *C;
+} syrkStruct;
+
+typedef struct cholmod_gemm_t {
+  double score;
+  SuiteSparse_long m;
+  SuiteSparse_long n;
+  SuiteSparse_long k;
+  SuiteSparse_long lda;
+  SuiteSparse_long ldb;
+  SuiteSparse_long ldc;
+  double *A;
+  double *B;
+  double *C;
+} gemmStruct;
+
+typedef struct cholmod_potrf_t {
+  double score;
+  SuiteSparse_long n;
+  SuiteSparse_long lda;
+  double *A;
+} potrfStruct;
+
+typedef struct cholmod_trsm_t {
+  double score;
+  SuiteSparse_long m;
+  SuiteSparse_long n;
+  SuiteSparse_long lda;
+  SuiteSparse_long ldb;
+  double *A;
+  double *B;
+} trsmStruct;
+
+typedef struct cholmod_desc_t {
+  double score;
+  SuiteSparse_long d;
+  SuiteSparse_long s;
+  SuiteSparse_long pdi1;
+  SuiteSparse_long pdx1;
+  SuiteSparse_long ndrow1;
+  SuiteSparse_long ndrow2;
+  double *C;
+} descStruct;
+
+typedef struct cholmod_super_t {
+  SuiteSparse_long s;
+  SuiteSparse_long k1;
+  SuiteSparse_long k2;
+  SuiteSparse_long psi;
+  SuiteSparse_long psx;
+  SuiteSparse_long nscol;
+  SuiteSparse_long nsrow;
+} superStruct;
+
+
+
+
+/* structures for holding pointers to syrk,gemm,potrf,trsm parameters in pinned memory */
+typedef struct cholmod_syrk_ptrs_t {
+  int *d;
+  int *n;
+  int *k;
+  int *lda;
+  int *ldc;
+  double **A;
+  double **C;
+} syrkPtrsStruct;
+
+typedef struct cholmod_gemm_ptrs_t {
+  int *m;
+  int *n;
+  int *k;
+  int *lda;
+  int *ldb;
+  int *ldc;
+  double **A;
+  double **B;
+  double **C;
+} gemmPtrsStruct;
+
+typedef struct cholmod_potrf_ptrs_t {
+  int *n;
+  int *lda;
+  double **A;
+} potrfPtrsStruct;
+
+typedef struct cholmod_trsm_ptrs_t {
+  int *m;
+  int *n;
+  int *lda;
+  int *ldb;
+  double **A;
+  double **B;
+} trsmPtrsStruct;
+
+typedef struct cholmod_desc_ptrs_t {
+  int *s;
+  int *pdi1;
+  int *ndrow1;
+  int *ndrow2;
+  double **C;
+} descptrsStruct;
+
+typedef struct cholmod_super_ptrs_t {
+  int *s;
+  int *k1;
+  int *k2;
+  int *psi;
+  int *psx;
+  int *nscol;
+  int *nsrow;
+} superPtrsStruct;
+
+
+/* structure for holding subtree info for sorting */
+typedef struct cholmod_subtree_order_t {
+  int id;
+  double size;
+} cholmodSubtreeOrder;
+
+
+/* structure for holding descendant info for sorting */
 typedef struct cholmod_descendant_score_t {
   double score;
   SuiteSparse_long d;
 } descendantScore;
 
-/* For sorting descendant supernodes with qsort */
-int cholmod_score_comp (struct cholmod_descendant_score_t *i,
-			       struct cholmod_descendant_score_t *j);
 
-int cholmod_l_score_comp (struct cholmod_descendant_score_t *i,
-			       struct cholmod_descendant_score_t *j);
+
+
+/* function to sort subtrees with qsort */
+int cholmod_subtree_comp (struct cholmod_subtree_order_t *a, struct cholmod_subtree_order_t *b);
+int cholmod_l_subtree_comp (struct cholmod_subtree_order_t *a, struct cholmod_subtree_order_t *b);
+
+
+/* function to sort descendants with qsort */
+int cholmod_score_comp (struct cholmod_descendant_score_t *i, struct cholmod_descendant_score_t *j);
+int cholmod_l_score_comp (struct cholmod_descendant_score_t *i, struct cholmod_descendant_score_t *j);
+
+
+/* function to sort syrk with qsort */
+int cholmod_sort_syrk (struct cholmod_syrk_t *i, struct cholmod_syrk_t *j);
+int cholmod_l_sort_syrk (struct cholmod_syrk_t *i, struct cholmod_syrk_t *j);
+
+
+/* function to sort gemm with qsort */
+int cholmod_sort_gemm (struct cholmod_gemm_t *i, struct cholmod_gemm_t *j);
+int cholmod_l_sort_gemm (struct cholmod_gemm_t *i, struct cholmod_gemm_t *j);
+
+
+/* function to sort potrf with qsort */
+int cholmod_sort_potrf (struct cholmod_potrf_t *i, struct cholmod_potrf_t *j);
+int cholmod_l_sort_potrf (struct cholmod_potrf_t *i, struct cholmod_potrf_t *j);
+
+
+/* function to sort trsm with qsort */
+int cholmod_sort_trsm (struct cholmod_trsm_t *i, struct cholmod_trsm_t *j);
+int cholmod_l_sort_trsm (struct cholmod_trsm_t *i, struct cholmod_trsm_t *j);
+
+
+/* function to sort descendants with qsort */
+int cholmod_sort_desc (struct cholmod_desc_t *i, struct cholmod_desc_t *j);
+int cholmod_l_sort_desc (struct cholmod_desc_t *i, struct cholmod_desc_t *j);
+
+
+
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_allocate_sparse:  allocate a sparse matrix */

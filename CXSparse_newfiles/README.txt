@@ -120,7 +120,8 @@ Tcov/           CXSparse tests
 --------------------------------------------------------------------------------
 
 ChangeLog       changes in CSparse since first release
-License.txt     license
+lesser.txt      the GNU LGPL
+License.txt     license (GNU LGPL)
 
 --------------------------------------------------------------------------------
 ./Source:       Primary source code for CXSparse

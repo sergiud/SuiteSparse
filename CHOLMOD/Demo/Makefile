@@ -17,7 +17,7 @@ LIB2 = $(LDFLAGS) -L../../lib -lcholmod -lamd -lcolamd -lsuitesparseconfig \
 #-------------------------------------------------------------------------------
 # With the CUDA BLAS:
 ifneq ($(GPU_CONFIG),)
-LIB2 += $(CUDART_LIB) $(CUBLAS_LIB)
+LIB2 += $(CUDART_LIB) $(CUBLAS_LIB) $(CUSOLVER_LIB)
 endif
 #-------------------------------------------------------------------------------
 

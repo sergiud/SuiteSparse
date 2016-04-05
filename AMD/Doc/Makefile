@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# AMD Makefile for compiling on Unix systems
+# AMD Makefile for compiling on Unix systems (for GNU or original make)
 #------------------------------------------------------------------------------
 
 default: dist

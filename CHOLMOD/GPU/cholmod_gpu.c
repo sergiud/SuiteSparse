@@ -1,121 +1,146 @@
-/* ========================================================================== */
-/* === GPU/cholmod_gpu -===================================================== */
-/* ========================================================================== */
-
-/* -----------------------------------------------------------------------------
- * CHOLMOD/GPU Module.  Copyright (C) 2014, Timothy A. Davis.
- * http://www.suitesparse.com
- * -------------------------------------------------------------------------- */
-
-/* Primary routines:
- * -----------------
- * cholmod_gpu_memorysize       determine free memory on current GPU
- * cholmod_gpu_probe            ensure a GPU is available
- * cholmod_gpu_allocate         allocate GPU resources
- * cholmod_gpu_deallocate       free GPU resources
+/*
+ * File:
+ *   cholmod_gpu
+ *
+ * Description:
+ *   Contains functions for initializing 
+ *   the GPU. 
+ *
  */
 
+
+/* includes */
 #include "cholmod_internal.h"
 #include "cholmod_core.h"
-#include "cholmod_gpu.h"
+#include "cholmod_subtree.h"
 #include "stdio.h"
-#ifdef GPU_BLAS
-#include <cuda_runtime.h>
-#endif
 
 #define MINSIZE (64 * 1024 * 1024)
 
-/* ========================================================================== */
-/* === cholmod_gpu_memorysize =============================================== */
-/* ========================================================================== */
 
-/* Determine the amount of free memory on the current GPU.  To use another
- * GPU, use cudaSetDevice (k) prior to calling this routine, where k is an
- * integer in the range 0 to the number of devices-1.   If the free size is
- * less than 64 MB, then a size of 1 is returned.  Normal usage:
+
+
+
+
+
+
+
+
+/* 
+ *  Function:
+ *    poll_gpu
  *
- *  Common->useGPU = 1 ;
- *  err = cholmod_gpu_memorysize (&totmem, &availmem, Common);
- *  Returns 1 if GPU requested but not available, 0 otherwise
+ *  Description:
+ *    Ensures a GPU is available. Returns true if it
+ *    available, and false otherwise. 
+ *
  */
-
-#ifdef GPU_BLAS
-
-static int poll_gpu (size_t s)          /* TRUE if OK, FALSE otherwise */
+static int poll_gpu (size_t s)          
 {
+#ifdef SUITESPARSE_CUDA
+    /* local variables */
+    void *p = NULL;
+
+
     /* Returns TRUE if the GPU has a block of memory of size s,
-       FALSE otherwise.  The block of memory is immediately freed. */
-    void *p = NULL ;
-    /* double t = SuiteSparse_time ( ) ; */
-    if (s == 0)
-    {
+       FALSE otherwise. The block of memory is immediately freed. */
+    if (s == 0) {
         return (FALSE) ;
     }
-    if (cudaMalloc (&p, s) != cudaSuccess)
-    {
-        /* t = SuiteSparse_time ( ) - t ; */
-        /* printf ("s %lu failed, time %g\n", s, t) ; */
+    if (cudaMalloc (&p, s) != cudaSuccess) {
         return (FALSE) ;
     }
+
+    /* free block of memory */
     cudaFree (p) ;
-    /* t = SuiteSparse_time ( ) - t ; */
-    /* printf ("s %lu OK time %g\n", s, t) ; */
+
     return (TRUE) ;
+#endif
 }
 
-#endif
 
-int CHOLMOD(gpu_memorysize)      /* returns 1 on error, 0 otherwise */
+
+
+
+
+
+
+
+
+/*
+ *  Function:
+ *    cholmod_gpu_memorysize
+ *
+ *  Description:
+ *     Determine the amount of free memory on the current GPU.  To use another
+ *     GPU, use cudaSetDevice (k) prior to calling this routine, where k is an
+ *     integer in the range 0 to the number of devices-1.   If the free size is
+ *     less than 64 MB, then a size of 1 is returned. Function returns GPU 
+ *     memory size available. 
+ *     
+ */
+int CHOLMOD(gpu_memorysize)      
 (
     size_t         *total_mem,
     size_t         *available_mem,
     cholmod_common *Common
 )
 {
-    size_t good, bad, s, total_free, total_memory ;
-    int k ;
-    double t ;
+    /* local variables */
+    int k;
+    size_t good, bad, s, total_free, total_memory;
 
+
+    /* reset variables */
     *total_mem = 0;
     *available_mem = 0;
+
+
+    /* early exit*/
 #ifndef DLONG
     return 0;
 #endif
 
+    /* early exit */
     if (Common->useGPU != 1)
     {
         return (0) ;                    /* not using the GPU at all */
     }
 
-#ifdef GPU_BLAS
+
+
+
+    /* only if compiled with GPU */
+#ifdef SUITESPARSE_CUDA
+
 
     /* find the total amount of free memory */
-    t = SuiteSparse_time ( ) ;
     cudaMemGetInfo (&total_free, &total_memory) ;
-    t = SuiteSparse_time ( ) - t ;
-    /* printf ("free %lu tot %lu time %g\n", total_free, total_memory, t) ; */
-
     *total_mem = total_memory;
 
+
+    /* early exit (not even 64MB, return failure code)  */
     if (total_free < MINSIZE)
     {
-        return (1) ;                    /* not even 64MB; return failure code */
+        return (1) ;                    
     }
+
 
     /* try a bit less than the total free memory */
     s = MAX (MINSIZE, total_free*0.98) ;
     if (poll_gpu (s))
     {
-        /* printf ("quick %lu\n", s) ; */
         *available_mem = s;
-        return (0) ;  /* no error */
+        return (0) ;  
     }
 
-    /* ensure s = 64 MB is OK */
+
+    /* eary exit (not even 64MB, returnfailute code) */
     if (!poll_gpu (MINSIZE))
     {
-        return (1) ;                    /* not even 64MB; return failure code */
+        return (1) ;                    
     }
+
 
     /* 8 iterations of binary search */
     good = MINSIZE ;                    /* already known to be OK */
@@ -133,344 +158,591 @@ int CHOLMOD(gpu_memorysize)      /* returns 1 on error, 0 otherwise */
         }
     }
 
-    /* printf ("final %lu\n", good) ; */
+
     *available_mem = good;
 
 #endif
 
-    return (0) ; /* no error */
+    return (0) ; 
 }
 
 
-/* ========================================================================== */
-/* === cholmod_gpu_probe ==================================================== */
-/* ========================================================================== */
-/*
- * Used to ensure that a suitable GPU is available.  As this version of
- * CHOLMOD can only utilize a single GPU, only the default (i.e. selected as
- * 'best' by the NVIDIA driver) is verified as suitable.  If this selection
- * is incorrect, the user can select the proper GPU with the
- * CUDA_VISIBLE_DEVICES environment variable.
- *
- * To be considered suitable, the GPU must have a compute capability > 1 and
- * more than 1 GB of device memory.
- */
 
+
+
+
+
+
+
+
+/*
+ *  Function:
+ *    cholmod_gpu_probe
+ *
+ *  Description:
+ *   Used to ensure that a suitable GPU is available.  As this version of
+ *   CHOLMOD can only utilize a single GPU, only the default (i.e. selected as
+ *   'best' by the NVIDIA driver) is verified as suitable.  If this selection
+ *   is incorrect, the user can select the proper GPU with the
+ *   CUDA_VISIBLE_DEVICES environment variable.
+ *
+ *   To be considered suitable, the GPU must have a compute capability > 1 and
+ *   more than 1 GB of device memory.
+ */
 int CHOLMOD(gpu_probe) ( cholmod_common *Common )
 {
+#ifdef SUITESPARSE_CUDA
 
-#ifdef GPU_BLAS
-    int ngpus, idevice;
+    /* local variables */
+    int ngpus, idevice, count=0, gpuid;
     double tstart, tend;
-    struct cudaDeviceProp gpuProp;
+    struct cudaDeviceProp gpuProp, gpuProp0;
 
+
+
+
+    /* early exit */
     if (Common->useGPU != 1)
     {
         return (0) ;
     }
 
-    cudaGetDeviceCount(&ngpus);
 
-    if ( ngpus ) {
+    /* make sure requested # GPUs does not exceed max */
+    if(Common->numGPU > CHOLMOD_MAX_NUM_GPUS)
+    {
+      Common->numGPU = CHOLMOD_MAX_NUM_GPUS;
+    }
+
+
+    /* make sure # GPUs does not exceed GPUs avaiable */
+    cudaGetDeviceCount(&ngpus);
+    if(Common->numGPU > ngpus)
+    {
+      Common->numGPU = ngpus;
+    }
+    
+
+
+    /* if default selected (no numGPUs set) */
+    if (Common->numGPU == -1) 
+    {
+
+      /* set GPU 0, fetch GPU 0, fetch GPU 0 properties */
+      cudaSetDevice ( 0 );
+      cudaGetDevice ( &idevice );
+      cudaGetDeviceProperties ( &gpuProp0, idevice );
+      count = 1;
+
+      /* loop over all other GPUs */
+      for(gpuid = 1; gpuid < ngpus; gpuid++) {
+
+        /* set GPU, fetch GPU, fetch GPU properties  */
+        cudaSetDevice ( gpuid );
         cudaGetDevice ( &idevice );
         cudaGetDeviceProperties ( &gpuProp, idevice );
-        if ( gpuProp.major > 1 && 1.0e-9*gpuProp.totalGlobalMem > 1.0 ) {
-            return 1;  /* useGPU = 1 */
+
+        if(gpuProp.major == gpuProp0.major) {
+          count++;
         }
+                  
+      }       
+
+      /* set # GPUs */
+      Common->numGPU = count;
+
     }
-    CHOLMOD_GPU_PRINTF (("GPU WARNING: useGPUs was selected, "
-        "but no applicable GPUs were found. useGPU reset to FALSE.\n")) ;
+    /* if numGPUs set */
+    else if (Common->numGPU > 0) 
+    {
+
+      /* loop over available gpus */
+      for(gpuid = 0; gpuid < ngpus; gpuid++) 
+      {
+        
+        /* set GPU, fetch GPU, fetch GPU properties  */
+        cudaSetDevice ( gpuid );
+        cudaGetDevice ( &idevice );
+        cudaGetDeviceProperties ( &gpuProp, idevice );
+
+
+        /* GPU must have at least:
+         *   1. compute capability > 1
+         *   2. > 1GB device memory */
+        if ( gpuProp.major > 1 && 1.0e-9*gpuProp.totalGlobalMem > 1.0 )
+            count++;				/* increment # qualified GPUs */        
+
+      }
+
+      /* reset # GPUs to # compatible devices */
+      if(count < Common->numGPU)
+        Common->numGPU = count;
+            
+    }
+
+
+    if(Common->numGPU >= 1) return 1;		/* at least 1 compatible device found */
+    else		    return 0;		/* no compatible devices, disable GPU */
+
 #endif
 
+
     /* no GPU is available */
-    return 0;  /* useGPU = 0 */
+    return 0;  
 }
 
-/* ========================================================================== */
-/* === cholmod_gpu_deallocate =============================================== */
-/* ========================================================================== */
+
+
+
+
+
+
+
+
 
 /*
- * Deallocate all GPU related buffers.
+ *  Function:
+ *    gpu_deallocate
+ *
+ *  Description:
+ *    deallocate all GPU related buffers
  */
-
 int CHOLMOD(gpu_deallocate)
 (
+    int gpuid,
     cholmod_common *Common
 )
 {
+#ifdef SUITESPARSE_CUDA
 
-#ifdef GPU_BLAS
+    /* local variables */
     cudaError_t cudaErr;
 
-    if ( Common->dev_mempool )
+
+
+    /* free device memory */
+    if ( Common->dev_mempool[gpuid] )
     {
-        /* fprintf (stderr, "free dev_mempool\n") ; */
-        cudaErr = cudaFree (Common->dev_mempool);
-        /* fprintf (stderr, "free dev_mempool done\n") ; */
-        if ( cudaErr )
-        {
-            ERROR ( CHOLMOD_GPU_PROBLEM,
-                    "GPU error when freeing device memory.");
+        cudaErr = cudaFree (Common->dev_mempool[gpuid]);
+        if ( cudaErr ) {
+            ERROR ( CHOLMOD_GPU_PROBLEM, "GPU error when freeing device memory.");
         }
     }
-    Common->dev_mempool = NULL;
+
+
+    Common->dev_mempool[gpuid] = NULL;
     Common->dev_mempool_size = 0;
 
-    if ( Common->host_pinned_mempool )
+
+
+
+    /* free host (pinned) memory */
+    if ( Common->host_pinned_mempool[gpuid] )
     {
-        /* fprintf (stderr, "free host_pinned_mempool\n") ; */
-        cudaErr = cudaFreeHost ( Common->host_pinned_mempool );
-        /* fprintf (stderr, "free host_pinned_mempool done\n") ; */
-        if ( cudaErr )
-        {
-            ERROR ( CHOLMOD_GPU_PROBLEM,
-                    "GPU error when freeing host pinned memory.");
+        cudaErr = cudaFreeHost ( Common->host_pinned_mempool[gpuid] );
+        if ( cudaErr ) {
+            ERROR ( CHOLMOD_GPU_PROBLEM, "GPU error when freeing host pinned memory.");
         }
     }
-    Common->host_pinned_mempool = NULL;
+
+
+    Common->host_pinned_mempool[gpuid] = NULL;
     Common->host_pinned_mempool_size = 0;
 
+
+  
+    /* gpu end */
     CHOLMOD (gpu_end) (Common) ;
 #endif
 
     return (0);
 }
 
-/* ========================================================================== */
-/* === cholmod_gpu_end ====================================================== */
-/* ========================================================================== */
 
+
+
+
+
+
+
+
+
+/* 
+ *  Function:
+ *    gpu_end
+ *
+ *  Description:
+ *    free GPU handles & streams  
+ *
+ */
 void CHOLMOD(gpu_end)
 (
     cholmod_common *Common
 )
 {
-#ifdef GPU_BLAS
-    int k ;
+#ifdef SUITESPARSE_CUDA
 
-    /* ------------------------------------------------------------------ */
-    /* destroy Cublas Handle */
-    /* ------------------------------------------------------------------ */
+    /* local variables */
+    int j, k;
 
-    if (Common->cublasHandle)
+
+    /* 
+     * destroy cuBlas/cuSolver handles  
+     */
+    for(k = 0; k < Common->numGPU; k++) 
     {
-        /* fprintf (stderr, "destroy cublas %p\n", Common->cublasHandle) ; */
-        cublasDestroy (Common->cublasHandle) ;
-        /* fprintf (stderr, "destroy cublas done\n") ; */
-        Common->cublasHandle = NULL ;
+
+      /* cuBlas handle */
+      if (Common->cublasHandle[k])
+      {
+          cublasDestroy (Common->cublasHandle[k]) ;
+          Common->cublasHandle[k] = NULL ;
+      }
+
+
+      /* cuSolver handle */
+      if (Common->cusolverHandle[k])
+      {
+          cusolverDnDestroy (Common->cusolverHandle[k]) ;
+          Common->cusolverHandle[k] = NULL ;
+      }
+
     }
 
-    /* ------------------------------------------------------------------ */
-    /* destroy each CUDA stream */
-    /* ------------------------------------------------------------------ */
 
-    for (k = 0 ; k < CHOLMOD_HOST_SUPERNODE_BUFFERS ; k++)
+
+
+    /* 
+     * destroy CUDA streams 
+     */
+    for(k = 0; k < Common->numGPU; k++) 
     {
-        if (Common->gpuStream [k])
+      for(j = 0; j < CHOLMOD_DEVICE_STREAMS; j++) 
+      {
+
+        /* CUDA streams */
+        if (Common->gpuStream[k][j])
         {
-            /* fprintf (stderr, "destroy gpuStream [%d] %p\n", k,
-                Common->gpuStream [k]) ; */
-            cudaStreamDestroy (Common->gpuStream [k]) ;
-            /* fprintf (stderr, "destroy gpuStream [%d] done\n", k) ; */
-            Common->gpuStream [k] = NULL ;
+            cudaStreamDestroy (Common->gpuStream[k][j]) ;
+            Common->gpuStream[k][j] = NULL ;        
         }
+
+      }
     }
 
-    /* ------------------------------------------------------------------ */
-    /* destroy each CUDA event */
-    /* ------------------------------------------------------------------ */
 
-    for (k = 0 ; k < 3 ; k++)
+
+
+    /* 
+     * destroy CUDA events 
+     */
+    for(k = 0; k < Common->numGPU; k++)
     {
-        if (Common->cublasEventPotrf [k])
+
+
+      /* updateCKernelsComplete event */
+      if (Common->updateCKernelsComplete[k])
+      {
+          cudaEventDestroy (Common->updateCKernelsComplete[k]) ;
+          Common->updateCKernelsComplete[k] = NULL ;
+      }
+
+
+      /* updateCBuffersFree event */
+      for(j = 0; j < CHOLMOD_HOST_SUPERNODE_BUFFERS; j++)
+      {
+
+        if (Common->updateCBuffersFree[k][j])
         {
-            /* fprintf (stderr, "destroy cublasEnventPotrf [%d] %p\n", k,
-                Common->cublasEventPotrf [k]) ; */
-            cudaEventDestroy (Common->cublasEventPotrf [k]) ;
-            /* fprintf (stderr, "destroy cublasEnventPotrf [%d] done\n", k) ; */
-            Common->cublasEventPotrf [k] = NULL ;
+            cudaEventDestroy (Common->updateCBuffersFree[k][j]) ;
+            Common->updateCBuffersFree[k][j] = NULL ;
         }
-    }
 
-    for (k = 0 ; k < CHOLMOD_HOST_SUPERNODE_BUFFERS ; k++)
-    {
-        if (Common->updateCBuffersFree [k])
+      }
+
+
+      /* cublasEventPotrf event */
+      for(j = 0; j < 3; j++)
+      {
+
+        if (Common->cublasEventPotrf[k][j])
         {
-            /* fprintf (stderr, "destroy updateCBuffersFree [%d] %p\n", k,
-                Common->updateCBuffersFree [k]) ; */
-            cudaEventDestroy (Common->updateCBuffersFree [k]) ;
-            /* fprintf (stderr, "destroy updateCBuffersFree [%d] done\n", k) ;*/
-            Common->updateCBuffersFree [k] = NULL ;
+            cudaEventDestroy (Common->cublasEventPotrf[k][j]) ;
+            Common->cublasEventPotrf[k][j] = NULL ;
         }
+
+      }
     }
 
-    if (Common->updateCKernelsComplete)
-    {
-        /* fprintf (stderr, "destroy updateCKernelsComplete %p\n",
-            Common->updateCKernelsComplete) ; */
-        cudaEventDestroy (Common->updateCKernelsComplete) ;
-        /* fprintf (stderr, "destroy updateCKernelsComplete done\n") ; */
-        Common->updateCKernelsComplete = NULL;
-    }
+
 #endif
 }
 
 
-/* ========================================================================== */
-/* === cholmod_gpu_allocate ================================================= */
-/* ========================================================================== */
+
+
+
+
+
+
+
+
 /*
- * Allocate both host and device memory needed for GPU computation.
+ *  Function: 
+ *    gpu_allocate
  *
- * Memory allocation is expensive and should be done once and reused for
- * multiple factorizations.
- *
- * When gpu_allocate is called, the requested amount of device (and by
- * association host) memory is computed.  If that amount or more memory has
- * already been allocated, then nothing is done.  (i.e. memory allocation is
- * not reduced.)  If the requested amount is more than is currently allcoated
- * then both device and pinned host memory is freed and the new amount
- * allocated.
- *
- * This routine will allocate the minimum of either:
- *
- * maxGpuMemBytes - size of requested device allocation in bytes
- *
- * maxGpuMemFraction - size of requested device allocation as a fraction of
- *                     total GPU memory
- *
- * If both maxGpuMemBytes and maxGpuMemFraction are zero, this will allocate
- * the maximum amount of GPU memory possible.
- *
- * Note that since the GPU driver requires some memory, it is not advisable
- * to request maxGpuMemFraction of 1.0 (which will request all GPU memory and
- * will fail).  If maximum memory is requested then call this routine wtih
- * both maxGpuMemBytes and maxGpuMemFraction of 0.0.
+ *  Description:
+ *    Allocate both host (pinned) and device memory needed for GPU computation.
+ *    Cleans up the memory (memset, cudaMemset) to avoid linering errors/bad values
+ *    from previous runs. Also creates cuBlas & cuSolver handles.
  *
  */
 
-int CHOLMOD(gpu_allocate) ( cholmod_common *Common )
+int CHOLMOD(gpu_allocate) 
+( 
+  cholmod_common *Common 
+)
 {
 
-#ifdef GPU_BLAS
+/* only if compiled with GPU */
+#ifdef SUITESPARSE_CUDA
 
-    int k;
-    size_t fdm, tdm;
-    size_t requestedDeviceMemory, requestedHostMemory;
+
+    /* local variables */
+    int i, k;
     double tstart, tend;
+    size_t fdm, tdm, tfdm[Common->numGPU], availableDeviceMemory, availableHostMemory, requestedDeviceMemory, requestedHostMemory, maxGpuMemBytes;
     cudaError_t cudaErr;
     cublasStatus_t cublasErr;
-    size_t maxGpuMemBytes;
-    double maxGpuMemFraction;
+    cusolverStatus_t cusolverErr;
 
-    /* fprintf (stderr, "gpu_allocate useGPU %d\n", Common->useGPU) ; */
+
+    /* early exit */
     if (Common->useGPU != 1) return (0) ;
 
-    maxGpuMemBytes = Common->maxGpuMemBytes;
-    maxGpuMemFraction = Common->maxGpuMemFraction;
+
+
+
 
     /* ensure valid input */
+    maxGpuMemBytes = Common->maxGpuMemBytes;
     if ( maxGpuMemBytes < 0 ) maxGpuMemBytes = 0;
-    if ( maxGpuMemFraction < 0 ) maxGpuMemFraction = 0;
-    if ( maxGpuMemFraction > 1 ) maxGpuMemFraction = 1;
 
-    int err = CHOLMOD(gpu_memorysize) (&tdm,&fdm,Common) ;
-    if (err)
-    {
-        printf ("GPU failure in cholmod_gpu: gpu_memorysize %g %g MB\n",
-            ((double) tdm) / (1024*1024),
-            ((double) fdm) / (1024*1024)) ;
-        ERROR (CHOLMOD_GPU_PROBLEM, "gpu memorysize failure\n") ;
+
+
+
+
+
+    /* 
+     * Fetch total available device memory
+     */
+    fdm = 0;
+    for(k = 0; k < Common->numGPU; k++) {
+
+      cudaSetDevice(k); 
+      CHOLMOD_HANDLE_CUDA_ERROR (CHOLMOD(gpu_memorysize) (&tdm,&tfdm[k],Common), "gpu_memorysize");
+
+      /* get minimum amount of memory avialble across the 4 devices. Amount allocated for each 
+       * device must be the same. */
+      if(!k) fdm = tfdm[k];
+      else {
+        if(tfdm[k] < fdm) fdm = tfdm[k];
+      }     
+
     }
 
-    /* compute the amount of device memory requested */
-    if ( maxGpuMemBytes == 0 && maxGpuMemFraction == 0 ) {
-        /* no specific request - take all available GPU memory
-         *  (other programs could already have allocated some GPU memory,
-         *  possibly even previous calls to gpu_allocate).  Always leave
-         *  50 MB free for driver use. */
-        requestedDeviceMemory = fdm+Common->dev_mempool_size-
-            1024ll*1024ll*50ll;
-    }
-    else if ( maxGpuMemBytes > 0 && maxGpuMemFraction > 0 ) {
-        /* both byte and fraction limits - take the lowest of the two */
-        requestedDeviceMemory = maxGpuMemBytes;
-        if ( requestedDeviceMemory > tdm*maxGpuMemFraction ) {
-            requestedDeviceMemory = tdm*maxGpuMemFraction;
-        }
-    }
-    else if ( maxGpuMemFraction > 0 ) {
-        /* just a fraction requested */
-        requestedDeviceMemory = maxGpuMemFraction * tdm;
-    }
-    else {
-        /* specific number of bytes requested */
-        requestedDeviceMemory = maxGpuMemBytes;
-        if ( maxGpuMemBytes > fdm ) {
-            CHOLMOD_GPU_PRINTF ((
-                "GPU WARNING: Requested amount of device memory not available\n"
-                )) ;
-            requestedDeviceMemory = fdm;
-        }
+
+
+
+
+    /* 
+     * Compute the amount of device & host memory available: 
+     * Always leave 50 MB free for driver use. 
+     */
+    availableDeviceMemory = fdm + Common->dev_mempool_size - 1024ll*1024ll*50ll;
+    availableHostMemory = availableDeviceMemory;
+
+
+
+
+
+    /* if memory requested larger than total memory available or no specific memory requested */
+    if ( maxGpuMemBytes > availableDeviceMemory || maxGpuMemBytes == 0 ) {		
+       maxGpuMemBytes = availableDeviceMemory;
     }
 
-    /* do nothing if sufficient memory has already been allocated */
-    if ( requestedDeviceMemory <= Common->dev_mempool_size ) {
 
-        CHOLMOD_GPU_PRINTF (("requested = %d, mempool = %d \n",
-            requestedDeviceMemory, Common->dev_mempool_size));
-        CHOLMOD_GPU_PRINTF (("GPU NOTE:  gpu_allocate did nothing \n"));
-        return 0;
-    }
 
-    CHOLMOD(gpu_deallocate);
 
-    /* create cuBlas handle */
-    if ( ! Common->cublasHandle ) {
-        cublasErr = cublasCreate (&(Common->cublasHandle)) ;
-        if (cublasErr != CUBLAS_STATUS_SUCCESS) {
-            ERROR (CHOLMOD_GPU_PROBLEM, "CUBLAS initialization") ;
-            return 1;
-        }
-    }
 
-    /* allocated corresponding pinned host memory */
-    requestedHostMemory = requestedDeviceMemory*CHOLMOD_HOST_SUPERNODE_BUFFERS/
-        CHOLMOD_DEVICE_SUPERNODE_BUFFERS;
+    /* 
+     * Compute the amount of device & host memory requested
+     */
+    requestedDeviceMemory = maxGpuMemBytes;
+    requestedHostMemory = maxGpuMemBytes;
 
-    cudaErr = cudaMallocHost ( (void**)&(Common->host_pinned_mempool),
-                               requestedHostMemory );
-    while ( cudaErr ) {
-        /* insufficient host memory, try again with less */
-        requestedHostMemory *= .5;
-        cudaErr = cudaMallocHost ( (void**)&(Common->host_pinned_mempool),
-                                   requestedHostMemory );
-    }
-    Common->host_pinned_mempool_size = requestedHostMemory;
 
-    requestedDeviceMemory = requestedHostMemory*
-        CHOLMOD_DEVICE_SUPERNODE_BUFFERS/CHOLMOD_HOST_SUPERNODE_BUFFERS;
 
-    /* Split up the memory allocations into required device buffers. */
-    Common->devBuffSize = requestedDeviceMemory/
-        (size_t)CHOLMOD_DEVICE_SUPERNODE_BUFFERS;
+
+
+    /* Set maximum size of buffers */
+    Common->devBuffSize = requestedDeviceMemory/(size_t)(CHOLMOD_DEVICE_SUPERNODE_BUFFERS);
     Common->devBuffSize -= Common->devBuffSize%0x20000;
 
-    cudaErr = cudaMalloc ( &(Common->dev_mempool), requestedDeviceMemory );
-    /*
-    CHOLMOD_HANDLE_CUDA_ERROR (cudaErr,"device memory allocation failure\n");
-    */
-    if (cudaErr)
-    {
-        printf ("GPU failure in cholmod_gpu: requested %g MB\n",
-            ((double) requestedDeviceMemory) / (1024*1024)) ;
-        ERROR (CHOLMOD_GPU_PROBLEM, "device memory allocation failure\n") ;
+
+
+
+
+    /* deallocate memory for each GPU */
+    for(k = 0; k < Common->numGPU; k++) {
+      cudaSetDevice(k);
+      CHOLMOD(gpu_deallocate) (k, Common);
     }
 
+
+
+
+
+    /* allocated and clear pinned host memory for each GPU */
+    for(k = 0; k < Common->numGPU; k++) {
+
+      cudaSetDevice(k);
+
+      /* allocate pinned memory */
+      cudaErr = cudaHostAlloc ((void**)&(Common->host_pinned_mempool[k]), requestedHostMemory, cudaHostAllocMapped);    
+
+      /* clear pinned memory */
+      memset(Common->host_pinned_mempool[k],0,requestedHostMemory);
+
+      if(cudaErr) printf("error:%s\n",cudaGetErrorString(cudaErr) );
+      CHOLMOD_HANDLE_CUDA_ERROR (cudaErr,"host memory allocation failure\n");
+
+    }
+
+
+
+
+
+    /* allocate device memory for each GPU */
+    for(k = 0; k < Common->numGPU; k++) {
+
+      cudaSetDevice(k);
+
+      /* allocate device memory */
+      cudaErr = cudaMalloc ( &(Common->dev_mempool[k]), requestedDeviceMemory );
+
+      /* clear device memory */
+      cudaMemset(Common->dev_mempool[k],0,requestedDeviceMemory);
+
+      if(cudaErr) printf("error:%s\n",cudaGetErrorString(cudaErr) );
+      CHOLMOD_HANDLE_CUDA_ERROR (cudaErr,"device memory allocation failure\n");
+    }
+
+
+
+
+
+    /* store device & host memory sizes */
+    Common->host_pinned_mempool_size = requestedHostMemory;
     Common->dev_mempool_size = requestedDeviceMemory;
 
-#endif
 
+
+
+
+    /* print GPU info */    
+    PRINTF("\n\nGPU allocate..\n");
+    PRINTFV("numGPU: %d\t",Common->numGPU);
+    PRINTFV("maxGpuMemBytes: %ld\n",maxGpuMemBytes);
+    PRINTFV("devBuffSize: %ld\n",Common->devBuffSize);
+    PRINTFV("availableDeviceMemory:% ld\t",availableDeviceMemory);
+    PRINTFV("availableHostMemory: %ld\n",availableHostMemory);
+    PRINTFV("requestedDeviceMemory:% ld\t",requestedDeviceMemory);
+    PRINTFV("requestedHostMemory: %ld\n",requestedHostMemory);
+    PRINTF("\n\n\n");
+
+
+
+
+
+    /* Create CUDA streams */
+    for(k = 0; k < Common->numGPU; k++) {
+
+      cudaSetDevice(k);
+
+      for (i = 0; i < CHOLMOD_DEVICE_STREAMS; i++ ) {
+        cudaErr = cudaStreamCreate ( &(Common->gpuStream[k][i]) );
+        /* commenting this in causes occasinal nan values for benchmarks: 2cubes_sphere.mtx, crankseg_1.mtx */
+        /*cudaErr = cudaStreamCreateWithFlags ( &(Common->gpuStream[k][i]), cudaStreamNonBlocking);*/
+        if (cudaErr != cudaSuccess) {
+          ERROR (CHOLMOD_GPU_PROBLEM, "create CUDA streams") ;
+          abort();
+        }
+      }
+
+    }
+
+
+
+
+
+    /* Create CUDA handles */
+    for(k = 0; k < Common->numGPU; k++) {
+
+      cudaSetDevice(k);
+      /* create cuBlas handle */
+      cublasErr = cublasCreate (&(Common->cublasHandle[k])) ;
+      if (cublasErr != CUBLAS_STATUS_SUCCESS) {
+        ERROR (CHOLMOD_GPU_PROBLEM, "CUBLAS initialization") ;
+        return 1;
+      }
+
+      /* create cuSolver handle */
+      cusolverErr = cusolverDnCreate( &(Common->cusolverHandle[k]) );
+      if (cusolverErr != CUSOLVER_STATUS_SUCCESS) {
+        ERROR (CHOLMOD_GPU_PROBLEM, "CUSOLVER initialization") ;
+        return 1;
+      }
+
+    }
+
+
+
+
+
+    /* Create CUDA events */
+    for(k = 0; k < Common->numGPU; k++) {
+
+      cudaSetDevice(k);
+
+      for (i = 0 ; i < 3 ; i++) {
+        cudaErr = cudaEventCreateWithFlags(&(Common->cublasEventPotrf[k][i]), cudaEventDisableTiming) ;
+        if (cudaErr != cudaSuccess) {
+          ERROR (CHOLMOD_GPU_PROBLEM, "CUDA cublasEventPotrf event") ;
+          return (0) ;
+        }
+      }
+
+      for (i = 0 ; i < CHOLMOD_HOST_SUPERNODE_BUFFERS ; i++) {
+        cudaErr = cudaEventCreateWithFlags(&(Common->updateCBuffersFree[k][i]), cudaEventDisableTiming) ;
+        if (cudaErr != cudaSuccess) {
+          ERROR (CHOLMOD_GPU_PROBLEM, "CUDA updateCBuffersFree event") ;
+          return (0) ;
+        }
+      }
+
+      cudaErr = cudaEventCreateWithFlags ( &(Common->updateCKernelsComplete[k]), cudaEventDisableTiming );
+      if (cudaErr != cudaSuccess) {
+        ERROR (CHOLMOD_GPU_PROBLEM, "CUDA updateCKernelsComplete event") ;
+        return (0) ;
+      }
+
+    }
+
+
+
+
+
+#endif
     return (0);
 }

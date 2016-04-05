@@ -5,7 +5,7 @@
 # This file contains all configuration settings for all packages in SuiteSparse,
 # except for CSparse (which is stand-alone) and the packages in MATLAB_Tools.
 
-SUITESPARSE_VERSION = 4.5.2
+SUITESPARSE_VERSION = 4.5.1
 
 #===============================================================================
 # Options you can change without editing this file:
@@ -144,7 +144,8 @@ SUITESPARSE_VERSION = 4.5.2
     # performance.  This script can also detect if the Intel MKL BLAS is
     # installed.
 
-    LAPACK ?= -llapack
+    #LAPACK ?= -llapack
+    #LAPACK ?= -llapack
 
     ifndef BLAS
         ifdef MKLROOT
@@ -156,11 +157,12 @@ SUITESPARSE_VERSION = 4.5.2
             #   $(MKLROOT)/lib/intel64/libmkl_intel_thread.a \
             #   -Wl,--end-group -lpthread -lm
             # using dynamic linking:
-            BLAS = -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm
+            BLAS = -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm
             LAPACK =
         else
             # use the OpenBLAS at http://www.openblas.net
             BLAS = -lopenblas
+	    LAPACK ?= -lopenblas
         endif
     endif
 
@@ -201,7 +203,6 @@ SUITESPARSE_VERSION = 4.5.2
     ifeq ($(wildcard $(CUDA_PATH)),)
         # CUDA is not present
         CUDA_PATH     =
-        GPU_BLAS_PATH =
         GPU_CONFIG    =
         CUDART_LIB    =
         CUBLAS_LIB    =
@@ -211,15 +212,16 @@ SUITESPARSE_VERSION = 4.5.2
         NVCCFLAGS     =
     else
         # with CUDA for CHOLMOD and SPQR
-        GPU_BLAS_PATH = $(CUDA_PATH)
-        # GPU_CONFIG must include -DGPU_BLAS to compile SuiteSparse for the
-        # GPU.  You can add additional GPU-related flags to it as well.
+        # GPU_CONFIG must include -DSUITESPARSE_CUDA to compile SuiteSparse 
+	# for the GPU.  You can add additional GPU-related flags to it as 
+	# well.
         # with 4 cores (default):
-        GPU_CONFIG    = -DGPU_BLAS
+        GPU_CONFIG    = -DSUITESPARSE_CUDA -DCHOLMOD_OMP_NUM_THREADS=32
         # For example, to compile CHOLMOD for 10 CPU cores when using the GPU:
-        # GPU_CONFIG  = -DGPU_BLAS -DCHOLMOD_OMP_NUM_THREADS=10
+        # GPU_CONFIG  = -DSUITESPARSE_CUDA -DCHOLMOD_OMP_NUM_THREADS=10
         CUDART_LIB    = $(CUDA_PATH)/lib64/libcudart.so
-        CUBLAS_LIB    = $(CUDA_PATH)/lib64/libcublas.so
+        CUBLAS_LIB    = $(CUDA_PATH)/lib64/libcublas.so $(CUDA_PATH)/lib64/libnvToolsExt.so
+	CUSOLVER_LIB  = $(CUDA_PATH)/lib64/libcusolver.so
         CUDA_INC_PATH = $(CUDA_PATH)/include/
         CUDA_INC      = -I$(CUDA_INC_PATH)
         NVCC          = $(CUDA_PATH)/bin/nvcc
@@ -274,21 +276,22 @@ SUITESPARSE_VERSION = 4.5.2
     #            optional: Partition
     #
     # Configuration flags:
-    # -DNCHECK      do not include the Check module.
-    # -DNCHOLESKY   do not include the Cholesky module.
-    # -DNPARTITION  do not include the Partition module.
+    # -DNCHECK      do not include the Check module.       License GNU LGPL
+    # -DNCHOLESKY   do not include the Cholesky module.    License GNU LGPL
+    # -DNPARTITION  do not include the Partition module.   License GNU LGPL
     #               also do not include METIS.
-    # -DNCAMD       do not use CAMD & CCOLAMD in Parition Module.
-    # -DNMATRIXOPS  do not include the MatrixOps module.
-    # -DNMODIFY     do not include the Modify module.
-    # -DNSUPERNODAL do not include the Supernodal module.
+    # -DNCAMD       do not use CAMD & CCOLAMD in Parition Modulel  GNU LGPL
+    # -DNGPL        do not include any GNU GPL Modules in the CHOLMOD library:
+    # -DNMATRIXOPS  do not include the MatrixOps module.   License GNU GPL
+    # -DNMODIFY     do not include the Modify module.      License GNU GPL
+    # -DNSUPERNODAL do not include the Supernodal module.  License GNU GPL
     #
     # -DNPRINT      do not print anything.
     # -D'LONGBLAS=long' or -DLONGBLAS='long long' defines the integers used by
     #               LAPACK and the BLAS (defaults to 'int')
     # -DNSUNPERF    for Solaris only.  If defined, do not use the Sun
     #               Performance Library
-    # -DGPU_BLAS    enable the use of the CUDA BLAS
+    # -DSUITESPARSE_CUDA enable the use of GPU computing using CUDA
 
     CHOLMOD_CONFIG ?= $(GPU_CONFIG)
 
@@ -301,7 +304,7 @@ SUITESPARSE_VERSION = 4.5.2
     # -DNPARTITION      do not include the CHOLMOD partition module
     # -DNEXPERT         do not include the functions in SuiteSparseQR_expert.cpp
     # -DHAVE_TBB        enable the use of Intel's Threading Building Blocks
-    # -DGPU_BLAS        enable the use of the CUDA BLAS
+    # -DSUITESPARSE_CUDA enable the use of GPU computing using CUDA
 
     SPQR_CONFIG ?= $(GPU_CONFIG)
 
@@ -452,7 +455,7 @@ else
         SO_PLAIN  = $(LIBRARY).so
         SO_MAIN   = $(LIBRARY).so.$(SO_VERSION)
         SO_TARGET = $(LIBRARY).so.$(VERSION)
-        SO_OPTS  += -shared -Wl,-soname -Wl,$(SO_MAIN) -Wl,--no-undefined
+        SO_OPTS  += -shared -Wl,-soname -Wl,$(SO_MAIN) -Wl,--no-undefined -lstdc++
         # Linux/Unix *.so files can be moved without modification:
         SO_INSTALL_NAME = echo
     endif

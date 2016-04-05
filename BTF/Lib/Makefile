@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 
 LIBRARY = libbtf
-VERSION = 1.2.5
+VERSION = 1.2.4
 SO_VERSION = 1
 
 default: library

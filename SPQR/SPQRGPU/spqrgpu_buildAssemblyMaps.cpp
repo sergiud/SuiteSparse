@@ -2,7 +2,7 @@
 // === spqrgpu_buildAssemblyMaps ===============================================
 // =============================================================================
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
 #include "spqr.hpp"
 
 void spqrgpu_buildAssemblyMaps

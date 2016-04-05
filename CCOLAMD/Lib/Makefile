@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 
 LIBRARY = libccolamd
-VERSION = 2.9.5
+VERSION = 2.9.4
 SO_VERSION = 2
 
 default: library

@@ -4,6 +4,9 @@
 
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Demo Module.  Copyright (C) 2005-2013, Timothy A. Davis
+ * The CHOLMOD/Demo Module is licensed under Version 2.0 of the GNU
+ * General Public License.  See gpl.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * -------------------------------------------------------------------------- */
 
 /* Read in a matrix from a file, and use CHOLMOD to solve Ax=b if A is
@@ -170,36 +173,6 @@ int main (int argc, char **argv)
 
     xtype = A->xtype ;
     cholmod_l_print_sparse (A, "A", cm) ;
-
-#if 0
-    if ( 0 ) {
-      // scale diagonal
-      printf ("\n\n     SCALING DIAGONAL   \n\n");
-      
-      // create diagonal
-      printf ("%ld,%ld,%d\n", A->nrow, A->ncol, A->xtype );
-
-      cholmod_sparse *D = cholmod_l_speye (A->nrow, A->ncol, A->xtype, cm );
-      printf ("sparse done \n");
-      cholmod_l_print_sparse (D, "D", cm);
-
-      D->stype = 1;
-      cholmod_l_print_sparse (D, "D", cm);
-
-      double alpha[2];
-      double beta[2];
-      alpha[0] = 1.0;
-      alpha[1] = 1.0;
-      beta[0] = 1.0e9; // 9 works, 467doesn't
-      beta[1] = 1.0e0;
-
-      cholmod_sparse *C = cholmod_l_add (A, D, alpha, beta, 1, 0, cm );
-      cholmod_l_print_sparse (C, "C", cm);
-
-      A = C;
-
-    }
-#endif
 
     if (A->nrow > A->ncol)
     {
@@ -712,11 +685,6 @@ int main (int argc, char **argv)
 		" after iterative refinement\n", resid2) ;
     }
     printf ("rcond    %8.1e\n\n", rcond) ;
-
-    if (L_is_super)
-    {
-        cholmod_l_gpu_stats (cm) ;
-    }
 
     cholmod_l_free_factor (&L, cm) ;
     cholmod_l_free_dense (&X, cm) ;

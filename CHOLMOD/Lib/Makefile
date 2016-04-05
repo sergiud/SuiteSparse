@@ -3,7 +3,7 @@
 #===============================================================================
 
 LIBRARY = libcholmod
-VERSION = 3.0.10
+VERSION = 4.0.0
 SO_VERSION = 3
 
 default: library
@@ -22,7 +22,7 @@ SO_OPTS += $(CFOPENMP)
 #-------------------------------------------------------------------------------
 # With the CUDA BLAS:
 ifneq ($(GPU_CONFIG),)
-LDLIBS += $(CUDART_LIB) $(CUBLAS_LIB)
+LDLIBS += $(CUDART_LIB) $(CUBLAS_LIB) $(CUSOLVER_LIB)
 endif
 #-------------------------------------------------------------------------------
 
@@ -35,6 +35,10 @@ library:
 I = -I../../AMD/Include -I../../AMD/Source -I../../COLAMD/Include \
 	$(I_WITH_PARTITION) -I../Include -I../../SuiteSparse_config \
 	$(CUDA_INC)
+
+ifneq ($(MKLROOT),)
+	I += -DMKLROOT
+endif
 
 #-------------------------------------------------------------------------------
 
@@ -67,7 +71,7 @@ INC =   ../Include/cholmod.h \
 	../Include/cholmod_partition.h \
 	../Include/cholmod_supernodal.h \
 	../Include/cholmod_template.h \
-	../Include/cholmod_gpu.h
+	../Include/cholmod_subtree.h
 
 #-------------------------------------------------------------------------------
 # The 7 CHOLMOD library modules (int, double)
@@ -100,7 +104,9 @@ SUPERNODAL = cholmod_super_numeric.o cholmod_super_solve.o \
 	cholmod_super_symbolic.o
 
 ifneq ($(GPU_CONFIG),)
-GPU = cholmod_gpu.o cholmod_gpu_kernels.o
+GPU = cholmod_gpu.o cholmod_gpu_kernels.o \
+	dgemm_custom_simple_1block_batch.o dsyrk_custom_simple_1block_batch.o \
+	dtrsm_custom_simple_1block_batch.o dpotrf_custom_simple_1block_batch.o
 else
 GPU =
 endif
@@ -493,7 +499,14 @@ cholmod_l_updown.o: ../Modify/cholmod_updown.c \
 #-------------------------------------------------------------------------------
 
 cholmod_super_numeric.o: ../Supernodal/cholmod_super_numeric.c \
-        ../GPU/t_cholmod_gpu.c \
+        ../GPU/t_cholmod_subtree.c \
+        ../GPU/t_cholmod_root.c \
+        ../GPU/t_initialize_subtree.c \
+        ../GPU/t_factorize_subtree.c \
+        ../GPU/t_factorize_root.c \
+        ../GPU/t_factorize_root_parallel.c \
+        ../GPU/t_factorize_cpu_parallel.c \
+        ../GPU/t_factorize_cpu_serial.c \
 	../Supernodal/t_cholmod_super_numeric.c
 	$(C) -c $(I) $<
 
@@ -523,6 +536,18 @@ cholmod_l_super_solve.o: ../Supernodal/cholmod_super_solve.c \
 
 cholmod_gpu_kernels.o: ../GPU/cholmod_gpu_kernels.cu
 	$(NVCC) $(I) $(NVCCFLAGS) -c ../GPU/cholmod_gpu_kernels.cu
+
+dgemm_custom_simple_1block_batch.o: ../GPU/dgemm_custom_simple_1block_batch.cu
+	$(NVCC) $(I) $(NVCCFLAGS) -c ../GPU/dgemm_custom_simple_1block_batch.cu
+
+dsyrk_custom_simple_1block_batch.o: ../GPU/dsyrk_custom_simple_1block_batch.cu
+	$(NVCC) $(I) $(NVCCFLAGS) -c ../GPU/dsyrk_custom_simple_1block_batch.cu
+
+dtrsm_custom_simple_1block_batch.o: ../GPU/dtrsm_custom_simple_1block_batch.cu
+	$(NVCC) $(I) $(NVCCFLAGS) -c ../GPU/dtrsm_custom_simple_1block_batch.cu
+
+dpotrf_custom_simple_1block_batch.o: ../GPU/dpotrf_custom_simple_1block_batch.cu
+	$(NVCC) $(I) $(NVCCFLAGS) -c ../GPU/dpotrf_custom_simple_1block_batch.cu
 
 cholmod_gpu.o: ../GPU/cholmod_gpu.c 
 	$(C) -c $(I) $<

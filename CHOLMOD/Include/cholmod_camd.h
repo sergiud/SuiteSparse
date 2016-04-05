@@ -5,6 +5,9 @@
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Include/cholmod_camd.h.
  * Copyright (C) 2005-2013, Univ. of Florida.  Author: Timothy A. Davis
+ * CHOLMOD/Include/cholmod_partition.h is licensed under Version 2.1 of the GNU
+ * Lesser General Public License.  See lesser.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * -------------------------------------------------------------------------- */
 
 /* CHOLMOD Partition module, interface to CAMD, CCOLAMD, and CSYMAMD

@@ -4,6 +4,9 @@
 
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Check Module.  Copyright (C) 2005-2013, Timothy A. Davis
+ * The CHOLMOD/Check Module is licensed under Version 2.1 of the GNU
+ * Lesser General Public License.  See lesser.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * -------------------------------------------------------------------------- */
 
 /* Routines to check and print the contents of the 5 CHOLMOD objects:
@@ -592,58 +595,6 @@ int CHOLMOD(print_common)
     return (check_common (print, name, Common)) ;
 }
 
-
-/* ========================================================================== */
-/* === cholmod_gpu_stats ==================================================== */
-/* ========================================================================== */
-
-/* Print CPU / GPU statistics.  If the timer is not installed, the times are
-   reported as zero, but this function still works.  Likewise, the function
-   still works if the GPU BLAS is not installed. */
-
-int CHOLMOD(gpu_stats)
-(
-    cholmod_common *Common      /* input */
-)
-{
-    double cpu_time, gpu_time ;
-    int print ;
-
-    RETURN_IF_NULL_COMMON (FALSE) ;
-    print = Common->print ;
-
-    P2 ("%s", "\nCHOLMOD GPU/CPU statistics:\n") ;
-    P2 ("SYRK  CPU calls %12.0f", (double) Common->CHOLMOD_CPU_SYRK_CALLS) ;
-    P2 (" time %12.4e\n", Common->CHOLMOD_CPU_SYRK_TIME) ;
-    P2 ("      GPU calls %12.0f", (double) Common->CHOLMOD_GPU_SYRK_CALLS) ;
-    P2 (" time %12.4e\n", Common->CHOLMOD_GPU_SYRK_TIME) ;
-    P2 ("GEMM  CPU calls %12.0f", (double) Common->CHOLMOD_CPU_GEMM_CALLS) ;
-    P2 (" time %12.4e\n", Common->CHOLMOD_CPU_GEMM_TIME) ;
-    P2 ("      GPU calls %12.0f", (double) Common->CHOLMOD_GPU_GEMM_CALLS) ;
-    P2 (" time %12.4e\n", Common->CHOLMOD_GPU_GEMM_TIME) ;
-    P2 ("POTRF CPU calls %12.0f", (double) Common->CHOLMOD_CPU_POTRF_CALLS) ;
-    P2 (" time %12.4e\n", Common->CHOLMOD_CPU_POTRF_TIME) ;
-    P2 ("      GPU calls %12.0f", (double) Common->CHOLMOD_GPU_POTRF_CALLS) ;
-    P2 (" time %12.4e\n", Common->CHOLMOD_GPU_POTRF_TIME) ;
-    P2 ("TRSM  CPU calls %12.0f", (double) Common->CHOLMOD_CPU_TRSM_CALLS) ;
-    P2 (" time %12.4e\n", Common->CHOLMOD_CPU_TRSM_TIME) ;
-    P2 ("      GPU calls %12.0f", (double) Common->CHOLMOD_GPU_TRSM_CALLS) ;
-    P2 (" time %12.4e\n", Common->CHOLMOD_GPU_TRSM_TIME) ;
-
-    cpu_time = Common->CHOLMOD_CPU_SYRK_TIME + Common->CHOLMOD_CPU_TRSM_TIME +
-               Common->CHOLMOD_CPU_GEMM_TIME + Common->CHOLMOD_CPU_POTRF_TIME ;
-
-    gpu_time = Common->CHOLMOD_GPU_SYRK_TIME + Common->CHOLMOD_GPU_TRSM_TIME +
-               Common->CHOLMOD_GPU_GEMM_TIME + Common->CHOLMOD_GPU_POTRF_TIME ;
-
-    P2 ("time in the BLAS: CPU %12.4e", cpu_time) ;
-    P2 (" GPU %12.4e", gpu_time) ;
-    P2 (" total: %12.4e\n", cpu_time + gpu_time) ;
-
-    P2 ("assembly time %12.4e", Common->CHOLMOD_ASSEMBLE_TIME) ;
-    P2 ("  %12.4e\n", Common->CHOLMOD_ASSEMBLE_TIME2) ;
-    return (TRUE) ;
-}
 
 
 /* ========================================================================== */

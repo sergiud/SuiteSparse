@@ -5,6 +5,9 @@
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Include/cholmod_internal.h.
  * Copyright (C) 2005-2013, Univ. of Florida.  Author: Timothy A. Davis
+ * CHOLMOD/Include/cholmod_internal.h is licensed under Version 2.1 of the GNU
+ * Lesser General Public License.  See lesser.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * -------------------------------------------------------------------------- */
 
 /* CHOLMOD internal include file.
@@ -248,7 +251,7 @@ size_t cholmod_l_mult_size_t (size_t a, size_t k, int *ok) ;
 #define ID "%d"
 
 /* GPU acceleration is not available for the int version of CHOLMOD */
-#undef GPU_BLAS
+#undef SUITESPARSE_CUDA
 
 #endif
 

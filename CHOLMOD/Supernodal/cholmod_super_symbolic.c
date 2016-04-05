@@ -4,6 +4,9 @@
 
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Supernodal Module. Copyright (C) 2005-2006, Timothy A. Davis
+ * The CHOLMOD/Supernodal Module is licensed under Version 2.0 of the GNU
+ * General Public License.  See gpl.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * http://www.suitesparse.com
  * -------------------------------------------------------------------------- */
 
@@ -42,9 +45,9 @@
 
 #include "cholmod_internal.h"
 #include "cholmod_supernodal.h"
-
-#ifdef GPU_BLAS
-#include "cholmod_gpu.h"
+#include "cholmod_subtree.h"
+#ifdef MKLROOT
+#include "mkl.h"
 #endif
 
 /* ========================================================================== */
@@ -178,11 +181,8 @@ int CHOLMOD(super_symbolic2)
 	merge, snext, esize, maxesize, nrelax0, nrelax1, nrelax2, Asorted ;
     size_t w ;
     int ok = TRUE, find_xsize ;
-    const char* env_use_gpu;
-    const char* env_max_bytes;
+    const char* env_use_gpu, *env_max_bytes, *env_num_gpu, *env_hybrid_gpu, *env_omp_num_threads, *env_partial_factorization;
     size_t max_bytes;
-    const char* env_max_fraction;
-    double max_fraction;
 
     /* ---------------------------------------------------------------------- */
     /* check inputs */
@@ -239,10 +239,22 @@ int CHOLMOD(super_symbolic2)
     /* ---------------------------------------------------------------------- */
     /* allocate GPU workspace */
     /* ---------------------------------------------------------------------- */
+#ifndef SUITESPARSE_CUDA
+    /* GPU module is not installed */
+    Common->useGPU = 0;
+    Common->numGPU = 0;
+    Common->useHybrid = 0;
+#endif
+
+#ifndef DLONG
+    /* GPU module supported only for long int */
+    Common->useGPU = 0;
+    Common->numGPU = 0;
+    Common->useHybrid = 0;
+#endif
+
 
     L->useGPU = 0 ;     /* only used for Cholesky factorization, not QR */
-
-#ifdef GPU_BLAS
 
     /* GPU module is installed */
     if ( for_whom == CHOLMOD_ANALYZE_FOR_CHOLESKY )
@@ -251,68 +263,196 @@ int CHOLMOD(super_symbolic2)
            the GPU is requested and available. */
 
         max_bytes = 0;
-        max_fraction = 0;
 
+#ifdef SUITESPARSE_CUDA
 #ifdef DLONG
+        /* set useGPU parameter */
         if ( Common->useGPU == EMPTY )
         {
-            /* useGPU not explicity requested by the user, but not explicitly
-             * prohibited either.  Query OS environment variables for request.*/
+            /* Query OS environment variables for request.*/
             env_use_gpu  = getenv("CHOLMOD_USE_GPU");
 
+            /* CHOLMOD_USE_GPU environment variable is set */
             if ( env_use_gpu )
             {
-                /* CHOLMOD_USE_GPU environment variable is set to something */
                 if ( atoi ( env_use_gpu ) == 0 )
                 {
-                    Common->useGPU = 0; /* don't use the gpu */
+                    Common->useGPU = 0; 				/* don't use the gpu */
                 }
                 else
                 {
-                    Common->useGPU = 1; /* use the gpu */
-                    env_max_bytes = getenv("CHOLMOD_GPU_MEM_BYTES");
-                    env_max_fraction = getenv("CHOLMOD_GPU_MEM_FRACTION");
-                    if ( env_max_bytes )
-                    {
-                        max_bytes = atol(env_max_bytes);
-                        Common->maxGpuMemBytes = max_bytes;
-                    }
-                    if ( env_max_fraction )
-                    {
-                        max_fraction = atof (env_max_fraction);
-                        if ( max_fraction < 0 ) max_fraction = 0;
-                        if ( max_fraction > 1 ) max_fraction = 1;
-                        Common->maxGpuMemFraction = max_fraction;
-                    }	  
+                    Common->useGPU = 1; 				/* use the gpu */
                 }
             }
+            /* CHOLMOD_USE_GPU environment variable not set */             
             else
             {
-                /* CHOLMOD_USE_GPU environment variable not set, so no GPU
-                 * acceleration will be used */
-                Common->useGPU = 0;
+                Common->useGPU = 0;					/* default is no GPU acceleration */
             }
-            /* fprintf (stderr, "useGPU queried: %d\n", Common->useGPU) ; */
         }
+
+
+        /* set maxGpuMemBytes parameter */
+        if ( Common->maxGpuMemBytes == EMPTY )
+        {
+            /* Query OS environment variables for request.*/
+	    env_max_bytes = getenv("CHOLMOD_GPU_MEM_BYTES");
+
+            /* CHOLMOD_GPU_MEM_BYTES environment variable is set */
+            if ( env_max_bytes )
+            {
+                /* GPU is set */
+                if(Common->useGPU)
+                {
+                    max_bytes = atol(env_max_bytes);
+                    Common->maxGpuMemBytes = max_bytes;
+                }
+            }
+        }
+
+       
+        /* set numGPU parameter */ 
+        if ( Common->numGPU == EMPTY )
+        {
+            /* Query OS environment variables for request.*/
+            env_num_gpu  = getenv("CHOLMOD_NUM_GPUS");
+
+            /* CHOLMOD_NUM_GPUS environment variable is set */
+            if ( env_num_gpu )
+            {	    
+                Common->numGPU = atoi ( env_num_gpu );              	/* set # GPUs */	
+            }
+            /* CHOLMOD_USE_GPU environment variable not set */
+	    else
+            {
+                Common->numGPU = -1;				    	/* default, #GPUs is not defined */
+            }	        	
+        }
+
+
+        /* set useHybrid parameter */
+        if ( Common->useHybrid == EMPTY )
+        {
+            /* Query OS environment variables for request.*/
+            env_hybrid_gpu  = getenv("CHOLMOD_GPU_HYBRID");
+
+            /* CHOLMOD_GPU_HYBRID environment variable is set */
+            if ( env_hybrid_gpu )
+            {
+                if ( atoi ( env_hybrid_gpu ) == 0 )
+                {
+                    Common->useHybrid = 0;                           	/* don't use hybrid (GPU only) */
+                }
+                else
+                {
+                    Common->useHybrid = 1; 				/* use hybrid (GPU + CPU) */
+                }
+            }
+            /* CHOLMOD_GPU_HYBRID environment variable not set */
+            else
+            {
+                Common->useHybrid = -1;                              	/* default, hybrid is not defined */
+            }
+        }
+#endif
+#endif
+
+
+        /* set ompNumThreads parameter */
+        if ( Common->ompNumThreads == EMPTY )
+        {
+            /* Query OS environment variables for request.*/
+            env_omp_num_threads  = getenv("OMP_NUM_THREADS");
+
+            /* OMP_NUM_THREADS environment variable is set */
+            if ( env_omp_num_threads )
+            {
+                Common->ompNumThreads = atoi ( env_omp_num_threads ); 	/* set # omp threads */
+            }
+            /* OMP_NUM_THREADS environment variable not set */
+            else
+            {
+#ifdef MKLROOT
+	      Common->ompNumThreads = mkl_get_max_threads();            /* default is # cores in CPU */
+#else
+	      Common->ompNumThreads = omp_get_max_threads();            /* default is # cores in CPU */
+#endif
+            }
+        }
+
+
+        /* set partialFactorization parameter */
+        if ( Common->partialFactorization == EMPTY )
+        {
+            /* Query OS environment variables for request.*/
+            env_partial_factorization  = getenv("CHOLMOD_PARTIAL_FACTORIZATION");
+
+            /* CHOLMOD_PARTIAL_FACTORIZATION   environment variable is set */
+            if ( env_partial_factorization )
+            {
+                if ( atoi ( env_partial_factorization ) == 0 )
+                {
+                    Common->partialFactorization = 0;                              /* don't use partialFactorization */
+                }
+                else
+                {
+                    Common->partialFactorization = 1;                              /* use partialFactorization (serial CPU only) */
+                }
+            }
+            /* CHOLMOD_PARTIAL_FACTORIZATION   environment variable not set */
+            else
+            {
+                Common->partialFactorization = 0;                                  /* default is no partialFactorization */
+            }
+        }
+
+
+
+#ifdef SUITESPARSE_CUDA
+#ifdef DLONG
+        /* GPU is not present */
+        if ( Common->useGPU == 0 || Common->numGPU == 0 || Common->partialFactorization == 1 )
+        {
+            Common->useGPU = 0;
+            Common->numGPU = 0;
+            Common->useHybrid = 0;
+        }
+
 
         /* Ensure that a GPU is present */
-        if ( Common->useGPU == 1 )
+        if ( Common->useGPU == 1 && Common->numGPU != 0 )
         {
-            /* fprintf (stderr, "\nprobe GPU:\n") ; */
             Common->useGPU = CHOLMOD(gpu_probe) (Common); 
-            /* fprintf (stderr, "\nprobe GPU: result %d\n", Common->useGPU) ; */
+	    if ( Common->useGPU == 1 && Common->numGPU > 0 )
+            {
+            	CHOLMOD(gpu_allocate) ( Common );
+	    }
         }
 
-        if ( Common->useGPU == 1 )
+       
+        /* GPU is present (set default behavior) */
+        if ( Common->useGPU == 1 && Common->numGPU > 0 && Common->partialFactorization == 0 )
         {
-            /* Cholesky + GPU, so allocate space */
-            /* fprintf (stderr, "allocate GPU:\n") ; */
-            CHOLMOD(gpu_allocate) ( Common );
-            /* fprintf (stderr, "allocate GPU done\n") ; */
+ 
+            /* if hybrid is not defined */
+            if(Common->useHybrid == -1) 
+            {
+                if(Common->numGPU == 1) 				/* if 1 GPU, enable CPU (hybrid) */
+                  Common->useHybrid = 1;                
+                else 
+                  Common->useHybrid = 0;				/* if multiple GPUs, disable CPU (GPU only) */
+            }
         }
-#else
-        /* GPU acceleration is only supported for long int version */
-        Common->useGPU = 0;
+
+
+	/* GPU is not present */
+   	if ( Common->useGPU == 0 || Common->numGPU == 0 || Common->partialFactorization == 1 )
+	{
+            Common->useGPU = 0;
+	    Common->numGPU = 0;
+            Common->useHybrid = 0;
+	}
+#endif
 #endif
 
         /* Cache the fact that the symbolic factorization supports 
@@ -321,10 +461,7 @@ int CHOLMOD(super_symbolic2)
 
     }
 
-#else
-    /* GPU module is not installed */
-    Common->useGPU = 0 ;
-#endif
+
 
     /* ---------------------------------------------------------------------- */
     /* get inputs */
@@ -419,7 +556,7 @@ int CHOLMOD(super_symbolic2)
 	if (Parent [j-1] != j	    /* parent of j-1 is not j */
 	    || (ColCount [j-1] != ColCount [j] + 1) /* j-1 not subset of j*/
 	    || Wi [j] > 1	    /* j has more than one child */
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
 	    /* Ensure that the supernode will fit in the GPU buffers */
 	    /* Data size of 16 bytes must be assumed for case of PATTERN */
 	    || (for_whom == CHOLMOD_ANALYZE_FOR_CHOLESKY && L->useGPU && 
@@ -579,7 +716,7 @@ int CHOLMOD(super_symbolic2)
 	    }
 	}
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
 	if ( for_whom == CHOLMOD_ANALYZE_FOR_CHOLESKY && L->useGPU ) {
 	  /* Ensure that the aggregated supernode fits in the device 
 	     supernode buffers */

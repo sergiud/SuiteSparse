@@ -5,6 +5,9 @@
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Core Module.  Copyright (C) 2005-2006,
  * Univ. of Florida.  Author: Timothy A. Davis
+ * The CHOLMOD/Core Module is licensed under Version 2.1 of the GNU
+ * Lesser General Public License.  See lesser.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * -------------------------------------------------------------------------- */
 
 /* Core utility routines for the cholmod_common object:
@@ -169,55 +172,43 @@ int CHOLMOD(start)
     /* GPU initializations */
     /* ---------------------------------------------------------------------- */
 
+
     /* these are destroyed by cholmod_gpu_deallocate and cholmod_gpu_end */
-    Common->cublasHandle = NULL ;
-    Common->cublasEventPotrf [0] = NULL ;
-    Common->cublasEventPotrf [1] = NULL ;
-    Common->cublasEventPotrf [2] = NULL ;
-    for (k = 0 ; k < CHOLMOD_HOST_SUPERNODE_BUFFERS ; k++)
+    for (k = 0; k < CHOLMOD_MAX_NUM_GPUS; k++)
     {
-        Common->gpuStream [k] = NULL ;
-        Common->updateCBuffersFree [k] = NULL ;
+      Common->cublasHandle[k] = NULL ;
+      Common->cusolverHandle[k] = NULL ;
+      Common->cublasEventPotrf[k][0] = NULL ;
+      Common->cublasEventPotrf[k][1] = NULL ;
+      Common->cublasEventPotrf[k][2] = NULL ;
+      Common->updateCKernelsComplete[k] = NULL;
     }
-    Common->updateCKernelsComplete = NULL;
+
+
+    int gpuid;
+    for(gpuid = 0; gpuid < CHOLMOD_MAX_NUM_GPUS; gpuid ++) {
+      for(k = 0; k < CHOLMOD_DEVICE_STREAMS; k++) {
+        Common->gpuStream[gpuid][k] = NULL ;
+        Common->updateCBuffersFree[gpuid][k] = NULL ;
+      }
+    }
+
 
     /* these are destroyed by cholmod_gpu_deallocate */
-    Common->dev_mempool = NULL;
-    Common->dev_mempool_size = 0;
-    Common->host_pinned_mempool = NULL;
-    Common->host_pinned_mempool_size = 0;
-
-    Common->syrkStart = 0 ;
-
-    Common->cholmod_cpu_gemm_time = 0 ;
-    Common->cholmod_cpu_syrk_time = 0 ;
-    Common->cholmod_cpu_trsm_time = 0 ;
-    Common->cholmod_cpu_potrf_time = 0 ;
-    Common->cholmod_gpu_gemm_time = 0 ;
-    Common->cholmod_gpu_syrk_time = 0 ;
-    Common->cholmod_gpu_trsm_time = 0 ;
-    Common->cholmod_gpu_potrf_time = 0 ;
-    Common->cholmod_assemble_time = 0 ;
-    Common->cholmod_assemble_time2 = 0 ;
-
-    Common->cholmod_cpu_gemm_calls = 0 ;
-    Common->cholmod_cpu_syrk_calls = 0 ;
-    Common->cholmod_cpu_trsm_calls = 0 ;
-    Common->cholmod_cpu_potrf_calls = 0 ;
-
-    Common->cholmod_gpu_gemm_calls = 0 ;
-    Common->cholmod_gpu_syrk_calls = 0 ;
-    Common->cholmod_gpu_trsm_calls = 0 ;
-    Common->cholmod_gpu_potrf_calls = 0 ;
-
-    Common->maxGpuMemBytes = 0;
-    Common->maxGpuMemFraction = 0.0;
+    for (k = 0; k < CHOLMOD_MAX_NUM_GPUS; k++)
+    {
+      Common->dev_mempool[k] = NULL;
+      Common->dev_mempool_size = 0;
+      Common->host_pinned_mempool[k] = NULL;
+      Common->host_pinned_mempool_size = 0;
+    }
 
     /* SPQR statistics and settings */
     Common->gpuMemorySize = 1 ;         /* default: no GPU memory available */
     Common->gpuKernelTime = 0.0 ;
     Common->gpuFlops = 0 ;
     Common->gpuNumKernelLaunches = 0 ;
+
 
     DEBUG_INIT ("cholmod start", Common) ;
 
@@ -362,10 +353,20 @@ int CHOLMOD(defaults)
     /* ---------------------------------------------------------------------- */
 
 #ifdef DLONG
-    Common->useGPU = EMPTY ;
+    Common->useGPU 		= EMPTY ;
+    Common->maxGpuMemBytes	= EMPTY ;
+    Common->numGPU 		= EMPTY ;
+    Common->useHybrid 		= EMPTY ;
+    Common->ompNumThreads 	= EMPTY ;    
+    Common->partialFactorization 	= EMPTY ;
 #else
     /* GPU acceleration is not supported for int version of CHOLMOD */
-    Common->useGPU = 0 ;
+    Common->useGPU 		= 0 ;
+    Common->maxGpuMemBytes      = 0 ;
+    Common->numGPU 		= 0 ;
+    Common->useHybrid 		= 0 ;
+    Common->ompNumThreads 	= EMPTY ;
+    Common->partialFactorization   = EMPTY ;
 #endif
 
     return (TRUE) ;
@@ -582,8 +583,13 @@ int CHOLMOD(free_work)
     Common->iworksize = 0 ;
     Common->xworksize = 0 ;
 
-#ifdef GPU_BLAS
-    CHOLMOD(gpu_deallocate) (Common) ;
+#ifdef SUITESPARSE_CUDA
+    int k;
+    for(k = 0; k < Common->numGPU; k++) {
+      cudaSetDevice(k);
+      CHOLMOD(gpu_deallocate) (0, Common) ;
+    }
+    cudaSetDevice(0);	
 #endif
     return (TRUE) ;
 }
@@ -726,19 +732,101 @@ double CHOLMOD(dbound)	/* returns modified diagonal entry of D */
 
 
 /* ========================================================================== */
-/* === scorecomp ============================================================ */
+/* === sort comp ============================================================ */
 /* ========================================================================== */
 
-/* For sorting descendant supernodes with qsort */
-int CHOLMOD(score_comp) (struct cholmod_descendant_score_t *i, 
-			       struct cholmod_descendant_score_t *j)
+/* function for sorting subtrees in qsort */
+int CHOLMOD(subtree_comp) (struct cholmod_subtree_order_t *a, struct cholmod_subtree_order_t *b)
+{
+  if( (*a).size < (*b).size) return 1;
+  else return -1;
+}
+
+
+/* function for sorting descendants with qsort */
+int CHOLMOD(score_comp) (struct cholmod_descendant_score_t *i, struct cholmod_descendant_score_t *j)
 {
   if ((*i).score < (*j).score)
     {
-	return (1) ;
+        return (1) ;
     }
     else
     {
-	return (-1) ;
+        return (-1) ;
     }
 }
+
+
+/* function for sorting syrk with qsort */
+int CHOLMOD(sort_syrk) (struct cholmod_syrk_t *i, struct cholmod_syrk_t *j)
+{
+  if ((*i).score < (*j).score)
+    {
+        return (1) ;
+    }
+    else
+    {
+        return (-1) ;
+    }
+}
+
+
+/* fucntion for sorting gemm with qsort */
+int CHOLMOD(sort_gemm) (struct cholmod_gemm_t *i, struct cholmod_gemm_t *j)
+{
+  if ((*i).score < (*j).score)
+    {
+        return (1) ;
+    }
+    else
+    {
+        return (-1) ;
+    }
+}
+
+
+/* function for sorting potrf with qsort */
+int CHOLMOD(sort_potrf) (struct cholmod_potrf_t *i, struct cholmod_potrf_t *j)
+{
+  if ((*i).score < (*j).score)
+    {
+        return (1) ;
+    }
+    else
+    {
+        return (-1) ;
+    }
+}
+
+
+/* function for sorting trsm with qsort */
+int CHOLMOD(sort_trsm) (struct cholmod_trsm_t *i, struct cholmod_trsm_t *j)
+{
+  if ((*i).score < (*j).score)
+    {
+        return (1) ;
+    }
+    else
+    {
+        return (-1) ;
+    }
+}
+
+
+/* function for sorting descendants with qsort */
+int CHOLMOD(sort_desc) (struct cholmod_desc_t *i, struct cholmod_desc_t *j)
+{
+  if ((*i).score < (*j).score)
+    {
+        return (1) ;
+    }
+    else
+    {
+        return (-1) ;
+    }
+}
+
+
+
+
+

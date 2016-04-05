@@ -14,7 +14,8 @@ in the MATLAB Command Window.
 Files in this directory:
 
 ChangeLog                   changes since first release
-License.txt                 license
+
+gpl.txt                     the GNU GPL license
 
 spqr_user_guide.pdf         User Guide; start here
 spqr.pdf                    Algorithm/Theory technical report
@@ -29,5 +30,5 @@ README.txt                  this file
 
 Timothy A. Davis, http://www.suitesparse.com
 
-GPU acceleration in collaboration with Nuri Yeralan,
-Sanjay Ranka, and Wissam Sid-Lakhdar.
+GPU acceleration in collaboration with Nuri Yeralan and
+Sanjay Ranka.

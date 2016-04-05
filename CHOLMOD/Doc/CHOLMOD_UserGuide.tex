@@ -21,7 +21,7 @@ DrTimothyAldenDavis@gmail.com, http://www.suitesparse.com }
 \title{User Guide for CHOLMOD: a sparse Cholesky factorization and
 modification package}
 
-\date{VERSION 3.0.10, Apr 1, 2016}
+\date{VERSION 4.0.0, Mar 17, 2016}
 \maketitle
 
 %-------------------------------------------------------------------------------
@@ -50,9 +50,9 @@ modification package}
 CHOLMOD Copyright\copyright 2005-2015 by Timothy A. Davis.  Portions are also
 copyrighted by William W. Hager (the {\tt Modify} Module),
 and the University of Florida (the {\tt Partition} and {\tt Core} Modules).
-All Rights Reserved.
-
-See CHOLMOD/Doc/License.txt for the license.
+All Rights Reserved.  Some of CHOLMOD's Modules are distributed under the GNU
+General Public License, and others under the GNU Lesser General Public License.
+Refer to each Module for details.
 CHOLMOD is also available under other licenses that permit its use in
 proprietary applications; contact the authors for details.
 See http://www.suitesparse.com for the code and all documentation,
@@ -322,31 +322,29 @@ their default values, do {\tt make config}.
 \noindent
 CHOLMOD's specific settings are given by the {\tt CHOLMOD\_CONFIG} string:
 \begin{itemize}
-\item {\tt -DNCHECK}:	    do not include the Check module.
-\item {\tt -DNCHOLESKY}:    do not include the Cholesky module.
+\item {\tt -DNCHECK}:	    do not include the Check module.	   License: GNU LGPL.
+\item {\tt -DNCHOLESKY}:    do not include the Cholesky module.	   License: GNU LGPL.
 \item {\tt -DNPARTITION}:   do not include the interface to METIS in
-                            the Partition module.
-\item {\tt -DCAMD}:         do not include the interfaces to CAMD, CCOLAMD,
-                            and CSYMAMD in the Partition module.
-\item {\tt -DNMATRIXOPS}:   do not include the MatrixOps module.
-                            Note that the Demo requires the MatrixOps module.
-\item {\tt -DNMODIFY}:	    do not include the Modify module.
-\item {\tt -DNSUPERNODAL}:  do not include the Supernodal module.
+the Partition module.   License: GNU LGPL.
+\item {\tt -DCAMD}:   do not include the interfaces to CAMD, CCOLAMD,
+and CSYMAMD in the Partition module.   License: GNU LGPL.
+\item {\tt -DNGPL}:	    do not include any GNU GPL Modules in the CHOLMOD library.
+Note that the Demo requires the MatrixOps module.
+\item {\tt -DNMATRIXOPS}:   do not include the MatrixOps module.   License: GNU GPL.
+Note that the Demo requires the MatrixOps module.
+\item {\tt -DNMODIFY}:	    do not include the Modify module.      License: GNU GPL.
+\item {\tt -DNSUPERNODAL}:  do not include the Supernodal module.  License: GNU GPL.
 \item {\tt -DNPRINT}:	    do not print anything.
 \item {\tt -D'LONGBLAS=long'} or {\tt -DLONGBLAS='long long'}
-			    defines the integers used by LAPACK
-                            and the BLAS (defaults to {\tt int}).
-\item {\tt -DNSUNPERF}:	    for Solaris only.  If defined, do not use the
-                            Sun Performance Library.
+			    defines the integers used by LAPACK and the BLAS (defaults to {\tt int}).
+\item {\tt -DNSUNPERF}:	    for Solaris only.  If defined, do not use the Sun Performance Library.
 \item {\tt -DNLARGEFILE}:   CHOLMOD now assumes support for large files (2GB or
-                            larger).  If this causes problems, you can compile
-                            CHOLMOD with -DNLARGEFILE.  To use large files, you
-                            should {\tt \#include "cholmod.h"} (or at least
-                            {\tt \#include "cholmod\_io64.h"}) before any other
-                            {\tt \#include} statements, in your application
-                            that uses CHOLMOD.  You may need to use {\tt
-                            fopen64} to create a file pointer to pass to
-                            CHOLMOD, if you are using a non-gcc compiler.
+larger).  If this causes problems, you can compile CHOLMOD with -DNLARGEFILE.
+To use large files, you should {\tt \#include "cholmod.h"} (or at least
+{\tt \#include "cholmod\_io64.h"}) before any other {\tt \#include} statements,
+in your application that uses CHOLMOD.  You may need to use {\tt fopen64}
+to create a file pointer to pass to CHOLMOD, if you are using a non-gcc
+compiler.
 \end{itemize}
 
 Type {\tt make} in the {\tt CHOLMOD} directory.  The AMD,
@@ -497,20 +495,32 @@ better able to accelerate the dense math associated with larger supernodes.
 Hence the GPU will provide more significant performance improvements for larger
 matrices that have more, larger supernodes.
 
-In CHOLMOD v2.3.0 this GPU capability has been improved to provide a
-significant increase in performance and the interface has been expanded to make
-the use of GPUs more flexible.  CHOLMOD can take advantage of a single NVIDIA
-GPU that supports CUDA and has at least 64MB of memory.  (But substantially
-more memory, typically about 3 GB, is recommended for best performance.)
+In CHOLMOD v2.3.0 this GPU capability was improved to reduce the required PCIe 
+communication between the CPU and GPU and consequently provide a significant 
+increase in performance.  As well, the interface was expanded to make the use 
+of GPUs more flexible.  
 
-Only the {\tt long} integer version of CHOLMOD can leverage GPU acceleration.
+%CHOLMOD can take advantage of a single NVIDIA GPU that supports CUDA and has 
+% at least 64MB of memory.  (But substantially more memory, typically about 3 
+% GB, is recommended for best performance.)
+
+In CHOLMOD v4.0.0, the GPU algorithm was extensively modified to further improve 
+performance by a) further minimizing communication between the CPU and GPU, 
+b) further leveraging hybrid computing and c) enabling the concurrent use of 
+multiple GPUs.
+
+GPU acceleration in CHOLMOD only applies to double-precision math, so only those 
+GPUs with high double-precision capability will provide significant 
+acceleration.  As well, GPU acceleration is only enabled in the {\tt long} 
+integer version of CHOLMOD.
+
 
 %-------------------------------------------------------------------------------
 \subsection{Compiling CHOLMOD with GPU support}
 %-------------------------------------------------------------------------------
 
 In order to support GPU processing, CHOLMOD must be compiled with the
-preprocessor macro {\tt GPU\_BLAS} defined.  All GPU code is conditional upon
+preprocessor macro {\tt SUITESPARSE\_CUDA} defined.  All GPU code is conditional upon
 this macro.  As well, the environment variable {\tt CUDA\_ROOT} must be defined
 and point to the installation of the CUDA toolkit to be used for compilation of
 CHOLMOD.  Typically this would be {\tt /usr/local/cuda}.
@@ -523,9 +533,9 @@ without the need to edit the {\tt SuiteSparse\_config.mk} file.
 \subsection{Enabling GPU acceleration in CHOLMOD}
 %-------------------------------------------------------------------------------
 
-Even if compiled with GPU support, in CHOLMOD v.2.3.0, GPU processing is not
+Even if compiled with GPU support, GPU processing is not
 enabled by default and must be specifically requested.  There are two ways to
-do this, either in the code calling CHOLMOD or using environment variables.
+do this, either in the code calling CHOLMOD or through the use of environment variables.
 
 The code author can specify the use of GPU processing with the {\tt
 Common->useGPU} variable.  If this is set to {\tt 1}, CHOLMOD will attempt to
@@ -537,8 +547,8 @@ cholmod\_start(Common)} is called, so the code author must set {\tt
 Common->useGPU} after calling {\tt cholmod\_start}.
 
 Alternatively, or if it is not possible to modify the code calling CHOLMOD, GPU
-processing can invoked using the {\tt CHOLMOD\_USE\_GPU} environment variable.
-This makes it possible for any CHOLMOD user to invoke GPU processing even if
+processing can be invoked using the {\tt CHOLMOD\_USE\_GPU} environment variable.
+This makes it possible for any CHOLMOD user to benefit from GPU acceleration even if
 the author of the calling program did not consider this.  The interpretation of
 the environment variable {\tt CHOLMOD\_USE\_GPU} is that if the string
 evaluates to an integer other than zero, GPU processing will be enabled.  Note
@@ -546,12 +556,87 @@ that the setting of {\tt Common->useGPU} takes precedence and the environment
 variable {\tt CHOLMOD\_USE\_GPU} will only be queried if {\tt Common->useGPU =
 -1}.
 
-Note that in either case, if GPU processing is requested, but there is no GPU
-present, CHOLMOD will continue using the CPU only.  Consequently it is always
+In any case, if GPU processing is requested, but there is no GPU
+present, CHOLMOD will continue using the CPU only.  Consequently, it is always
 safe to request GPU processing.
 
 %-------------------------------------------------------------------------------
-\newpage \subsection{Adjustable parameters}
+\subsection{GPU Algorithms}
+%-------------------------------------------------------------------------------
+
+The GPU can provide significantly more computational capability than the CPU.  
+However, the fact that the GPU is separate from the CPU and has its own memory 
+space can make accessing this additional computational capability somewhat 
+involved.  The primary issue is the time required to move data between the CPU 
+and GPU over the (relatively) slow PCIe link.
+
+For versions of CHOLMOD between v2.3.0 and v3.0.6, this issue of slow 
+communication was addressed by assembling supernodes on both the CPU and the 
+GPU.  Briefly stated, contributions from large descendant supernodes were 
+assembled on the GPU (which could take best advantage of the associated large, 
+dense math) and the CPU would be used to assemble the contribution from small 
+descendant supernodes (for which the cost of communicating the data to the GPU 
+would outweigh any computational advantage the GPU might have).  The partially 
+assembled supernodes on the GPU and CPU would only be combined at the end to 
+obtain the fully assembled supernode.  This resulted in both a CPU and GPU 
+factorization algorithm (i.e. two code paths), leveraged the GPU and the CPU 
+simultaneously (i.e. hybrid computing) and could be applied to the 
+factorization of arbitrarily large matrices (GPU memory only needed to be large 
+enough to hold the largest supernode).  These algorithms are now termed the CPU 
+and GPU `root' algorithms.
+
+To achieve further acceleration, CHOLMOD v4.0.0 introduces two additional 
+algorithms that further reduce PCIe communication.  The idea is to place 
+`subtrees' of the elimination tree on the GPU, such that the entire subtree can 
+be factorized, on the GPU, without any need for subsequent PCIe communication.  
+We term this the GPU `subtree' algorithm.  As the CPU would be idle when the GPU 
+is factorizing a subtree, a CPU `subtree' algorithm was also created to further 
+promote hybrid computing (That is, the CPU and GPU factorize separate subtrees 
+simultaneously.)  However, as the GPU subtree algorithm can only be applied to 
+subtrees which fit entirely in GPU memory, that portion of the (total) 
+elimination tree, which lies outside of the subtrees sent to the GPU, is 
+factorized using the original 'root' algorithms.  (Note that these supernodes 
+which don't fit in the subtrees are typically the largest supernodes, with the 
+largest descendants, such that the PCIe communication required to factorize 
+these supernodes can be well hidden behind computation on the GPU.)
+
+Additionally CHOLMOD v4.0.0 introduces the ability to use multiple GPUs to 
+further accelerate the numerical factorization.
+
+Note, however, that one feature of CHOLMOD, the ability to partially factorize a 
+non-positive definite matrix, is only supported by the CPU `root' algorithm.  
+For example, this feature is used by the $[L,p]=chol(A)$ syntax in MATLAB, which 
+returns only the first $p$ columns of $L$ if the diagonal on column $p+1$ is 
+found to be non-positive.
+
+%-------------------------------------------------------------------------------
+\subsection{Default Algorithm Selection}
+%-------------------------------------------------------------------------------
+
+The factorization algorithm(s) are selected as follows:
+
+If CHOLMOD is not built with  {\tt SUITESPARSE\_CUDA} defined, or if  
+{\tt CHOLMOD\_USE\_GPU} ( {\tt Common->useGPU}) is not set, then the GPU will 
+not be used.  In that case, if  {\tt OMP\_NUM\_THREADS}, or the number of CPU 
+cores, is greater than one, the CPU `subtrees' algorithm will be used.  
+Otherwise, the CPU `root' algorithm, supporting partial factorization, will be 
+used.
+
+If CHOLMOD is built with  {\tt SUITESPARSE\_CUDA} defined, and  
+{\tt CHOLMOD\_USE\_GPU} ( {\tt Common->useGPU}) is set, then, GPU acceleration 
+will be used.  If only one GPU is detected by the system, (or if, in a system 
+with multiple GPUs, there are no other GPUs identical to the 'most appropriate' 
+GPU, as determined by the NVIDIA driver) the single GPU will be used in 
+conjunction with aggressive hybrid computation on the CPU.  If multiple, 
+identical, GPUs are detected (and deemed `most appropriate' by the NVIDIA 
+driver) then multiple GPUs will be used for the factorization and aggressive 
+hybrid computation will not be used.
+
+Alternatively, flags in the Common data structure, or environment variables, as 
+described below, can be used to fine-tune the GPU behavior in CHOLMOD.
+
+%-------------------------------------------------------------------------------
+\subsection{Adjustable Parameters}
 %-------------------------------------------------------------------------------
 
 There are a number of parameters that have been added to CHOLMOD to control GPU
@@ -561,25 +646,25 @@ of CPU/GPU, better performance might be obtained by adjusting these parameters.
 
 \bigskip
 
-From {\tt t\_cholmod\_gpu.c}
+From {\tt cholmod\_subtree.h}
 
 \begin{quote}
   {\tt CHOLMOD\_ND\_ROW\_LIMIT} : Minimum number of rows required in a
   descendant supernode to be eligible for GPU processing during supernode
-  assembly
+  assembly.  Default is 256.
 
 
   {\tt CHOLMOD\_ND\_COL\_LIMIT} : Minimum number of columns in a descendant
-  supernode to be eligible for GPU processing during supernode assembly
+  supernode to be eligible for GPU processing during supernode assembly.  Default is 32.
 
 
   {\tt CHOLMOD\_POTRF\_LIMIT} : Minimum number of columns in a supernode to be
-  eligible for {\tt POTRF} and {\tt TRSM} processing on the GPU
+  eligible for {\tt POTRF} and {\tt TRSM} processing on the GPU.  Default is 512.
 
 
   {\tt CHOLMOD\_GPU\_SKIP} : Number of small descendant supernodes to assembled
   on the CPU before querying if the GPU is needs more descendant supernodes
-  queued 
+  queued.  Default is 3.
 
 \end{quote}
 
@@ -587,40 +672,88 @@ From {\tt cholmod\_core.h}
 
 \begin{quote}
   {\tt CHOLMOD\_HOST\_SUPERNODE\_BUFFERS} : Number of buffers in which to queue
-  descendant supernodes for GPU processing
+  descendant supernodes for GPU processing.  Default is 6.
+
+  {\tt CHOLMOD\_MAX\_NUM\_GPUs} : Maximum number of concurrent GPUs CHOLMOD is 
+configured to handle.  Default is 8.  Note that reducing this number doesn't 
+meaningfully reduce memory usage (only 9 pointers allocated per extra GPU).
 
 \end{quote}
 
-Programatically
+Programmatically
 
 \begin{quote}
 
   {\tt Common->maxGpuMemBytes} : Specifies the maximum amount of memory, in
-  bytes, that CHOLMOD can allocate on the GPU.  If this parameter is not set,
+  bytes, that CHOLMOD can allocate on the GPU.  If this parameter is less than or equal to zero,
   CHOLMOD will allocate as much GPU memory as possible.  Hence, the purpose of
   this parameter is to restrict CHOLMOD's GPU memory use so that CHOLMOD can be
   used simultaneously with other codes that also use GPU acceleration and
   require some amount of GPU memory.  If the specified amount of GPU memory is
-  not allocatable, CHOLMOD will allocate the available memory and continue.
+  not allocatable, CHOLMOD will allocate the available memory and continue.  
+  By default, this parameter is  {\tt  NULL} and CHOLMOD will allocate all available GPU memory.
 
   {\tt Common->maxGpuMemFraction} : Entirely similar to {\tt
   Common->maxGpuMemBytes} but with the memory specified as a fraction of total
   GPU memory.  Note that if both {\tt maxGpuMemBytes} and {\tt
   maxGpuMemFraction} are specified, whichever results in the minimum amount of
-  memory will be used.
+  memory will be used.  The default value is 1.
+  
+  {\tt Common->numGPU} : Specifies the number of GPUs to use in the numerical 
+factorization phase.  This defaults to the number of GPU which are equivalent to 
+the 'most appropriate device as determined by the NVIDIA driver'.  [For example, 
+if the system has 1 Tesla K40 and 2 Tesla C2050s installed, the 'most appropriate' 
+GPU would be the K40, and there is only one of those, so  {\tt numGPU} would be 1.  
+If there were 2 Tesla K40s, and 1 GTX 280, then  {\tt numGPU} would be 2.]  
+
+  {\tt Common->useHybrid} : Specifies that aggressive hybrid computing will be used 
+with both the subtree and the root algorithm.  This is defaults to  {\tt true} if  
+{\tt numGPU} is 1.  This defaults to  {\tt false} if  {\tt numGPU} greater than 1.  
+This is because, depending on the specific CPU and matrix, load-balancing issues 
+between the multiple GPUs and CPU creates and increased risk of reduced performance, 
+as compared to not using hybrid computing.
+  
+  {\tt Common->partialFactorization} : If partial factorization is a required 
+feature, setting this flag will force the numerical factorization to be performed 
+solely on the CPU using the `root' algorithm.  That is, it will force the use of 
+the only algorithm which supports partial factorization.  This defaults to off (not set).
+
+  {\tt Common->ompNumThreads} : Defines the number of threads to be used for the 
+OpenMP sections of the code.  Defaults to the number of cores in the system, or 
+what the  {\tt OMP\_NUM\_THREADS} environment variable is set to.
+
 
 \end{quote}
 
 Environment variables
 
 \begin{quote}
-  {\tt CHOLMOD\_GPU\_MEM\_BYTES} : Environment variable with a meaning
-  equivalent to {\tt Common->maxGpuMemBytes}.  This will only be queried if
-  {\tt Common->useGPU = -1}.
 
+  \raggedright
+
+  (These will only be queried if   {\tt Common->useGPU = -1}.)
+
+  {\tt CHOLMOD\_GPU\_MEM\_BYTES} : Environment variable with a meaning
+  equivalent to {\tt Common->maxGpuMemBytes}.  
+  
   {\tt CHOLMOD\_GPU\_MEM\_FRACTION} : Environment variable with a meaning
-  equivalent to {\tt Common->maxGpuMemFraction}.  This will only be queried if
-  {\tt Common->useGPU = -1}.
+  equivalent to {\tt Common->maxGpuMemFraction}.  
+    
+  {\tt CHOLMOD\_NUM\_GPUS} : Environment variable with a meaning
+  equivalent to {\tt Common->numGPU}.  
+    
+  {\tt CHOLMOD\_GPU\_HYBRID} : Environment variable with a meaning
+  equivalent to {\tt Common->useHybrid}. 
+  
+  {\tt CHOLMOD\_PARTIAL\_FACTORIZATION} : Environment variable with a meaning
+  equivalent to {\tt Common->partialFactorization}. 
+  
+   {\tt CHOLMOD\_VERBOSE} : If set will generate additional output which can 
+be helpful in understanding performance and resolving issues.
+
+   {\tt OMP\_NUM\_THREADS} : Standard OMP environment variable.  If set, this 
+will be the value used by {\tt Common->ompNumThreads} if that value is not 
+explicitly set.
 
 \end{quote}
 
@@ -779,6 +912,15 @@ sub-directory (a folder for Windows users) within the CHOLMOD directory
     \item {\tt Tcov}: an exhaustive test coverage (requires Linux or Solaris)
     \item {\tt Valgrind}: runs the {\tt Tcov} test under {\tt valgrind} (requires Linux)
     \end{enumerate}
+
+The following Modules are licensed under the GNU Lesser General Public
+License: {\tt Check}, {\tt Cholesky}, {\tt Core}, and {\tt Partition}.
+The following Modules are licensed under the GNU General Public
+License: {\tt Demo}, {\tt Modify}, {\tt MatrixOps}, {\tt Supernodal},
+the {\tt MATLAB} Module (not MATLAB itself!), {\tt Tcov}, and {\tt Valgrind}.
+The files in the {\tt Include} Module are licensed according to
+their respective Modules.  The {\tt Lib} and {\tt Doc} Modules need
+no license; the compiled binaries are licensed the same as their source code.
 
 %-------------------------------------------------------------------------------
 \newpage \subsection{{\tt Core} Module: basic data structures and definitions}

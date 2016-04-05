@@ -4,6 +4,9 @@
 
 /* -----------------------------------------------------------------------------
  * CHOLMOD/GPU Module.  Copyright (C) 2005-2012, Timothy A. Davis
+ * The CHOLMOD/GPU Module is licensed under Version 2.0 of the GNU
+ * General Public License.  See gpl.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * http://www.suitesparse.com
  * -------------------------------------------------------------------------- */
 
@@ -13,7 +16,7 @@
 /* === include files and definitions ======================================== */
 /* ========================================================================== */
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
 
 #include <string.h>
 #include "cholmod_template.h"

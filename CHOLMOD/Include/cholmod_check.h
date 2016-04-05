@@ -4,6 +4,9 @@
 
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Include/cholmod_check.h.  Copyright (C) 2005-2006, Timothy A. Davis
+ * CHOLMOD/Include/cholmod_check.h is licensed under Version 2.1 of the GNU
+ * Lesser General Public License.  See lesser.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * http://www.suitesparse.com
  * -------------------------------------------------------------------------- */
 
@@ -91,12 +94,6 @@ int cholmod_print_common
 
 int cholmod_l_print_common (const char *, cholmod_common *) ;
 
-/* -------------------------------------------------------------------------- */
-/* cholmod_gpu_stats:  print the GPU / CPU statistics */
-/* -------------------------------------------------------------------------- */
-
-int cholmod_gpu_stats   (cholmod_common *) ;
-int cholmod_l_gpu_stats (cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_check_sparse:  check a sparse matrix */

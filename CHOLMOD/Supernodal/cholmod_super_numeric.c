@@ -4,6 +4,9 @@
 
 /* -----------------------------------------------------------------------------
  * CHOLMOD/Supernodal Module.  Copyright (C) 2005-2006, Timothy A. Davis
+ * The CHOLMOD/Supernodal Module is licensed under Version 2.0 of the GNU
+ * General Public License.  See gpl.txt for a text of the license.
+ * CHOLMOD is also available under other licenses; contact authors for details.
  * http://www.suitesparse.com
  * -------------------------------------------------------------------------- */
 
@@ -59,29 +62,48 @@
 #include "cholmod_internal.h"
 #include "cholmod_supernodal.h"
 
-#ifdef GPU_BLAS
-#include "cholmod_gpu.h"
-#endif
+#include "cholmod_subtree.h"
 
 /* ========================================================================== */
 /* === TEMPLATE codes for GPU and regular numeric factorization ============= */
 /* ========================================================================== */
 
 #ifdef DLONG
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
+
 #define REAL
-#include "../GPU/t_cholmod_gpu.c"
+#include "../GPU/t_cholmod_subtree.c"
+#include "../GPU/t_cholmod_root.c"
+
 #define COMPLEX
-#include "../GPU/t_cholmod_gpu.c"
+#include "../GPU/t_cholmod_subtree.c"
+#include "../GPU/t_cholmod_root.c"
+
 #define ZOMPLEX
 /* no #include of "../GPU/t_cholmod_gpu.c".  Zomplex case relies on complex */
+
 #endif
 #endif
 
+
 #define REAL
+#include "../GPU/t_initialize_subtree.c"
+#include "../GPU/t_factorize_subtree.c"
+#include "../GPU/t_factorize_root.c"
+#include "../GPU/t_factorize_root_parallel.c"
+#include "../GPU/t_factorize_cpu_parallel.c"
+#include "../GPU/t_factorize_cpu_serial.c"
 #include "t_cholmod_super_numeric.c"
+
 #define COMPLEX
+#include "../GPU/t_initialize_subtree.c"
+#include "../GPU/t_factorize_subtree.c"
+#include "../GPU/t_factorize_root.c"
+#include "../GPU/t_factorize_root_parallel.c"
+#include "../GPU/t_factorize_cpu_parallel.c"
+#include "../GPU/t_factorize_cpu_serial.c"
 #include "t_cholmod_super_numeric.c"
+
 #define ZOMPLEX
 #include "t_cholmod_super_numeric.c"
 

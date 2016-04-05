@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 
 LIBRARY = libSuiteSparse_GPURuntime
-VERSION = 1.0.4
+VERSION = 1.0.3
 SO_VERSION = 1
 
 default: library

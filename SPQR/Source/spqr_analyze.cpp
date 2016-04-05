@@ -63,7 +63,7 @@ spqr_symbolic *spqr_analyze
     double *Flops, *Flops_subtree ;
     Long *Sp, *Sj;
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
     spqr_gpu *QRgpu ;
     Long *RjmapOffsets, *RimapOffsets ;
     Long RjmapSize, RimapSize;
@@ -103,7 +103,7 @@ spqr_symbolic *spqr_analyze
     // GPU selection
     // -------------------------------------------------------------------------
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
     // See if the user wants to use GPU acceleration.
     bool useGPU ;
 
@@ -409,7 +409,7 @@ spqr_symbolic *spqr_analyze
     // allocated later (or skipped if not using GPU)
     QRsym->QRgpu = NULL ;
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
 
     QRgpu = NULL ;
     RjmapOffsets = NULL ;
@@ -856,7 +856,7 @@ spqr_symbolic *spqr_analyze
         ASSERT (cm_min <= cm_max) ;
         ASSERT (csize_min <= csize_max) ;
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
         if(useGPU)
         {
             // Compute Rjmap Offsets.
@@ -969,7 +969,7 @@ spqr_symbolic *spqr_analyze
         }
     }
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
     if(useGPU)
     {
         /* Save GPU size members. */
@@ -1064,7 +1064,7 @@ spqr_symbolic *spqr_analyze
 
     PR (("flops %g\n", total_flops)) ;
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
 
     // -------------------------------------------------------------------------
     // if we're using GPU acceleration, construct static gpu stages

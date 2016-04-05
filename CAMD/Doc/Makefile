@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# CAMD Makefile for compiling on Unix systems
+# CAMD Makefile for compiling on Unix systems (for GNU or original make)
 #------------------------------------------------------------------------------
 
 default: dist

@@ -46,7 +46,35 @@ Quick start (for MATLAB users):
 
 UMFPACK is available under alternate licences; contact T. Davis for details.
 
-UMFPACK License:  See UMFPACK/Doc/License.txt for the license.
+UMFPACK License:
+
+    Your use or distribution of UMFPACK or any modified version of
+    UMFPACK implies that you agree to this License.
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    General Public License for more details.
+
+    You should have received a copy of the GNU General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
+    USA
+
+    Permission is hereby granted to use or copy this program under the
+    terms of the GNU GPL, provided that the Copyright, this License,
+    and the Availability of the original version is retained on all copies.
+    User documentation of any code that uses this code or any modified
+    version of this code must cite the Copyright, this License, the
+    Availability note, and "Used by permission." Permission to modify
+    the code and to distribute modified code is granted, provided the
+    Copyright, this License, and the Availability note are retained,
+    and a notice that the code was modified is included.
 
 Availability:
 
@@ -65,7 +93,7 @@ Availability:
 
 --------------------------------------------------------------------------------
 
-Refer to ../AMD/Doc/License.txt for the License for AMD, which is a separate
+Refer to ../AMD/README for the License for AMD, which is a separate
 package for ordering sparse matrices that is required by UMFPACK.
 UMFPACK v4.5 cannot use AMD v1.1 or earlier.  UMFPACK 5.x
 requires AMD v2.0 or later.
@@ -147,7 +175,7 @@ Files and directories in the UMFPACK distribution:
     Files in the UMFPACK directory:
     ----------------------------------------------------------------------------
 
-    Makefile	top-level Makefile
+    Makefile	top-level Makefile for GNU make or original make.
 		Windows users would require Cygwin to use "make"
 
     README.txt	this file
@@ -305,7 +333,7 @@ Files and directories in the UMFPACK distribution:
     Demo directory:
     ----------------------------------------------------------------------------
 
-    Makefile			to compile the demos
+    Makefile			for GNU make or original make
 
     umfpack_simple.c		a simple demo
     umpack_xx_demo.c		template to create the demo codes below
@@ -354,6 +382,8 @@ Files and directories in the UMFPACK distribution:
     ----------------------------------------------------------------------------
 
     Contents.m			for "help umfpack" listing of toolbox contents
+    GNUmakefile			a nice Makefile, for GNU make
+    Makefile			an ugly Unix Makefile (for older make's)
 
     lu_normest.m		1-norm estimate of A-L*U (by Hager & Davis).
     luflop.m			for "help luflop"
@@ -373,8 +403,13 @@ Files and directories in the UMFPACK distribution:
     umfpack_demo.m.out		output of umfpack_demo.m
     umfpack_simple.m.out	output of umfpack_simple
 
+    lcc_lib/lapacksyms.def	LAPACK definitions for lcc compiler (Windows)
+    lcc_lib/libmwlapack.lib	LAPACK definitions for lcc compiler (Windows)
+
     ----------------------------------------------------------------------------
-    Lib directory:
+    Lib directory:  libumfpack.a library placed here
     ----------------------------------------------------------------------------
 
-    Makefile			to compile the library
+    GNUmakefile			a nice Makefile, for GNU make
+    Makefile			an ugly Unix Makefile (for older make's)
+    libumfpack.def		UMPFACK definitions for Windows

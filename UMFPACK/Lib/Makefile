@@ -1,9 +1,9 @@
 #-------------------------------------------------------------------------------
-# UMFPACK Makefile for compiling on Unix systems (for GNU Make)
+# UMFPACK Makefile for compiling on Unix systems
 #-------------------------------------------------------------------------------
 
 LIBRARY = libumfpack
-VERSION = 5.7.4
+VERSION = 5.7.5
 SO_VERSION = 5
 
 default: library

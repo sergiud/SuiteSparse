@@ -1,0 +1,1453 @@
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R has 1 nonzeros, Reference to non-existent field 'rank_est'.
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 with 1 nonzeros, estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 with 3 nonzeros, estimated rank: 2
+          rank: 2
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 with 1 nonzeros, estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 with 6 nonzeros, estimated rank: 3
+          rank: 3
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 with 20 nonzeros, estimated rank: 7
+          rank: 7
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 with 6 nonzeros, estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+estimated rank: 2
+          rank: 2
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+estimated rank: 3
+          rank: 3
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 nnz(R): 20 nnz(diag(R)): 7
+estimated rank: 7
+          rank: 7
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 nnz(R): 6 nnz(diag(R)): 6
+estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Relat/rel3'
+     title: 'Relations from Florent Hiver, Univ. Paris-Est Marne-La-Valle'e'
+         A: [12x5 double]
+        id: 2172
+      date: '2008'
+    author: 'F. Hiver'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [8x62 char]
+
+pirosky:  A is 12-by-5 with 18 nonzeros
+          R is 5-by-5 nnz(R): 6 nnz(diag(R)): 3
+estimated rank: 3
+          rank: 2
+
+Prob = 
+
+     title: [1x71 char]
+         A: [5x5 double]
+      name: 'vanHeukelum/cage3'
+        id: 904
+      date: '2003'
+    author: 'A. van Heukelum'
+        ed: 'T. Davis'
+      kind: 'directed weighted graph'
+
+pirosky:  A is 5-by-5 with 19 nonzeros
+          R is 5-by-5 nnz(R): 15 nnz(diag(R)): 5
+estimated rank: 5
+          rank: 5
+
+Prob = 
+
+     title: 'Netlib LP problem galenet: minimize c'*x, where Ax=b, lo<=x<=hi'
+      name: 'LPnetlib/lpi_galenet'
+         A: [8x14 double]
+         b: [8x1 double]
+        id: 715
+       aux: [1x1 struct]
+      kind: 'linear programming problem'
+      date: ''
+    author: 'H. Greenberg'
+        ed: 'J. Chinneck'
+     notes: [19x76 char]
+
+pirosky:  A is 8-by-14 with 22 nonzeros
+          R is 8-by-8 nnz(R): 17 nnz(diag(R)): 8
+estimated rank: 8
+          rank: 8
+
+Prob = 
+
+     title: [1x68 char]
+         A: [48x48 double]
+     Zeros: [48x48 double]
+      name: 'HB/bcsstm01'
+        id: 56
+      date: '1982'
+    author: 'J. Lewis'
+        ed: 'I. Duff, R. Grimes, J. Lewis'
+      kind: 'structural problem'
+
+pirosky:  A is 48-by-48 with 24 nonzeros
+          R is 48-by-48 nnz(R): 24 nnz(diag(R)): 24
+estimated rank: 24
+          rank: 23
+
+Prob = 
+
+      name: 'JGD_Relat/relat3'
+     title: 'Relations from Florent Hiver, Univ. Paris-Est Marne-La-Valle'e'
+         A: [12x5 double]
+        id: 2179
+      date: '2008'
+    author: 'F. Hiver'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [8x62 char]
+
+pirosky:  A is 12-by-5 with 24 nonzeros
+          R is 5-by-5 nnz(R): 3 nnz(diag(R)): 1
+estimated rank: 1
+          rank: 2
+
+Prob = 
+
+     title: 'Netlib LP problem itest2: minimize c'*x, where Ax=b, lo<=x<=hi'
+      name: 'LPnetlib/lpi_itest2'
+         A: [9x13 double]
+         b: [9x1 double]
+        id: 719
+       aux: [1x1 struct]
+      kind: 'linear programming problem'
+      date: '1991'
+    author: 'J. Chinneck, E. Dravnieks'
+        ed: 'J. Chinneck'
+     notes: [33x76 char]
+
+pirosky:  A is 9-by-13 with 26 nonzeros
+          R is 9-by-9 nnz(R): 33 nnz(diag(R)): 9
+estimated rank: 9
+          rank: 9
+
+Prob = 
+
+     title: 'Netlib LP problem itest6: minimize c'*x, where Ax=b, lo<=x<=hi'
+      name: 'LPnetlib/lpi_itest6'
+         A: [11x17 double]
+         b: [11x1 double]
+        id: 720
+       aux: [1x1 struct]
+      kind: 'linear programming problem'
+      date: '1991'
+    author: 'J. Chinneck, E. Dravnieks'
+        ed: 'J. Chinneck'
+     notes: [33x76 char]
+
+pirosky:  A is 11-by-17 with 29 nonzeros
+          R is 11-by-11 nnz(R): 31 nnz(diag(R)): 11
+estimated rank: 11
+          rank: 10
+
+Prob = 
+
+      name: 'Pajek/Tina_AskCal'
+     title: [1x70 char]
+         A: [11x11 double]
+        id: 1525
+      kind: 'directed graph'
+     notes: [7x78 char]
+       aux: [1x1 struct]
+      date: '1992'
+    author: 'V. Batagelj'
+        ed: 'V. Batagelj'
+
+pirosky:  A is 11-by-11 with 29 nonzeros
+          R is 11-by-11 nnz(R): 26 nnz(diag(R)): 9
+estimated rank: 9
+          rank: 10
+
+Prob = 
+
+      name: 'JGD_Homology/n3c4-b1'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [15x6 double]
+        id: 2085
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 15-by-6 with 30 nonzeros
+          R is 6-by-6 nnz(R): 21 nnz(diag(R)): 6
+estimated rank: 6
+          rank: 5
+
+Prob = 
+
+      name: 'JGD_Homology/n3c4-b4'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x15 double]
+        id: 2088
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-15 with 30 nonzeros
+          R is 6-by-6 nnz(R): 21 nnz(diag(R)): 6
+estimated rank: 6
+          rank: 5
+
+Prob = 
+
+      name: 'Pajek/Tina_AskCog'
+     title: [1x68 char]
+         A: [11x11 double]
+        id: 1526
+      kind: 'directed graph'
+     notes: [7x78 char]
+       aux: [1x1 struct]
+      date: '1992'
+    author: 'V. Batagelj'
+        ed: 'V. Batagelj'
+
+pirosky:  A is 11-by-11 with 36 nonzeros
+          R is 11-by-11 nnz(R): 51 nnz(diag(R)): 11
+estimated rank: 11
+          rank: 11
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b1'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [18x9 double]
+        id: 2008
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 18-by-9 with 36 nonzeros
+          R is 9-by-9 nnz(R): 37 nnz(diag(R)): 9
+estimated rank: 9
+          rank: 8
+
+Prob = 
+
+      name: 'Pajek/GD01_b'
+     title: 'Pajek network: Graph Drawing contest 2001'
+         A: [18x18 double]
+        id: 1479
+      kind: 'directed graph'
+     notes: [7x78 char]
+       aux: [1x1 struct]
+      date: '2001'
+    author: 'Graph Drawing Contest'
+        ed: 'V. Batagelj'
+
+pirosky:  A is 18-by-18 with 37 nonzeros
+          R is 18-by-18 nnz(R): 37 nnz(diag(R)): 17
+estimated rank: 17
+          rank: 18
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+
+
+
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+          estimated rank: 2
+          numerical rank: 2
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+          estimated rank: 2
+          numerical rank: 2
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 3
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 nnz(R): 20 nnz(diag(R)): 7
+          estimated rank: 7
+          numerical rank: 7
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 nnz(R): 6 nnz(diag(R)): 6
+          estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Relat/rel3'
+     title: 'Relations from Florent Hiver, Univ. Paris-Est Marne-La-Valle'e'
+         A: [12x5 double]
+        id: 2172
+      date: '2008'
+    author: 'F. Hiver'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [8x62 char]
+
+pirosky:  A is 12-by-5 with 18 nonzeros
+          transposing R and doing second QR
+          R is 5-by-5 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 2
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+whos
+  Name         Size                Bytes  Class     Attributes
+
+  A           12x5                   336  double    sparse    
+  f            1x2230              17840  double              
+  i            1x2230              17840  double              
+  id           1x1                     8  double              
+  ignore       1x2230              17840  double              
+  index        1x1               1121178  struct              
+  k            1x1                     8  double              
+  nmat         1x1                     8  double              
+  opts         1x1                   388  struct              
+  s            5x1                    40  double              
+
+whos
+  Name         Size                Bytes  Class     Attributes
+
+  A           12x5                   336  double    sparse    
+  f            1x2230              17840  double              
+  i            1x2230              17840  double              
+  id           1x1                     8  double              
+  ignore       1x2230              17840  double              
+  index        1x1               1121178  struct              
+  k            1x1                     8  double              
+  nmat         1x1                     8  double              
+  opts         1x1                   388  struct              
+  s            5x1                    40  double              
+
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+          estimated rank: 2
+          numerical rank: 2
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 3
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 nnz(R): 20 nnz(diag(R)): 7
+          estimated rank: 7
+          numerical rank: 7
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 nnz(R): 6 nnz(diag(R)): 6
+          estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Relat/rel3'
+     title: 'Relations from Florent Hiver, Univ. Paris-Est Marne-La-Valle'e'
+         A: [12x5 double]
+        id: 2172
+      date: '2008'
+    author: 'F. Hiver'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [8x62 char]
+
+pirosky:  A is 12-by-5 with 18 nonzeros
+          transposing R and doing second QR
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 1
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+          estimated rank: 2
+          numerical rank: 2
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 3
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 nnz(R): 20 nnz(diag(R)): 7
+          estimated rank: 7
+          numerical rank: 7
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 nnz(R): 6 nnz(diag(R)): 6
+          estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Relat/rel3'
+     title: 'Relations from Florent Hiver, Univ. Paris-Est Marne-La-Valle'e'
+         A: [12x5 double]
+        id: 2172
+      date: '2008'
+    author: 'F. Hiver'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [8x62 char]
+
+pirosky:  A is 12-by-5 with 18 nonzeros
+          transposing R and doing second QR
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 1
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+          estimated rank: 2
+          numerical rank: 2
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 3
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 nnz(R): 20 nnz(diag(R)): 7
+          estimated rank: 7
+          numerical rank: 7
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 nnz(R): 6 nnz(diag(R)): 6
+          estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Relat/rel3'
+     title: 'Relations from Florent Hiver, Univ. Paris-Est Marne-La-Valle'e'
+         A: [12x5 double]
+        id: 2172
+      date: '2008'
+    author: 'F. Hiver'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [8x62 char]
+
+pirosky:  A is 12-by-5 with 18 nonzeros
+          transposing R and doing second QR
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+
+s =
+
+    6.0000
+    0.0000
+    0.0000
+         0
+         0
+
+          numerical rank: 1
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+          estimated rank: 2
+          numerical rank: 2
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 3
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 nnz(R): 20 nnz(diag(R)): 7
+          estimated rank: 7
+          numerical rank: 7
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 nnz(R): 6 nnz(diag(R)): 6
+          estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+          estimated rank: 2
+Undefined function or variable 'tight'.
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+Undefined function or variable 'tight'.
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 nnz(R): 20 nnz(diag(R)): 7
+          estimated rank: 7
+Undefined function or variable 'tight'.
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 nnz(R): 6 nnz(diag(R)): 6
+          estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+demo_pirosky
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec3'
+     title: [1x80 char]
+         A: [0 1]
+        id: 2137
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 1-by-2 with 1 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec4'
+     title: [1x80 char]
+         A: [2x3 double]
+        id: 2138
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 2-by-3 with 3 nonzeros
+          R is 2-by-2 nnz(R): 3 nnz(diag(R)): 2
+          estimated rank: 2
+          numerical rank: 2
+
+Prob = 
+
+      name: 'JGD_GL7d/GL7d10'
+     title: [1x75 char]
+         A: [1x60 double]
+        id: 1983
+      date: '2008'
+    author: 'P. Elbaz-Vincent'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [48x77 char]
+
+pirosky:  A is 1-by-60 with 8 nonzeros
+          R is 1-by-1 nnz(R): 1 nnz(diag(R)): 1
+          estimated rank: 1
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Kocay/Trec5'
+     title: [1x80 char]
+         A: [3x7 double]
+        id: 2139
+      date: '2008'
+    author: 'N. Thiery'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [19x80 char]
+
+pirosky:  A is 3-by-7 with 12 nonzeros
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+          numerical rank: 3
+
+Prob = 
+
+     title: 'Unsymmetric Matrix b1_ss, F. Grund, Dec 1994.'
+         A: [7x7 double]
+         b: [7x1 double]
+      name: 'Grund/b1_ss'
+        id: 449
+      date: '1997'
+    author: 'F. Grund'
+        ed: 'F. Grund'
+      kind: 'chemical process simulation problem'
+
+pirosky:  A is 7-by-7 with 15 nonzeros
+          R is 7-by-7 nnz(R): 20 nnz(diag(R)): 7
+          estimated rank: 7
+          numerical rank: 7
+
+Prob = 
+
+      name: 'JGD_Homology/ch3-3-b2'
+     title: 'Simplicial complexes from Homology from Volkmar Welker.'
+         A: [6x18 double]
+        id: 2009
+      date: '2008'
+    author: 'V. Welker'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [7x60 char]
+
+pirosky:  A is 6-by-18 with 18 nonzeros
+          R is 6-by-6 nnz(R): 6 nnz(diag(R)): 6
+          estimated rank: 6
+Error using ==> piro_band_svd
+Out of memory. Type HELP MEMORY for your options.
+
+Prob = 
+
+      name: 'JGD_Relat/rel3'
+     title: 'Relations from Florent Hiver, Univ. Paris-Est Marne-La-Valle'e'
+         A: [12x5 double]
+        id: 2172
+      date: '2008'
+    author: 'F. Hiver'
+        ed: 'J.-G. Dumas'
+      kind: 'combinatorial problem'
+     notes: [8x62 char]
+
+pirosky:  A is 12-by-5 with 18 nonzeros
+          transposing R and doing second QR
+          R is 3-by-3 nnz(R): 6 nnz(diag(R)): 3
+          estimated rank: 3
+
+s =
+
+    6.0000
+    0.0000
+    0.0000
+         0
+         0
+
+          numerical rank: 1
+
+Prob = 
+
+     title: [1x71 char]
+         A: [5x5 double]
+      name: 'vanHeukelum/cage3'
+        id: 904
+      date: '2003'
+    author: 'A. van Heukelum'
+        ed: 'T. Davis'
+      kind: 'directed weighted graph'
+
+pirosky:  A is 5-by-5 with 19 nonzeros
+          R is 5-by-5 nnz(R): 15 nnz(diag(R)): 5
+          estimated rank: 5
+          numerical rank: 5
+
+Prob = 
+
+     title: 'Netlib LP problem galenet: minimize c'*x, where Ax=b, lo<=x<=hi'
+      name: 'LPnetlib/lpi_galenet'
+         A: [8x14 double]
+         b: [8x1 double]
+        id: 715
+       aux: [1x1 struct]
+      kind: 'linear programming problem'
+      date: ''
+    author: 'H. Greenberg'
+        ed: 'J. Chinneck'
+     notes: [19x76 char]
+
+pirosky:  A is 8-by-14 with 22 nonzeros
+          R is 8-by-8 nnz(R): 17 nnz(diag(R)): 8
+          estimated rank: 8
+          numerical rank: 8
+
+Prob = 
+
+     title: [1x68 char]
+         A: [48x48 double]
+     Zeros: [48x48 double]
+      name: 'HB/bcsstm01'
+        id: 56
+      date: '1982'
+    author: 'J. Lewis'
+        ed: 'I. Duff, R. Grimes, J. Lewis'
+      kind: 'structural problem'
+
+pirosky:  A is 48-by-48 with 24 nonzeros
+          transposing R and doing second QR
+          R is 24-by-24 nnz(R): 24 nnz(diag(R)): 24
+          estimated rank: 24
+Band Reduction failed -6
+Error using ==> piro_band_svd
+Band Reduction failed 
+
+{??? Operation terminated by user during ==> demo_pirosky at 27
+} 
+pwd
+
+ans =
+
+/Users/davis/sparse/SuiteSparse/PIRO_SKY/MATLAB
+
+exit

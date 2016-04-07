@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 
 LIBRARY = libcxsparse
-VERSION = 3.1.7
+VERSION = 3.1.8
 SO_VERSION = 3
 
 default: library

@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 
 LIBRARY = libcolamd
-VERSION = 2.9.4
+VERSION = 2.9.5
 SO_VERSION = 2
 
 default: library

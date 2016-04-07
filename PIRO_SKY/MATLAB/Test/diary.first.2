@@ -1,0 +1,216 @@
+test_blksky_perf
+
+cond =
+
+find ((index.nrows == index.ncols) & (index.nrows >= 1000) & (index.nrows <=1500) )
+
+Relative time is (svds time)/(colamd + qr + R-bidiag time) 
+R-bidiag will use a static data structure for this tests 
+These tests will be slow because of svds(). 
+
+
+ID 	 Size 	 (relative time)
+
+63 	 1074-by-1074 	 257.499 167.408 
+64 	 1083-by-1083 	 4216.32 4567.31 
+66 	 1473-by-1473 	 27602.6 8335.93 
+1637 	 1090-by-1090 	 0.384315 0.3442 
+1346 	 1157-by-1157 	 0.394125 0.222098 
+242 	 1000-by-1000 	 0.949239 0.920259 
+245 	 1104-by-1104 	 5.56117 2.5993 
+450 	 1089-by-1089 	 5.32031 0.584079 
+319 	 1000-by-1000 	 12.2948 6.95556 
+338 	 1000-by-1000 	 27.3134 7.90775 
+1 	 1138-by-1138 	 0.874922 0.373123 
+160 	 1107-by-1107 	 0.961552 0.403822 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_05.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_05.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_07.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_07.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_06.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_06.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/YZhou/circuit204.mat
+to /home/math0/rsiva/UFget/mat/YZhou/circuit204.mat
+1896 	 1020-by-1020 	 0.480757 0.243052 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_04.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_04.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_10.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_10.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_08.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_08.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_09.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_09.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_01.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_01.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_02.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_02.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_03.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_03.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_11.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_11.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_12.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_12.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_13.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_13.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_14.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_14.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_15.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_15.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_16.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_16.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_17.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_17.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_18.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_18.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_19.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_19.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_20.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_20.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_21.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_21.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_22.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_22.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_23.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_23.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_24.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_24.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_25.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_25.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_26.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_26.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_27.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_27.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_28.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_28.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_29.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_29.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_30.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_30.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_31.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_31.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_32.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_32.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_33.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_33.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_34.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_34.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_35.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_35.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_36.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_36.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_37.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_37.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_38.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_38.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_39.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_39.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_40.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_40.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_41.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_41.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_42.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_42.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_43.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_43.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_44.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_44.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_45.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_45.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_46.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_46.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_47.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_47.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_48.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_48.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_49.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_49.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_50.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_50.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_dcop_51.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_dcop_51.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/qh1484.mat
+to /home/math0/rsiva/UFget/mat/Bai/qh1484.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/orsirr_1.mat
+to /home/math0/rsiva/UFget/mat/HB/orsirr_1.mat
+225 	 1030-by-1030 	 0.706047 0.366337 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh2.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh2.mat
+177 	 1009-by-1009 	 1.94387 1.25037 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp1009.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp1009.mat
+194 	 1009-by-1009 	 1.96674 1.41334 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rdb1250.mat
+to /home/math0/rsiva/UFget/mat/Bai/rdb1250.mat
+1628 	 1250-by-1250 	 2.35068 1.36193 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rdb1250l.mat
+to /home/math0/rsiva/UFget/mat/Bai/rdb1250l.mat
+1629 	 1250-by-1250 	 2.60517 1.39569 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh3.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh3.mat
+178 	 1089-by-1089 	 2.24874 1.56153 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_trans_01.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_trans_01.mat
+1106 	 1220-by-1220 	 0.490106 0.321507 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/fpga_trans_02.mat
+to /home/math0/rsiva/UFget/mat/Sandia/fpga_trans_02.mat
+1107 	 1220-by-1220 	 0.50489 0.342969 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh7.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh7.mat
+182 	 1138-by-1138 	 2.78785 1.83947 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh8.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh8.mat
+183 	 1141-by-1141 	 2.5476 1.60203 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/mahindas.mat
+to /home/math0/rsiva/UFget/mat/HB/mahindas.mat
+208 	 1258-by-1258 	 1.14454 0.349789 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh5.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh5.mat
+180 	 1180-by-1180 	 3.46977 2.77027 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_1007.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_1007.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/nnc1374.mat
+to /home/math0/rsiva/UFget/mat/HB/nnc1374.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_1005.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_1005.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp1270.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp1270.mat
+195 	 1270-by-1270 	 3.37407 2.13751 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Rajat/rajat04.mat
+to /home/math0/rsiva/UFget/mat/Rajat/rajat04.mat
+1188 	 1041-by-1041 	 0.617298 0.291899 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Oberwolfach/rail_1357.mat
+to /home/math0/rsiva/UFget/mat/Oberwolfach/rail_1357.mat
+1442 	 1357-by-1357 	 4.27465 1.77915 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh6.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh6.mat
+181 	 1377-by-1377 	 4.8016 3.27499 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh9.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh9.mat
+184 	 1349-by-1349 	 3.4643 1.947 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh4.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh4.mat
+179 	 1440-by-1440 	 4.34264 2.36612 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/pores_2.mat
+to /home/math0/rsiva/UFget/mat/HB/pores_2.mat
+233 	 1224-by-1224 	 1.03561 0.58924 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_1242.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_1242.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/vanHeukelum/cage8.mat
+to /home/math0/rsiva/UFget/mat/vanHeukelum/cage8.mat
+909 	 1015-by-1015 	 1.31024 0.32474 
+downloading http://www.cise.ufl.edu/research/sparse/mat/FIDAP/ex32.mat
+to /home/math0/rsiva/UFget/mat/FIDAP/ex32.mat
+downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G51.mat
+to /home/math0/rsiva/UFget/mat/Gset/G51.mat
+515 	 1000-by-1000 	 0.254449 0.198016 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G53.mat
+to /home/math0/rsiva/UFget/mat/Gset/G53.mat
+517 	 1000-by-1000 	 0.254376 0.217581 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G52.mat
+to /home/math0/rsiva/UFget/mat/Gset/G52.mat
+516 	 1000-by-1000 	 0.427897 0.26597 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G54.mat
+to /home/math0/rsiva/UFget/mat/Gset/G54.mat
+518 	 1000-by-1000 	 0.253154 0.205793 
+
+diary off

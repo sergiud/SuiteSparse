@@ -1,0 +1,71 @@
+i>> test_blksky_perf
+
+cond =
+
+find ((index.nrows == index.ncols) & (index.nrows >= 1000) & (index.nrows <=1500) )
+
+Relative time is (svds time)/(colamd + qr + R-bidiag time) 
+R-bidiag will use a static data structure for this tests 
+These tests will be slow because of svds(). 
+
+
+ID       Size    (relative time)
+
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstm08.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstm08.mat
+63       1074-by-1074    202.711 151.201 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstm09.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstm09.mat
+64       1083-by-1083    4019.72 4949.12 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstm11.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstm11.mat
+66       1473-by-1473    20842.1 7170.67 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/GD96_a.mat
+to /home/math0/rsiva/UFget/mat/Pajek/GD96_a.mat
+1488     1096-by-1096    4.9466 1.09737 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/tols1090.mat
+to /home/math0/rsiva/UFget/mat/Bai/tols1090.mat
+1637     1090-by-1090    0.703988 0.813613 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Rajat/rajat19.mat
+to /home/math0/rsiva/UFget/mat/Rajat/rajat19.mat
+1346     1157-by-1157    0.535631 0.345414 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/saylr3.mat
+to /home/math0/rsiva/UFget/mat/HB/saylr3.mat
+240      1000-by-1000    0.644761 0.856967 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/sherman1.mat
+to /home/math0/rsiva/UFget/mat/HB/sherman1.mat
+242      1000-by-1000    0.449391 0.529419 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/sherman4.mat
+to /home/math0/rsiva/UFget/mat/HB/sherman4.mat
+245      1104-by-1104    2.00299 0.950815 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Grund/b2_ss.mat
+to /home/math0/rsiva/UFget/mat/Grund/b2_ss.mat
+450      1089-by-1089    2.67165 0.398991 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/olm1000.mat
+to /home/math0/rsiva/UFget/mat/Bai/olm1000.mat
+319      1000-by-1000    19.8006 13.0793 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/tub1000.mat
+to /home/math0/rsiva/UFget/mat/Bai/tub1000.mat
+338      1000-by-1000    39.0798 14.7606 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/1138_bus.mat
+to /home/math0/rsiva/UFget/mat/HB/1138_bus.mat
+1        1138-by-1138    1.19102 0.698557 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Grund/b_dyn.mat
+to /home/math0/rsiva/UFget/mat/Grund/b_dyn.mat
+451      1089-by-1089    0.669866 0.484876 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/SmaGri.mat
+to /home/math0/rsiva/UFget/mat/Pajek/SmaGri.mat
+1522     1059-by-1059    0.257597 0.219926 
+downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/Roget.mat
+to /home/math0/rsiva/UFget/mat/Pajek/Roget.mat
+1518     1022-by-1022    0.398767 0.233793 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcspwr06.mat
+to /home/math0/rsiva/UFget/mat/HB/bcspwr06.mat
+18       1454-by-1454    1.09035 0.61557 
+downloading http://www.cise.ufl.edu/research/sparse/mat/HB/gre_1107.mat
+to /home/math0/rsiva/UFget/mat/HB/gre_1107.mat
+??? Operation terminated by user during ==> test_blksky_perf at 81
+
+>> 
+
+

@@ -1,0 +1,1166 @@
+prev = maxNumCompThreads(1) 
+
+prev =
+
+    16
+
+sky_perf_compare
+
+cond =
+
+find ((index.nrows == index.ncols) & (index.nrows <= 5000) )
+
+??? Undefined function or variable 'UFget'.
+
+Error in ==> sky_perf_compare at 21
+index = UFget ;
+
+addpath('../UFget')
+pwd
+
+ans =
+
+/home/math0/rsiva/PIRO_SKY
+
+addpath('./MATLAB')
+addpath('./Test/')
+sky_perf_compare
+
+cond =
+
+find ((index.nrows == index.ncols) & (index.nrows <= 5000) )
+
+Relative time is (svds time)/(colamd + qr + R-bidiag time) 
+R-bidiag will use a static data structure for this tests 
+These tests will be slow because of svds(). 
+
+
+ID 	 Size 	 Sky Time 	 n/1000 	 n/500	  n/100	  n/50	  n/10	  n/5
+
+ 0.0327  -1.0000  -1.0000  -1.0000  -1.0000  -1.0000  0.2471  
+  0.0007  -1.0000  -1.0000  -1.0000  -1.0000  -1.0000  -1.0000  
+  0.0009  -1.0000  -1.0000  -1.0000  -1.0000  0.0437  0.0191  
+  0.0008  -1.0000  -1.0000  -1.0000  -1.0000  0.0058  0.0054  
+  0.0009  -1.0000  -1.0000  -1.0000  -1.0000  -1.0000  0.0056  
+  0.0009  -1.0000  -1.0000  -1.0000  -1.0000  0.0059  0.0058  
+  0.0009  -1.0000  -1.0000  -1.0000  -1.0000  -1.0000  0.0067  
+  0.0013  -1.0000  -1.0000  -1.0000  -1.0000  0.0166  0.0144  
+  0.0018  -1.0000  -1.0000  -1.0000  -1.0000  0.0176  0.0167  
+  0.0014  -1.0000  -1.0000  -1.0000  -1.0000  0.0153  0.0164  
+  0.0026  -1.0000  -1.0000  -1.0000  0.0068  0.0098  0.0153  
+  0.0014  -1.0000  -1.0000  -1.0000  -1.0000  0.0099  0.0145  
+  0.0014  -1.0000  -1.0000  -1.0000  -1.0000  0.0125  0.0138  
+  0.0013  -1.0000  -1.0000  -1.0000  -1.0000  0.0093  0.0110  
+  0.0013  -1.0000  -1.0000  -1.0000  -1.0000  0.0091  0.0118  
+  0.0023  -1.0000  -1.0000  -1.0000  0.0123  0.0195  0.0247  
+  0.0090  -1.0000  -1.0000  -1.0000  0.0065  0.0327  0.0299  
+  0.0069  -1.0000  -1.0000  -1.0000  0.0064  0.0165  0.0327  
+  0.0020  -1.0000  -1.0000  -1.0000  -1.0000  0.0152  0.0226  
+  0.0021  -1.0000  -1.0000  -1.0000  0.0123  0.0191  0.0189  
+  0.0022  -1.0000  -1.0000  -1.0000  0.0064  0.0160  0.0293  
+  0.0014  -1.0000  -1.0000  -1.0000  -1.0000  0.0095  0.0086  
+  0.0037  -1.0000  -1.0000  -1.0000  0.0084  0.0172  0.0279  
+  0.0033  -1.0000  -1.0000  -1.0000  0.0106  0.0194  0.0267  
+  0.0023  -1.0000  -1.0000  0.0071  0.0097  0.0449  0.0526  
+  0.0027  -1.0000  -1.0000  -1.0000  -1.0000  0.0174  0.0222  
+  0.0028  -1.0000  -1.0000  -1.0000  -1.0000  0.0172  0.0189  
+  0.0028  -1.0000  -1.0000  -1.0000  -1.0000  0.0173  0.0306  
+  0.0023  -1.0000  -1.0000  -1.0000  0.0064  0.0205  0.0386  
+  0.0017  -1.0000  -1.0000  -1.0000  0.0162  0.0228  0.0208  
+  0.0028  -1.0000  -1.0000  -1.0000  0.0124  0.0155  0.0213  
+  0.0053  -1.0000  -1.0000  -1.0000  0.0086  0.0264  0.0360  
+  0.0024  -1.0000  -1.0000  -1.0000  0.0541  0.0332  0.0322  
+  0.0025  -1.0000  -1.0000  -1.0000  0.0437  0.0583  0.0548  
+  0.0034  -1.0000  -1.0000  -1.0000  -1.0000  0.0146  0.0184  
+  0.0463  -1.0000  -1.0000  0.0067  0.0506  0.4915  0.2006  
+  0.0255  -1.0000  -1.0000  0.0067  0.0065  0.2502  0.0634  
+  0.0093  -1.0000  -1.0000  0.0236  0.0439  0.0609  0.0663  
+  0.0037  -1.0000  -1.0000  -1.0000  0.0124  0.0183  0.0231  
+  0.0112  -1.0000  -1.0000  0.0131  0.0169  0.0259  0.0543  
+  0.0085  -1.0000  -1.0000  0.0175  0.0275  0.0466  0.0784  
+  0.0704  -1.0000  -1.0000  0.0069  0.0067  0.1838  0.0770  
+  0.0047  -1.0000  -1.0000  -1.0000  0.0126  0.0213  0.0272  
+  0.0050  -1.0000  -1.0000  -1.0000  0.0108  0.0221  0.0275  
+  0.0577  -1.0000  -1.0000  0.0149  0.0286  0.0541  0.1069  
+  0.0331  -1.0000  -1.0000  0.0113  0.0124  0.0258  0.0720  
+  0.0056  -1.0000  -1.0000  -1.0000  0.0240  0.0289  0.0445  
+  0.0025  -1.0000  -1.0000  0.0067  0.0097  0.0361  0.0472  
+  0.0127  -1.0000  -1.0000  0.0091  0.0102  0.0308  0.1186  
+  0.0078  -1.0000  -1.0000  0.0135  0.0175  0.0265  0.0536  
+  0.0069  -1.0000  -1.0000  -1.0000  0.0110  0.0236  0.0380  
+  0.0091  -1.0000  -1.0000  -1.0000  0.0169  0.0837  0.0593  
+  0.0069  -1.0000  -1.0000  0.1531  0.0930  0.0734  0.0965  
+  0.0237  -1.0000  -1.0000  0.0300  0.0365  0.0824  0.1719  
+  0.0192  -1.0000  -1.0000  0.0232  0.0309  0.0807  0.1676  
+  0.0098  -1.0000  -1.0000  0.0090  0.0102  0.0179  0.1439  
+  0.0124  -1.0000  -1.0000  0.0161  0.0309  0.0948  0.1356  
+  0.0189  -1.0000  -1.0000  0.0210  0.0280  0.0660  0.1346  
+  0.0032  -1.0000  -1.0000  0.0068  0.0066  0.0427  0.0563  
+  0.0322  -1.0000  -1.0000  0.0073  0.0069  0.0879  0.1584  
+  0.0050  -1.0000  -1.0000  -1.0000  0.0068  0.0143  0.0321  
+  0.0086  -1.0000  -1.0000  0.1198  0.0760  0.0633  0.0866  
+  0.0502  -1.0000  -1.0000  0.0068  0.0066  0.2748  0.1993  
+  0.0210  -1.0000  -1.0000  0.0230  0.0334  0.0957  0.1851  
+  0.0343  -1.0000  -1.0000  0.0073  0.0069  0.0835  0.1920  
+  0.0207  -1.0000  -1.0000  0.0261  0.0267  0.0754  0.1414  
+  0.0206  -1.0000  -1.0000  0.0302  0.0301  0.0878  0.1554  
+  0.0237  -1.0000  -1.0000  0.0116  0.0141  0.0664  0.8773  
+  0.0189  -1.0000  -1.0000  0.9805  0.6356  0.5433  1.1497  
+  0.3815  -1.0000  -1.0000  0.1637  0.8931  0.1667  0.2997  
+  0.5843  -1.0000  -1.0000  0.3524  0.5629  2.2451  6.3322  
+  0.1048  -1.0000  -1.0000  0.0076  0.0104  0.0496  0.2067  
+  0.0687  -1.0000  -1.0000  0.0525  0.0469  0.1986  0.5355  
+  0.0183  -1.0000  -1.0000  0.0141  0.0176  0.0451  0.0804  
+  0.0354  -1.0000  -1.0000  0.0402  0.0614  0.1494  0.3515  
+  0.0359  -1.0000  -1.0000  1.2358  1.0502  0.2144  0.3409  
+  0.0471  -1.0000  -1.0000  0.0075  0.0105  0.0977  0.1496  
+  0.0404  -1.0000  -1.0000  0.0202  0.0269  0.0579  0.1225  
+  0.3010  -1.0000  -1.0000  0.0131  0.0224  0.4031  1.8710  
+  0.3009  -1.0000  -1.0000  0.0130  0.0208  0.2264  2.1889  
+  0.3009  -1.0000  -1.0000  0.0131  0.0208  0.3100  1.8533  
+  0.3010  -1.0000  -1.0000  0.0129  0.0202  0.2245  1.8609  
+  0.3011  -1.0000  -1.0000  0.0130  0.0206  0.3652  1.6617  
+  0.3011  -1.0000  -1.0000  0.0130  0.0206  0.3949  1.7226  
+  0.3010  -1.0000  -1.0000  0.0131  0.0354  0.3946  2.0212  
+  0.2827  -1.0000  -1.0000  0.0175  0.0220  0.3690  1.9168  
+  1.3763  -1.0000  -1.0000  0.0237  0.0194  0.5406  2.7323  
+  0.8098  -1.0000  0.0108  0.0461  0.2331  2.2760  10.5656  
+ ??? Operation terminated by user during ==> sky_perf_compare at 102
+
+clear functions
+sky_perf_compare
+
+cond =
+
+find ((index.nrows == index.ncols) & (index.nrows <= 5000) )
+
+Relative time is (svds time)/(colamd + qr + R-bidiag time) 
+R-bidiag will use a static data structure for this tests 
+These tests will be slow because of svds(). 
+
+
+ID 	 Size 	 Sky Time 	 n/1000 	 n/500	  n/100	  n/50	  n/10	  n/5
+
+ 249  663  0.8312  -1.0000  0.1996  0.0839  0.0885  2.2634  8.8864  
+  268  497  1.5815  -1.0000  -1.0000  0.0096  0.0575  0.5844  1.2076  
+  248  663  0.8271  -1.0000  0.0101  0.0334  0.0899  2.2292  6.8346  
+  1458  1882  116  209  1641  90  0.0115  -1.0000  -1.0000  -1.0000  0.0093  0.0133  0.0269  
+  202  265  0.0333  -1.0000  -1.0000  0.0450  0.0406  0.0822  0.1941  
+  231  362  0.0587  -1.0000  -1.0000  0.0457  0.0678  0.2506  0.7889  
+  96  229  884  258  335  496  0.1203  -1.0000  -1.0000  0.0446  0.0784  0.6565  3.0535  
+  267  479  0.8330  -1.0000  -1.0000  0.0145  0.0348  0.4809  4.7504  
+  76  1922  166  512  0.1686  -1.0000  0.0332  0.0526  0.1161  0.6250  3.1591  
+  321  500  0.0319  -1.0000  -1.0000  0.3899  0.2836  0.5689 ??? Operation terminated by user during ==> eigs at 214
+
+In ==> svds at 140
+[W,D,bflag] = eigs(B,bk,bsigma,boptions);
+
+In ==> sky_perf_compare at 171
+        sgood = svds(A1, floor(n/5)) ;
+
+clear functions
+sky_perf_compare
+
+cond =
+
+find ((index.nrows == index.ncols) & (index.nrows <= 5000) )
+
+Relative time is (svds time)/(colamd + qr + R-bidiag time) 
+R-bidiag will use a static data structure for this tests 
+These tests will be slow because of svds(). 
+
+
+ID 	 Size 	 Sky Time 	 n/1000 	 n/500	  n/100	  n/50	  n/10	  n/5
+
+ 321  500  0.0511  -1.0000  -1.0000  0.6067  0.3300  0.5718  1.5985  
+  875  306  0.0608  -1.0000  -1.0000  0.0248  0.0276  0.0919  0.3306  
+  876  306  0.0605  -1.0000  -1.0000  0.0128  0.0233  0.0974  0.4701  
+  2205  150  0.0332  -1.0000  -1.0000  0.0337  0.0569  0.0587  0.0861  
+  266  381  0.1353  -1.0000  -1.0000  0.0136  0.0180  0.2084  3.4947  
+  149  680  1.5907  -1.0000  0.0153  0.0280  0.0586  2.3506  99.7595  
+  1639  340  0.3638  -1.0000  -1.0000  0.0292  0.0318  0.0901  0.3188  
+  8  292  
+  251  240  0.0473  -1.0000  -1.0000  0.0330  0.0324  0.0693  0.1626  
+  315  416  0.0216  -1.0000  -1.0000  0.0176  0.0350  0.2347  1.1731  
+  1864  261  0.1026  -1.0000  -1.0000  0.0084  0.0082  0.1712  0.3861  
+  2015  600  
+  926  367  0.0812  -1.0000  -1.0000  0.0639  0.0770  0.3186  0.9197  
+  27  153  0.0163  -1.0000  -1.0000  0.0148  0.0219  0.0293  0.0639  
+  150  680  1.7563  -1.0000  0.0150  0.0294  0.0643  2.5154  165.0786  
+  207  147  0.0168  -1.0000  -1.0000  0.0146  0.0228  0.0389  0.0618  
+  122  310  0.0392  -1.0000  -1.0000  0.0374  0.0400  0.1064  0.3242  
+  206  147  0.0146  -1.0000  -1.0000  0.0239  0.0416  0.0553  0.0801  
+  254  363  0.2824  -1.0000  -1.0000  0.0418  0.0407  0.1534  0.6521  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/fs_680_3.mat
+to /home/math0/rsiva/UFget/mat/HB/fs_680_3.mat
+ 151  680  1.3279  -1.0000  0.0155  0.0290  0.0634  2.5201  157.7916  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/662_bus.mat
+to /home/math0/rsiva/UFget/mat/HB/662_bus.mat
+ 3  662  2.3949  -1.0000  0.0110  0.0297  0.0814  1.2826  5.3075  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/dw256A.mat
+to /home/math0/rsiva/UFget/mat/Bai/dw256A.mat
+ 310  512  0.1699  -1.0000  0.0349  0.0470  0.0729  0.9025  2.9626  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/dwa512.mat
+to /home/math0/rsiva/UFget/mat/Bai/dwa512.mat
+ 1616  512  0.1704  -1.0000  0.0302  0.0411  0.0652  0.8931  2.8775  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/dw256B.mat
+to /home/math0/rsiva/UFget/mat/Bai/dw256B.mat
+ 311  512  0.1798  -1.0000  0.0534  0.2002  0.6852  2.3824  5.9392  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/dwb512.mat
+to /home/math0/rsiva/UFget/mat/Bai/dwb512.mat
+ 1617  512  0.1799  -1.0000  0.0515  0.1900  0.6311  2.2839  6.0078  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_307.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_307.mat
+ 121  307  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_292.mat
+to /home/math0/rsiva/UFget/mat/HB/can_292.mat
+ 100  292  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rdb450.mat
+to /home/math0/rsiva/UFget/mat/Bai/rdb450.mat
+ 1634  450  0.1186  -1.0000  -1.0000  0.0490  0.1003  0.3887  1.5807  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rdb450l.mat
+to /home/math0/rsiva/UFget/mat/Bai/rdb450l.mat
+ 1635  450  0.1179  -1.0000  -1.0000  0.0521  0.1082  0.4549  1.6883  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/Erdos971.mat
+to /home/math0/rsiva/UFget/mat/Pajek/Erdos971.mat
+ 1465  472  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/MathWorks/Harvard500.mat
+to /home/math0/rsiva/UFget/mat/MathWorks/Harvard500.mat
+ 1172  500  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/mcca.mat
+to /home/math0/rsiva/UFget/mat/HB/mcca.mat
+ 212  180  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp_406.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp_406.mat
+ 203  406  0.0819  -1.0000  -1.0000  0.0486  0.0596  0.2143  0.7890  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/Erdos981.mat
+to /home/math0/rsiva/UFget/mat/Pajek/Erdos981.mat
+ 1467  485  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/FEMLAB/problem1.mat
+to /home/math0/rsiva/UFget/mat/FEMLAB/problem1.mat
+ 929  415  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lns_511.mat
+to /home/math0/rsiva/UFget/mat/HB/lns_511.mat
+ 190  511  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lnsp_511.mat
+to /home/math0/rsiva/UFget/mat/HB/lnsp_511.mat
+ 193  511  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/west0655.mat
+to /home/math0/rsiva/UFget/mat/HB/west0655.mat
+ 269  655  2.6684  -1.0000  0.0154  0.0164  0.0693  0.9293  25.1221  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/Erdos991.mat
+to /home/math0/rsiva/UFget/mat/Pajek/Erdos991.mat
+ 1469  492  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/ck400.mat
+to /home/math0/rsiva/UFget/mat/Bai/ck400.mat
+ 307  400  0.0702  -1.0000  -1.0000  0.0333  0.0282  0.7041  1.4015  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/JGD_Trefethen/Trefethen_200b.mat
+to /home/math0/rsiva/UFget/mat/JGD_Trefethen/Trefethen_200b.mat
+ 2206  199  0.0650  -1.0000  -1.0000  0.0360  0.0538  0.0831  0.1329  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/JGD_Trefethen/Trefethen_200.mat
+to /home/math0/rsiva/UFget/mat/JGD_Trefethen/Trefethen_200.mat
+ 2207  200  0.0656  -1.0000  -1.0000  0.0727  0.0540  0.0864  0.1403  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/bfwb398.mat
+to /home/math0/rsiva/UFget/mat/Bai/bfwb398.mat
+ 295  398  0.0766  -1.0000  -1.0000  0.0541  0.0528  0.1802  0.8599  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_256.mat
+to /home/math0/rsiva/UFget/mat/HB/can_256.mat
+ 98  256  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/qh768.mat
+to /home/math0/rsiva/UFget/mat/Bai/qh768.mat
+ 1627  768  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_361.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_361.mat
+ 124  361  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/str_200.mat
+to /home/math0/rsiva/UFget/mat/HB/str_200.mat
+ 255  363  0.1682  -1.0000  -1.0000  0.0184  0.0253  0.1986  0.5599  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_268.mat
+to /home/math0/rsiva/UFget/mat/HB/can_268.mat
+ 99  268  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/vanHeukelum/cage7.mat
+to /home/math0/rsiva/UFget/mat/vanHeukelum/cage7.mat
+ 908  340  0.1460  -1.0000  -1.0000  0.0735  0.1105  0.4007  0.7068  
+  73  3134  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstk20.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstk20.mat
+ 42  485  0.3002  -1.0000  -1.0000  0.0188  0.0257  0.5499  2.5401  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/TOKAMAK/utm300.mat
+to /home/math0/rsiva/UFget/mat/TOKAMAK/utm300.mat
+ 824  300  0.2286  -1.0000  -1.0000  0.0380  0.0455  0.1378  0.3708  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_492.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_492.mat
+ 126  492  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/str_400.mat
+to /home/math0/rsiva/UFget/mat/HB/str_400.mat
+ 256  363  0.1756  -1.0000  -1.0000  0.0185  0.0250  0.2453  0.5949  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G11.mat
+to /home/math0/rsiva/UFget/mat/Gset/G11.mat
+ 471  800  0.2153  -1.0000  0.0565  0.2429  0.4051  5.5363  14.9690  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G12.mat
+to /home/math0/rsiva/UFget/mat/Gset/G12.mat
+ 472  800  0.3123  -1.0000  0.0494  0.2530  0.5439  5.5136  14.8345  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G13.mat
+to /home/math0/rsiva/UFget/mat/Gset/G13.mat
+ 473  800  0.3856  -1.0000  0.1116  0.1856  0.3288  4.8583  14.3357  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_346.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_346.mat
+ 123  346  
+  1939  3240  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/685_bus.mat
+to /home/math0/rsiva/UFget/mat/HB/685_bus.mat
+ 4  685  2.3514  -1.0000  0.0119  0.0291  0.1811  1.6364  6.7004  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/nos6.mat
+to /home/math0/rsiva/UFget/mat/HB/nos6.mat
+ 222  675  0.2447  -1.0000  0.0402  0.0624  0.0861  0.9710  3.5509  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_0.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_0.mat
+ 82  822  5.6832  -1.0000  0.0186  0.0422  0.1076  2.5299  26.6598  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/str_600.mat
+to /home/math0/rsiva/UFget/mat/HB/str_600.mat
+ 257  363  0.1742  -1.0000  -1.0000  0.0233  0.0218  0.3486  0.5780  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/qh882.mat
+to /home/math0/rsiva/UFget/mat/Bai/qh882.mat
+ 328  882  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/dwg961a.mat
+to /home/math0/rsiva/UFget/mat/Bai/dwg961a.mat
+ 1618  961  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/pores_3.mat
+to /home/math0/rsiva/UFget/mat/HB/pores_3.mat
+ 234  532  0.1141  -1.0000  0.0320  0.0465  0.0527  0.3877  6.7233  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_193.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_193.mat
+ 114  193  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_512.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_512.mat
+ 128  512  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/west0989.mat
+to /home/math0/rsiva/UFget/mat/HB/west0989.mat
+ 270  989  8.3565  -1.0000  0.0521  0.0684  0.0957  39.3979  18.6424  
+  1637  1090  5.3745  0.0714  0.1022  0.1433  0.2711  3.9479  21.5970  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstm24.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstm24.mat
+ 74  3562  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_419.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_419.mat
+ 125  419  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstm21.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstm21.mat
+ 71  3600  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstk04.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstk04.mat
+ 26  132  0.0218  -1.0000  -1.0000  0.0201  0.0350  0.0313  0.0553  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/bfwa398.mat
+to /home/math0/rsiva/UFget/mat/Bai/bfwa398.mat
+ 292  398  0.3031  -1.0000  -1.0000  0.0647  0.0670  0.2292  0.8541  
+  1346  1157  19.9784  0.0234  0.0356  0.0636  0.5247  11.0485  87.0670  
+  240  1000  
+  242  1000  1.1467  -1.0000  0.0760  0.1199  0.2389  3.6176  15.8225  
+  245  1104  1.1209  0.0481  0.0625  0.1164  0.2677  7.9658  28.3836  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_200.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_200.mat
+ 87  822  6.0842  -1.0000  0.0188  0.0546  0.1405  2.2386  18.1098  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_445.mat
+to /home/math0/rsiva/UFget/mat/HB/can_445.mat
+ 101  445  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/ck656.mat
+to /home/math0/rsiva/UFget/mat/Bai/ck656.mat
+ 308  656  0.2245  -1.0000  0.0121  0.0355  0.0892  4.2486  7.7111  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp_577.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp_577.mat
+ 204  577  0.1778  -1.0000  0.0480  0.0797  0.1100  0.7620  2.8987  
+  450  1089  4.9901  0.0392  0.0668  0.0684  0.1456  14.3772  83.3675  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/young3c.mat
+to /home/math0/rsiva/UFget/mat/HB/young3c.mat
+ 280  841  0.4209  -1.0000  0.1024  0.1669  0.3192  3.7978  11.7930  
+  319  1000  0.1227  -1.0000  2.4616  1.5934  1.2158  6.6536  11.2379  
+  338  1000  0.1437  -1.0000  0.5474  1.3220  2.8028  13.7071  24.3836  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_400.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_400.mat
+ 88  822  5.7555  -1.0000  0.0238  0.0450  0.1302  2.2605  16.5935  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/nnc666.mat
+to /home/math0/rsiva/UFget/mat/HB/nnc666.mat
+ 216  666  0.3242  -1.0000  0.0341  0.0689  0.0871  0.7604  3.4159  
+  1  1138  10.8881  0.0365  0.0349  0.3164  0.3491  7.9022  55.2856  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/young1c.mat
+to /home/math0/rsiva/UFget/mat/HB/young1c.mat
+ 278  841  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/young2c.mat
+to /home/math0/rsiva/UFget/mat/HB/young2c.mat
+ 279  841  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/young4c.mat
+to /home/math0/rsiva/UFget/mat/HB/young4c.mat
+ 281  841  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/nos2.mat
+to /home/math0/rsiva/UFget/mat/HB/nos2.mat
+ 218  957  0.1207  -1.0000  0.6643  0.7564  0.7057  3.8418  7.1392  
+  451  1089  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_600.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_600.mat
+ 89  822  5.9268  -1.0000  0.0197  0.0594  0.1291  2.2555  14.2296  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/hor_131.mat
+to /home/math0/rsiva/UFget/mat/HB/hor_131.mat
+ 167  434  0.2114  -1.0000  -1.0000  0.0354  0.0394  0.2910  1.2099  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/USAir97.mat
+to /home/math0/rsiva/UFget/mat/Pajek/USAir97.mat
+ 1529  332  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Oberwolfach/t2dal_e.mat
+to /home/math0/rsiva/UFget/mat/Oberwolfach/t2dal_e.mat
+ 1207  4257  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/fs_541_4.mat
+to /home/math0/rsiva/UFget/mat/HB/fs_541_4.mat
+ 148  541  0.7581  -1.0000  0.0110  0.0279  0.0494  0.6394  6.1253  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/fs_541_1.mat
+to /home/math0/rsiva/UFget/mat/HB/fs_541_1.mat
+ 145  541  0.7371  -1.0000  0.0121  0.0331  0.1041  0.8474  5.8271  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/fs_541_2.mat
+to /home/math0/rsiva/UFget/mat/HB/fs_541_2.mat
+ 146  541  0.7268  -1.0000  0.0122  0.0293  0.0705  0.6805  6.5369  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/fs_541_3.mat
+to /home/math0/rsiva/UFget/mat/HB/fs_541_3.mat
+ 147  541  0.7259  -1.0000  0.0120  0.0292  0.0538  0.6610  4.8599  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/FIDAP/ex1.mat
+to /home/math0/rsiva/UFget/mat/FIDAP/ex1.mat
+ 406  216  0.0546  -1.0000  -1.0000  0.0615  0.0510  0.0618  0.1523  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstk02.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstk02.mat
+ 24  66  0.0086  -1.0000  -1.0000  -1.0000  0.0130  0.0191  0.0319  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/pde900.mat
+to /home/math0/rsiva/UFget/mat/Bai/pde900.mat
+ 325  900  0.4376  -1.0000  0.0464  0.1237  0.2656  6.4760  18.2749  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Barabasi/NotreDame_yeast.mat
+to /home/math0/rsiva/UFget/mat/Barabasi/NotreDame_yeast.mat
+ 1511  2114  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_800.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_800.mat
+ 90  822  5.3192  -1.0000  0.0244  0.0436  0.1093  2.2401  12.5096  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/nos7.mat
+to /home/math0/rsiva/UFget/mat/HB/nos7.mat
+ 223  729  0.5131  -1.0000  0.0182  0.0610  0.0676  13.7866  90.8230  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rdb800l.mat
+to /home/math0/rsiva/UFget/mat/Bai/rdb800l.mat
+ 1636  800  0.4216  -1.0000  0.0693  0.2311  0.3317  3.6448  13.5652  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_1000.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_1000.mat
+ 83  822  6.3163  -1.0000  0.0200  0.0373  0.1124  1.9365  14.0596  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/JGD_Trefethen/Trefethen_300.mat
+to /home/math0/rsiva/UFget/mat/JGD_Trefethen/Trefethen_300.mat
+ 2208  300  0.1817  -1.0000  -1.0000  0.0630  0.0830  0.1752  0.3964  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/cdde1.mat
+to /home/math0/rsiva/UFget/mat/Bai/cdde1.mat
+ 300  961  0.5087  -1.0000  0.1280  0.2796  0.4814  6.7541  19.6594  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/cdde2.mat
+to /home/math0/rsiva/UFget/mat/Bai/cdde2.mat
+ 301  961  0.5084  -1.0000  0.2058  0.3128  0.6891  7.8834  21.5294  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/cdde3.mat
+to /home/math0/rsiva/UFget/mat/Bai/cdde3.mat
+ 302  961  0.5090  -1.0000  0.1326  0.3105  0.5130  6.7768  19.7553  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/cdde4.mat
+to /home/math0/rsiva/UFget/mat/Bai/cdde4.mat
+ 303  961  0.5081  -1.0000  0.2014  0.3675  0.6625  7.7979  21.6686  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/cdde5.mat
+to /home/math0/rsiva/UFget/mat/Bai/cdde5.mat
+ 304  961  0.5059  -1.0000  0.1170  0.2695  0.4572  6.6972  19.6892  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/cdde6.mat
+to /home/math0/rsiva/UFget/mat/Bai/cdde6.mat
+ 305  961  0.5002  -1.0000  0.1985  0.3524  0.6710  8.3680  21.7013  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_1200.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_1200.mat
+ 84  822  5.7009  -1.0000  0.0246  0.0455  0.1283  2.2388  12.7662  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_1400.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_1400.mat
+ 85  822  6.5731  -1.0000  0.0249  0.0438  0.1089  2.2046  13.9554  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bp_1600.mat
+to /home/math0/rsiva/UFget/mat/HB/bp_1600.mat
+ 86  822  6.2245  -1.0000  0.0245  0.0418  0.1276  2.2381  13.9370  
+  1522  1059  
+  1518  1022  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_592.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_592.mat
+ 130  592  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_607.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_607.mat
+ 131  607  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/nos5.mat
+to /home/math0/rsiva/UFget/mat/HB/nos5.mat
+ 221  468  0.2619  -1.0000  -1.0000  0.0408  0.0776  0.4230  1.7516  
+  1638  2000  19.3069  0.3125  0.2911  0.8186  2.4122  23.2776  129.2242  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp_778.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp_778.mat
+ 205  778  0.3443  -1.0000  0.0706  0.1388  0.2033  2.6843  7.0963  
+  18  1454  
+  271  1505  21.3183  0.1716  3.8400  0.2158  0.4756  176.4088  79.0513  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rdb968.mat
+to /home/math0/rsiva/UFget/mat/Bai/rdb968.mat
+ 333  968  0.6439  -1.0000  0.0874  0.3267  0.4762  6.5532  19.3328  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/steam2.mat
+to /home/math0/rsiva/UFget/mat/HB/steam2.mat
+ 252  600  0.3746  -1.0000  0.1400  0.2916  1.0121  1.1880  2.7324  
+  160  1107  1.8929  0.0605  0.1500  0.2269  0.4656  11.5183  33.4995  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/fs_760_1.mat
+to /home/math0/rsiva/UFget/mat/HB/fs_760_1.mat
+ 152  760  0.4051  -1.0000  0.0152  0.0301  0.1044  68.7472  281.4459  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/fs_760_2.mat
+to /home/math0/rsiva/UFget/mat/HB/fs_760_2.mat
+ 153  760  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/plat362.mat
+to /home/math0/rsiva/UFget/mat/HB/plat362.mat
+ 229  362  0.1276  -1.0000  -1.0000  0.0393  0.0622  0.2359  0.6486  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/fs_760_3.mat
+to /home/math0/rsiva/UFget/mat/HB/fs_760_3.mat
+ 154  760  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcspwr07.mat
+to /home/math0/rsiva/UFget/mat/HB/bcspwr07.mat
+ 19  1612  
+  1059  1220  
+  1061  1220  
+  1060  1220  
+  1896  1020  5.0251  0.0327  0.0881  0.1226  0.4240  9.1186  21.3689  
+  1058  1220  
+  1064  1220  
+  1062  1220  
+  1063  1220  
+  1055  1220  
+  1056  1220  
+  1057  1220  
+  1065  1220  
+  1066  1220  
+  1067  1220  
+  1068  1220  
+  1069  1220  
+  1070  1220  
+  1071  1220  
+  1072  1220  
+  1073  1220  
+  1074  1220  
+  1075  1220  
+  1076  1220  
+  1077  1220  
+  1078  1220  
+  1079  1220  
+  1080  1220  
+  1081  1220  
+  1082  1220  
+  1083  1220  
+  1084  1220  
+  1085  1220  
+  1086  1220  
+  1087  1220  
+  1088  1220  
+  1089  1220  
+  1090  1220  
+  1091  1220  
+  1092  1220  
+  1093  1220  
+  1094  1220  
+  1095  1220  
+  1096  1220  
+  1097  1220  
+  1098  1220  
+  1099  1220  
+  1100  1220  
+  1101  1220  
+  1102  1220  
+  1103  1220  
+  1104  1220  
+  1105  1220  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/DRIVCAV/cavity02.mat
+to /home/math0/rsiva/UFget/mat/DRIVCAV/cavity02.mat
+ 381  317  0.0973  -1.0000  -1.0000  0.0307  0.0383  0.1567  0.3510  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/DRIVCAV/cavity04.mat
+to /home/math0/rsiva/UFget/mat/DRIVCAV/cavity04.mat
+ 383  317  0.0973  -1.0000  -1.0000  0.0377  0.0351  0.1299  0.3395  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/orsirr_2.mat
+to /home/math0/rsiva/UFget/mat/HB/orsirr_2.mat
+ 226  886  1.2605  -1.0000  0.0272  0.0402  2.7596  2.5295  21.2009  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/bfwb782.mat
+to /home/math0/rsiva/UFget/mat/Bai/bfwb782.mat
+ 297  782  0.3461  -1.0000  0.0746  0.1157  0.2021  2.3455  9.1865  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_758.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_758.mat
+ 134  758  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_503.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_503.mat
+ 127  503  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jpwh_991.mat
+to /home/math0/rsiva/UFget/mat/HB/jpwh_991.mat
+ 187  991  1.9344  -1.0000  0.0442  0.1218  0.3520  7.7465  22.9362  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcspwr08.mat
+to /home/math0/rsiva/UFget/mat/HB/bcspwr08.mat
+ 20  1624  
+  1626  1484  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/jagmesh1.mat
+to /home/math0/rsiva/UFget/mat/HB/jagmesh1.mat
+ 176  936  0.4683  -1.0000  0.0887  0.2662  0.4253  5.0702  11.8454  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcspwr09.mat
+to /home/math0/rsiva/UFget/mat/HB/bcspwr09.mat
+ 21  1723  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_715.mat
+to /home/math0/rsiva/UFget/mat/HB/can_715.mat
+ 105  715  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstk19.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstk19.mat
+ 41  817  0.2911  -1.0000  0.0322  0.0837  0.1525  2.4718  28.4961  
+  225  1030  1.6878  0.0387  0.0565  0.1766  0.1749  6.1341  56.7208  
+  177  1009  0.5986  0.0969  0.1444  0.2355  0.3944  5.2108  15.1681  
+  194  1009  0.5984  0.1002  0.1521  0.2613  0.4115  5.2372  15.0342  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_634.mat
+to /home/math0/rsiva/UFget/mat/HB/can_634.mat
+ 104  634  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstm07.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstm07.mat
+ 62  420  0.1559  -1.0000  -1.0000  0.1454  0.1070  0.3678  0.9746  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/DRIVCAV/cavity01.mat
+to /home/math0/rsiva/UFget/mat/DRIVCAV/cavity01.mat
+ 380  317  0.1076  -1.0000  -1.0000  0.1273  0.1058  0.1582  0.3726  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_869.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_869.mat
+ 135  869  
+  1628  1250  1.1787  0.1310  0.1829  0.5212  1.0046  11.5562  41.0527  
+  1629  1250  1.1768  0.1270  0.1856  0.5576  0.9699  12.6981  41.2498  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/west2021.mat
+to /home/math0/rsiva/UFget/mat/HB/west2021.mat
+ 272  2021  41.0246  0.8063  0.4228  0.6540  1.0328  627.5232  223.2854  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/DRIVCAV/cavity03.mat
+to /home/math0/rsiva/UFget/mat/DRIVCAV/cavity03.mat
+ 382  317  0.1081  -1.0000  -1.0000  0.0325  0.0325  0.1388  0.3981  
+  178  1089  0.6814  0.1097  0.1785  0.3772  0.6394  7.1207  21.4554  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bates/Chem97ZtZ.mat
+to /home/math0/rsiva/UFget/mat/Bates/Chem97ZtZ.mat
+ 1401  2541  8.1646  0.1408  0.1756  1.2223  4.0898  151.5827  818.9375  
+  1106  1220  27.4115  0.0668  0.0733  0.2150  0.5539  12.3429  40.7282  
+  1107  1220  27.4015  0.0717  0.0681  0.1920  0.6569  10.3257  41.0986  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_918.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_918.mat
+ 138  918  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Norris/lung1.mat
+to /home/math0/rsiva/UFget/mat/Norris/lung1.mat
+ 893  1650  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_878.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_878.mat
+ 137  878  
+  182  1138  0.6500  0.1474  0.2880  0.3514  0.5522  7.5363  21.8261  
+  183  1141  0.8996  0.1485  0.2157  0.3019  0.5344  7.6093  21.8897  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/bfwa782.mat
+to /home/math0/rsiva/UFget/mat/Bai/bfwa782.mat
+ 294  782  1.3752  -1.0000  0.0496  0.0596  0.2344  3.5547  7.4149  
+  208  1258  34.5836  0.0228  0.0582  0.2578  0.3803  19.1549  91.9984  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/gr_30_30.mat
+to /home/math0/rsiva/UFget/mat/HB/gr_30_30.mat
+ 159  900  0.6999  -1.0000  0.1366  0.5991  1.0840  8.9648  25.8270  
+  180  1180  1.7383  0.1352  0.2831  0.3346  0.7933  8.4191  24.4972  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Averous/epb0.mat
+to /home/math0/rsiva/UFget/mat/Averous/epb0.mat
+ 287  1794  0.5334  0.1697  0.3574  2.5399  4.0693  37.8717  150.3896  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstk06.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstk06.mat
+ 28  420  0.1558  -1.0000  -1.0000  0.1177  0.0678  0.2147  0.8199  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstk07.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstk07.mat
+ 29  420  0.1560  -1.0000  -1.0000  0.1215  0.0702  0.2059  0.8060  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/bwm2000.mat
+to /home/math0/rsiva/UFget/mat/Bai/bwm2000.mat
+ 299  2000  0.5865  8.3061  8.0005  8.9917  14.4651  52.5063  93.6409  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/olm2000.mat
+to /home/math0/rsiva/UFget/mat/Bai/olm2000.mat
+ 320  2000  0.4956  8.2715  7.8234  8.9440  14.2303  47.3806  91.6000  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G32.mat
+to /home/math0/rsiva/UFget/mat/Gset/G32.mat
+ 494  2000  2.1304  0.5832  0.5427  3.0374  7.3685  75.9044  213.3337  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G33.mat
+to /home/math0/rsiva/UFget/mat/Gset/G33.mat
+ 495  2000  3.1735  6.2751  1.7365  2.2268  7.4806  68.5960  205.6121  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G34.mat
+to /home/math0/rsiva/UFget/mat/Gset/G34.mat
+ 496  2000  2.6249  0.6045  0.5254  2.5814  8.1986  71.0669  192.8529  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/GD06_Java.mat
+to /home/math0/rsiva/UFget/mat/Pajek/GD06_Java.mat
+ 1483  1538  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Grund/poli.mat
+to /home/math0/rsiva/UFget/mat/Grund/poli.mat
+ 467  4008  183.4333  0.2464  0.5322  6.0266  19.8315  391.7967  1636.2438  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/JGD_Trefethen/Trefethen_500.mat
+to /home/math0/rsiva/UFget/mat/JGD_Trefethen/Trefethen_500.mat
+ 2209  500  0.7075  -1.0000  -1.0000  0.1956  0.1966  0.7469  2.8489  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/mhda416.mat
+to /home/math0/rsiva/UFget/mat/Bai/mhda416.mat
+ 314  416  
+  111  1007  
+  214  1374  
+  110  1005  
+  195  1270  1.0144  0.1684  0.2353  0.4963  0.8975  10.5302  30.6350  
+  1188  1041  5.5756  0.0211  0.0214  0.1007  0.2065  9.4560  38.6289  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/JGD_SPG/EX1.mat
+to /home/math0/rsiva/UFget/mat/JGD_SPG/EX1.mat
+ 2195  560  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/JGD_SPG/EX2.mat
+to /home/math0/rsiva/UFget/mat/JGD_SPG/EX2.mat
+ 2196  560  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/tols4000.mat
+to /home/math0/rsiva/UFget/mat/Bai/tols4000.mat
+ 1640  4000  79.6550  1.1092  1.2296  6.5065  16.3670  185.7239  1160.8213  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/EPA.mat
+to /home/math0/rsiva/UFget/mat/Pajek/EPA.mat
+ 1463  4772  
+  1442  1357  2.3710  0.1339  0.3728  0.5031  1.5819  21.2510  57.1567  
+  181  1377  1.0092  0.2393  0.2585  0.4741  1.0218  12.9840  38.3836  
+  1239  3002  
+  1790  3001  
+  184  1349  1.1699  0.1763  0.2967  0.4499  1.0423  13.5619  35.9788  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G15.mat
+to /home/math0/rsiva/UFget/mat/Gset/G15.mat
+ 475  800  3.4659  -1.0000  0.0268  0.0926  0.1737  3.1695  11.3428  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G19.mat
+to /home/math0/rsiva/UFget/mat/Gset/G19.mat
+ 479  800  3.4035  -1.0000  0.0465  0.0803  0.1827  3.4664  11.2930  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G17.mat
+to /home/math0/rsiva/UFget/mat/Gset/G17.mat
+ 477  800  3.4231  -1.0000  0.0282  0.0994  0.1712  3.1830  11.1678  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G21.mat
+to /home/math0/rsiva/UFget/mat/Gset/G21.mat
+ 482  800  3.4387  -1.0000  0.0458  0.0856  0.1569  3.1589  11.3744  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G16.mat
+to /home/math0/rsiva/UFget/mat/Gset/G16.mat
+ 476  800  3.4106  -1.0000  0.0270  0.0912  0.1839  2.8843  11.2709  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G20.mat
+to /home/math0/rsiva/UFget/mat/Gset/G20.mat
+ 481  800  3.4699  -1.0000  0.0463  0.0956  0.1551  3.5001  11.3881  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G14.mat
+to /home/math0/rsiva/UFget/mat/Gset/G14.mat
+ 474  800  3.5703  -1.0000  0.0268  0.0792  0.1864  3.1556  11.2877  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Gset/G18.mat
+to /home/math0/rsiva/UFget/mat/Gset/G18.mat
+ 478  800  3.5354  -1.0000  0.0530  0.0918  0.1533  3.4792  11.3279  
+  179  1440  1.5266  0.3242  0.4013  0.5390  1.5356  14.9772  44.2218  
+  233  1224  7.9603  0.0253  0.0251  1.7818  0.7126  12.0073  35.8640  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/plsk1919.mat
+to /home/math0/rsiva/UFget/mat/HB/plsk1919.mat
+ 230  1919  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_838.mat
+to /home/math0/rsiva/UFget/mat/HB/can_838.mat
+ 107  838  1.1391  -1.0000  0.0481  0.0829  0.1617  2.5509  12.6108  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/dw1024.mat
+to /home/math0/rsiva/UFget/mat/Bai/dw1024.mat
+ 309  2048  4.8658  0.2690  0.3239  14.1623  22.7915  111.4360  195.5370  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/dw2048.mat
+to /home/math0/rsiva/UFget/mat/Bai/dw2048.mat
+ 1614  2048  4.8591  0.2631  0.3162  14.1862  22.3287  110.5030  194.5571  
+  1521  3084  
+  112  1242  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/dwg961b.mat
+to /home/math0/rsiva/UFget/mat/Bai/dwg961b.mat
+ 1619  961  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp1561.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp1561.mat
+ 196  1561  1.6255  0.2336  0.4424  0.6887  1.9604  18.9098  55.4266  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Morandini/rotor2.mat
+to /home/math0/rsiva/UFget/mat/Morandini/rotor2.mat
+ 1327  791  5.0662  -1.0000  0.0423  0.2404  0.1850  1.7542  15.2212  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Oberwolfach/filter2D.mat
+to /home/math0/rsiva/UFget/mat/Oberwolfach/filter2D.mat
+ 1430  1668  2.6078  0.2314  5.9467  0.8822  2.2345  24.4222  56.4753  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Zitney/extr1b.mat
+to /home/math0/rsiva/UFget/mat/Zitney/extr1b.mat
+ 1535  2836  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Zitney/extr1.mat
+to /home/math0/rsiva/UFget/mat/Zitney/extr1.mat
+ 836  2837  
+  909  1015  3.7673  0.1283  0.3297  0.8446  0.7570  15.4384  24.3152  
+  429  1159  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_05.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_05.mat
+ 988  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_04.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_04.mat
+ 987  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_03.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_03.mat
+ 986  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_01.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_01.mat
+ 984  1813  23.5532  0.0310  0.0889  0.2452  3.4430  36.7205  197.4292  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/init_adder1.mat
+to /home/math0/rsiva/UFget/mat/Sandia/init_adder1.mat
+ 1108  1813  23.5475  0.0309  0.1060  0.2401  3.4368  36.5429  198.1001  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Rajat/rajat02.mat
+to /home/math0/rsiva/UFget/mat/Rajat/rajat02.mat
+ 1186  1960  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_06.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_06.mat
+ 989  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_07.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_07.mat
+ 990  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_10.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_10.mat
+ 993  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_09.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_09.mat
+ 992  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_08.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_08.mat
+ 991  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_11.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_11.mat
+ 994  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_13.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_13.mat
+ 996  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_19.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_19.mat
+ 1002  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_44.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_44.mat
+ 1027  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_02.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_02.mat
+ 985  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_12.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_12.mat
+ 995  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_14.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_14.mat
+ 997  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_15.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_15.mat
+ 998  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_16.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_16.mat
+ 999  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_17.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_17.mat
+ 1000  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_18.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_18.mat
+ 1001  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_20.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_20.mat
+ 1003  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_21.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_21.mat
+ 1004  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_22.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_22.mat
+ 1005  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_23.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_23.mat
+ 1006  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_24.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_24.mat
+ 1007  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_25.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_25.mat
+ 1008  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_26.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_26.mat
+ 1009  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_27.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_27.mat
+ 1010  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_28.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_28.mat
+ 1011  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_29.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_29.mat
+ 1012  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_30.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_30.mat
+ 1013  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_31.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_31.mat
+ 1014  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_32.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_32.mat
+ 1015  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_33.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_33.mat
+ 1016  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_34.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_34.mat
+ 1017  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_35.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_35.mat
+ 1018  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_36.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_36.mat
+ 1019  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_37.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_37.mat
+ 1020  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_38.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_38.mat
+ 1021  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_39.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_39.mat
+ 1022  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_40.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_40.mat
+ 1023  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_41.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_41.mat
+ 1024  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_42.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_42.mat
+ 1025  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_43.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_43.mat
+ 1026  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_45.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_45.mat
+ 1028  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_46.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_46.mat
+ 1029  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_47.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_47.mat
+ 1030  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_48.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_48.mat
+ 1031  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_49.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_49.mat
+ 1032  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_50.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_50.mat
+ 1033  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_51.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_51.mat
+ 1034  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_52.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_52.mat
+ 1035  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_53.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_53.mat
+ 1036  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_54.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_54.mat
+ 1037  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_55.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_55.mat
+ 1038  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_56.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_56.mat
+ 1039  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_57.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_57.mat
+ 1040  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_58.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_58.mat
+ 1041  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_59.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_59.mat
+ 1042  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_60.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_60.mat
+ 1043  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_61.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_61.mat
+ 1044  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_62.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_62.mat
+ 1045  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_63.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_63.mat
+ 1046  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_64.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_64.mat
+ 1047  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_65.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_65.mat
+ 1048  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_66.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_66.mat
+ 1049  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_67.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_67.mat
+ 1050  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_68.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_68.mat
+ 1051  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_dcop_69.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_dcop_69.mat
+ 1052  1813  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/watt_1.mat
+to /home/math0/rsiva/UFget/mat/HB/watt_1.mat
+ 258  1856  3.7062  0.0463  0.0731  0.2244  1.3854  20.4748  131.0630  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/watt_2.mat
+to /home/math0/rsiva/UFget/mat/HB/watt_2.mat
+ 259  1856  5.6210  0.0309  0.0317  0.2244  1.0786  20.0364  131.8228  
+  460  3083  
+  515  1000  6.4722  -1.0000  0.0736  0.1372  0.2930  6.0864  23.7663  
+  517  1000  6.9022  -1.0000  0.0863  0.2122  0.2995  6.1721  21.5638  
+  516  1000  6.3919  -1.0000  0.0604  0.1679  0.2749  5.5190  21.2346  
+  518  1000  6.7230  -1.0000  0.0596  0.1845  0.3043  5.5178  21.3668  
+  511  3000  
+  512  3000  
+  514  3000  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rdb2048.mat
+to /home/math0/rsiva/UFget/mat/Bai/rdb2048.mat
+ 331  2048  4.3250  0.5630  0.5091  2.2781  5.8071  51.3921  166.5088  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rdb2048_noL.mat
+to /home/math0/rsiva/UFget/mat/Bai/rdb2048_noL.mat
+ 1632  2048  4.3045  0.5376  0.5309  2.1791  5.1645  50.8968  166.2708  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/Journals.mat
+to /home/math0/rsiva/UFget/mat/Pajek/Journals.mat
+ 1506  124  0.0342  -1.0000  -1.0000  0.0143  0.0194  0.0412  0.0772  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_1054.mat
+to /home/math0/rsiva/UFget/mat/HB/can_1054.mat
+ 91  1054  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/cryg2500.mat
+to /home/math0/rsiva/UFget/mat/Bai/cryg2500.mat
+ 1613  2500  4.9602  0.1297  0.1704  1.1934  3.5666  68.8644  323.7259  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/can_1072.mat
+to /home/math0/rsiva/UFget/mat/HB/can_1072.mat
+ 92  1072  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/JGD_Trefethen/Trefethen_700.mat
+to /home/math0/rsiva/UFget/mat/JGD_Trefethen/Trefethen_700.mat
+ 2210  700  2.2892  -1.0000  0.1798  0.2619  0.3775  2.8978  8.5262  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/Kohonen.mat
+to /home/math0/rsiva/UFget/mat/Pajek/Kohonen.mat
+ 1507  4470  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Rajat/rajat12.mat
+to /home/math0/rsiva/UFget/mat/Rajat/rajat12.mat
+ 1196  1879  31.6512  0.0339  0.0344  0.6731  2.9967  133.3168  237.8747  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp1882.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp1882.mat
+ 197  1882  2.5536  0.3288  0.5977  1.2886  3.5711  32.9602  99.4769  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstk08.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstk08.mat
+ 30  1074  6.6820  0.0252  0.0384  0.2371  0.2854  11.0628  773.8779  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Hamm/add20.mat
+to /home/math0/rsiva/UFget/mat/Hamm/add20.mat
+ 539  2395  136.7829  2.9454  0.7161  11.6083  15.0559  60.6444  246.5733  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/USpowerGrid.mat
+to /home/math0/rsiva/UFget/mat/Pajek/USpowerGrid.mat
+ 1530  4941  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Zitney/radfr1.mat
+to /home/math0/rsiva/UFget/mat/Zitney/radfr1.mat
+ 838  1048  0.5158  0.0254  0.0401  0.2813  0.2602  6.0150  94.3652  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/JGD_CAG/CAG_mat364.mat
+to /home/math0/rsiva/UFget/mat/JGD_CAG/CAG_mat364.mat
+ 1942  364  0.1727  -1.0000  -1.0000  0.0260  0.0435  0.2250  0.7747  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/yeast.mat
+to /home/math0/rsiva/UFget/mat/Pajek/yeast.mat
+ 1533  2361  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/orsreg_1.mat
+to /home/math0/rsiva/UFget/mat/HB/orsreg_1.mat
+ 227  2205  6.9245  11.9591  11.0861  20.7745  14.9544  121.2145  294.2546  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_trans_01.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_trans_01.mat
+ 1053  1814  25.2033  0.0356  0.0786  0.3237  2.9429  39.2910  195.8065  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Sandia/adder_trans_02.mat
+to /home/math0/rsiva/UFget/mat/Sandia/adder_trans_02.mat
+ 1054  1814  25.2027  0.0359  0.0787  0.3266  3.7689  39.2940  209.3320  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/pde2961.mat
+to /home/math0/rsiva/UFget/mat/Bai/pde2961.mat
+ 324  2961  7.1310  0.2636  0.3587  3.3305  10.2400  211.1018  693.3386  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/blckhole.mat
+to /home/math0/rsiva/UFget/mat/HB/blckhole.mat
+ 81  2132  7.0963  0.1489  0.1864  1.9942  5.1018  47.4260  142.6382  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/MathWorks/Sieber.mat
+to /home/math0/rsiva/UFget/mat/MathWorks/Sieber.mat
+ 1378  2290  113.0309  0.4655  0.3788  1.2856  2.8605  53.6535  224.4387  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Schenk_IBMNA/c-18.mat
+to /home/math0/rsiva/UFget/mat/Schenk_IBMNA/c-18.mat
+ 1537  2169  236.6161  0.0425  0.0671  1.2872  2.6978  187.9870  571.8272  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp2233.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp2233.mat
+ 198  2233  3.8762  0.7590  0.6052  2.3285  5.5914  54.1735  161.3690  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/nos3.mat
+to /home/math0/rsiva/UFget/mat/HB/nos3.mat
+ 219  960  0.9633  -1.0000  0.1423  0.3026  0.3896  4.7242  17.6817  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/dwt_992.mat
+to /home/math0/rsiva/UFget/mat/HB/dwt_992.mat
+ 139  992  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rbsa480.mat
+to /home/math0/rsiva/UFget/mat/Bai/rbsa480.mat
+ 329  480  0.3229  -1.0000  -1.0000  0.1032  0.1519  0.7422  2.4843  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rbsb480.mat
+to /home/math0/rsiva/UFget/mat/Bai/rbsb480.mat
+??? Error using ==> urlwrite at 134
+Error downloading URL.
+
+Error in ==> UFget at 168
+    urlwrite (maturl, tmp) ;
+
+Error in ==> sky_perf_compare at 39
+    Prob = UFget (id) ;   % Prob is a struct (matrix, name, meta-data, ...)
+
+sky_perf_compare
+
+cond =
+
+find ((index.nrows == index.ncols) & (index.nrows <= 5000) )
+
+Relative time is (svds time)/(colamd + qr + R-bidiag time) 
+R-bidiag will use a static data structure for this tests 
+These tests will be slow because of svds(). 
+
+
+ID 	 Size 	 Sky Time 	 n/1000 	 n/500	  n/100	  n/50	  n/10	  n/5
+
+downloading http://www.cise.ufl.edu/research/sparse/mat/Bai/rbsb480.mat
+to /home/math0/rsiva/UFget/mat/Bai/rbsb480.mat
+ 330  480  0.3218  -1.0000  -1.0000  0.1090  0.1741  0.6784  2.5106  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/PARSEC/Si2.mat
+to /home/math0/rsiva/UFget/mat/PARSEC/Si2.mat
+ 1360  769  2.8915  -1.0000  0.0987  0.1693  0.3001  3.9080  12.2516  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/lshp2614.mat
+to /home/math0/rsiva/UFget/mat/HB/lshp2614.mat
+ 199  2614  5.7654  0.8971  0.9538  3.9406  9.3804  88.3799  265.0024  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Oberwolfach/spiral.mat
+to /home/math0/rsiva/UFget/mat/Oberwolfach/spiral.mat
+ 1446  1434  15.2782  0.0367  0.0372  0.5053  2.3943  17.4775  39.0560  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Hollinger/g7jac010.mat
+to /home/math0/rsiva/UFget/mat/Hollinger/g7jac010.mat
+ 545  2880  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Hollinger/g7jac010sc.mat
+to /home/math0/rsiva/UFget/mat/Hollinger/g7jac010sc.mat
+ 546  2880  125.6994  0.0912  0.1527  2.9037  6.9840  139.8886  1169.8783  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Pajek/ODLIS.mat
+to /home/math0/rsiva/UFget/mat/Pajek/ODLIS.mat
+ 1512  2909  
+  1623  3200  1.1477  0.1381  0.1893  1.8227  8.0474  252.7822  1048.0266  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Mallya/lhr01.mat
+to /home/math0/rsiva/UFget/mat/Mallya/lhr01.mat
+ 734  1477 ??? Operation terminated by user during ==> sky_perf_compare at 108
+
+diary off
+prev = maxNumCompThreads(1) 
+
+prev =
+
+    16
+
+addpath('./Test/')
+addpath('./MATLAB')
+addpath('../UFget')
+sky_perf_compare
+
+cond =
+
+find ((index.nrows == index.ncols) & (index.nrows <= 5000) )
+
+Relative time is (svds time)/(colamd + qr + R-bidiag time) 
+R-bidiag will use a static data structure for this tests 
+These tests will be slow because of svds(). 
+
+
+ID 	 Size 	 Sky Time 	 n/1000 	 n/500	  n/100	  n/50	  n/10	  n/5
+
+ 734  1477  2.8505  0.3898  0.2433  0.3580  0.8957  18.6375  79.1083  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/HB/bcsstk09.mat
+to /home/math0/rsiva/UFget/mat/HB/bcsstk09.mat
+ 31  1083  1.8288  0.1820  0.2768  0.9022  0.8263  9.2398  20.8847  
+ downloading http://www.cise.ufl.edu/research/sparse/mat/Muite/Chebyshev2.mat
+to /home/math0/rsiva/UFget/mat/Muite/Chebyshev2.mat
+ 1865  2053 ??? Operation terminated by user during ==> spdiags at 71
+
+In ==> find_bw at 3
+[B, d] = spdiags(R) ;
+
+In ==> sky_perf_compare at 90
+    bw = find_bw(R, 1) ;
+
+
+diary off

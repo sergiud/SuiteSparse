@@ -1,0 +1,156 @@
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+</head>
+<div align="center">
+  <center>
+  <pre><font face="Arial Black">
+</font>
+<font face="Arial" size="5"><u>Matlab Mesh Partitioning and Graph Separator Toolbox</u></font></pre>
+  </center>
+</div>
+<div align="center">
+  <center>
+  <pre><font face="Arial" size="3">Distribution version of 8 Feb 2002</font></pre>
+  </center>
+</div>
+<div align="center">
+  <center>
+  <pre><font face="Arial" size="3">This toolbox contains Matlab code for several graph and mesh partitioning
+methods, including geometric, spectral, geometric spectral, and coordinate
+bisection.  It also has routines to generate recursive multiway partitions, 
+vertex separators, and nested dissection orderings; and it has some sample
+meshes and mesh generators.  
+
+The toolbox contains a Matlab interface to Leland and Hendrickson's 
+Chaco partitioning package, but it doesn't contain Chaco itself.  
+The file &quot;chaco/README&quot; tells how to install the interface to Chaco.
+It also contains a Matlab interface to Karypis et al.'s Metis
+partitioning package, using Robert Bridson's &quot;metismex&quot; code.</font></pre>
+  </center>
+</div>
+<pre>&nbsp;</pre>
+<pre><font size="4" face="Arial"><b>Download Toolbox
+</b></font>   <b>zipped:  </b><a href="ftp://parcftp.xerox.com/pub/gilbert/meshpartdist.zip">ftp://parcftp.xerox.com/pub/gilbert/meshpartdist.zip
+</a><b>   uuencoded tarfile:  </b><a href="ftp://parcftp.xerox.com/pub/gilbert/meshpartdist.uu">ftp://parcftp.xerox.com/pub/gilbert/meshpartdist.uu</a></pre>
+<div align="left">
+  <PRE><font size="4" face="Arial"><b>Toolbox Contents</b></font></PRE>
+</div>
+<div align="left">
+  <PRE>
+<b><u>Demonstrations.</u></b>
+  Say &quot;meshdemo&quot; for some examples.
+  Also, many of the individual routines can draw pictures of what they do.
+
+<b><u>Partitioning methods.</u></b>
+  geopart        - Geometric. 
+  specpart       - Spectral.
+  gspart         - Geometric spectral.
+  coordpart      - Coordinate bisection.
+  inertpart      - Inertial bisection.
+  chaco          - Multilevel Kernighan-Lin, and other options.
+  metispart      - Multilevel method from Metis.
+  metismex       - Interface to more options of Metis.
+
+<b><u>Multiway partitions.</u></b>
+  dice           - Use any 2-way partitioner to get a multiway partition.
+  geodice        - Recursive geometric partitioning.
+  specdice       - Recursive spectral partitioning.
+  gsdice         - Recursive geometric spectral partitioning.
+  chaco          - Can also produce multiway partitions directly.
+  metisdice      - Multiway partitioning from Metis.
+
+<b><u>Vertex separators.</u></b>
+  vtxsep         - Convert a 2-way partition to a vertex separator.
+  geosep         - Vertex separator from geometric partitioning.
+  specsep        - Vertex separator from spectral partitioning.
+
+<b><u>Nested dissection.</u></b>
+  ndperm         - Use any 2-way partitioner for nested dissection.
+  geond          - Geometric nested dissection ordering.
+  specnd         - Spectral nested dissection ordering.
+  gsnd           - Geometric spectral nested dissection ordering.
+  metisnd        - Nested dissection ordering from Metis.
+  analyze        - Predict fill, opcount, etc. for an elimination ordering.
+
+<b><u>Meshes and graph generators.</u></b>
+  meshes.mat     - Three sample meshes with coordinates:
+    Eppstein     - A 2D finite-element mesh with 547 nodes.
+    Smallmesh    - A 2D finite-element mesh with 136 nodes.
+    Tapir        - A 2D finite-element mesh with 1024 nodes.
+  grid5          - 2D square 5-point mesh.
+  grid7          - 2D square 7-point mesh.
+  grid9          - 2D square 9-point mesh.
+  gridt          - 2D triangular mesh.
+  grid3d         - 3D cubical mesh.
+  grid3dt        - 3D cubical simplicial mesh.
+  badmesh        - A mesh that has no good straight-line cut.
+  cockroach      - A mesh for which spectral bisection does poorly.
+  treexpath      - A mesh for which spectral bisection does poorly.
+
+<b><u>Visualization and graphics.</u></b>
+  (All the partitioners can also draw pictures of what they do.)
+  gplotpart      - Draw a 2-way partition.
+  gplotmap       - Draw a multiway partition.
+  highlight      - Draw a mesh with some vertices highlighted.
+  gplotg         - Draw a 2D or 3D mesh (replaces Matlab's gplot).
+  etreeplotg     - Draw an elimination tree (replaces Matlab's etreeplot).
+  spypart        - Matrix spy plot with partition boundaries.
+  dmspy          - Spy plot of matrix in block triangular form.
+ 
+<b><u>Utilities.</u></b>
+  cutsize        - Find or count edges cut by a partition.
+  other          - Other side of a partition, or change representations.
+  intersection   - Intersection of two sets.
+  union          - Union of two sets.
+  fiedler        - Fiedler vector of a graph.
+  laplacian      - Laplacian matrix of a graph.
+  components     - Connected components of a graph.
+  contract       - Condense a graph according to a given block structure.
+  distances      - Distances between adjacent mesh points.
+  blockdiags     - Create matrix with specified block diagonals.
+  resetrandoms   - Reset random number generators to startup values.
+
+<font size="4" face="Arial"><b>References</b></font>
+
+  John R. Gilbert, Gary L. Miller, and Shang-Hua Teng.
+  Geometric mesh partitioning:  Implementation and experiments.
+  SIAM J. Scientific Computing 19:2091-2110, 1998.
+
+  Tony F. Chan, John R. Gilbert, and Shang-Hua Teng.
+  Geometric spectral partitioning.
+  Xerox PARC Technical Report CSL-94-15, 1995.
+
+  Bruce Hendrickson and Robert Leland.
+  The Chaco user's guide, version 2.0.
+  Sandia National Laboratories Technical Report SAND94-2692, 1994.
+
+  George Karypis et al.
+  METIS, Serial graph partitioning, version 4.0.1, November 1998.
+  <a href="http://www.cs.umn.edu/~karypis/metis">http://www.cs.umn.edu/~karypis/metis</a>
+  
+  Robert Bridson.
+  A MATLAB CMEX interface to the Metis library. 
+  <a href="http://www.stanford.edu/~rbridson/download/metismex.c">http://www.stanford.edu/~rbridson/download/metismex.c</a></PRE>
+</div>
+<div align="left">
+  <PRE>
+ 
+<font size="4" face="Arial"><b>Toolbox Authors</b></font>
+  
+  John R. Gilbert
+  Palo Alto Research Center
+  3333 Coyote Hill Road
+  Palo Alto, CA  94304
+  <a href="mailto:john.gilbert@ieee.org">john.gilbert@ieee.org</a>
+
+  Shang-Hua Teng
+  Computer Science Department
+  Boston University
+  Boston, MA 02215
+  <a href="mailto:steng@cs.bu.edu">steng@cs.bu.edu</a>
+ 
+  Thanks to Tim Davis for updating the toolbox to Matlab 5;
+  to George Karypis, Vipin Kumar, and Robert Bridson for Metis 
+  and its interface; and to Bruce Hendrickson and Robert Leland
+  for Chaco.</PRE>
+</div>

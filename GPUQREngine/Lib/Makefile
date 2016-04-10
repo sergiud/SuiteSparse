@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 
 LIBRARY = libGPUQREngine
-VERSION = 1.0.3
+VERSION = 1.0.4
 SO_VERSION = 1
 
 default: library

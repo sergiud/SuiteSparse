@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 
 LIBRARY = libklu
-VERSION = 1.3.6
+VERSION = 1.3.7
 SO_VERSION = 1
 
 default: library

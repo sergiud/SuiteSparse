@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 
 LIBRARY = libamd
-VERSION = 2.4.4
+VERSION = 2.4.5
 SO_VERSION = 2
 
 default: library

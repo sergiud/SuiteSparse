@@ -1,0 +1,47 @@
+--------------------------------------------------------------------------------
+big stuff:
+--------------------------------------------------------------------------------
+
+bug fix for a bidiagonal matrix plus one entry
+
+Demo/*
+
+Tcov/*
+    statement coverage
+    malloc tests
+    edge cases (0-by-0, 1-by-1, 2-by-2)
+
+--------------------------------------------------------------------------------
+easier stuff:
+--------------------------------------------------------------------------------
+
+NO: return U and V
+
+NO: sky_reduce is a long function (about 1600 lines).  Split it in
+NO:    multiple functions?
+
+Rename to SkylineSVD, functions are skylinesvd_*
+
+Write Doc/UserGuide.tex
+
+move internal include files to Source/
+
+ensure all user-visible names are skylinesvd_*
+
+no complex case.  Just do double-real-long, no *_drl name scheme
+
+add standard comment header to all files (like PIRO_BAND)
+
+remove any code duplicated from PIRO_BAND
+    Givens rotations?
+
+remove MALLOC, FREE macros, use SuiteSparse_malloc, etc instead
+
+need to add lots of comments to the code.  blksky.c for example.
+
+check for malloc failures
+
+check if user inputs are valid
+
+Remove Results/* directory, eventually
+

@@ -1,0 +1,86 @@
+This is a Matlab interface to Hendrickson and Leland's "Chaco" graph
+partitioning software (version 2.0).  The interface is part of Gilbert
+and Teng's Matlab mesh partitioning toolbox.  It runs under Matlab
+version 4.2c or later.  See the references below for more information.
+
+------------------------------------------------------------------
+
+Installation instructions:
+
+1.  Unpack the partitioning toolbox from "meshpart.uu".  (You've
+    probably already done this.)  This creates a directory "meshpart"
+    full of m-files, with a subdirectory "chaco" containing a copy
+    of this README and the other files listed below. 
+2.  Put the "meshpart" directory on your Matlab path.  At this point
+    you can use all of the mesh partitioning toolbox except Chaco.
+3.  Unpack the Chaco distribution (not included here) per the 
+    instructions in its manual.  Don't put it in the meshpart/chaco
+    directory; put it wherever else you want to.
+4.  In the meshpart/chaco directory, edit "Makefile" per the 
+    instructions contained in it, to reflect the locations of Chaco 
+    and Matlab and any necessary changes.
+5.  In the meshpart/chaco directory, utter "make".  This compiles 
+    everything and puts "mlchaco.mexsol" in the meshpart directory.
+6.  After testing everything, utter "make clean" to delete the
+    object files.
+
+This has been tested on Sun workstations running Solaris 2.5, using 
+gcc 2.7.2 and Matlab 4.2c, with Chaco 2.0.  It should be fairly simple 
+to modify the Makefile to create a mex-file for any Unix system.  
+    
+------------------------------------------------------------------
+
+The mex-file version of Chaco includes the following files.  All names
+are relative to the subdirectory "chaco" of the mesh partitioning
+toolbox directory.
+
+ README is this file.
+ Makefile builds the Matlab version of Chaco.
+ ../chaco.m is the m-file interface.
+ ../mlchaco.m is the help text for mlchaco.mex.
+ mlchaco.c is the glue between chaco.m and Chaco's "interface" routine.
+ User_Params.verbose can be copied to "../User_Params" to make Chaco print 
+    some information about what it's doing.  See the Chaco manual for details.
+ User_Params.debug can be copied to "../User_Params" to make Chaco print even
+    more information.
+ user_params.c replaces the version in Chaco: it changes some defaults, 
+    including turning off most normal output.
+ smalloc.c replaces the version in Chaco: it uses Matlab's mxCalloc and 
+    mxFree instead of malloc and free.
+ bail.c replaces the version in Chaco: it returns to Matlab instead of
+    exiting.
+ check_input.c replaces the version in Chaco: it calls "chaco_check_graph"
+    instead of "check_graph" to avoid a name conflict with an internal
+    Matlab routine.
+ chaco_check_graph.c replaces check_graph.c in Chaco; it's identical 
+    except for the name, which conflicts with an internal Matlab routine.
+
+
+------------------------------------------------------------------
+
+References:
+
+Chaco is described in B. Hendrickson and R. Leland, "The Chaco
+User's Guide (Version 2.0)", Sandia National Laboratories report
+SAND94-2692, October 1994.  Inquiries about obtaining Chaco 
+should be directed to Bruce Hendrickson, bahendr@cs.sandia.gov.
+
+The Matlab Mesh Partitioning Toolbox (which includes this interface
+to Chaco but not Chaco itself) is described in J. Gilbert, G. Miller,
+and S. Teng, "Geometric Mesh Partitioning:  Implementation and 
+Experiments", Xerox PARC report CSL-94-13, 1994.  The report is
+available as
+
+  ftp://parcftp.xerox.com/pub/gilbert/csl9413.ps.Z
+
+and the Toolbox is 
+
+  ftp://parcftp.xerox.com/pub/gilbert/meshpart.uu
+
+Inquiries about the Toolbox should be directed to John Gilbert,
+gilbert@parc.xerox.com.
+
+Chaco is copyrighted by Sandia Corporation.  The Mesh Partitioning
+Toolbox is copyright (c) 1990-1996 by Xerox Corporation; for its
+complete copyright and licensing notice see the file copyright.m
+in the meshpart directory.

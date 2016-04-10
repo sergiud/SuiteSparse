@@ -1,0 +1,27 @@
+% This file, User_Params, is read at runtime to modify Chaco's defaults.
+% The purpose of this version is to turn on some debugging stuff that
+% the Matlab version will normally have off.
+
+ECHO = 2
+OUTPUT_METRICS = 2
+OUTPUT_TIME = 2
+PRINT_HEADERS = 1
+
+DEBUG_EVECS = 1
+DEBUG_KL = 1
+DEBUG_INERTIAL = 1
+DEBUG_CONNECTED = 1
+DEBUG_PERTURB = 1
+DEBUG_ASSIGN = 1
+DEBUG_OPTIMIZE = 1
+DEBUG_BPMATCH = 1
+DEBUG_COARSEN = 1
+DEBUG_MEMORY = 1
+DEBUG_INPUT = 0
+DEBUG_PARAMS = 1
+DEBUG_INTERNAL = 1
+DEBUG_REFINE_PART = 1
+DEBUG_REFINE_MAP = 1
+DEBUG_SIMULATOR = 1
+DEBUG_TRACE = 1
+DEBUG_MACH_PARAMS = 1

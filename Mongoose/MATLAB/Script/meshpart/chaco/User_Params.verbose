@@ -1,0 +1,8 @@
+% This file, User_Params, is read at runtime to modify Chaco's defaults.
+% The purpose of this version is to turn on some verbose output that
+% the Matlab version will normally have off.
+
+ECHO = 1
+OUTPUT_METRICS = 1
+OUTPUT_TIME = 1
+PRINT_HEADERS = 1

@@ -607,6 +607,10 @@ generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
   UMFPACK/Source/umf_triplet.c SUFFIX _zl_map_x COMPILE_DEFINITIONS ZLONG DO_MAP
   DO_VALUES)
 
+if (MSVC)
+  add_definitions (-D_CRT_SECURE_NO_WARNINGS)
+endif (MSVC)
+
 add_library (amd
   ${GEN_AMD_SRCS_DINT}
   ${GEN_AMD_SRCS_DLONG}

@@ -960,7 +960,7 @@ set_component_version (colamd 2.9.4)
 set_component_version (klu 1.3.6)
 set_component_version (ldl 2.2.4)
 set_component_version (spqr 2.0.5)
-set_component_version (suitesparseconfig 4.5.1)
+set_component_version (suitesparseconfig "${VERSION}")
 set_component_version (umfpack 5.7.4)
 
 set_target_properties (amd PROPERTIES EXPORT_NAME AMD)

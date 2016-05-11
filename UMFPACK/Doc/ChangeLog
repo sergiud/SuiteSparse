@@ -1,3 +1,7 @@
+May 4, 2016: version 5.7.6
+
+    * minor changes to Makefile
+
 Apr 1, 2016: version 5.7.5
 
     * licensing simplified (no other change); refer to UMFPACK/Doc/License.txt

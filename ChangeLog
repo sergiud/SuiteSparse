@@ -1,3 +1,7 @@
+May 4, 2016: SuiteSparse 4.5.3
+
+    * minor changes to Makefiles
+
 Apr 1, 2016: SuiteSparse 4.5.2
 
     * licensing simplified (no other change); refer to PACKAGE/Doc/License.txt

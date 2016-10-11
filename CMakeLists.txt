@@ -635,8 +635,7 @@ target_include_directories (cholmod PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
 )
 
-target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES}
-  colamd)
+target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES} colamd)
 
 if (WITH_PARTITION AND METIS_FOUND)
   target_include_directories (cholmod SYSTEM PUBLIC ${METIS_INCLUDE_DIR})
@@ -766,8 +765,8 @@ add_library (umfpack
   ${UMFPACK_HDRS}
 )
 
-target_include_directories (umfpack PUBLIC ${LAPACK_INCLUDE_DIRS})
-target_link_libraries (umfpack PUBLIC ${LAPACK_LIBRARIES} cholmod)
+# NOTE cholmod already dependens on LAPACK
+target_link_libraries (umfpack PUBLIC cholmod)
 
 set (KLU_HDRS
   KLU/Include/klu.h

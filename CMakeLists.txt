@@ -1047,6 +1047,22 @@ endif (TARGET suitesparsecuda)
 
 set_target_properties (${_SuiteSparse_TARGETS} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+add_executable (cholmod_demo
+  CHOLMOD/Demo/cholmod_demo.h
+  CHOLMOD/Demo/cholmod_demo.c
+)
+target_link_libraries (cholmod_demo PRIVATE cholmod)
+
+add_executable (cholmod_l_demo
+  CHOLMOD/Demo/cholmod_l_demo.c
+)
+target_link_libraries (cholmod_l_demo PRIVATE cholmod)
+
+add_executable (cholmod_simple
+  CHOLMOD/Demo/cholmod_simple.c
+)
+target_link_libraries (cholmod_simple PRIVATE cholmod)
+
 add_executable (umf4
   UMFPACK/Demo/umf4.c
 )

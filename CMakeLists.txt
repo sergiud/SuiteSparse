@@ -646,7 +646,9 @@ target_include_directories (cholmod PUBLIC
 target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES} colamd)
 
 if (WITH_PARTITION AND METIS_FOUND)
-  target_include_directories (cholmod SYSTEM PUBLIC ${METIS_INCLUDE_DIR})
+  target_include_directories (cholmod SYSTEM PRIVATE ${METIS_INCLUDE_DIRS})
+  target_include_directories (cholmod SYSTEM PUBLIC
+    $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
   target_link_libraries (cholmod PUBLIC ${METIS_LIBRARIES})
 endif (WITH_PARTITION AND METIS_FOUND)
 
@@ -831,7 +833,9 @@ if (HAVE_M)
 endif (HAVE_M)
 
 if (WITH_TBB AND TBB_FOUND)
-  target_include_directories (spqr PUBLIC ${TBB_INCLUDE_DIRS})
+  target_include_directories (spqr SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
+  target_include_directories (spqr SYSTEM PUBLIC
+    $<BUILD_INTERFACE:${TBB_INCLUDE_DIRS}>)
   target_link_libraries (spqr PUBLIC ${TBB_LIBRARIES})
   target_compile_definitions (spqr PUBLIC WITH_TBB)
 endif (WITH_TBB AND TBB_FOUND)

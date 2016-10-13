@@ -23,12 +23,20 @@ project (SuiteSparse C CXX)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set (CMAKE_DEBUG_POSTFIX _debug)
 
+include (CheckCCompilerFlag)
 include (CheckFunctionExists)
 include (CMakeDependentOption)
 include (FeatureSummary)
 
+check_c_compiler_flag (-fPIC HAVE_PIC)
+
+if (WITH_CUDA)
+  find_package (CUDA 7.0)
+endif (WITH_CUDA)
+
 find_package (METIS 5.0)
 
+option (WITH_CUDA "Enable CUDA support" ON)
 option (WITH_PRINT "Print diagnostic messages" OFF)
 option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 option (WITH_LGPL "Enable GNU LGPL modules" ON)
@@ -896,8 +904,68 @@ if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   #target_compile_definitions (SuiteSparse PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 
-install (TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu ldl
-  suitesparseconfig
+# CUDA support
+if (WITH_CUDA AND CUDA_FOUND)
+  list (APPEND CUDA_NVCC_FLAGS -std=c++11)
+
+  # Workaround for GCC >= 6.2.x (and CUDA 8.0)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION
+      VERSION_GREATER "6.1")
+    list (APPEND CUDA_NVCC_FLAGS -Xcompiler -D__CORRECT_ISO_CPP11_MATH_H_PROTO)
+  endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION
+      VERSION_GREATER "6.1")
+
+  if (HAVE_PIC)
+    list (APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
+  endif (HAVE_PIC)
+
+  cuda_add_library (suitesparsecuda
+    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Runtime.hpp
+    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Workspace.hpp
+    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_debug.hpp
+    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_macros.hpp
+    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_workspace_macros.hpp
+    SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace.cpp
+    SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_cpuAllocators.cpp
+    SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_gpuAllocators.cpp
+    SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_transfer.cpp
+  )
+
+  target_include_directories (suitesparsecuda PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include>
+  )
+
+  target_link_libraries (suitesparsecuda PUBLIC suitesparseconfig)
+
+  set (CHOLMOD_GPU_SRCS CHOLMOD/GPU/cholmod_gpu.c)
+
+  generate_source_files (GEN_CHOLMOD_GPU_SRCS_DLONG FILES "${CHOLMOD_GPU_SRCS}" SUFFIX _dl
+    COMPILE_DEFINITIONS DLONG)
+
+  cuda_wrap_srcs (cholmod OBJ GEN_CHOLMOD_GPU_KERNELS
+    CHOLMOD/GPU/cholmod_gpu_kernels.cu)
+
+  target_sources (cholmod PRIVATE
+    ${CHOLMOD_GPU_SRCS}
+    CHOLMOD/GPU/cholmod_gpu_kernels.cu
+    ${GEN_CHOLMOD_GPU_KERNELS}
+    ${GEN_CHOLMOD_GPU_SRCS_DLONG}
+  )
+
+  target_compile_definitions (cholmod PRIVATE GPU_BLAS)
+  target_include_directories (cholmod PUBLIC ${CUDA_INCLUDE_DIRS})
+  target_link_libraries (cholmod PUBLIC ${CUDA_LIBRARIES}
+    ${CUDA_CUBLAS_LIBRARIES} suitesparsecuda)
+endif (WITH_CUDA AND CUDA_FOUND)
+
+set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu
+  ldl suitesparseconfig)
+
+if (TARGET suitesparsecuda)
+  list (APPEND _SuiteSparse_TARGETS suitesparsecuda)
+endif (TARGET suitesparsecuda)
+
+install (TARGETS ${_SuiteSparse_TARGETS}
   EXPORT suitesparse-targets
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
@@ -911,8 +979,7 @@ configure_package_config_file (suitesparse-config.cmake.in
 write_basic_package_version_file (suitesparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
-export (TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu ldl
-  suitesparseconfig NAMESPACE ${SuiteSparse_NAMESPACE} FILE
+export (TARGETS ${_SuiteSparse_TARGETS} NAMESPACE ${SuiteSparse_NAMESPACE} FILE
   suitesparse-targets.cmake)
 export (PACKAGE SuiteSparse)
 
@@ -974,8 +1041,11 @@ set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
 set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
 set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
 
-set_target_properties (amd btf camd ccolamd colamd cholmod spqr umfpack klu ldl
-  suitesparseconfig PROPERTIES POSITION_INDEPENDENT_CODE ON)
+if (TARGET suitesparsecuda)
+  set_component_version (suitesparsecuda 1.0.5)
+endif (TARGET suitesparsecuda)
+
+set_target_properties (${_SuiteSparse_TARGETS} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_executable (umf4
   UMFPACK/Demo/umf4.c
@@ -1023,6 +1093,7 @@ if (WITH_FORTRAN)
   target_link_libraries (umf4hb PRIVATE umfpack)
 endif (WITH_FORTRAN)
 
+add_feature_info (CUDA WITH_CUDA "GPU accelerated CHOLMOD using CUDA")
 add_feature_info (GPL WITH_GPL "GNU GPL modules")
 add_feature_info (LGPL WITH_LGPL "GNU LGPL modules")
 add_feature_info (CAMD WITH_CAMD "CAMD, CCOLAMD, CSYMAMD interfaces")

@@ -1103,7 +1103,6 @@ add_executable (umfpack_simple
 
 target_link_libraries (umfpack_simple PRIVATE umfpack)
 
-
 if (WITH_FORTRAN)
   add_executable (umf4hb
     UMFPACK/Demo/umf4_f77wrapper.c

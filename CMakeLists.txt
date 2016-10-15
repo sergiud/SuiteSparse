@@ -12,10 +12,16 @@ if (POLICY CMP0054)
   cmake_policy (SET CMP0054 NEW)
 endif (POLICY CMP0054)
 
-option (WITH_FORTRAN "Enables Fortran support" OFF)
+include (CheckLanguage)
+
+option (WITH_FORTRAN "Enables Fortran support" ON)
 
 if (WITH_FORTRAN)
-  enable_language (Fortran)
+  check_language (Fortran)
+
+  if (CMAKE_Fortran_COMPILER)
+    enable_language (Fortran)
+  endif (CMAKE_Fortran_COMPILER)
 endif (WITH_FORTRAN)
 
 project (SuiteSparse C CXX)
@@ -1103,14 +1109,14 @@ add_executable (umfpack_simple
 
 target_link_libraries (umfpack_simple PRIVATE umfpack)
 
-if (WITH_FORTRAN)
+if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
   add_executable (umf4hb
     UMFPACK/Demo/umf4_f77wrapper.c
     UMFPACK/Demo/umf4hb.f
   )
 
   target_link_libraries (umf4hb PRIVATE umfpack)
-endif (WITH_FORTRAN)
+endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
 
 add_feature_info (CUDA WITH_CUDA "GPU accelerated CHOLMOD using CUDA")
 add_feature_info (GPL WITH_GPL "GNU GPL modules")
@@ -1118,7 +1124,7 @@ add_feature_info (LGPL WITH_LGPL "GNU LGPL modules")
 add_feature_info (CAMD WITH_CAMD "CAMD, CCOLAMD, CSYMAMD interfaces")
 add_feature_info (Check WITH_CHECK "Check module")
 add_feature_info (Cholesky WITH_CHOLESKY "Cholesky module")
-add_feature_info (Fortran WITH_FORTRAN "Fortran compilation")
+add_feature_info (Fortran "WITH_FORTRAN AND CMAKE_Fortran_COMPILER" "Fortran compilation")
 add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
 add_feature_info (Partition WITH_PARTITION "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")

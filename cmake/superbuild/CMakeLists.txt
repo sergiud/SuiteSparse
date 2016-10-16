@@ -85,7 +85,7 @@ ExternalProject_Add (metis
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   CMAKE_CACHE_ARGS
-    -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
+    -DSHARED:BOOL=${BUILD_SHARED_LIBS}
     -DGKLIB_PATH:PATH=${CMAKE_CURRENT_BINARY_DIR}/metis-prefix/src/metis/GKlib
   INSTALL_COMMAND ""
   PATCH_COMMAND ${_METIS_PATCH_COMMAND}
@@ -124,8 +124,7 @@ ExternalProject_Add (lapack
   #  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 	#-DCMAKE_MAKE_PROGRAM=${_MINGW_BIN_TMP}/mingw32-make.exe
   #CMAKE_GENERATOR "MinGW Makefiles"
-  #CMAKE_CACHE_ARGS
-  #  -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
+  CMAKE_CACHE_ARGS -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
   INSTALL_COMMAND ""
   ${_LAPACK_DEPENDS}
 )
@@ -149,27 +148,28 @@ set (_PREFIX_PATH
   ${CMAKE_CURRENT_BINARY_DIR}/tbb-prefix/src/tbb/build/${_TBB_BUILD_PREFIX}_release
 )
 
-# Workout the library extension
+# Workout the library prefix and extension
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set (_LIB_PREFIX "")
   set (_LIB_SUFFIX ${CMAKE_LINK_LIBRARY_SUFFIX})
 else (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   if (BUILD_SHARED_LIBS)
+    set (_LIB_PREFIX ${CMAKE_SHARED_LIBRARY_PREFIX})
     set (_LIB_SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
   else (BUILD_SHARED_LIBS)
+    set (_LIB_PREFIX ${CMAKE_SHARED_STATIC_PREFIX})
     set (_LIB_SUFFIX ${CMAKE_STATIC_LIBRARY_SUFFIX})
   endif (BUILD_SHARED_LIBS)
 endif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
-if (WIN32)
-  set (_LAPACK_LIBS
-    -DBLAS_blas_LIBRARY:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/lapack-prefix/src/lapack-build/lib/libblas${_LIB_SUFFIX}
-    -DLAPACK_lapack_LIBRARY:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/lapack-prefix/src/lapack-build/lib/liblapack${_LIB_SUFFIX}
-  )
+set (_LAPACK_LIBS
+  -DBLAS_blas_LIBRARY:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/lapack-prefix/src/lapack-build/lib/libblas${_LIB_SUFFIX}
+  -DLAPACK_lapack_LIBRARY:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/lapack-prefix/src/lapack-build/lib/liblapack${_LIB_SUFFIX}
+)
 
-  set (_METIS_LIBS
-    -DMETIS_LIBRARY:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/metis-prefix/src/metis-build/libmetis/${CMAKE_CFG_INTDIR}/metis${_LIB_SUFFIX}
-  )
-endif (WIN32)
+set (_METIS_LIBS
+  -DMETIS_LIBRARY:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/metis-prefix/src/metis-build/libmetis/${CMAKE_CFG_INTDIR}/${_LIB_PREFIX}metis${_LIB_SUFFIX}
+)
 
 ExternalProject_Add (suitesparse
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..

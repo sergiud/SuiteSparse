@@ -722,6 +722,10 @@ add_library (spqr
 )
 
 if (WITH_TBB AND TBB_FOUND)
+  target_include_directories (spqr SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
+  target_include_directories (spqr SYSTEM PUBLIC
+    $<BUILD_INTERFACE:${TBB_INCLUDE_DIRS}>)
+  target_link_libraries (spqr PUBLIC ${TBB_LIBRARIES})
   target_compile_definitions (spqr PRIVATE HAVE_TBB)
 endif (WITH_TBB AND TBB_FOUND)
 
@@ -837,14 +841,6 @@ endif (HAVE_BLAS_UNDERSCORE)
 if (HAVE_M)
   target_link_libraries (suitesparseconfig PUBLIC m)
 endif (HAVE_M)
-
-if (WITH_TBB AND TBB_FOUND)
-  target_include_directories (spqr SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
-  target_include_directories (spqr SYSTEM PUBLIC
-    $<BUILD_INTERFACE:${TBB_INCLUDE_DIRS}>)
-  target_link_libraries (spqr PUBLIC ${TBB_LIBRARIES})
-  target_compile_definitions (spqr PUBLIC WITH_TBB)
-endif (WITH_TBB AND TBB_FOUND)
 
 target_include_directories (amd PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_KLU_INCLUDE_DIR}>"

@@ -1,0 +1,11 @@
+--- metis-5.1.0/GKlib/gk_arch.h	2013-03-30 17:24:45.000000000 +0100
++++ metis-5.1.0/GKlib/gk_arch.h	2015-08-29 20:02:24.582989300 +0200
+@@ -58,7 +58,7 @@
+ #define PTRDIFF_MAX  INT64_MAX
+ #endif
+
+-#ifdef __MSC__
++#if _MSC_VER < 1900
+ /* MSC does not have rint() function */
+ #define rint(x) ((int)((x)+0.5))
+

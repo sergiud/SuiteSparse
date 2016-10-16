@@ -77,6 +77,12 @@ if (MSVC)
   # Also, ignore if the patch has been already applied (-N).
   set (_METIS_PATCH_COMMAND ${CMAKE_COMMAND} -E env ${PATCH_EXECUTABLE} -p1
     -N -l -s -i ${CMAKE_CURRENT_SOURCE_DIR}/metis_msvc.diff)
+  # Build METIS as shared library as requsted by the user, unless MSVC is used.
+  # In this case, the symbols are not exported automatically requiring the
+  # library to be build as a static one.
+  set (_METIS_SHARED OFF)
+else (MSVC)
+  set (_METIS_SHARED ${BUILD_SHARED_LIBS})
 endif (MSVC)
 
 ExternalProject_Add (metis
@@ -85,8 +91,8 @@ ExternalProject_Add (metis
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   CMAKE_CACHE_ARGS
-    -DSHARED:BOOL=${BUILD_SHARED_LIBS}
     -DGKLIB_PATH:PATH=${CMAKE_CURRENT_BINARY_DIR}/metis-prefix/src/metis/GKlib
+    -DSHARED:BOOL=${_METIS_SHARED}
   INSTALL_COMMAND ""
   PATCH_COMMAND ${_METIS_PATCH_COMMAND}
   ${_METIS_DEPENDS}

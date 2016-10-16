@@ -103,6 +103,7 @@ include (CPack)
 include (CheckIncludeFile)
 include (CheckLibraryExists)
 include (CheckTypeSize)
+include (CheckSymbolExists)
 include (GenerateSourceFiles)
 
 find_package (LAPACK REQUIRED)
@@ -121,7 +122,18 @@ if (WITH_TBB)
 endif (WITH_TBB)
 
 check_include_file (complex.h HAVE_COMPLEX_H)
+check_include_file (fenv.h HAVE_FENV_H)
 check_library_exists (m ceil "" HAVE_M)
+
+cmake_push_check_state (RESET)
+set (CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+
+if (HAVE_M)
+  set (CMAKE_REQUIRED_LIBRARIES m)
+endif (HAVE_M)
+
+check_symbol_exists (feenableexcept "fenv.h" HAVE_FEENABLEEXCEPT)
+cmake_pop_check_state ()
 
 set (CMAKE_EXTRA_INCLUDE_FILES complex.h)
 check_type_size (_C_double_complex HAVE_C_DOUBLE_COMPLEX BUILTIN_TYPES_ONLY)
@@ -648,6 +660,10 @@ add_library (cholmod
 target_include_directories (cholmod PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
 )
+
+if (HAVE_FEENABLEEXCEPT)
+  target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
+endif (HAVE_FEENABLEEXCEPT)
 
 target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES} colamd)
 

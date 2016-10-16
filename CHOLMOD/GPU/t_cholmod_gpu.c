@@ -15,6 +15,7 @@
 
 #ifdef GPU_BLAS
 
+#include <cuda_runtime.h>
 #include <string.h>
 #include "cholmod_template.h"
 

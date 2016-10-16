@@ -24,10 +24,17 @@ project (SuiteSparse)
 option (BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 include (CheckLanguage)
+
+if (NOT WIN32)
+  # On non-Windows platforms, the Fortran compiler is required. The script will
+  # not proceed without the Fortran compiler.
+  enable_language (Fortran)
+else (NOT WIN32)
+  check_language (Fortran)
+endif (NOT WIN32)
+
 include (ExternalProject)
 include (ProcessorCount)
-
-check_language (Fortran)
 
 ProcessorCount (_PROCESSORS)
 

@@ -106,6 +106,12 @@ if (WIN32)
     PATH=${_MINGW_BIN_TMP} ${CMAKE_COMMAND} --build
       ${CMAKE_CURRENT_BINARY_DIR}/lapack-prefix/src/lapack-build
   )
+else (WIN32)
+  if (CMAKE_GENERATOR STREQUAL Ninja)
+    # Use make instead of ninja to build LAPACK, since ninja does not support
+    # gfortran.
+    set (_LAPACK_BUILD CMAKE_GENERATOR "Unix Makefiles")
+  endif (CMAKE_GENERATOR STREQUAL Ninja)
 endif (WIN32)
 
 ExternalProject_Add (lapack

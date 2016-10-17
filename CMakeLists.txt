@@ -295,7 +295,7 @@ set (CHOLMOD_SRCS
   #CHOLMOD/Supernodal/t_cholmod_super_solve.c
 )
 
-if (NOT WITH_PARTITION)
+if (NOT WITH_PARTITION OR NOT METIS_FOUND)
   set_property (SOURCE
     CHOLMOD/Partition/cholmod_camd.c
     CHOLMOD/Partition/cholmod_ccolamd.c
@@ -304,7 +304,7 @@ if (NOT WITH_PARTITION)
     CHOLMOD/Partition/cholmod_metis.c
     CHOLMOD/Partition/cholmod_nesdis.c
     APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
-endif (NOT WITH_PARTITION)
+endif (NOT WITH_PARTITION OR NOT METIS_FOUND)
 
 configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
@@ -1279,7 +1279,7 @@ add_feature_info (LGPL WITH_LGPL "GNU LGPL modules")
 add_feature_info (CAMD WITH_CAMD "CAMD, CCOLAMD, CSYMAMD interfaces")
 add_feature_info (Check WITH_CHECK "Check module")
 add_feature_info (Cholesky WITH_CHOLESKY "Cholesky module")
-add_feature_info (Fortran "WITH_FORTRAN AND CMAKE_Fortran_COMPILER" "Fortran compilation")
+add_feature_info (Fortran WITH_FORTRAN "Fortran compilation")
 add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
 add_feature_info (Partition WITH_PARTITION "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")

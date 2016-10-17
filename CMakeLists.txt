@@ -56,13 +56,19 @@ include (FeatureSummary)
 
 check_c_compiler_flag (-fPIC HAVE_PIC)
 
+option (WITH_CUDA "Enable CUDA support" ON)
+option (WITH_OPENMP "Enable OpenMP support" ON)
+
 if (WITH_CUDA)
   find_package (CUDA 7.0)
 endif (WITH_CUDA)
 
+if (WITH_OPENMP)
+  find_package (OpenMP)
+endif (WITH_OPENMP)
+
 find_package (METIS 5.0)
 
-option (WITH_CUDA "Enable CUDA support" ON)
 option (WITH_PRINT "Print diagnostic messages" OFF)
 option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 option (WITH_LGPL "Enable GNU LGPL modules" ON)
@@ -681,6 +687,14 @@ target_include_directories (cholmod PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
 )
 
+if (WITH_OPENMP AND OPENMP_FOUND)
+  target_compile_definitions (cholmod PRIVATE HAVE_OPENMP)
+  target_compile_options (cholmod PRIVATE ${OpenMP_CXX_FLAGS})
+
+  set_property (TARGET cholmod APPEND PROPERTY INTERFACE_LINK_LIBRARIES
+    ${OpenMP_CXX_FLAGS})
+endif (WITH_OPENMP AND OPENMP_FOUND)
+
 if (HAVE_FEENABLEEXCEPT)
   target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
 endif (HAVE_FEENABLEEXCEPT)
@@ -756,6 +770,18 @@ add_library (spqr
   ${SPQR_SRCS}
   ${SPQR_HDRS}
 )
+
+if (WITH_CUDA AND CUDA_FOUND)
+  target_sources (spqr PRIVATE
+    SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
+    SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
+    SPQR/SPQRGPU/spqrgpu_kernel.cpp
+  )
+
+  target_include_directories (spqr PRIVATE ${CUDA_INCLUDE_DIRS})
+  target_link_libraries (spqr PUBLIC ${CUDA_LIBRARIES})
+  target_link_libraries (spqr PUBLIC suitesparsecuda)
+endif (WITH_CUDA AND CUDA_FOUND)
 
 if (WITH_TBB AND TBB_FOUND)
   target_include_directories (spqr SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
@@ -979,6 +1005,93 @@ if (WITH_CUDA AND CUDA_FOUND)
 
   target_link_libraries (suitesparsecuda PUBLIC suitesparseconfig)
 
+  # GPUQREngine
+
+  cuda_include_directories (
+    ${CMAKE_CURRENT_SOURCE_DIR}/GPUQREngine/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include
+  )
+
+  cuda_add_library (gpuqrengine
+    #GPUQREngine/Demo/gpuqrengine_demo.cpp
+    GPUQREngine/Include/GPUQREngine.hpp
+    GPUQREngine/Include/GPUQREngine_BucketList.hpp
+    GPUQREngine/Include/GPUQREngine_Common.hpp
+    GPUQREngine/Include/GPUQREngine_Front.hpp
+    GPUQREngine/Include/GPUQREngine_FrontState.hpp
+    GPUQREngine/Include/GPUQREngine_GraphVizHelper.hpp
+    GPUQREngine/Include/GPUQREngine_Internal.hpp
+    GPUQREngine/Include/GPUQREngine_LLBundle.hpp
+    GPUQREngine/Include/GPUQREngine_Scheduler.hpp
+    GPUQREngine/Include/GPUQREngine_SEntry.hpp
+    GPUQREngine/Include/GPUQREngine_SparseMeta.hpp
+    GPUQREngine/Include/GPUQREngine_Stats.hpp
+    GPUQREngine/Include/GPUQREngine_TaskDescriptor.hpp
+    GPUQREngine/Include/GPUQREngine_Timing.hpp
+    #GPUQREngine/Include/Kernel/Apply/block_apply.cu
+    #GPUQREngine/Include/Kernel/Apply/block_apply_1.cu
+    #GPUQREngine/Include/Kernel/Apply/block_apply_1_by_1.cu
+    #GPUQREngine/Include/Kernel/Apply/block_apply_2.cu
+    #GPUQREngine/Include/Kernel/Apply/block_apply_2_by_1.cu
+    #GPUQREngine/Include/Kernel/Apply/block_apply_3.cu
+    #GPUQREngine/Include/Kernel/Apply/block_apply_3_by_1.cu
+    #GPUQREngine/Include/Kernel/Apply/block_apply_chunk.cu
+    #GPUQREngine/Include/Kernel/Apply/cevta_tile.cu
+    #GPUQREngine/Include/Kernel/Apply/params_apply.hpp
+    #GPUQREngine/Include/Kernel/Apply/pipelined_rearrange.cu
+    #GPUQREngine/Include/Kernel/Assemble/packAssemble.cu
+    #GPUQREngine/Include/Kernel/Assemble/sAssemble.cu
+    #GPUQREngine/Include/Kernel/Factorize/factorize_3_by_1.cu
+    #GPUQREngine/Include/Kernel/Factorize/factorize_vt.cu
+    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_1_by_1.cu
+    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_1_by_1_edge.cu
+    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_2_by_1.cu
+    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_2_by_1_edge.cu
+    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_3_by_1.cu
+    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_3_by_1_edge.cu
+    #GPUQREngine/Include/Kernel/qrKernel.cu
+    GPUQREngine/Include/Kernel/sharedMemory.hpp
+    #GPUQREngine/Include/Kernel/uberKernel.cu
+    GPUQREngine/Source/BucketList/BucketList.cpp
+    GPUQREngine/Source/BucketList/BucketList_AdvanceBundles.cpp
+    GPUQREngine/Source/BucketList/BucketList_CreateBundles.cpp
+    GPUQREngine/Source/BucketList/BucketList_FillWorkQueue.cpp
+    GPUQREngine/Source/BucketList/BucketList_GrowBundles.cpp
+    GPUQREngine/Source/BucketList/BucketList_Manage.cpp
+    GPUQREngine/Source/BucketList/BucketList_PostProcessing.cpp
+    GPUQREngine/Source/GPUQREngine_ExpertDense.cpp
+    GPUQREngine/Source/GPUQREngine_ExpertSparse.cpp
+    GPUQREngine/Source/GPUQREngine_GraphVizHelper.cpp
+    GPUQREngine/Source/GPUQREngine_Internal.cpp
+    GPUQREngine/Source/GPUQREngine_UberKernel.cu
+    GPUQREngine/Source/LLBundle/LLBundle.cpp
+    GPUQREngine/Source/LLBundle/LLBundle_AddTiles.cpp
+    GPUQREngine/Source/LLBundle/LLBundle_Advance.cpp
+    GPUQREngine/Source/LLBundle/LLBundle_GPUPack.cpp
+    GPUQREngine/Source/LLBundle/LLBundle_PipelinedRearrange.cpp
+    GPUQREngine/Source/LLBundle/LLBundle_UpdateSecondMinIndex.cpp
+    GPUQREngine/Source/Scheduler/Scheduler.cpp
+    GPUQREngine/Source/Scheduler/Scheduler_FillWorkQueue.cpp
+    GPUQREngine/Source/Scheduler/Scheduler_Front.cpp
+    GPUQREngine/Source/Scheduler/Scheduler_LaunchKernel.cpp
+    GPUQREngine/Source/Scheduler/Scheduler_PostProcess.cpp
+    GPUQREngine/Source/Scheduler/Scheduler_Render.cpp
+    GPUQREngine/Source/Scheduler/Scheduler_TransferData.cpp
+    GPUQREngine/Source/Scheduler/ssgpu_maxQueueSize.cpp
+    GPUQREngine/Source/TaskDescriptor/TaskDescriptor_flops.cpp
+  )
+
+  target_include_directories (gpuqrengine PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPUQREngine/Include>
+  )
+
+  target_include_directories (gpuqrengine PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/GPUQREngine/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include
+  )
+
+  target_link_libraries (gpuqrengine PUBLIC suitesparsecuda)
+
   set (CHOLMOD_GPU_SRCS CHOLMOD/GPU/cholmod_gpu.c)
 
   generate_source_files (GEN_CHOLMOD_GPU_SRCS_DLONG FILES "${CHOLMOD_GPU_SRCS}" SUFFIX _dl
@@ -994,10 +1107,19 @@ if (WITH_CUDA AND CUDA_FOUND)
     ${GEN_CHOLMOD_GPU_SRCS_DLONG}
   )
 
-  target_compile_definitions (cholmod PRIVATE GPU_BLAS)
+  target_compile_definitions (cholmod PUBLIC GPU_BLAS)
   target_include_directories (cholmod PUBLIC ${CUDA_INCLUDE_DIRS})
   target_link_libraries (cholmod PUBLIC ${CUDA_LIBRARIES}
     ${CUDA_CUBLAS_LIBRARIES} suitesparsecuda)
+
+  # SPQR GPU
+  target_sources (spqr PRIVATE
+    SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
+    SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
+    SPQR/SPQRGPU/spqrgpu_kernel.cpp
+  )
+
+  target_link_libraries (spqr PUBLIC gpuqrengine)
 endif (WITH_CUDA AND CUDA_FOUND)
 
 set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu
@@ -1006,6 +1128,10 @@ set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu
 if (TARGET suitesparsecuda)
   list (APPEND _SuiteSparse_TARGETS suitesparsecuda)
 endif (TARGET suitesparsecuda)
+
+if (TARGET gpuqrengine)
+  list (APPEND _SuiteSparse_TARGETS gpuqrengine)
+endif (TARGET gpuqrengine)
 
 install (TARGETS ${_SuiteSparse_TARGETS}
   EXPORT suitesparse-targets
@@ -1071,6 +1197,14 @@ set_component_version (spqr 2.0.7)
 set_component_version (suitesparseconfig "${VERSION}")
 set_component_version (umfpack 5.7.6)
 
+if (TARGET suitesparsecuda)
+  set_component_version (suitesparsecuda 1.0.5)
+endif (TARGET suitesparsecuda)
+
+if (TARGET gpuqrengine)
+  set_component_version (gpuqrengine 1.0.5)
+endif (TARGET gpuqrengine)
+
 set_target_properties (amd PROPERTIES EXPORT_NAME AMD)
 set_target_properties (btf PROPERTIES EXPORT_NAME BTF)
 set_target_properties (camd PROPERTIES EXPORT_NAME CAMD)
@@ -1083,9 +1217,6 @@ set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
 set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
 set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
 
-if (TARGET suitesparsecuda)
-  set_component_version (suitesparsecuda 1.0.5)
-endif (TARGET suitesparsecuda)
 
 set_target_properties (${_SuiteSparse_TARGETS} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -1149,6 +1280,22 @@ if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
 
   target_link_libraries (umf4hb PRIVATE umfpack)
 endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
+
+add_executable (qrdemo SPQR/Demo/qrdemo.cpp)
+add_executable (qrdemoc SPQR/Demo/qrdemoc.c)
+add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
+add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
+
+target_link_libraries (qrdemo PRIVATE spqr)
+target_link_libraries (qrdemoc PRIVATE spqr)
+target_link_libraries (qrsimple PRIVATE spqr)
+target_link_libraries (qrsimplec PRIVATE spqr)
+
+if (TARGET gpuqrengine)
+  add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
+
+  target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod)
+endif (TARGET gpuqrengine)
 
 add_feature_info (CUDA WITH_CUDA "GPU accelerated CHOLMOD using CUDA")
 add_feature_info (GPL WITH_GPL "GNU GPL modules")

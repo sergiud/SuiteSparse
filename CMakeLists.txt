@@ -69,6 +69,7 @@ endif (WITH_OPENMP)
 
 find_package (METIS 5.0)
 
+option (WITH_DEMOS "Build demos" ON)
 option (WITH_PRINT "Print diagnostic messages" OFF)
 option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 option (WITH_LGPL "Enable GNU LGPL modules" ON)
@@ -1217,85 +1218,60 @@ set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
 set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
 set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
 
+set_target_properties (${_SuiteSparse_TARGETS} PROPERTIES
+  POSITION_INDEPENDENT_CODE ON)
 
-set_target_properties (${_SuiteSparse_TARGETS} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-add_executable (cholmod_demo
-  CHOLMOD/Demo/cholmod_demo.h
-  CHOLMOD/Demo/cholmod_demo.c
-)
-target_link_libraries (cholmod_demo PRIVATE cholmod)
-
-add_executable (cholmod_l_demo
-  CHOLMOD/Demo/cholmod_l_demo.c
-)
-target_link_libraries (cholmod_l_demo PRIVATE cholmod)
-
-add_executable (cholmod_simple
-  CHOLMOD/Demo/cholmod_simple.c
-)
-target_link_libraries (cholmod_simple PRIVATE cholmod)
-
-add_executable (umf4
-  UMFPACK/Demo/umf4.c
-)
-
-target_link_libraries (umf4 PRIVATE umfpack)
-
-add_executable (umfpack_di_demo
-  UMFPACK/Demo/umfpack_di_demo.c
-)
-
-target_link_libraries (umfpack_di_demo PRIVATE umfpack)
-
-add_executable (umfpack_dl_demo
-  UMFPACK/Demo/umfpack_dl_demo.c
-)
-
-target_link_libraries (umfpack_dl_demo PRIVATE umfpack)
-
-add_executable (umfpack_zi_demo
-  UMFPACK/Demo/umfpack_zi_demo.c
-)
-
-target_link_libraries (umfpack_zi_demo PRIVATE umfpack)
-
-add_executable (umfpack_zl_demo
-  UMFPACK/Demo/umfpack_zl_demo.c
-)
-
-target_link_libraries (umfpack_zl_demo PRIVATE umfpack)
-
-add_executable (umfpack_simple
-  UMFPACK/Demo/umfpack_simple.c
-)
-
-target_link_libraries (umfpack_simple PRIVATE umfpack)
-
-if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
-  add_executable (umf4hb
-    UMFPACK/Demo/umf4_f77wrapper.c
-    UMFPACK/Demo/umf4hb.f
+if (WITH_DEMOS)
+  add_executable (cholmod_demo
+    CHOLMOD/Demo/cholmod_demo.h
+    CHOLMOD/Demo/cholmod_demo.c
   )
+  target_link_libraries (cholmod_demo PRIVATE cholmod)
 
-  target_link_libraries (umf4hb PRIVATE umfpack)
-endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
+  add_executable (cholmod_l_demo CHOLMOD/Demo/cholmod_l_demo.c)
+  target_link_libraries (cholmod_l_demo PRIVATE cholmod)
 
-add_executable (qrdemo SPQR/Demo/qrdemo.cpp)
-add_executable (qrdemoc SPQR/Demo/qrdemoc.c)
-add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
-add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
+  add_executable (cholmod_simple CHOLMOD/Demo/cholmod_simple.c)
+  target_link_libraries (cholmod_simple PRIVATE cholmod)
 
-target_link_libraries (qrdemo PRIVATE spqr)
-target_link_libraries (qrdemoc PRIVATE spqr)
-target_link_libraries (qrsimple PRIVATE spqr)
-target_link_libraries (qrsimplec PRIVATE spqr)
+  add_executable (umf4 UMFPACK/Demo/umf4.c)
+  target_link_libraries (umf4 PRIVATE umfpack)
 
-if (TARGET gpuqrengine)
-  add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
+  add_executable (umfpack_di_demo UMFPACK/Demo/umfpack_di_demo.c)
+  target_link_libraries (umfpack_di_demo PRIVATE umfpack)
 
-  target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod)
-endif (TARGET gpuqrengine)
+  add_executable (umfpack_dl_demo UMFPACK/Demo/umfpack_dl_demo.c)
+  target_link_libraries (umfpack_dl_demo PRIVATE umfpack)
+
+  add_executable (umfpack_zi_demo UMFPACK/Demo/umfpack_zi_demo.c)
+  target_link_libraries (umfpack_zi_demo PRIVATE umfpack)
+
+  add_executable (umfpack_zl_demo UMFPACK/Demo/umfpack_zl_demo.c)
+  target_link_libraries (umfpack_zl_demo PRIVATE umfpack)
+
+  add_executable (umfpack_simple UMFPACK/Demo/umfpack_simple.c)
+  target_link_libraries (umfpack_simple PRIVATE umfpack)
+
+  if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
+    add_executable (umf4hb UMFPACK/Demo/umf4_f77wrapper.c UMFPACK/Demo/umf4hb.f)
+    target_link_libraries (umf4hb PRIVATE umfpack)
+  endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
+
+  add_executable (qrdemo SPQR/Demo/qrdemo.cpp)
+  add_executable (qrdemoc SPQR/Demo/qrdemoc.c)
+  add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
+  add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
+
+  target_link_libraries (qrdemo PRIVATE spqr)
+  target_link_libraries (qrdemoc PRIVATE spqr)
+  target_link_libraries (qrsimple PRIVATE spqr)
+  target_link_libraries (qrsimplec PRIVATE spqr)
+
+  if (TARGET gpuqrengine)
+    add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
+    target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod)
+  endif (TARGET gpuqrengine)
+endif (WITH_DEMOS)
 
 add_feature_info (CUDA WITH_CUDA "GPU accelerated CHOLMOD using CUDA")
 add_feature_info (GPL WITH_GPL "GNU GPL modules")

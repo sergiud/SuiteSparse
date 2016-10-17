@@ -1,10 +1,10 @@
 # CMake-based SuiteSparse Superbuild
 
-Building SuiteSparse on Microsoft Windows is fairly difficult, as all its
+Building SuiteSparse on Microsoft Windows is not easy, as all its
 dependencies must be typically built by hand. The whole process is therefore
 rather complicated and time consuming.
 
-The `CMakeLists.txt` in this directory fully automates the build process. The
+The [CMakeLists.txt](CMakeLists.txt) fully automates the build process. The
 CMake-based superbuild script will download all the dependencies and the tools
 required to build them, compile the libraries, and finally build SuiteSparse.
 
@@ -37,7 +37,7 @@ project from the IDE.
 
 ## How does it work?
 
-The `CMakeLists.txt` in this directory will download the following libraries:
+The [CMakeLists.txt](CMakeLists.txt) will download the following libraries:
 
 * METIS 5.1
 * LAPACK 3.6.1
@@ -84,6 +84,7 @@ if (TARGET SuiteSparse::SPQR)
   target_link_libraries (MyProject PRIVATE SuiteSparse::SPQR)
 endif (TARGET SuiteSparse::SPQR)
 ```
+## Bug Reports
 
 For latest updates and issues refer to
 https://github.com/sergiud/SuiteSparse/tree/cmake.

@@ -34,6 +34,8 @@ endif (POLICY CMP0054)
 
 include (CheckLanguage)
 
+option (BUILD_CXSPARSE "Build CXSparse" ON)
+
 option (WITH_FORTRAN "Enables Fortran support" ON)
 
 if (WITH_FORTRAN)
@@ -1274,6 +1276,10 @@ if (WITH_DEMOS)
     target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod)
   endif (TARGET gpuqrengine)
 endif (WITH_DEMOS)
+
+if (BUILD_CXSPARSE)
+  add_subdirectory (CXSparse)
+endif (BUILD_CXSPARSE)
 
 add_feature_info (CUDA WITH_CUDA "GPU accelerated CHOLMOD using CUDA")
 add_feature_info (GPL WITH_GPL "GNU GPL modules")

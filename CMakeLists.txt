@@ -135,7 +135,11 @@ include (CheckTypeSize)
 include (CheckSymbolExists)
 include (GenerateSourceFiles)
 
-find_package (LAPACK REQUIRED)
+find_package (LAPACK QUIET NO_MODULE)
+
+if (NOT LAPACK_FOUND)
+  find_package (LAPACK MODULE REQUIRED)
+endif (NOT LAPACK_FOUND)
 
 cmake_push_check_state (RESET)
 
@@ -704,7 +708,12 @@ if (HAVE_FEENABLEEXCEPT)
   target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
 endif (HAVE_FEENABLEEXCEPT)
 
-target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES} colamd)
+if (TARGET blas AND TARGET lapack)
+  set (LAPACK_DEPENDENCY "find_dependency (LAPACK ${LAPACK_VERSION})")
+  target_link_libraries (cholmod PUBLIC blas lapack)
+else (TARGET blas AND TARGET lapack)
+  target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES} colamd)
+endif (TARGET blas AND TARGET lapack)
 
 if (WITH_PARTITION AND METIS_FOUND)
   target_include_directories (cholmod SYSTEM PRIVATE ${METIS_INCLUDE_DIRS})

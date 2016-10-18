@@ -25,13 +25,14 @@ option (BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 include (CheckLanguage)
 
-if (NOT WIN32)
-  # On non-Windows platforms, the Fortran compiler is required. The script will
-  # not proceed without the Fortran compiler.
+# Check whether Fortran is possibly available. The check might fail either
+# because a Fortran compiler could not be found, or the generator does not
+# support it.
+check_language (Fortran)
+
+if (CMAKE_Fortran_COMPILER)
   enable_language (Fortran)
-else (NOT WIN32)
-  check_language (Fortran)
-endif (NOT WIN32)
+endif (CMAKE_Fortran_COMPILER)
 
 include (ExternalProject)
 include (ProcessorCount)
@@ -176,8 +177,7 @@ else (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 set (_LAPACK_LIBS
-  -DBLAS_blas_LIBRARY:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/lapack-prefix/src/lapack-build/lib/libblas${_LIB_SUFFIX}
-  -DLAPACK_lapack_LIBRARY:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/lapack-prefix/src/lapack-build/lib/liblapack${_LIB_SUFFIX}
+  -DLAPACK_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/lapack-prefix/src/lapack-build
 )
 
 set (_METIS_LIBS

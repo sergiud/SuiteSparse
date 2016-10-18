@@ -1,9 +1,12 @@
 @PACKAGE_INIT@
 
 include (CMakeFindDependencyMacro)
-include ("${CMAKE_CURRENT_LIST_DIR}/suitesparse-targets.cmake")
 
 @LAPACK_DEPENDENCY@
+
+# Add the targets after the dependecies were found since SuiteSparse targets
+# depend on the external targets.
+include ("${CMAKE_CURRENT_LIST_DIR}/suitesparse-targets.cmake")
 
 set (_SuiteSparse_NAMESPACE "@SuiteSparse_NAMESPACE@")
 

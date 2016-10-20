@@ -56,7 +56,8 @@ include (CheckFunctionExists)
 include (CMakeDependentOption)
 include (FeatureSummary)
 
-check_c_compiler_flag (-fPIC HAVE_PIC)
+check_c_compiler_flag (-fPIC HAVE_FPIC)
+check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
 
 option (WITH_CUDA "Enable CUDA support" ON)
 option (WITH_OPENMP "Enable OpenMP support" ON)
@@ -131,8 +132,9 @@ include (CMakePushCheckState)
 include (CPack)
 include (CheckIncludeFile)
 include (CheckLibraryExists)
-include (CheckTypeSize)
 include (CheckSymbolExists)
+include (CheckTypeSize)
+include (ComponentVersion)
 include (GenerateSourceFiles)
 
 find_package (LAPACK REQUIRED)
@@ -990,9 +992,9 @@ if (WITH_CUDA AND CUDA_FOUND)
   endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION
       VERSION_GREATER "6.1")
 
-  if (HAVE_PIC)
+  if (HAVE_FPIC)
     list (APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
-  endif (HAVE_PIC)
+  endif (HAVE_FPIC)
 
   cuda_add_library (suitesparsecuda
     SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Runtime.hpp
@@ -1197,6 +1199,10 @@ endif (TARGET suitesparsecuda)
 if (TARGET gpuqrengine)
   set_component_version (gpuqrengine 1.0.5)
 endif (TARGET gpuqrengine)
+
+if (HAVE_QSTD_C99)
+  target_compile_options (suitesparseconfig PUBLIC $<$<C_COMPILER_ID:Intel>:-Qstd=c99>)
+endif (HAVE_QSTD_C99)
 
 set_target_properties (amd PROPERTIES EXPORT_NAME AMD)
 set_target_properties (btf PROPERTIES EXPORT_NAME BTF)

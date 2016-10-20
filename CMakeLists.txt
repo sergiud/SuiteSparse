@@ -176,6 +176,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     _CRT_SECURE_NO_WARNINGS)
 endif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
+source_group ("Generated Files" REGULAR_EXPRESSION "^[^_]+_[^_]+_[^\\.]+\\.c$")
+
 set (AMD_SRCS
   AMD/Source/amd_1.c
   AMD/Source/amd_2.c

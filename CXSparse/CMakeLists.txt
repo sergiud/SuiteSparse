@@ -205,7 +205,6 @@ if (NOT HAVE_C99_COMPLEX STREQUAL "")
 elseif (HAVE_C99_COMPLEX_SUBSET)
   # C99 subset supported by MSVC
   target_compile_definitions (cxsparse PUBLIC CXSPARSE_C99_COMPLEX_SUBSET)
-  message("foo")
 else (NOT HAVE_C99_COMPLEX STREQUAL "")
   target_compile_definitions (cxsparse PUBLIC NCOMPLEX)
 endif (NOT HAVE_C99_COMPLEX STREQUAL "")

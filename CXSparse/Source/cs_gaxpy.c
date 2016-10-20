@@ -10,7 +10,7 @@ CS_INT cs_gaxpy (const cs *A, const CS_ENTRY *x, CS_ENTRY *y)
     {
         for (p = Ap [j] ; p < Ap [j+1] ; p++)
         {
-            y [Ai [p]] += Ax [p] * x [j] ;
+            y [Ai [p]] = CS_ADD(y[Ai[p]], CS_MUL(Ax [p], x [j])) ;
         }
     }
     return (1) ;

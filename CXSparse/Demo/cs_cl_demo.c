@@ -27,7 +27,7 @@ static cs_cl *make_sym (cs_cl *A)
     cs_cl *AT, *C ;
     AT = cs_cl_transpose (A, 1) ;          /* AT = A' */
     cs_cl_fkeep (AT, &dropdiag, NULL) ;    /* drop diagonal entries from AT */
-    C = cs_cl_add (A, AT, 1, 1) ;          /* C = A+AT */
+    C = cs_cl_add (A, AT, CS_COMPLEX_ONE(), CS_COMPLEX_ONE()) ;          /* C = A+AT */
     cs_cl_spfree (AT) ;
     return (C) ;
 }
@@ -36,16 +36,16 @@ static cs_cl *make_sym (cs_cl *A)
 static void rhs (cs_complex_t *x, cs_complex_t *b, cs_long_t m)
 {
     cs_long_t i ;
-    for (i = 0 ; i < m ; i++) b [i] = 1 + ((double) i) / m ;
+    for (i = 0 ; i < m ; i++) b [i] = CS_COMPLEX_MAKE_ENTRY(1. + ((double) i) / m);
     for (i = 0 ; i < m ; i++) x [i] = b [i] ;
 }
 
 /* infinity-norm of x */
-static double norm (cs_complex_t *x, cs_long_t n)
+static double norm_d (cs_complex_t *x, cs_long_t n)
 {
     cs_long_t i ;
     double normx = 0 ;
-    for (i = 0 ; i < n ; i++) normx = CS_MAX (normx, cabs (x [i])) ;
+    for (i = 0 ; i < n ; i++) normx = CS_MAX (normx, CS_COMPLEX_ABS (x [i])) ;
     return (normx) ;
 }
 
@@ -55,10 +55,10 @@ static void print_resid (cs_long_t ok, cs_cl *A, cs_complex_t *x, cs_complex_t *
     cs_long_t i, m, n ;
     if (!ok) { printf ("    (failed)\n") ; return ; }
     m = A->m ; n = A->n ;
-    for (i = 0 ; i < m ; i++) resid [i] = -b [i] ;  /* resid = -b */
+    for (i = 0 ; i < m ; i++) resid [i] = CS_COMPLEX_MUL(CS_COMPLEX_MINUS_ONE(), b [i]) ;  /* resid = -b */
     cs_cl_gaxpy (A, x, resid) ;                        /* resid = resid + A*x  */
-    printf ("resid: %8.2e\n", norm (resid,m) / ((n == 0) ? 1 :
-        (cs_cl_norm (A) * norm (x,n) + norm (b,m)))) ;
+    printf ("resid: %8.2e\n", norm_d (resid,m) / ((n == 0) ? 1 :
+        (cs_cl_norm (A) * norm_d (x,n) + norm_d (b,m)))) ;
 }
 
 static double tic (void) { return (clock () / (double) CLOCKS_PER_SEC) ; }
@@ -81,7 +81,7 @@ problem *get_problem (FILE *f, double tol)
     cs_cl *T, *A, *C ;
     cs_long_t sym, m, n, mn, nz1, nz2 ;
     problem *Prob ;
-    Prob = cs_cl_calloc (1, sizeof (problem)) ;
+    Prob = (problem*)cs_cl_calloc (1, sizeof (problem)) ;
     if (!Prob) return (NULL) ;
     T = cs_cl_load (f) ;                   /* load triplet matrix T from a file */
     Prob->A = A = cs_cl_compress (T) ;     /* A = compressed-column form of T */
@@ -102,9 +102,9 @@ problem *get_problem (FILE *f, double tol)
     if (nz1 != nz2) printf ("zero entries dropped: %g\n", (double) (nz1 - nz2));
     if (nz2 != A->p [n]) printf ("tiny entries dropped: %g\n",
             (double) (nz2 - A->p [n])) ;
-    Prob->b = cs_cl_malloc (mn, sizeof (cs_complex_t)) ;
-    Prob->x = cs_cl_malloc (mn, sizeof (cs_complex_t)) ;
-    Prob->resid = cs_cl_malloc (mn, sizeof (cs_complex_t)) ;
+    Prob->b = (cs_complex_t*)cs_cl_malloc (mn, sizeof (cs_complex_t)) ;
+    Prob->x = (cs_complex_t*)cs_cl_malloc (mn, sizeof (cs_complex_t)) ;
+    Prob->resid = (cs_complex_t*)cs_cl_malloc (mn, sizeof (cs_complex_t)) ;
     return ((!Prob->b || !Prob->x || !Prob->resid) ? free_problem (Prob) : Prob) ;
 }
 
@@ -117,7 +117,7 @@ problem *free_problem (problem *Prob)
     cs_cl_free (Prob->b) ;
     cs_cl_free (Prob->x) ;
     cs_cl_free (Prob->resid) ;
-    return (cs_cl_free (Prob)) ;
+    return (problem*)(cs_cl_free (Prob)) ;
 }
 
 /* solve a linear system using Cholesky, LU, and QR, with various orderings */
@@ -209,7 +209,7 @@ cs_long_t demo3 (problem *Prob)
     rhs (x, b, n) ;                             /* compute right-hand side */
     printf ("\nchol then update/downdate ") ;
     print_order (1) ;
-    y = cs_cl_malloc (n, sizeof (cs_complex_t)) ;
+    y = (cs_complex_t*)cs_cl_malloc (n, sizeof (cs_complex_t)) ;
     t = tic () ;
     S = cs_cl_schol (1, C) ;                       /* symbolic Chol, amd(A+A') */
     printf ("\nsymbolic chol time %8.2f\n", toc (t)) ;
@@ -239,7 +239,7 @@ cs_long_t demo3 (problem *Prob)
     {
         p2 = p1 - Lp [k] ;
         Wi [p2] = Li [p1] ;
-        Wx [p2] = s * rand () / ((double) RAND_MAX) ;
+        Wx [p2] = CS_COMPLEX_MULCR(s, (double)(rand ()) / ((double) RAND_MAX)) ;
     }
     t = tic () ;
     ok = cs_cl_updown (N->L, +1, W, S->parent) ;   /* update: L*L'+W*W' */
@@ -258,7 +258,7 @@ cs_long_t demo3 (problem *Prob)
     WW = cs_cl_multiply (W2, WT) ;
     cs_cl_spfree (WT) ;
     cs_cl_spfree (W2) ;
-    E = cs_cl_add (C, WW, 1, 1) ;
+    E = cs_cl_add (C, WW, CS_COMPLEX_MAKE(1., 0.), CS_COMPLEX_MAKE(1., 0.)) ;
     cs_cl_spfree (WW) ;
     if (!E || !p) return (done3 (0, S, N, y, W, E, p)) ;
     printf ("update:   time: %8.2f (incl solve) ", t1+t) ;

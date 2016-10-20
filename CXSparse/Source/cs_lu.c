@@ -10,16 +10,16 @@ csn *cs_lu (const cs *A, const css *S, double tol)
     if (!CS_CSC (A) || !S) return (NULL) ;          /* check inputs */
     n = A->n ;
     q = S->q ; lnz = S->lnz ; unz = S->unz ;
-    x = cs_malloc (n, sizeof (CS_ENTRY)) ;            /* get CS_ENTRY workspace */
-    xi = cs_malloc (2*n, sizeof (CS_INT)) ;            /* get CS_INT workspace */
-    N = cs_calloc (1, sizeof (csn)) ;               /* allocate result */
+    x = (CS_ENTRY *)cs_malloc (n, sizeof (CS_ENTRY)) ;            /* get CS_ENTRY workspace */
+    xi = (CS_INT *)cs_malloc (2*n, sizeof (CS_INT)) ;            /* get CS_INT workspace */
+    N = (csn *)cs_calloc (1, sizeof (csn)) ;               /* allocate result */
     if (!x || !xi || !N) return (cs_ndone (N, NULL, xi, x, 0)) ;
     N->L = L = cs_spalloc (n, n, lnz, 1, 0) ;       /* allocate result L */
     N->U = U = cs_spalloc (n, n, unz, 1, 0) ;       /* allocate result U */
-    N->pinv = pinv = cs_malloc (n, sizeof (CS_INT)) ;  /* allocate result pinv */
+    N->pinv = pinv = (CS_INT *)cs_malloc (n, sizeof (CS_INT)) ;  /* allocate result pinv */
     if (!L || !U || !pinv) return (cs_ndone (N, NULL, xi, x, 0)) ;
     Lp = L->p ; Up = U->p ;
-    for (i = 0 ; i < n ; i++) x [i] = 0 ;           /* clear workspace */
+    for (i = 0 ; i < n ; i++) x [i] = CS_ZERO() ;           /* clear workspace */
     for (i = 0 ; i < n ; i++) pinv [i] = -1 ;       /* no rows pivotal yet */
     for (k = 0 ; k <= n ; k++) Lp [k] = 0 ;         /* no cols of L yet */
     lnz = unz = 0 ;
@@ -64,16 +64,16 @@ csn *cs_lu (const cs *A, const css *S, double tol)
         Ux [unz++] = pivot ;
         pinv [ipiv] = k ;           /* ipiv is the kth pivot row */
         Li [lnz] = ipiv ;           /* first entry in L(:,k) is L(k,k) = 1 */
-        Lx [lnz++] = 1 ;
+        Lx [lnz++] = CS_MAKE_ENTRY(1) ;
         for (p = top ; p < n ; p++) /* L(k+1:n,k) = x / pivot */
         {
             i = xi [p] ;
             if (pinv [i] < 0)       /* x(i) is an entry in L(:,k) */
             {
                 Li [lnz] = i ;      /* save unpermuted row in L */
-                Lx [lnz++] = x [i] / pivot ;    /* scale pivot column */
+                Lx [lnz++] = CS_DIV(x [i], pivot) ;    /* scale pivot column */
             }
-            x [i] = 0 ;             /* x [0..n-1] = 0 for next k */
+            x [i] = CS_ZERO() ;             /* x [0..n-1] = 0 for next k */
         }
     }
     /* --- Finalize L and U ------------------------------------------------- */

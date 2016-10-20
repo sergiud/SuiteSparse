@@ -41,7 +41,7 @@ static void rhs (double *x, double *b, int m)
 }
 
 /* infinity-norm of x */
-static double norm (double *x, int n)
+static double norm_d (double *x, int n)
 {
     int i ;
     double normx = 0 ;
@@ -57,8 +57,8 @@ static void print_resid (int ok, cs_di *A, double *x, double *b, double *resid)
     m = A->m ; n = A->n ;
     for (i = 0 ; i < m ; i++) resid [i] = -b [i] ;  /* resid = -b */
     cs_di_gaxpy (A, x, resid) ;                        /* resid = resid + A*x  */
-    printf ("resid: %8.2e\n", norm (resid,m) / ((n == 0) ? 1 :
-        (cs_di_norm (A) * norm (x,n) + norm (b,m)))) ;
+    printf ("resid: %8.2e\n", norm_d (resid,m) / ((n == 0) ? 1 :
+        (cs_di_norm (A) * norm_d (x,n) + norm_d (b,m)))) ;
 }
 
 static double tic (void) { return (clock () / (double) CLOCKS_PER_SEC) ; }

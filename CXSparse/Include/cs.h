@@ -28,18 +28,79 @@
 #include "mex.h"
 #endif
 
-
-#ifdef __cplusplus
-#ifndef NCOMPLEX
-#include <complex>
-typedef std::complex<double> cs_complex_t ;
-#endif
-extern "C" {
-#else
 #ifndef NCOMPLEX
 #include <complex.h>
-#define cs_complex_t double _Complex
-#endif
+
+#if defined(CXSPARSE_C99_COMPLEX)
+typedef double complex cs_complex_t;
+
+#define CS_COMPLEX_MULCC(x, y) ((x) * (y))
+#define CS_COMPLEX_MULCR(x, y) ((x) * (y))
+#define CS_COMPLEX_MUL(x, y) ((x) * (y))
+#define CS_COMPLEX_MAKE_ENTRY(x) (x)
+#define CS_COMPLEX_ZERO() CS_COMPLEX_MAKE_ENTRY(0.)
+#define CS_COMPLEX_SQRT(x) csqrt(x)
+#define CS_COMPLEX_ABS(x) cabs(x)
+#define CS_COMPLEX_ONE() CS_COMPLEX_MAKE_ENTRY(1.)
+#define CS_COMPLEX_MINUS_ONE() CS_COMPLEX_MAKE_ENTRY(-1.)
+#define CS_COMPLEX_ADD(x, y) ((x) + (y))
+#define CS_COMPLEX_SUB(x, y) ((x) - (y))
+#define CS_COMPLEX_IS_ZERO(x) ((x) == 0)
+#define CS_COMPLEX_DIV(x, y) ((x) / (y))
+#define CS_COMPLEX_MAKE(re, im) ((re) + (im) * I)
+
+#elif defined(CXSPARSE_C99_COMPLEX_SUBSET)
+typedef _Dcomplex cs_complex_t;
+
+#define CS_COMPLEX_MUL(x, y) CS_COMPLEX_MULCC(x, y)
+#define CS_COMPLEX_MAKE_ENTRY(x) CS_COMPLEX_MAKE(x, 0.0)
+#define CS_COMPLEX_ZERO() CS_COMPLEX_MAKE_ENTRY(0.)
+#define CS_COMPLEX_SQRT(x) csqrt(x)
+#define CS_COMPLEX_ABS(x) cabs(x)
+#define CS_COMPLEX_ONE() CS_COMPLEX_MAKE_ENTRY(1.)
+#define CS_COMPLEX_MINUS_ONE() CS_COMPLEX_MAKE_ENTRY(-1.)
+#define CS_COMPLEX_ADD(x, y) _DCOMPLEX_(creal(x) + creal(y), cimag(x) + cimag(y))
+#define CS_COMPLEX_SUB(x, y) _DCOMPLEX_(creal(x) - creal(y), cimag(x) - cimag(y))
+#define CS_COMPLEX_IS_ZERO(x) (creal(x) == 0 && cimag(x) == 0)
+#define CS_COMPLEX_DIV(x, y) _DCOMPLEX_((x._Val[0] * y._Val[0] + x._Val[1] * y._Val[1]) / (y._Val[0] * y._Val[0] + y._Val[1] * y._Val[1]),  (x._Val[1] * y._Val[0] - x._Val[0] * y._Val[1]) / (y._Val[0] * y._Val[0] + y._Val[1] * y._Val[1]))
+#define CS_COMPLEX_MAKE(re, im) _DCOMPLEX_(re, im)
+#define CS_COMPLEX_MULCC(x, y) _Cmulcc(x, y)
+#define CS_COMPLEX_MULCR(x, y) _Cmulcr(x, y)
+#else
+#error "C99 complex support not specified"
+#endif /* defined(CXSPARSE_C99_COMPLEX) */
+#endif /* !defined(NCOMPLEX) */
+
+#ifdef CS_COMPLEX
+#ifdef NCOMPLEX
+#error "C99 complex support undefined"
+#endif /* defined(NCOMPLEX) */
+#define CS_MUL(x, y) CS_COMPLEX_MUL(x, y)
+#define CS_MAKE_ENTRY(x) CS_COMPLEX_MAKE_ENTRY(x)
+#define CS_ZERO() CS_COMPLEX_ZERO()
+#define CS_SQRT(x) CS_COMPLEX_SQRT(x)
+#define CS_ONE() CS_COMPLEX_ONE()
+#define CS_MINUS_ONE() CS_COMPLEX_MINUS_ONE()
+#define CS_ADD(x, y) CS_COMPLEX_ADD(x, y)
+#define CS_SUB(x, y) CS_COMPLEX_SUB(x, y)
+#define CS_IS_ZERO(x) CS_COMPLEX_IS_ZERO(x)
+#define CS_DIV(x, y) CS_COMPLEX_DIV(x, y)
+#else /* !defined(CS_COMPLEX) */
+#define CS_MUL(x, y) ((x) * (y))
+#define CS_MAKE_ENTRY(x) (x)
+#define CS_SQRT(x) sqrt(x)
+#define CS_ZERO() 0
+#define CS_ONE() 1
+#define CS_MINUS_ONE() (-1)
+#define CS_ADD(x, y) ((x) + (y))
+#define CS_SUB(x, y) ((x) - (y))
+#define CS_IS_ZERO(x) ((x) == 0)
+#define CS_DIV(x, y) ((x) / (y))
+#endif /* defined(CS_COMPLEX) */
+
+
+#if defined(__cplusplus)
+extern "C" {
 #endif
 
 #define CS_VER 3                    /* CXSparse Version */
@@ -443,14 +504,14 @@ cs_complex_t cs_ci_house (cs_complex_t *x, double *beta, int n) ;
 int *cs_ci_maxtrans (const cs_ci *A, int seed) ;
 int *cs_ci_post (const int *parent, int n) ;
 cs_cid *cs_ci_scc (cs_ci *A) ;
-int cs_ci_scatter (const cs_ci *A, int j, cs_complex_t beta, int *w, 
+int cs_ci_scatter (const cs_ci *A, int j, cs_complex_t beta, int *w,
     cs_complex_t *x, int mark,cs_ci *C, int nz) ;
 int cs_ci_tdfs (int j, int k, int *head, const int *next, int *post,
     int *stack) ;
 int cs_ci_leaf (int i, int j, const int *first, int *maxfirst, int *prevleaf,
     int *ancestor, int *jleaf) ;
 int cs_ci_reach (cs_ci *G, const cs_ci *B, int k, int *xi, const int *pinv) ;
-int cs_ci_spsolve (cs_ci *L, const cs_ci *B, int k, int *xi, 
+int cs_ci_spsolve (cs_ci *L, const cs_ci *B, int k, int *xi,
     cs_complex_t *x, const int *pinv, int lo) ;
 int cs_ci_ereach (const cs_ci *A, int k, const int *parent, int *s, int *w) ;
 int *cs_ci_randperm (int n, int seed) ;
@@ -591,7 +652,7 @@ cs_long_t cs_cl_leaf (cs_long_t i, cs_long_t j, const cs_long_t *first,
     cs_long_t *maxfirst, cs_long_t *prevleaf, cs_long_t *ancestor, cs_long_t *jleaf) ;
 cs_long_t cs_cl_reach (cs_cl *G, const cs_cl *B, cs_long_t k, cs_long_t *xi,
     const cs_long_t *pinv) ;
-cs_long_t cs_cl_spsolve (cs_cl *L, const cs_cl *B, cs_long_t k, cs_long_t *xi, 
+cs_long_t cs_cl_spsolve (cs_cl *L, const cs_cl *B, cs_long_t k, cs_long_t *xi,
     cs_complex_t *x, const cs_long_t *pinv, cs_long_t lo) ;
 cs_long_t cs_cl_ereach (const cs_cl *A, cs_long_t k, const cs_long_t *parent,
     cs_long_t *s, cs_long_t *w) ;
@@ -639,10 +700,17 @@ cs_cld *cs_cl_ddone (cs_cld *D, cs_cl *C, void *w, cs_long_t ok) ;
 #endif
 
 #ifdef CS_COMPLEX
+#ifndef NCOMPLEX
 #define CS_REAL(x) creal(x)
 #define CS_IMAG(x) cimag(x)
 #define CS_CONJ(x) conj(x)
 #define CS_ABS(x) cabs(x)
+#elif defined(__cplusplus)
+#define CS_REAL(x) (x).real()
+#define CS_IMAG(x) (x).imag()
+#define CS_CONJ(x) conj(x)
+#define CS_ABS(x) abs(x)
+#endif
 #else
 #define CS_REAL(x) (x)
 #define CS_IMAG(x) (0.)
@@ -752,7 +820,7 @@ cs_dl *cs_l_real (cs_cl *A, cs_long_t real) ;
 cs_cl *cs_l_complex (cs_dl *A, cs_long_t real) ;
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 #endif

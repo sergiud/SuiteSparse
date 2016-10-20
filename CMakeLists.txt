@@ -56,7 +56,8 @@ include (CheckFunctionExists)
 include (CMakeDependentOption)
 include (FeatureSummary)
 
-check_c_compiler_flag (-fPIC HAVE_PIC)
+check_c_compiler_flag (-fPIC HAVE_FPIC)
+check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
 
 option (WITH_CUDA "Enable CUDA support" ON)
 option (WITH_OPENMP "Enable OpenMP support" ON)
@@ -131,8 +132,9 @@ include (CMakePushCheckState)
 include (CPack)
 include (CheckIncludeFile)
 include (CheckLibraryExists)
-include (CheckTypeSize)
 include (CheckSymbolExists)
+include (CheckTypeSize)
+include (ComponentVersion)
 include (GenerateSourceFiles)
 
 find_package (LAPACK QUIET NO_MODULE)
@@ -177,6 +179,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set_property (DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
     _CRT_SECURE_NO_WARNINGS)
 endif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+
+source_group ("Generated Files" REGULAR_EXPRESSION "^[^_]+_[^_]+_[^\\.]+\\.c$")
 
 set (AMD_SRCS
   AMD/Source/amd_1.c
@@ -696,12 +700,14 @@ target_include_directories (cholmod PUBLIC
 
 if (WITH_OPENMP AND OPENMP_FOUND)
   target_compile_definitions (cholmod PRIVATE HAVE_OPENMP)
-  target_compile_options (cholmod PRIVATE ${OpenMP_CXX_FLAGS})
+  target_compile_options (cholmod PRIVATE ${OpenMP_C_FLAGS})
 
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set_property (TARGET cholmod APPEND PROPERTY LINK_LIBRARIES
+      ${OpenMP_C_FLAGS})
     set_property (TARGET cholmod APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-      ${OpenMP_CXX_FLAGS})
-  endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      ${OpenMP_C_FLAGS})
+  endif (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif (WITH_OPENMP AND OPENMP_FOUND)
 
 if (HAVE_FEENABLEEXCEPT)
@@ -997,9 +1003,9 @@ if (WITH_CUDA AND CUDA_FOUND)
   endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION
       VERSION_GREATER "6.1")
 
-  if (HAVE_PIC)
+  if (HAVE_FPIC)
     list (APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
-  endif (HAVE_PIC)
+  endif (HAVE_FPIC)
 
   cuda_add_library (suitesparsecuda
     SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Runtime.hpp
@@ -1185,20 +1191,6 @@ install (FILES
   DESTINATION lib/cmake/SuiteSparse
   COMPONENT Development)
 
-macro (set_component_version _COMPONENT _VERSION)
-  set_target_properties (${_COMPONENT} PROPERTIES VERSION ${_VERSION})
-  string (REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+)" "\\1" _MAJOR_VERSION
-    "${_VERSION}")
-  set_target_properties (${_COMPONENT} PROPERTIES SOVERSION ${_MAJOR_VERSION})
-
-  if (WIN32)
-    set_target_properties (${_COMPONENT} PROPERTIES RUNTIME_OUTPUT_NAME
-      ${_COMPONENT}-${_VERSION})
-    set_target_properties (${_COMPONENT} PROPERTIES RUNTIME_OUTPUT_NAME_DEBUG
-      ${_COMPONENT}-debug-${_VERSION})
-  endif (WIN32)
-endmacro (set_component_version)
-
 set_component_version (amd 2.4.6)
 set_component_version (btf 1.2.6)
 set_component_version (camd 2.4.6)
@@ -1218,6 +1210,10 @@ endif (TARGET suitesparsecuda)
 if (TARGET gpuqrengine)
   set_component_version (gpuqrengine 1.0.5)
 endif (TARGET gpuqrengine)
+
+if (HAVE_QSTD_C99)
+  target_compile_options (suitesparseconfig PUBLIC $<$<C_COMPILER_ID:Intel>:-Qstd=c99>)
+endif (HAVE_QSTD_C99)
 
 set_target_properties (amd PROPERTIES EXPORT_NAME AMD)
 set_target_properties (btf PROPERTIES EXPORT_NAME BTF)

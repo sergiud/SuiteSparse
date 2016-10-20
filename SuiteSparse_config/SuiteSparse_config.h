@@ -155,7 +155,7 @@ int SuiteSparse_divcomplex
 /* determine which timer to use, if any */
 #ifndef NTIMER
 #ifdef _POSIX_C_SOURCE
-#if    _POSIX_C_SOURCE >= 199309L
+#if    _POSIX_C_SOURCE >= 199309L && defined(_POSIX_MONOTONIC_CLOCK)
 #define SUITESPARSE_TIMER_ENABLED
 #endif
 #endif

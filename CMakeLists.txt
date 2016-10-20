@@ -692,12 +692,14 @@ target_include_directories (cholmod PUBLIC
 
 if (WITH_OPENMP AND OPENMP_FOUND)
   target_compile_definitions (cholmod PRIVATE HAVE_OPENMP)
-  target_compile_options (cholmod PRIVATE ${OpenMP_CXX_FLAGS})
+  target_compile_options (cholmod PRIVATE ${OpenMP_C_FLAGS})
 
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set_property (TARGET cholmod APPEND PROPERTY LINK_LIBRARIES
+      ${OpenMP_C_FLAGS})
     set_property (TARGET cholmod APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-      ${OpenMP_CXX_FLAGS})
-  endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      ${OpenMP_C_FLAGS})
+  endif (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif (WITH_OPENMP AND OPENMP_FOUND)
 
 if (HAVE_FEENABLEEXCEPT)

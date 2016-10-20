@@ -32,6 +32,7 @@
 *.tcov
 *.toc 
 *.un~
+build*
 gmon.out
 my_*.out
 

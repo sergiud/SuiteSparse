@@ -24,11 +24,15 @@ if (POLICY CMP0054)
   cmake_policy (SET CMP0054 NEW)
 endif (POLICY CMP0054)
 
-project (CXSparse C)
+#if (MSVC)
+  #project (cxsparse CXX)
+#else (MSVC)
+project (cxsparse C)
+#endif (MSVC)
 
 set (MAJOR_VERSION 3)
 set (MINOR_VERSION 1)
-set (VERSION_PATCH 3)
+set (VERSION_PATCH 9)
 
 set (SHORT_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
 
@@ -38,8 +42,8 @@ endif (NOT VERSION_PATCH EQUAL 0)
 
 set (VERSION "${MAJOR_VERSION}.${MINOR_VERSION}.${VERSION_PATCH}")
 
-set (CPACK_PACKAGE_NAME CXSparse)
-set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "CXSparse: an extended version of CSparse")
+set (CPACK_PACKAGE_NAME cxsparse)
+set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "cxsparse: an extended version of CSparse")
 set (CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION})
 set (CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION})
 set (CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
@@ -52,33 +56,50 @@ if (NOT CPack_CMake_INCLUDED)
 endif ()
 
 include (CMakePackageConfigHelpers)
-include (CheckSymbolExists)
-include (CheckIncludeFile)
+include (CMakePushCheckState)
 include (CheckCSourceCompiles)
+include (CheckIncludeFile)
 include (CheckLibraryExists)
+include (CheckStructHasMember)
+include (CheckSymbolExists)
 include (CheckTypeSize)
+include (ComponentVersion)
 include (GenerateSourceFiles)
 
 check_include_file (complex.h HAVE_COMPLEX_H)
 
-if (HAVE_COMPLEX_H)
-  check_c_source_compiles ("
-#include <complex.h>
-
-int main()
-{
-  int I;
-  I = 0;
-  (void)I;
-  return 0;
-}
-" COMPLEX_I_MACRO_NO_CONFLICT)
-endif (HAVE_COMPLEX_H)
-
+cmake_push_check_state (RESET)
 set (CMAKE_EXTRA_INCLUDE_FILES complex.h)
-check_symbol_exists (_DCOMPLEX_ complex.h HAVE__DCOMPLEX_)
-check_type_size (_C_double_complex HAVE_C_DOUBLE_COMPLEX BUILTIN_TYPES_ONLY)
+
+if (HAVE_QSTD_C99)
+  set (CMAKE_REQUIRED_FLAGS /Qstd=c99)
+endif (HAVE_QSTD_C99)
+
 check_library_exists (m sqrt "" HAVE_M)
+
+check_type_size ("double complex" HAVE_C99_COMPLEX BUILTIN_TYPES_ONLY)
+check_type_size (_C_double_complex HAVE_C_DOUBLE_COMPLEX)
+check_symbol_exists (_DCOMPLEX_ complex.h HAVE__DCOMPLEX_)
+check_symbol_exists (_Cmulcc complex.h HAVE__CMULCC)
+check_symbol_exists (_Cmulcr complex.h HAVE__CMULCR)
+check_symbol_exists (cabs complex.h HAVE_CABS)
+check_symbol_exists (cimag complex.h HAVE_CIMAG)
+check_symbol_exists (conj complex.h HAVE_CONJ)
+check_symbol_exists (creal complex.h HAVE_CREAL)
+check_symbol_exists (csqrt complex.h HAVE_CSQRT)
+check_struct_has_member (_C_double_complex _Val complex.h
+  HAVE_C_DOUBLE_COMPLEX__VAL_MEMBER LANGUAGE C)
+
+cmake_pop_check_state ()
+
+if (HAVE__CMULCC AND HAVE__CMULCR AND HAVE__DCOMPLEX_
+  AND HAVE_CABS AND HAVE_CIMAG AND HAVE_CREAL AND HAVE_CSQRT
+  AND HAVE_CONJ AND NOT HAVE_C_DOUBLE_COMPLEX STREQUAL "" AND
+  HAVE_C_DOUBLE_COMPLEX__VAL_MEMBER)
+  set (HAVE_C99_COMPLEX_SUBSET ON)
+endif ()
+
+source_group ("Generated Files" REGULAR_EXPRESSION "^[^_]+_[^_]+_[^\\.]+\\.c$")
 
 set (HDRS
   Include/cs.h
@@ -141,19 +162,15 @@ set (PROJECT_SRCS
 generate_source_files (GEN_SRCS_DINT FILES "${PROJECT_SRCS}" SUFFIX _di)
 generate_source_files (GEN_SRCS_DLONG FILES "${PROJECT_SRCS}" SUFFIX _dl
   COMPILE_DEFINITIONS CS_LONG)
-generate_source_files (GEN_SRCS_DINT_COMPLEX FILES "${PROJECT_SRCS}" SUFFIX _ci
-  COMPILE_DEFINITIONS CS_COMPLEX)
-generate_source_files (GEN_SRCS_DLONG_COMPLEX FILES "${PROJECT_SRCS}" SUFFIX _cl
-  COMPILE_DEFINITIONS CS_LONG CS_COMPLEX)
+
+if (NOT HAVE_C99_COMPLEX STREQUAL "" OR HAVE_C99_COMPLEX_SUBSET)
+  generate_source_files (GEN_SRCS_DINT_COMPLEX FILES "${PROJECT_SRCS}" SUFFIX
+    _ci COMPILE_DEFINITIONS CS_COMPLEX)
+  generate_source_files (GEN_SRCS_DLONG_COMPLEX FILES "${PROJECT_SRCS}" SUFFIX
+    _cl COMPILE_DEFINITIONS CS_LONG CS_COMPLEX)
+endif (NOT HAVE_C99_COMPLEX STREQUAL "" OR HAVE_C99_COMPLEX_SUBSET)
 
 set (SRCS
-)
-
-if (HAVE_COMPLEX_H)
-  list (APPEND SRCS Source/cs_convert.c)
-endif (HAVE_COMPLEX_H)
-
-add_library (CXSparse
   ${HDRS}
   ${SRCS}
   ${GEN_SRCS_DINT}
@@ -162,36 +179,45 @@ add_library (CXSparse
   ${GEN_SRCS_DLONG_COMPLEX}
 )
 
-target_include_directories (CXSparse PUBLIC
+if (HAVE_COMPLEX_H)
+  list (APPEND SRCS Source/cs_convert.c)
+endif (HAVE_COMPLEX_H)
+
+if (MSVC)
+  #set_source_files_properties (${SRCS} PROPERTIES LANGUAGE CXX)
+endif (MSVC)
+
+add_library (cxsparse ${SRCS})
+
+target_include_directories (cxsparse PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>"
   "$<INSTALL_INTERFACE:include>"
 )
 
-target_link_libraries (CXSparse PUBLIC suitesparseconfig)
+target_link_libraries (cxsparse PUBLIC suitesparseconfig)
 
 if (HAVE_M)
-  target_link_libraries (CXSparse PUBLIC m)
+  target_link_libraries (cxsparse PUBLIC m)
 endif (HAVE_M)
 
-if (NOT HAVE_COMPLEX_H)
-  target_compile_definitions (CXSparse PUBLIC NCOMPLEX)
-endif (NOT HAVE_COMPLEX_H)
-
-if (NOT HAVE_C_DOUBLE_COMPLEX STREQUAL "")
-  target_compile_definitions (CXSparse PUBLIC HAVE_C_DOUBLE_COMPLEX)
-endif (NOT HAVE_C_DOUBLE_COMPLEX STREQUAL "")
-
-if (NOT COMPLEX_I_MACRO_NO_CONFLICT)
-  target_compile_definitions (CXSparse PUBLIC CXSPARSE_COMPLEX_I_CONFLICT)
-endif (NOT COMPLEX_I_MACRO_NO_CONFLICT)
+if (NOT HAVE_C99_COMPLEX STREQUAL "")
+  target_compile_definitions (cxsparse PUBLIC CXSPARSE_C99_COMPLEX)
+elseif (HAVE_C99_COMPLEX_SUBSET)
+  # C99 subset supported by MSVC
+  target_compile_definitions (cxsparse PUBLIC CXSPARSE_C99_COMPLEX_SUBSET)
+  message("foo")
+else (NOT HAVE_C99_COMPLEX STREQUAL "")
+  target_compile_definitions (cxsparse PUBLIC NCOMPLEX)
+endif (NOT HAVE_C99_COMPLEX STREQUAL "")
 
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-  target_compile_definitions (CXSparse PRIVATE _CRT_SECURE_NO_WARNINGS)
+  target_compile_definitions (cxsparse PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 
-set_target_properties (CXSparse PROPERTIES PUBLIC_HEADER Include/cs.h)
+set_target_properties (cxsparse PROPERTIES PUBLIC_HEADER Include/cs.h)
+set_target_properties (cxsparse PROPERTIES EXPORT_NAME CXSparse)
 
-install (TARGETS CXSparse
+install (TARGETS cxsparse
   EXPORT cxsparse-targets
   RUNTIME DESTINATION bin
   PUBLIC_HEADER DESTINATION include
@@ -205,8 +231,8 @@ configure_package_config_file (cxsparse-config.cmake.in
 write_basic_package_version_file (cxsparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
-export (TARGETS CXSparse NAMESPACE CXSparse:: FILE cxsparse-targets.cmake)
-export (PACKAGE CXSparse)
+export (TARGETS cxsparse NAMESPACE CXSparse:: FILE cxsparse-targets.cmake)
+export (PACKAGE cxsparse)
 
 install (EXPORT cxsparse-targets NAMESPACE CXSparse::
   DESTINATION lib/cmake/CXSparse)
@@ -215,101 +241,142 @@ install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/cxsparse-config-version.cmake
   DESTINATION lib/cmake/CXSparse)
 
-set_target_properties (CXSparse PROPERTIES POSITION_INDEPENDENT_CODE ON)
-set_target_properties (CXSparse PROPERTIES VERSION ${MAJOR_VERSION})
-set_target_properties (CXSparse PROPERTIES SOVERSION ${VERSION})
+set_target_properties (cxsparse PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_component_version (cxsparse ${VERSION})
 
 add_executable (cs_ci_demo1
   Demo/cs_ci_demo1.c
 )
-target_link_libraries (cs_ci_demo1 PRIVATE CXSparse)
+target_link_libraries (cs_ci_demo1 PRIVATE cxsparse)
 
 add_executable (cs_ci_demo2
   Demo/cs_ci_demo.c
   Demo/cs_ci_demo.h
   Demo/cs_ci_demo2.c
 )
-target_link_libraries (cs_ci_demo2 PRIVATE CXSparse)
+target_link_libraries (cs_ci_demo2 PRIVATE cxsparse)
 
 add_executable (cs_ci_demo3
   Demo/cs_ci_demo.c
   Demo/cs_ci_demo.h
   Demo/cs_ci_demo3.c
 )
-target_link_libraries (cs_ci_demo3 PRIVATE CXSparse)
+target_link_libraries (cs_ci_demo3 PRIVATE cxsparse)
 
 add_executable (cs_cl_demo1
   Demo/cs_cl_demo1.c
 )
-target_link_libraries (cs_cl_demo1 PRIVATE CXSparse)
+target_link_libraries (cs_cl_demo1 PRIVATE cxsparse)
 
 add_executable (cs_cl_demo2
   Demo/cs_cl_demo.c
   Demo/cs_cl_demo.h
   Demo/cs_cl_demo2.c
 )
-target_link_libraries (cs_cl_demo2 PRIVATE CXSparse)
+target_link_libraries (cs_cl_demo2 PRIVATE cxsparse)
 
 add_executable (cs_cl_demo3
   Demo/cs_cl_demo.c
   Demo/cs_cl_demo.h
   Demo/cs_cl_demo3.c
 )
-target_link_libraries (cs_cl_demo3 PRIVATE CXSparse)
+target_link_libraries (cs_cl_demo3 PRIVATE cxsparse)
 
 add_executable (cs_di_demo1
   Demo/cs_di_demo1.c
 )
-target_link_libraries (cs_di_demo1 PRIVATE CXSparse)
+target_link_libraries (cs_di_demo1 PRIVATE cxsparse)
 
 add_executable (cs_di_demo2
   Demo/cs_di_demo.c
   Demo/cs_di_demo.h
   Demo/cs_di_demo2.c
 )
-target_link_libraries (cs_di_demo2 PRIVATE CXSparse)
+target_link_libraries (cs_di_demo2 PRIVATE cxsparse)
 
 add_executable (cs_di_demo3
   Demo/cs_di_demo.c
   Demo/cs_di_demo.h
   Demo/cs_di_demo3.c
 )
-target_link_libraries (cs_di_demo3 PRIVATE CXSparse)
+target_link_libraries (cs_di_demo3 PRIVATE cxsparse)
 
 add_executable (cs_dl_demo1
   Demo/cs_dl_demo1.c
 )
-target_link_libraries (cs_dl_demo1 PRIVATE CXSparse)
+target_link_libraries (cs_dl_demo1 PRIVATE cxsparse)
 
 add_executable (cs_dl_demo2
   Demo/cs_dl_demo.c
   Demo/cs_dl_demo.h
   Demo/cs_dl_demo2.c
 )
-target_link_libraries (cs_dl_demo2 PRIVATE CXSparse)
+target_link_libraries (cs_dl_demo2 PRIVATE cxsparse)
 
 add_executable (cs_dl_demo3
   Demo/cs_dl_demo.c
   Demo/cs_dl_demo.h
   Demo/cs_dl_demo3.c
 )
-target_link_libraries (cs_dl_demo3 PRIVATE CXSparse)
+target_link_libraries (cs_dl_demo3 PRIVATE cxsparse)
 
 add_executable (cs_demo1
   Demo/cs_demo1.c
 )
-target_link_libraries (cs_demo1 PRIVATE CXSparse)
+target_link_libraries (cs_demo1 PRIVATE cxsparse)
 
 add_executable (cs_demo2
   Demo/cs_demo.c
   Demo/cs_demo.h
   Demo/cs_demo2.c
 )
-target_link_libraries (cs_demo2 PRIVATE CXSparse)
+target_link_libraries (cs_demo2 PRIVATE cxsparse)
 
 add_executable (cs_demo3
   Demo/cs_demo.c
   Demo/cs_demo.h
   Demo/cs_demo3.c
 )
-target_link_libraries (cs_demo3 PRIVATE CXSparse)
+target_link_libraries (cs_demo3 PRIVATE cxsparse)
+
+if (MSVC)
+  #set_source_files_properties (
+  #  Demo/cs_demo.c
+  #Demo/cs_demo1.c
+  #Demo/cs_demo2.c
+  #Demo/cs_demo3.c
+  #Demo/cs_ci_demo.c
+  #Demo/cs_cl_demo.c
+  #Demo/cs_dl_demo.c
+  #Demo/cs_ci_demo1.c
+  #Demo/cs_ci_demo2.c
+  #Demo/cs_ci_demo3.c
+  #Demo/cs_dl_demo1.c
+  #Demo/cs_dl_demo2.c
+  #Demo/cs_dl_demo3.c
+  #PROPERTIES LANGUAGE CXX
+  #)
+  #set_target_properties (
+  #  cxsparse
+  #  cs_ci_demo1
+  #  cs_ci_demo2
+  #  cs_ci_demo3
+  #  cs_cl_demo1
+  #  cs_cl_demo2
+  #  cs_cl_demo3
+  #  cs_demo1
+  #  cs_demo2
+  #  cs_demo3
+  #  cs_di_demo1
+  #  cs_di_demo2
+  #  cs_di_demo3
+  #  cs_dl_demo1
+  #  cs_dl_demo2
+  #  cs_dl_demo3
+  #  PROPERTIES LINKER_LANGUAGE CXX
+  #)
+  #target_compile_definitions (
+  #  cs_cl_demo1
+  #PRIVATE CS_COMPLEX
+  #)
+endif (MSVC)

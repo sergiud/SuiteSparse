@@ -14,9 +14,9 @@ CS_INT cs_scatter (const cs *A, CS_INT j, CS_ENTRY beta, CS_INT *w, CS_ENTRY *x,
         {
             w [i] = mark ;                      /* i is new entry in column j */
             Ci [nz++] = i ;                     /* add i to pattern of C(:,j) */
-            if (x) x [i] = beta * Ax [p] ;      /* x(i) = beta*A(i,j) */
+            if (x) x [i] = CS_MUL(beta, Ax [p]) ;      /* x(i) = beta*A(i,j) */
         }
-        else if (x) x [i] += beta * Ax [p] ;    /* i exists in C(:,j) already */
+        else if (x) x [i] = CS_ADD(x[i], CS_MUL(beta, Ax [p])) ;    /* i exists in C(:,j) already */
     }
     return (nz) ;
 }

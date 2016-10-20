@@ -17,7 +17,7 @@ cs *cs_load (FILE *f)
 #endif
     {
 #ifdef CS_COMPLEX
-        if (!cs_entry (T, (CS_INT) i, (CS_INT) j, x + xi*I)) return (cs_spfree (T)) ;
+        if (!cs_entry (T, (CS_INT) i, (CS_INT) j, CS_COMPLEX_MAKE(x, xi))) return (cs_spfree (T)) ;
 #else
         if (!cs_entry (T, (CS_INT) i, (CS_INT) j, x)) return (cs_spfree (T)) ;
 #endif

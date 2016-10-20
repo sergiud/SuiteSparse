@@ -9,9 +9,9 @@ cs *cs_multiply (const cs *A, const cs *B)
     if (A->n != B->m) return (NULL) ;
     m = A->m ; anz = A->p [A->n] ;
     n = B->n ; Bp = B->p ; Bi = B->i ; Bx = B->x ; bnz = Bp [n] ;
-    w = cs_calloc (m, sizeof (CS_INT)) ;                    /* get workspace */
+    w = (CS_INT *)cs_calloc (m, sizeof (CS_INT)) ;                    /* get workspace */
     values = (A->x != NULL) && (Bx != NULL) ;
-    x = values ? cs_malloc (m, sizeof (CS_ENTRY)) : NULL ; /* get workspace */
+    x = values ? (CS_ENTRY *)cs_malloc (m, sizeof (CS_ENTRY)) : NULL ; /* get workspace */
     C = cs_spalloc (m, n, anz + bnz, values, 0) ;        /* allocate result */
     if (!C || !w || (values && !x)) return (cs_done (C, w, x, 0)) ;
     Cp = C->p ;
@@ -25,7 +25,7 @@ cs *cs_multiply (const cs *A, const cs *B)
         Cp [j] = nz ;                   /* column j of C starts here */
         for (p = Bp [j] ; p < Bp [j+1] ; p++)
         {
-            nz = cs_scatter (A, Bi [p], Bx ? Bx [p] : 1, w, x, j+1, C, nz) ;
+            nz = cs_scatter (A, Bi [p], Bx ? Bx [p] : CS_MAKE_ENTRY(1), w, x, j+1, C, nz) ;
         }
         if (values) for (p = Cp [j] ; p < nz ; p++) Cx [p] = x [Ci [p]] ;
     }

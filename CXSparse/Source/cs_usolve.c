@@ -8,10 +8,10 @@ CS_INT cs_usolve (const cs *U, CS_ENTRY *x)
     n = U->n ; Up = U->p ; Ui = U->i ; Ux = U->x ;
     for (j = n-1 ; j >= 0 ; j--)
     {
-        x [j] /= Ux [Up [j+1]-1] ;
+        x [j] = CS_DIV(x [j], Ux [Up [j+1]-1]) ;
         for (p = Up [j] ; p < Up [j+1]-1 ; p++)
         {
-            x [Ui [p]] -= Ux [p] * x [j] ;
+            x [Ui [p]] = CS_SUB(x[Ui[p]], CS_MUL(Ux [p], x [j])) ;
         }
     }
     return (1) ;

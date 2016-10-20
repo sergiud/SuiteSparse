@@ -1,4 +1,9 @@
 #include "cs.h"
+#include <complex.h>
+
+#ifndef _DCOMPLEX_
+#define _DCOMPLEX_(re, im) re + im * I
+#endif /* !defined(_DCOMPLEX_) */
 
 /* convert from complex to real (int version) */
 /* C = real(A) if real is true, imag(A) otherwise */
@@ -41,7 +46,7 @@ cs_ci *cs_i_complex (cs_di *A, int real)
     nn = triplet ? nz : (n+1) ;
     for (p = 0 ; p < nz ; p++) Ci [p] = Ai [p] ;
     for (p = 0 ; p < nn ; p++) Cp [p] = Ap [p] ;
-    for (p = 0 ; p < nz ; p++) Cx [p] = real ? Ax [p] : (I * Ax [p]) ;
+    for (p = 0 ; p < nz ; p++) Cx [p] = real ? _DCOMPLEX_(Ax [p], 0.0) : _DCOMPLEX_(0.0, Ax [p]) ;
     if (triplet) C->nz = nz ;
     return (C) ;
 }
@@ -87,7 +92,7 @@ cs_cl *cs_l_complex (cs_dl *A, cs_long_t real)
     nn = triplet ? nz : (n+1) ;
     for (p = 0 ; p < nz ; p++) Ci [p] = Ai [p] ;
     for (p = 0 ; p < nn ; p++) Cp [p] = Ap [p] ;
-    for (p = 0 ; p < nz ; p++) Cx [p] = real ? Ax [p] : (I * Ax [p]) ;
+    for (p = 0 ; p < nz ; p++) Cx [p] = real ? _DCOMPLEX_(Ax [p], 0.0) : _DCOMPLEX_(0.0, Ax [p]) ;
     if (triplet) C->nz = nz ;
     return (C) ;
 }

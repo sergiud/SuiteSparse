@@ -12,15 +12,15 @@ csn *cs_qr (const cs *A, const css *S)
     m = A->m ; n = A->n ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     q = S->q ; parent = S->parent ; pinv = S->pinv ; m2 = S->m2 ;
     vnz = S->lnz ; rnz = S->unz ; leftmost = S->leftmost ;
-    w = cs_malloc (m2+n, sizeof (CS_INT)) ;            /* get CS_INT workspace */
-    x = cs_malloc (m2, sizeof (CS_ENTRY)) ;           /* get CS_ENTRY workspace */
-    N = cs_calloc (1, sizeof (csn)) ;               /* allocate result */
+    w = (CS_INT *)cs_malloc (m2+n, sizeof (CS_INT)) ;            /* get CS_INT workspace */
+    x = (CS_ENTRY *)cs_malloc (m2, sizeof (CS_ENTRY)) ;           /* get CS_ENTRY workspace */
+    N = (csn *)cs_calloc (1, sizeof (csn)) ;               /* allocate result */
     if (!w || !x || !N) return (cs_ndone (N, NULL, w, x, 0)) ;
     s = w + m2 ;                                    /* s is size n */
-    for (k = 0 ; k < m2 ; k++) x [k] = 0 ;          /* clear workspace x */
+    for (k = 0 ; k < m2 ; k++) x [k] = CS_ZERO() ;          /* clear workspace x */
     N->L = V = cs_spalloc (m2, n, vnz, 1, 0) ;      /* allocate result V */
     N->U = R = cs_spalloc (m2, n, rnz, 1, 0) ;      /* allocate result R */
-    N->B = Beta = cs_malloc (n, sizeof (double)) ;  /* allocate result Beta */
+    N->B = Beta = (double *)cs_malloc (n, sizeof (double)) ;  /* allocate result Beta */
     if (!R || !V || !Beta) return (cs_ndone (N, NULL, w, x, 0)) ;
     Rp = R->p ; Ri = R->i ; Rx = R->x ;
     Vp = V->p ; Vi = V->i ; Vx = V->x ;
@@ -57,13 +57,13 @@ csn *cs_qr (const cs *A, const css *S)
             cs_happly (V, i, Beta [i], x) ; /* apply (V(i),Beta(i)) to x */
             Ri [rnz] = i ;                  /* R(i,k) = x(i) */
             Rx [rnz++] = x [i] ;
-            x [i] = 0 ;
-            if (parent [i] == k) vnz = cs_scatter (V, i, 0, w, NULL, k, V, vnz);
+            x [i] = CS_ZERO() ;
+            if (parent [i] == k) vnz = cs_scatter (V, i, CS_ZERO(), w, NULL, k, V, vnz);
         }
         for (p = p1 ; p < vnz ; p++)        /* gather V(:,k) = x */
         {
             Vx [p] = x [Vi [p]] ;
-            x [Vi [p]] = 0 ;
+            x [Vi [p]] = CS_ZERO() ;
         }
         Ri [rnz] = k ;                     /* R(k,k) = norm (x) */
         Rx [rnz++] = cs_house (Vx+p1, Beta+k, vnz-p1) ; /* [v,beta]=house(x) */

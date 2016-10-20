@@ -41,7 +41,7 @@ static void rhs (double *x, double *b, int m)
 }
 
 /* infinity-norm of x */
-static double norm (double *x, int n)
+static double norm_d (double *x, int n)
 {
     int i ;
     double normx = 0 ;
@@ -57,8 +57,8 @@ static void print_resid (int ok, cs *A, double *x, double *b, double *resid)
     m = A->m ; n = A->n ;
     for (i = 0 ; i < m ; i++) resid [i] = -b [i] ;  /* resid = -b */
     cs_gaxpy (A, x, resid) ;                        /* resid = resid + A*x  */
-    printf ("resid: %8.2e\n", norm (resid,m) / ((n == 0) ? 1 :
-        (cs_norm (A) * norm (x,n) + norm (b,m)))) ;
+    printf ("resid: %8.2e\n", norm_d (resid,m) / ((n == 0) ? 1 :
+        (cs_norm (A) * norm_d (x,n) + norm_d (b,m)))) ;
 }
 
 static double tic (void) { return (clock () / (double) CLOCKS_PER_SEC) ; }
@@ -81,7 +81,7 @@ problem *get_problem (FILE *f, double tol)
     cs *T, *A, *C ;
     int sym, m, n, mn, nz1, nz2 ;
     problem *Prob ;
-    Prob = cs_calloc (1, sizeof (problem)) ;
+    Prob = (problem*)cs_calloc (1, sizeof (problem)) ;
     if (!Prob) return (NULL) ;
     T = cs_load (f) ;                   /* load triplet matrix T from a file */
     Prob->A = A = cs_compress (T) ;     /* A = compressed-column form of T */
@@ -102,9 +102,9 @@ problem *get_problem (FILE *f, double tol)
     if (nz1 != nz2) printf ("zero entries dropped: %g\n", (double) (nz1 - nz2));
     if (nz2 != A->p [n]) printf ("tiny entries dropped: %g\n",
             (double) (nz2 - A->p [n])) ;
-    Prob->b = cs_malloc (mn, sizeof (double)) ;
-    Prob->x = cs_malloc (mn, sizeof (double)) ;
-    Prob->resid = cs_malloc (mn, sizeof (double)) ;
+    Prob->b = (CS_ENTRY*)cs_malloc (mn, sizeof (double)) ;
+    Prob->x = (CS_ENTRY*)cs_malloc (mn, sizeof (double)) ;
+    Prob->resid = (CS_ENTRY*)cs_malloc (mn, sizeof (double)) ;
     return ((!Prob->b || !Prob->x || !Prob->resid) ? free_problem (Prob) : Prob) ;
 }
 
@@ -117,7 +117,7 @@ problem *free_problem (problem *Prob)
     cs_free (Prob->b) ;
     cs_free (Prob->x) ;
     cs_free (Prob->resid) ;
-    return (cs_free (Prob)) ;
+    return (problem*)(cs_free (Prob)) ;
 }
 
 /* solve a linear system using Cholesky, LU, and QR, with various orderings */
@@ -207,7 +207,7 @@ int demo3 (problem *Prob)
     rhs (x, b, n) ;                             /* compute right-hand side */
     printf ("\nchol then update/downdate ") ;
     print_order (1) ;
-    y = cs_malloc (n, sizeof (double)) ;
+    y = (CS_ENTRY*)cs_malloc (n, sizeof (double)) ;
     t = tic () ;
     S = cs_schol (1, C) ;                       /* symbolic Chol, amd(A+A') */
     printf ("\nsymbolic chol time %8.2f\n", toc (t)) ;

@@ -12,7 +12,7 @@ CS_INT cs_fkeep (cs *A, CS_INT (*fkeep) (CS_INT, CS_INT, CS_ENTRY, void *), void
         Ap [j] = nz ;                       /* record new location of col j */
         for ( ; p < Ap [j+1] ; p++)
         {
-            if (fkeep (Ai [p], j, Ax ? Ax [p] : 1, other))
+            if (fkeep (Ai [p], j, Ax ? Ax [p] : CS_MAKE_ENTRY(1), other))
             {
                 if (Ax) Ax [nz] = Ax [p] ;  /* keep A(i,j) */
                 Ai [nz++] = Ai [p] ;

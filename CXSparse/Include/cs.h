@@ -30,9 +30,15 @@
 
 #ifndef NCOMPLEX
 #include <complex.h>
+#endif /* !defined(NCOMPLEX) */
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+#ifndef NCOMPLEX
 #if defined(CXSPARSE_C99_COMPLEX)
-typedef double complex cs_complex_t;
+typedef double _Complex cs_complex_t;
 
 #define CS_COMPLEX_MULCC(x, y) ((x) * (y))
 #define CS_COMPLEX_MULCR(x, y) ((x) * (y))
@@ -47,7 +53,7 @@ typedef double complex cs_complex_t;
 #define CS_COMPLEX_SUB(x, y) ((x) - (y))
 #define CS_COMPLEX_IS_ZERO(x) ((x) == 0)
 #define CS_COMPLEX_DIV(x, y) ((x) / (y))
-#define CS_COMPLEX_MAKE(re, im) ((re) + (im) * I)
+#define CS_COMPLEX_MAKE(re, im) ((re) + (im) * _Complex_I)
 
 #elif defined(CXSPARSE_C99_COMPLEX_SUBSET)
 typedef _Dcomplex cs_complex_t;
@@ -97,11 +103,6 @@ typedef _Dcomplex cs_complex_t;
 #define CS_IS_ZERO(x) ((x) == 0)
 #define CS_DIV(x, y) ((x) / (y))
 #endif /* defined(CS_COMPLEX) */
-
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
 
 #define CS_VER 3                    /* CXSparse Version */
 #define CS_SUBVER 1

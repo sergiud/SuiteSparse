@@ -77,7 +77,7 @@ endif (HAVE_QSTD_C99)
 
 check_library_exists (m sqrt "" HAVE_M)
 
-check_type_size ("double complex" HAVE_C99_COMPLEX BUILTIN_TYPES_ONLY)
+check_type_size ("double _Complex" HAVE_C99_COMPLEX BUILTIN_TYPES_ONLY)
 check_type_size (_C_double_complex HAVE_C_DOUBLE_COMPLEX)
 check_symbol_exists (_DCOMPLEX_ complex.h HAVE__DCOMPLEX_)
 check_symbol_exists (_Cmulcc complex.h HAVE__CMULCC)

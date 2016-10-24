@@ -231,7 +231,7 @@ write_basic_package_version_file (cxsparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
 export (TARGETS cxsparse suitesparseconfig NAMESPACE CXSparse:: FILE cxsparse-targets.cmake)
-export (PACKAGE cxsparse)
+export (PACKAGE CXSparse)
 
 install (EXPORT cxsparse-targets NAMESPACE CXSparse::
   DESTINATION lib/cmake/CXSparse)

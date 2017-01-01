@@ -112,9 +112,10 @@ endfunction (check_options)
 check_options (CAMD CHECK CHOLESKY GPL MATRIXOPS MODIFY PARTITION PRINT
   SUPERNODAL)
 
+# SuiteSparse version
 set (MAJOR_VERSION 4)
 set (MINOR_VERSION 5)
-set (VERSION_PATCH 3)
+set (VERSION_PATCH 4)
 
 set (SHORT_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
 
@@ -1203,7 +1204,7 @@ set_component_version (cholmod 3.0.11)
 set_component_version (colamd 2.9.6)
 set_component_version (klu 1.3.8)
 set_component_version (ldl 2.2.6)
-set_component_version (spqr 2.0.7)
+set_component_version (spqr 2.0.8)
 set_component_version (suitesparseconfig "${VERSION}")
 set_component_version (umfpack 5.7.6)
 

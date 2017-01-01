@@ -1,25 +1,25 @@
 # Ignore these files:
 *.a
-*.aux 
+*.aux
 *.bak
 *.bb
 *.bbg
-*.bbl 
-*.blg 
+*.bbl
+*.blg
 *.d
 *.da
-*.dll 
+*.dll
 *.dSYM
-*.dvi 
+*.dvi
 *.dylib
 *.gcda
-*.gcda 
+*.gcda
 *.gcno
-*.gcno 
+*.gcno
 *.gcov
 *.ln
-*.lof 
-*.log 
+*.lof
+*.log
 *.lot
 *.mex*
 *.o
@@ -30,8 +30,10 @@
 *.so.*
 *.swp
 *.tcov
-*.toc 
+*.toc
 *.un~
+.DS_Store
+.nfs*
 build*
 gmon.out
 my_*.out
@@ -181,6 +183,16 @@ UMFPACK/Tcov/cover.out
 MATLAB_Tools/spqr_rank/save_samples_demo_spqr_rank.mat
 CXSparse/MATLAB/CSparse/cs_cl_*.c
 CXSparse/MATLAB/Test/cs_*.c
+
+RBio/Tcov/RBdemo
+RBio/Tcov/RBdemo.c
+RBio/Tcov/RBio.c
+RBio/Tcov/RBio.h
+RBio/Tcov/RBtest
+RBio/Tcov/SuiteSparse_config.c
+RBio/Tcov/SuiteSparse_config.h
+RBio/Tcov/*.out
+RBio/Tcov/*.rb
 
 # Do not ignore this file
 !.gitignore

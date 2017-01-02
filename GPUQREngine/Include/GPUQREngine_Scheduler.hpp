@@ -22,12 +22,13 @@
 
 #define SSGPU_MINAPPLYGRANULARITY 16
 
+GPUQRENGINE_EXPORT
 size_t ssgpu_maxQueueSize       // return size of scheduler queue
 (
     size_t gpuMemorySize        // size of GPU memory, in bytes
 ) ;
 
-class Scheduler
+class GPUQRENGINE_EXPORT Scheduler
 {
 private:
     /* Scheduler.cpp */

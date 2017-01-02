@@ -12,6 +12,7 @@
 #include "SuiteSparseGPU_Runtime.hpp"
 #include "GPUQREngine_Front.hpp"
 #include "GPUQREngine_Stats.hpp"
+#include "GPUQREngine_export.h"
 
 enum QREngineResultCode
 {
@@ -22,6 +23,7 @@ enum QREngineResultCode
 
 // Use C++ Polymorphism to provide many different function signatures and
 // call patterns.
+GPUQRENGINE_EXPORT
 QREngineResultCode GPUQREngine
 (
     size_t gpuMemorySize,
@@ -30,6 +32,7 @@ QREngineResultCode GPUQREngine
     QREngineStats *stats = NULL
 );
 
+GPUQRENGINE_EXPORT
 QREngineResultCode GPUQREngine
 (
     size_t gpuMemorySize,
@@ -41,6 +44,7 @@ QREngineResultCode GPUQREngine
     QREngineStats *stats = NULL
 );
 
+GPUQRENGINE_EXPORT
 Int *GPUQREngine_FindStaircase
 (
     Front *front                // The front whose staircase we are computing

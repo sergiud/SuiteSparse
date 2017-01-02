@@ -2,17 +2,21 @@
 #define SPQRGPU_HPP_
 
 #include "GPUQREngine.hpp"
+#include "spqr_export.h"
 
+SPQR_EXPORT
 void spqrgpu_kernel
 (
     spqr_blob <double> *Blob    // contains the entire problem input/output
 ) ;
 
+SPQR_EXPORT
 void spqrgpu_kernel             // placeholder, since complex case not supported
 (
     spqr_blob <Complex> *Blob
 ) ;
 
+SPQR_EXPORT
 void spqrgpu_computeFrontStaging
 (
     // inputs, not modified on output
@@ -53,6 +57,7 @@ void spqrgpu_computeFrontStaging
     cholmod_common *cc
 );
 
+SPQR_EXPORT
 void spqrgpu_buildAssemblyMaps
 (
     Long numFronts,

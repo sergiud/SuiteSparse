@@ -16,8 +16,9 @@
 #include "GPUQREngine_Common.hpp"
 #include "GPUQREngine_SparseMeta.hpp"
 #include "GPUQREngine_FrontState.hpp"
+#include "GPUQREngine_export.h"
 
-class Front
+class GPUQRENGINE_EXPORT Front
 {
 public:
     Int fids;           // Front id within a stage

@@ -6,8 +6,9 @@
 #define SUITESPARSE_GPURUNTIME_WORKSPACE_HPP
 
 #include "SuiteSparseGPU_Runtime.hpp"
+#include "GPURuntime_export.h"
 
-class Workspace
+class SUITESPARSECONFIG_EXPORT Workspace
 {
 private:
 

@@ -931,6 +931,8 @@ set (SuiteSparse_KLU_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/KLU)
 set (SuiteSparse_LDL_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/LDL)
 set (SuiteSparse_SPQR_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/SPQR)
 set (SuiteSparse_UMFPACK_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/UMFPACK)
+set (SuiteSparse_GPURuntime_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/GPURuntime)
+set (SuiteSparse_GPUQREngine_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/GPUQREngine)
 
 target_include_directories (suitesparseconfig PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
@@ -1059,6 +1061,8 @@ if (WITH_CUDA AND CUDA_FOUND)
 
   target_include_directories (suitesparsecuda PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_GPURuntime_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${SuiteSparse_GPURuntime_INCLUDE_DIR}>
   )
 
   target_link_libraries (suitesparsecuda PUBLIC suitesparseconfig)
@@ -1141,6 +1145,8 @@ if (WITH_CUDA AND CUDA_FOUND)
 
   target_include_directories (gpuqrengine PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPUQREngine/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_GPUQREngine_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${SuiteSparse_GPUQREngine_INCLUDE_DIR}>
   )
 
   target_include_directories (gpuqrengine PRIVATE
@@ -1180,22 +1186,42 @@ if (WITH_CUDA AND CUDA_FOUND)
   target_link_libraries (spqr PUBLIC gpuqrengine)
 endif (WITH_CUDA AND CUDA_FOUND)
 
-set (_SuiteSparse_base_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack
+set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack
   klu ldl suitesparseconfig)
-set (_SuiteSparse_TARGETS ${_SuiteSparse_base_TARGETS})
 
-foreach (_target ${_SuiteSparse_base_TARGETS})
-  string (TOUPPER "${_target}" _upper_target)
+set_property (TARGET suitesparseconfig PROPERTY NAME_ALIAS SuiteSparse)
+set_property (TARGET suitesparseconfig PROPERTY HEADERS_VARIABLE
+  SUITESPARSECONFIG_HDRS)
+set_property (TARGET suitesparseconfig PROPERTY INSTALL_DESTINATION
+  ${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR})
 
-  set (_target_include_dir ${SuiteSparse_${_upper_target}_INCLUDE_DIR})
+if (TARGET suitesparsecuda)
+  list (APPEND _SuiteSparse_TARGETS suitesparsecuda)
+  set_property (TARGET suitesparsecuda PROPERTY NAME_ALIAS GPURuntime)
+endif (TARGET suitesparsecuda)
 
-  if ("${_target}" STREQUAL suitesparseconfig)
-    set (_export_header
-      ${CMAKE_CURRENT_BINARY_DIR}/${_target_include_dir}/SuiteSparse_export.h)
-  else ("${_target}" STREQUAL suitesparseconfig)
-    set (_export_header
-      ${CMAKE_CURRENT_BINARY_DIR}/${_target_include_dir}/${_target}_export.h)
-  endif ("${_target}" STREQUAL suitesparseconfig)
+if (TARGET gpuqrengine)
+  list (APPEND _SuiteSparse_TARGETS gpuqrengine)
+  set_property (TARGET gpuqrengine PROPERTY NAME_ALIAS GPUQREngine)
+endif (TARGET gpuqrengine)
+
+foreach (_target ${_SuiteSparse_TARGETS})
+  get_property (_upper_target TARGET ${_target} PROPERTY NAME_ALIAS)
+
+  if ("${_upper_target}" STREQUAL "")
+    string (TOUPPER "${_target}" _upper_target)
+  endif ("${_upper_target}" STREQUAL "")
+
+  get_property (_target_include_dir TARGET ${_target} PROPERTY
+    INSTALL_DESTINATION)
+
+  if ("${_target_include_dir}" STREQUAL "")
+    set (_target_include_dir ${SuiteSparse_${_upper_target}_INCLUDE_DIR})
+  endif ("${_target_include_dir}" STREQUAL "")
+
+  set (_export_header
+    ${CMAKE_CURRENT_BINARY_DIR}/${_target_include_dir}/${_upper_target}_export.h)
+
   # Generate an export header with the name <target>_export.h for each mandatory
   # target.
   generate_export_header (${_target} EXPORT_FILE_NAME ${_export_header})
@@ -1203,18 +1229,17 @@ foreach (_target ${_SuiteSparse_base_TARGETS})
   # Add the export header to the target
   target_sources (${_target} PRIVATE ${_export_header})
 
+  get_property (_HDRS_VAR TARGET ${_target} PROPERTY HEADERS_VARIABLE)
+
+  if ("${_HDRS_VAR}" STREQUAL "")
+    set (_HDRS_VAR ${_upper_target}_HDRS)
+  endif ("${_HDRS_VAR}" STREQUAL "")
+
   # Install headers
-  install (FILES ${${_upper_target}_HDRS} ${_export_header} DESTINATION
+  install (FILES ${${_HDRS_VAR}} ${_export_header} DESTINATION
     ${_target_include_dir} COMPONENT Development)
 endforeach (_target)
 
-if (TARGET suitesparsecuda)
-  list (APPEND _SuiteSparse_TARGETS suitesparsecuda)
-endif (TARGET suitesparsecuda)
-
-if (TARGET gpuqrengine)
-  list (APPEND _SuiteSparse_TARGETS gpuqrengine)
-endif (TARGET gpuqrengine)
 
 set (_SuiteSparse_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR}/SuiteSparse)
 set (_SuiteSparse_CMake_INSTALLDIR ${_SuiteSparse_CMake_LIBDIR}/cmake)

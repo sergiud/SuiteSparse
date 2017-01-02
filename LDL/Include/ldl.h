@@ -7,6 +7,7 @@
  */
 
 #include "SuiteSparse_config.h"
+#include "ldl_export.h"
 
 #ifdef LDL_LONG
 #define LDL_int SuiteSparse_long
@@ -42,38 +43,49 @@
 /* === int version ========================================================== */
 /* ========================================================================== */
 
+LDL_EXPORT
 void ldl_symbolic (int n, int Ap [ ], int Ai [ ], int Lp [ ],
     int Parent [ ], int Lnz [ ], int Flag [ ], int P [ ], int Pinv [ ]) ;
 
+LDL_EXPORT
 int ldl_numeric (int n, int Ap [ ], int Ai [ ], double Ax [ ],
     int Lp [ ], int Parent [ ], int Lnz [ ], int Li [ ], double Lx [ ],
     double D [ ], double Y [ ], int Pattern [ ], int Flag [ ],
     int P [ ], int Pinv [ ]) ;
 
+LDL_EXPORT
 void ldl_lsolve (int n, double X [ ], int Lp [ ], int Li [ ],
     double Lx [ ]) ;
 
+LDL_EXPORT
 void ldl_dsolve (int n, double X [ ], double D [ ]) ;
 
+LDL_EXPORT
 void ldl_ltsolve (int n, double X [ ], int Lp [ ], int Li [ ],
     double Lx [ ]) ;
 
+LDL_EXPORT
 void ldl_perm  (int n, double X [ ], double B [ ], int P [ ]) ;
+LDL_EXPORT
 void ldl_permt (int n, double X [ ], double B [ ], int P [ ]) ;
 
+LDL_EXPORT
 int ldl_valid_perm (int n, int P [ ], int Flag [ ]) ;
+LDL_EXPORT
 int ldl_valid_matrix ( int n, int Ap [ ], int Ai [ ]) ;
 
 /* ========================================================================== */
 /* === long version ========================================================= */
 /* ========================================================================== */
 
+LDL_EXPORT
 void ldl_l_symbolic (SuiteSparse_long n, SuiteSparse_long Ap [ ],
     SuiteSparse_long Ai [ ], SuiteSparse_long Lp [ ],
     SuiteSparse_long Parent [ ], SuiteSparse_long Lnz [ ],
     SuiteSparse_long Flag [ ], SuiteSparse_long P [ ],
     SuiteSparse_long Pinv [ ]) ;
 
+LDL_EXPORT
 SuiteSparse_long ldl_l_numeric (SuiteSparse_long n, SuiteSparse_long Ap [ ],
     SuiteSparse_long Ai [ ], double Ax [ ], SuiteSparse_long Lp [ ],
     SuiteSparse_long Parent [ ], SuiteSparse_long Lnz [ ],
@@ -81,21 +93,28 @@ SuiteSparse_long ldl_l_numeric (SuiteSparse_long n, SuiteSparse_long Ap [ ],
     SuiteSparse_long Pattern [ ], SuiteSparse_long Flag [ ],
     SuiteSparse_long P [ ], SuiteSparse_long Pinv [ ]) ;
 
+LDL_EXPORT
 void ldl_l_lsolve (SuiteSparse_long n, double X [ ], SuiteSparse_long Lp [ ],
     SuiteSparse_long Li [ ], double Lx [ ]) ;
 
+LDL_EXPORT
 void ldl_l_dsolve (SuiteSparse_long n, double X [ ], double D [ ]) ;
 
+LDL_EXPORT
 void ldl_l_ltsolve (SuiteSparse_long n, double X [ ], SuiteSparse_long Lp [ ],
     SuiteSparse_long Li [ ], double Lx [ ]) ;
 
+LDL_EXPORT
 void ldl_l_perm  (SuiteSparse_long n, double X [ ], double B [ ],
     SuiteSparse_long P [ ]) ;
+LDL_EXPORT
 void ldl_l_permt (SuiteSparse_long n, double X [ ], double B [ ],
     SuiteSparse_long P [ ]) ;
 
+LDL_EXPORT
 SuiteSparse_long ldl_l_valid_perm (SuiteSparse_long n, SuiteSparse_long P [ ],
     SuiteSparse_long Flag [ ]) ;
+LDL_EXPORT
 SuiteSparse_long ldl_l_valid_matrix ( SuiteSparse_long n,
     SuiteSparse_long Ap [ ], SuiteSparse_long Ai [ ]) ;
 

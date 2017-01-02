@@ -7,24 +7,28 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_save_symbolic
 (
     void *Symbolic,
     char *filename
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_save_symbolic
 (
     void *Symbolic,
     char *filename
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_save_symbolic
 (
     void *Symbolic,
     char *filename
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_save_symbolic
 (
     void *Symbolic,

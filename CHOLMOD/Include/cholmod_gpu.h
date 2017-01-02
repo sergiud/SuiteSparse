@@ -47,6 +47,7 @@ typedef struct cholmod_gpu_pointers
 
 } cholmod_gpu_pointers ;
 
+CHOLMOD_EXPORT
 int cholmod_gpu_memorysize   /* GPU memory size available, 1 if no GPU */
 (
     size_t         *total_mem,
@@ -54,6 +55,7 @@ int cholmod_gpu_memorysize   /* GPU memory size available, 1 if no GPU */
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_gpu_memorysize /* GPU memory size available, 1 if no GPU */
 (
     size_t         *total_mem,
@@ -61,16 +63,24 @@ int cholmod_l_gpu_memorysize /* GPU memory size available, 1 if no GPU */
     cholmod_common *Common
 ) ;
  
+CHOLMOD_EXPORT
 int cholmod_gpu_probe   ( cholmod_common *Common ) ;
+CHOLMOD_EXPORT
 int cholmod_l_gpu_probe ( cholmod_common *Common ) ;
 
+CHOLMOD_EXPORT
 int cholmod_gpu_deallocate   ( cholmod_common *Common ) ;
+CHOLMOD_EXPORT
 int cholmod_l_gpu_deallocate ( cholmod_common *Common ) ;
 
+CHOLMOD_EXPORT
 void cholmod_gpu_end   ( cholmod_common *Common ) ;
+CHOLMOD_EXPORT
 void cholmod_l_gpu_end ( cholmod_common *Common ) ;
 
+CHOLMOD_EXPORT
 int cholmod_gpu_allocate   ( cholmod_common *Common ) ;
+CHOLMOD_EXPORT
 int cholmod_l_gpu_allocate ( cholmod_common *Common ) ;
 
 #endif

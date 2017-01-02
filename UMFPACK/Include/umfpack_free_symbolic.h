@@ -7,21 +7,25 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 void umfpack_di_free_symbolic
 (
     void **Symbolic
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_dl_free_symbolic
 (
     void **Symbolic
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zi_free_symbolic
 (
     void **Symbolic
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zl_free_symbolic
 (
     void **Symbolic

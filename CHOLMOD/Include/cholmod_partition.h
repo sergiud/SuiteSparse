@@ -47,6 +47,7 @@
  * finds better orderings than METIS_NodeND, but takes longer.
  */
 
+CHOLMOD_EXPORT
 SuiteSparse_long cholmod_nested_dissection	/* returns # of components */
 (
     /* ---- input ---- */
@@ -64,6 +65,7 @@ SuiteSparse_long cholmod_nested_dissection	/* returns # of components */
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 SuiteSparse_long cholmod_l_nested_dissection (cholmod_sparse *,
     SuiteSparse_long *, size_t, SuiteSparse_long *, SuiteSparse_long *,
     SuiteSparse_long *, cholmod_common *) ;
@@ -74,6 +76,7 @@ SuiteSparse_long cholmod_l_nested_dissection (cholmod_sparse *,
 
 /* Order A, AA', or A(:,f)*A(:,f)' using METIS_NodeND. */
 
+CHOLMOD_EXPORT
 int cholmod_metis
 (
     /* ---- input ---- */
@@ -87,6 +90,7 @@ int cholmod_metis
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_metis (cholmod_sparse *, SuiteSparse_long *, size_t, int,
     SuiteSparse_long *, cholmod_common *) ;
 
@@ -96,6 +100,7 @@ int cholmod_l_metis (cholmod_sparse *, SuiteSparse_long *, size_t, int,
 
 /* Finds a node bisector of A, A*A', A(:,f)*A(:,f)'. */
 
+CHOLMOD_EXPORT
 SuiteSparse_long cholmod_bisect	/* returns # of nodes in separator */
 (
     /* ---- input ---- */
@@ -111,6 +116,7 @@ SuiteSparse_long cholmod_bisect	/* returns # of nodes in separator */
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 SuiteSparse_long cholmod_l_bisect (cholmod_sparse *, SuiteSparse_long *,
     size_t, int, SuiteSparse_long *, cholmod_common *) ;
 
@@ -121,6 +127,7 @@ SuiteSparse_long cholmod_l_bisect (cholmod_sparse *, SuiteSparse_long *,
 /* Find a set of nodes that bisects the graph of A or AA' (direct interface
  * to METIS_ComputeVertexSeperator). */
 
+CHOLMOD_EXPORT
 SuiteSparse_long cholmod_metis_bisector	/* returns separator size */
 (
     /* ---- input ---- */
@@ -138,6 +145,7 @@ SuiteSparse_long cholmod_metis_bisector	/* returns separator size */
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 SuiteSparse_long cholmod_l_metis_bisector (cholmod_sparse *,
     SuiteSparse_long *, SuiteSparse_long *, SuiteSparse_long *,
     cholmod_common *) ;
@@ -148,6 +156,7 @@ SuiteSparse_long cholmod_l_metis_bisector (cholmod_sparse *,
 
 /* Collapse nodes in a separator tree. */
 
+CHOLMOD_EXPORT
 SuiteSparse_long cholmod_collapse_septree
 (
     /* ---- input ---- */
@@ -162,6 +171,7 @@ SuiteSparse_long cholmod_collapse_septree
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 SuiteSparse_long cholmod_l_collapse_septree (size_t, size_t, double, size_t,
     SuiteSparse_long *, SuiteSparse_long *, cholmod_common *) ;
 

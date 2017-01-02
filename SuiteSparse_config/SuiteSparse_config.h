@@ -45,6 +45,8 @@ extern "C" {
 #include <limits.h>
 #include <stdlib.h>
 
+#include "SuiteSparse_export.h"
+
 /* ========================================================================== */
 /* === SuiteSparse_long ===================================================== */
 /* ========================================================================== */
@@ -93,24 +95,30 @@ struct SuiteSparse_config_struct
     int (*divcomplex_func) (double, double, double, double, double *, double *);
 } ;
 
+SUITESPARSECONFIG_EXPORT
 extern struct SuiteSparse_config_struct SuiteSparse_config ;
 
+SUITESPARSECONFIG_EXPORT
 void SuiteSparse_start ( void ) ;   /* called to start SuiteSparse */
 
+SUITESPARSECONFIG_EXPORT
 void SuiteSparse_finish ( void ) ;  /* called to finish SuiteSparse */
 
+SUITESPARSECONFIG_EXPORT
 void *SuiteSparse_malloc    /* pointer to allocated block of memory */
 (
     size_t nitems,          /* number of items to malloc (>=1 is enforced) */
     size_t size_of_item     /* sizeof each item */
 ) ;
 
+SUITESPARSECONFIG_EXPORT
 void *SuiteSparse_calloc    /* pointer to allocated block of memory */
 (
     size_t nitems,          /* number of items to calloc (>=1 is enforced) */
     size_t size_of_item     /* sizeof each item */
 ) ;
 
+SUITESPARSECONFIG_EXPORT
 void *SuiteSparse_realloc   /* pointer to reallocated block of memory, or
                                to original block if the realloc failed. */
 (
@@ -121,30 +129,36 @@ void *SuiteSparse_realloc   /* pointer to reallocated block of memory, or
     int *ok                 /* 1 if successful, 0 otherwise */
 ) ;
 
+SUITESPARSECONFIG_EXPORT
 void *SuiteSparse_free      /* always returns NULL */
 (
     void *p                 /* block to free */
 ) ;
 
+SUITESPARSECONFIG_EXPORT
 void SuiteSparse_tic    /* start the timer */
 (
     double tic [2]      /* output, contents undefined on input */
 ) ;
 
+SUITESPARSECONFIG_EXPORT
 double SuiteSparse_toc  /* return time in seconds since last tic */
 (
     double tic [2]      /* input: from last call to SuiteSparse_tic */
 ) ;
 
+SUITESPARSECONFIG_EXPORT
 double SuiteSparse_time  /* returns current wall clock time in seconds */
 (
     void
 ) ;
 
 /* returns sqrt (x^2 + y^2), computed reliably */
+SUITESPARSECONFIG_EXPORT
 double SuiteSparse_hypot (double x, double y) ;
 
 /* complex division of c = a/b */
+SUITESPARSECONFIG_EXPORT
 int SuiteSparse_divcomplex
 (
     double ar, double ai,	/* real and imaginary parts of a */
@@ -211,6 +225,7 @@ int SuiteSparse_divcomplex
  *                  they are compiled with GPU acceleration.
  */
 
+SUITESPARSECONFIG_EXPORT
 int SuiteSparse_version     /* returns SUITESPARSE_VERSION */
 (
     /* output, not defined on input.  Not used if NULL.  Returns

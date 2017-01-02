@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_get_numeric
 (
     int Lp [ ],
@@ -23,6 +24,7 @@ int umfpack_di_get_numeric
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_get_numeric
 (
     SuiteSparse_long Lp [ ],
@@ -39,6 +41,7 @@ SuiteSparse_long umfpack_dl_get_numeric
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_get_numeric
 (
     int Lp [ ],
@@ -55,6 +58,7 @@ int umfpack_zi_get_numeric
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_get_numeric
 (
     SuiteSparse_long Lp [ ],

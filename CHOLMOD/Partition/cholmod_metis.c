@@ -52,7 +52,18 @@
 #ifndef NPARTITION
 
 #include "cholmod_internal.h"
+
+#if defined(WIN32) && defined(_WINDLL)
+#ifdef _MSC_VER
+#  pragma push_macro("_WINDLL")
+#  undef _WINDLL
+#endif
+#endif
 #include "metis.h"
+#ifdef _MSC_VER
+#  pragma pop_macro("_WINDLL")
+#endif
+
 #include "cholmod_partition.h"
 #include "cholmod_cholesky.h"
 

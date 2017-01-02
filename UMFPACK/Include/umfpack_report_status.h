@@ -7,24 +7,28 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 void umfpack_di_report_status
 (
     const double Control [UMFPACK_CONTROL],
     int status
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_dl_report_status
 (
     const double Control [UMFPACK_CONTROL],
     SuiteSparse_long status
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zi_report_status
 (
     const double Control [UMFPACK_CONTROL],
     int status
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zl_report_status
 (
     const double Control [UMFPACK_CONTROL],

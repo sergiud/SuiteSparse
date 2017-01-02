@@ -70,17 +70,20 @@
 /* cholmod_check_common:  check the Common object */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_check_common
 (
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_check_common (cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_print_common:  print the Common object */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_print_common
 (
     /* ---- input ---- */
@@ -89,19 +92,23 @@ int cholmod_print_common
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_print_common (const char *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_gpu_stats:  print the GPU / CPU statistics */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_gpu_stats   (cholmod_common *) ;
+CHOLMOD_EXPORT
 int cholmod_l_gpu_stats (cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_check_sparse:  check a sparse matrix */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_check_sparse
 (
     /* ---- input ---- */
@@ -110,12 +117,14 @@ int cholmod_check_sparse
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_check_sparse (cholmod_sparse *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_print_sparse */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_print_sparse
 (
     /* ---- input ---- */
@@ -125,12 +134,14 @@ int cholmod_print_sparse
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_print_sparse (cholmod_sparse *, const char *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_check_dense:  check a dense matrix */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_check_dense
 (
     /* ---- input ---- */
@@ -139,12 +150,14 @@ int cholmod_check_dense
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_check_dense (cholmod_dense *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_print_dense:  print a dense matrix */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_print_dense
 (
     /* ---- input ---- */
@@ -154,12 +167,14 @@ int cholmod_print_dense
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_print_dense (cholmod_dense *, const char *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_check_factor:  check a factor */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_check_factor
 (
     /* ---- input ---- */
@@ -168,12 +183,14 @@ int cholmod_check_factor
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_check_factor (cholmod_factor *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_print_factor:  print a factor */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_print_factor
 (
     /* ---- input ---- */
@@ -183,12 +200,14 @@ int cholmod_print_factor
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_print_factor (cholmod_factor *, const char *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_check_triplet:  check a sparse matrix in triplet form */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_check_triplet
 (
     /* ---- input ---- */
@@ -197,12 +216,14 @@ int cholmod_check_triplet
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_check_triplet (cholmod_triplet *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_print_triplet:  print a triplet matrix */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_print_triplet
 (
     /* ---- input ---- */
@@ -212,12 +233,14 @@ int cholmod_print_triplet
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_print_triplet (cholmod_triplet *, const char *, cholmod_common *);
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_check_subset:  check a subset */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_check_subset
 (
     /* ---- input ---- */
@@ -228,6 +251,7 @@ int cholmod_check_subset
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_check_subset (SuiteSparse_long *, SuiteSparse_long, size_t,
     cholmod_common *) ;
 
@@ -235,6 +259,7 @@ int cholmod_l_check_subset (SuiteSparse_long *, SuiteSparse_long, size_t,
 /* cholmod_print_subset:  print a subset */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_print_subset
 (
     /* ---- input ---- */
@@ -246,6 +271,7 @@ int cholmod_print_subset
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_print_subset (SuiteSparse_long *, SuiteSparse_long, size_t,
     const char *, cholmod_common *) ;
 
@@ -253,6 +279,7 @@ int cholmod_l_print_subset (SuiteSparse_long *, SuiteSparse_long, size_t,
 /* cholmod_check_perm:  check a permutation */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_check_perm
 (
     /* ---- input ---- */
@@ -263,12 +290,14 @@ int cholmod_check_perm
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_check_perm (SuiteSparse_long *, size_t, size_t, cholmod_common *);
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_print_perm:  print a permutation vector */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_print_perm
 (
     /* ---- input ---- */
@@ -280,6 +309,7 @@ int cholmod_print_perm
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_print_perm (SuiteSparse_long *, size_t, size_t, const char *,
     cholmod_common *) ;
 
@@ -287,6 +317,7 @@ int cholmod_l_print_perm (SuiteSparse_long *, size_t, size_t, const char *,
 /* cholmod_check_parent:  check an elimination tree */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_check_parent
 (
     /* ---- input ---- */
@@ -296,12 +327,14 @@ int cholmod_check_parent
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_check_parent (SuiteSparse_long *, size_t, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_print_parent */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_print_parent
 (
     /* ---- input ---- */
@@ -312,6 +345,7 @@ int cholmod_print_parent
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_print_parent (SuiteSparse_long *, size_t, const char *,
     cholmod_common *) ;
 
@@ -319,6 +353,7 @@ int cholmod_l_print_parent (SuiteSparse_long *, size_t, const char *,
 /* cholmod_read_sparse: read a sparse matrix from a file */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 cholmod_sparse *cholmod_read_sparse
 (
     /* ---- input ---- */
@@ -327,12 +362,14 @@ cholmod_sparse *cholmod_read_sparse
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 cholmod_sparse *cholmod_l_read_sparse (FILE *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_read_triplet: read a triplet matrix from a file */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 cholmod_triplet *cholmod_read_triplet
 (
     /* ---- input ---- */
@@ -341,12 +378,14 @@ cholmod_triplet *cholmod_read_triplet
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 cholmod_triplet *cholmod_l_read_triplet (FILE *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_read_dense: read a dense matrix from a file */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 cholmod_dense *cholmod_read_dense
 (
     /* ---- input ---- */
@@ -355,12 +394,14 @@ cholmod_dense *cholmod_read_dense
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 cholmod_dense *cholmod_l_read_dense (FILE *, cholmod_common *) ; 
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_read_matrix: read a sparse or dense matrix from a file */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 void *cholmod_read_matrix
 (
     /* ---- input ---- */
@@ -385,12 +426,14 @@ void *cholmod_read_matrix
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 void *cholmod_l_read_matrix (FILE *, int, int *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_write_sparse: write a sparse matrix to a file */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_write_sparse
 (
     /* ---- input ---- */
@@ -402,6 +445,7 @@ int cholmod_write_sparse
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_write_sparse (FILE *, cholmod_sparse *, cholmod_sparse *,
     const char *c, cholmod_common *) ;
 
@@ -409,6 +453,7 @@ int cholmod_l_write_sparse (FILE *, cholmod_sparse *, cholmod_sparse *,
 /* cholmod_write_dense: write a dense matrix to a file */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_write_dense
 (
     /* ---- input ---- */
@@ -419,6 +464,7 @@ int cholmod_write_dense
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_write_dense (FILE *, cholmod_dense *, const char *,
     cholmod_common *) ;
 #endif

@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_scale
 (
     double X [ ],
@@ -14,6 +15,7 @@ int umfpack_di_scale
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_scale
 (
     double X [ ],
@@ -21,6 +23,7 @@ SuiteSparse_long umfpack_dl_scale
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_scale
 (
     double Xx [ ],	 double Xz [ ],
@@ -28,6 +31,7 @@ int umfpack_zi_scale
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_scale
 (
     double Xx [ ],	 double Xz [ ],

@@ -7,21 +7,25 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 void umfpack_di_defaults
 (
     double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_dl_defaults
 (
     double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zi_defaults
 (
     double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zl_defaults
 (
     double Control [UMFPACK_CONTROL]

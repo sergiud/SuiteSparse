@@ -36,6 +36,10 @@ if (POLICY CMP0054)
   cmake_policy (SET CMP0054 NEW)
 endif (POLICY CMP0054)
 
+if (POLICY CMP0063)
+  cmake_policy (SET CMP0063 NEW)
+endif (POLICY CMP0063)
+
 include (CheckLanguage)
 
 option (BUILD_CXSPARSE "Build CXSparse" ON)
@@ -59,6 +63,12 @@ include (CheckCCompilerFlag)
 include (CheckFunctionExists)
 include (CMakeDependentOption)
 include (FeatureSummary)
+include (GenerateExportHeader)
+include (GNUInstallDirs)
+
+set (CMAKE_C_VISIBILITY_PRESET hidden)
+set (CMAKE_CXX_VISIBILITY_PRESET hidden)
+set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 check_c_compiler_flag (-fPIC HAVE_FPIC)
 check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
@@ -185,8 +195,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     _CRT_SECURE_NO_WARNINGS)
 endif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
-source_group ("Generated Files" REGULAR_EXPRESSION "^[^_]+_[^_]+_[^\\.]+\\.c$")
-
 set (AMD_SRCS
   AMD/Source/amd_1.c
   AMD/Source/amd_2.c
@@ -205,7 +213,6 @@ set (AMD_SRCS
 
 set (AMD_HDRS
   AMD/Include/amd.h
-  AMD/Include/amd_internal.h
 )
 
 set (BTF_SRCS
@@ -216,7 +223,6 @@ set (BTF_SRCS
 
 set (BTF_HDRS
   BTF/Include/btf.h
-  BTF/Include/btf_internal.h
 )
 
 set (CAMD_SRCS
@@ -236,7 +242,6 @@ set (CAMD_SRCS
 
 set (CAMD_HDRS
   CAMD/Include/camd.h
-  CAMD/Include/camd_internal.h
 )
 
 set (CHOLMOD_SRCS
@@ -336,7 +341,6 @@ set (CHOLMOD_HDRS
   CHOLMOD/Include/cholmod_function.h
   CHOLMOD/Include/cholmod_gpu.h
   CHOLMOD/Include/cholmod_gpu_kernels.h
-  CHOLMOD/Include/cholmod_internal.h
   CHOLMOD/Include/cholmod_io64.h
   CHOLMOD/Include/cholmod_matrixops.h
   CHOLMOD/Include/cholmod_modify.h
@@ -540,7 +544,6 @@ set (KLU_SRCS
 
 set (KLU
   KLU/Include/klu.h
-  KLU/Include/klu_internal.h
   KLU/Include/klu_version.h
 )
 
@@ -679,22 +682,37 @@ if (MSVC)
   add_definitions (-D_CRT_SECURE_NO_WARNINGS)
 endif (MSVC)
 
+# output directory for binaries
+set (OUTPUT_DIR ${CMAKE_BINARY_DIR})
+
+# put binaries in a single directory
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR})
+
 add_library (amd
+  AMD/Include/amd_internal.h
+  ${AMD_HDRS}
   ${GEN_AMD_SRCS_DINT}
   ${GEN_AMD_SRCS_DLONG}
 )
 
 add_library (btf
+  BTF/Include/btf_internal.h
+  ${BTF_HDRS}
   ${GEN_BTF_SRCS_DINT}
   ${GEN_BTF_SRCS_DLONG}
 )
 
 add_library (camd
+  CAMD/Include/camd_internal.h
+  ${CAMD_HDRS}
   ${GEN_CAMD_SRCS_DINT}
   ${GEN_CAMD_SRCS_DLONG}
 )
 
 add_library (cholmod
+  CHOLMOD/Include/cholmod_internal.h
+  ${CHOLMOD_HDRS}
   ${GEN_CHOLMOD_SRCS_DINT}
   ${GEN_CHOLMOD_SRCS_DLONG}
 )
@@ -734,11 +752,13 @@ if (WITH_PARTITION AND METIS_FOUND)
 endif (WITH_PARTITION AND METIS_FOUND)
 
 add_library (ccolamd
+  ${CCOLAMD_HDRS}
   ${GEN_CCOLAMD_SRCS_DINT}
   ${GEN_CCOLAMD_SRCS_DLONG}
 )
 
 add_library (colamd
+  ${COLAMD_HDRS}
   ${GEN_COLAMD_SRCS_DINT}
   ${GEN_COLAMD_SRCS_DLONG}
 )
@@ -787,6 +807,7 @@ set (SPQR_SRCS
 )
 
 set (SPQR_HDRS
+  SPQR/Include/SuiteSparseQR.hpp
   SPQR/Include/SuiteSparseQR_C.h
   SPQR/Include/SuiteSparseQR_definitions.h
 )
@@ -816,13 +837,13 @@ if (WITH_TBB AND TBB_FOUND)
   target_compile_definitions (spqr PRIVATE HAVE_TBB)
 endif (WITH_TBB AND TBB_FOUND)
 
-set (CONFIG_HDRS
+set (SUITESPARSECONFIG_HDRS
   SuiteSparse_config/SuiteSparse_config.h
 )
 
 add_library (suitesparseconfig
   SuiteSparse_config/SuiteSparse_config.c
-  ${COLAMD_HDRS}
+  ${SUITESPARSECONFIG_HDRS}
 )
 
 set (UMFPACK_HDRS
@@ -877,11 +898,11 @@ target_link_libraries (umfpack PUBLIC cholmod)
 
 set (KLU_HDRS
   KLU/Include/klu.h
-  KLU/Include/klu_internal.h
   KLU/Include/klu_version.h
 )
 
 add_library (klu
+  KLU/Include/klu_internal.h
   ${GEN_KLU_SRCS_DINT}
   ${GEN_KLU_SRCS_DLONG}
   ${KLU_HDRS}
@@ -899,21 +920,23 @@ add_library (ldl
   ${LDL_HDRS}
 )
 
-set (SuiteSparse_AMD_INCLUDE_DIR include/SuiteSparse/AMD)
-set (SuiteSparse_BTF_INCLUDE_DIR include/SuiteSparse/BTF)
-set (SuiteSparse_CAMD_INCLUDE_DIR include/SuiteSparse/CAMD)
-set (SuiteSparse_CCOLAMD_INCLUDE_DIR include/SuiteSparse/CCOLAMD)
-set (SuiteSparse_CHOLMOD_INCLUDE_DIR include/SuiteSparse/CHOLMOD)
-set (SuiteSparse_COLAMD_INCLUDE_DIR include/SuiteSparse/COLAMD)
-set (SuiteSparse_CONFIG_INCLUDE_DIR include/SuiteSparse)
-set (SuiteSparse_KLU_INCLUDE_DIR include/SuiteSparse/KLU)
-set (SuiteSparse_LDL_INCLUDE_DIR include/SuiteSparse/LDL)
-set (SuiteSparse_SPQR_INCLUDE_DIR include/SuiteSparse/SPQR)
-set (SuiteSparse_UMFPACK_INCLUDE_DIR include/SuiteSparse/UMFPACK)
+set (SuiteSparse_AMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/AMD)
+set (SuiteSparse_BTF_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/BTF)
+set (SuiteSparse_CAMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/CAMD)
+set (SuiteSparse_CCOLAMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/CCOLAMD)
+set (SuiteSparse_CHOLMOD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/CHOLMOD)
+set (SuiteSparse_COLAMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/COLAMD)
+set (SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse)
+set (SuiteSparse_KLU_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/KLU)
+set (SuiteSparse_LDL_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/LDL)
+set (SuiteSparse_SPQR_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/SPQR)
+set (SuiteSparse_UMFPACK_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/UMFPACK)
 
 target_include_directories (suitesparseconfig PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_CONFIG_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>")
+  "$<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
+)
 
 if (HAVE_BLAS_UNDERSCORE)
   target_compile_definitions (cholmod PRIVATE BLAS_UNDERSCORE)
@@ -930,20 +953,25 @@ if (HAVE_M)
 endif (HAVE_M)
 
 target_include_directories (amd PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_KLU_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>")
+  "$<INSTALL_INTERFACE:${SuiteSparse_AMD_INCLUDE_DIR}>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>")
 target_include_directories (btf PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_BTF_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_BTF_INCLUDE_DIR}>")
 target_include_directories (camd PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_CAMD_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CAMD/Include>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CAMD/Include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CAMD_INCLUDE_DIR}>")
 target_include_directories (ccolamd PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_CCOLAMD_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CCOLAMD/Include>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CCOLAMD/Include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CCOLAMD_INCLUDE_DIR}>")
 target_include_directories (colamd PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_COLAMD_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/COLAMD/Include>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/COLAMD/Include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>")
 target_include_directories (cholmod PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_CHOLMOD_INCLUDE_DIR}>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Cholesky>"
@@ -952,21 +980,26 @@ target_include_directories (cholmod PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/MatrixOps>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Modify>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Supernodal>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CHOLMOD_INCLUDE_DIR}>"
 )
 target_include_directories (spqr PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_SPQR_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/Include>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/Include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SPQR_INCLUDE_DIR}>")
 target_include_directories (umfpack PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_UMFPACK_INCLUDE_DIR}>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Source>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_UMFPACK_INCLUDE_DIR}>"
 )
 target_include_directories (klu PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_KLU_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/Include>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/Include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_KLU_INCLUDE_DIR}>")
 target_include_directories (ldl PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_LDL_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/LDL/Include>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/LDL/Include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_LDL_INCLUDE_DIR}>")
 
 target_link_libraries (amd PUBLIC suitesparseconfig)
 target_link_libraries (btf PUBLIC suitesparseconfig)
@@ -1147,8 +1180,33 @@ if (WITH_CUDA AND CUDA_FOUND)
   target_link_libraries (spqr PUBLIC gpuqrengine)
 endif (WITH_CUDA AND CUDA_FOUND)
 
-set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack klu
-  ldl suitesparseconfig)
+set (_SuiteSparse_base_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack
+  klu ldl suitesparseconfig)
+set (_SuiteSparse_TARGETS ${_SuiteSparse_base_TARGETS})
+
+foreach (_target ${_SuiteSparse_base_TARGETS})
+  string (TOUPPER "${_target}" _upper_target)
+
+  set (_target_include_dir ${SuiteSparse_${_upper_target}_INCLUDE_DIR})
+
+  if ("${_target}" STREQUAL suitesparseconfig)
+    set (_export_header
+      ${CMAKE_CURRENT_BINARY_DIR}/${_target_include_dir}/SuiteSparse_export.h)
+  else ("${_target}" STREQUAL suitesparseconfig)
+    set (_export_header
+      ${CMAKE_CURRENT_BINARY_DIR}/${_target_include_dir}/${_target}_export.h)
+  endif ("${_target}" STREQUAL suitesparseconfig)
+  # Generate an export header with the name <target>_export.h for each mandatory
+  # target.
+  generate_export_header (${_target} EXPORT_FILE_NAME ${_export_header})
+
+  # Add the export header to the target
+  target_sources (${_target} PRIVATE ${_export_header})
+
+  # Install headers
+  install (FILES ${${_upper_target}_HDRS} ${_export_header} DESTINATION
+    ${_target_include_dir} COMPONENT Development)
+endforeach (_target)
 
 if (TARGET suitesparsecuda)
   list (APPEND _SuiteSparse_TARGETS suitesparsecuda)
@@ -1158,17 +1216,20 @@ if (TARGET gpuqrengine)
   list (APPEND _SuiteSparse_TARGETS gpuqrengine)
 endif (TARGET gpuqrengine)
 
+set (_SuiteSparse_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR}/SuiteSparse)
+set (_SuiteSparse_CMake_INSTALLDIR ${_SuiteSparse_CMake_LIBDIR}/cmake)
+
 install (TARGETS ${_SuiteSparse_TARGETS}
   EXPORT suitesparse-targets
-  RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib)
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
+  LIBRARY DESTINATION ${_SuiteSparse_CMake_LIBDIR} COMPONENT Development
+  ARCHIVE DESTINATION ${_SuiteSparse_CMake_LIBDIR} COMPONENT Development)
 
 set (SuiteSparse_NAMESPACE SuiteSparse::)
 
 configure_package_config_file (suitesparse-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config.cmake
-  INSTALL_DESTINATION lib/cmake/SuiteSparse)
+  INSTALL_DESTINATION ${_SuiteSparse_CMake_INSTALLDIR})
 write_basic_package_version_file (suitesparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
@@ -1176,24 +1237,12 @@ export (TARGETS ${_SuiteSparse_TARGETS} NAMESPACE ${SuiteSparse_NAMESPACE} FILE
   suitesparse-targets.cmake)
 export (PACKAGE SuiteSparse)
 
-install (FILES ${AMD_HDRS} DESTINATION ${SuiteSparse_AMD_INCLUDE_DIR})
-install (FILES ${BTF_HDRS} DESTINATION ${SuiteSparse_BTF_INCLUDE_DIR})
-install (FILES ${CAMD_HDRS} DESTINATION ${SuiteSparse_CAMD_INCLUDE_DIR})
-install (FILES ${CCOLAMD_HDRS} DESTINATION ${SuiteSparse_CCOLAMD_INCLUDE_DIR})
-install (FILES ${CHOLMOD_HDRS} DESTINATION ${SuiteSparse_CHOLMOD_INCLUDE_DIR})
-install (FILES ${COLAMD_HDRS} DESTINATION ${SuiteSparse_COLAMD_INCLUDE_DIR})
-install (FILES ${CONFIG_HDRS} DESTINATION ${SuiteSparse_CONFIG_INCLUDE_DIR})
-install (FILES ${KLU_HDRS} DESTINATION ${SuiteSparse_KLU_INCLUDE_DIR})
-install (FILES ${LDL_HDRS} DESTINATION ${SuiteSparse_LDL_INCLUDE_DIR})
-install (FILES ${SPQR_HDRS} DESTINATION ${SuiteSparse_SPQR_INCLUDE_DIR})
-install (FILES ${UMFPACK_HDRS} DESTINATION ${SuiteSparse_UMFPACK_INCLUDE_DIR})
-
 install (EXPORT suitesparse-targets NAMESPACE ${SuiteSparse_NAMESPACE}
-  DESTINATION lib/cmake/SuiteSparse)
+  DESTINATION ${_SuiteSparse_CMake_INSTALLDIR})
 install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config-version.cmake
-  DESTINATION lib/cmake/SuiteSparse
+  DESTINATION ${_SuiteSparse_CMake_INSTALLDIR}
   COMPONENT Development)
 
 set_component_version (amd 2.4.6)

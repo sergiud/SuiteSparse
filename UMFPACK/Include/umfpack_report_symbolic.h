@@ -7,24 +7,28 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_report_symbolic
 (
     void *Symbolic,
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_report_symbolic
 (
     void *Symbolic,
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_report_symbolic
 (
     void *Symbolic,
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_report_symbolic
 (
     void *Symbolic,

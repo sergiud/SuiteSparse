@@ -128,7 +128,9 @@ extern "C" {
 /* ========================================================================== */
 
 #include "SuiteSparse_config.h"
+#include "colamd_export.h"
 
+COLAMD_EXPORT
 size_t colamd_recommended	/* returns recommended value of Alen, */
 				/* or 0 if input arguments are erroneous */
 (
@@ -137,6 +139,7 @@ size_t colamd_recommended	/* returns recommended value of Alen, */
     int n_col			/* number of columns in A */
 ) ;
 
+COLAMD_EXPORT
 size_t colamd_l_recommended	/* returns recommended value of Alen, */
 				/* or 0 if input arguments are erroneous */
 (
@@ -145,16 +148,19 @@ size_t colamd_l_recommended	/* returns recommended value of Alen, */
     SuiteSparse_long n_col      /* number of columns in A */
 ) ;
 
+COLAMD_EXPORT
 void colamd_set_defaults	/* sets default parameters */
 (				/* knobs argument is modified on output */
     double knobs [COLAMD_KNOBS]	/* parameter settings for colamd */
 ) ;
 
+COLAMD_EXPORT
 void colamd_l_set_defaults	/* sets default parameters */
 (				/* knobs argument is modified on output */
     double knobs [COLAMD_KNOBS]	/* parameter settings for colamd */
 ) ;
 
+COLAMD_EXPORT
 int colamd			/* returns (1) if successful, (0) otherwise*/
 (				/* A and p arguments are modified on output */
     int n_row,			/* number of rows in A */
@@ -166,6 +172,7 @@ int colamd			/* returns (1) if successful, (0) otherwise*/
     int stats [COLAMD_STATS]	/* colamd output statistics and error codes */
 ) ;
 
+COLAMD_EXPORT
 SuiteSparse_long colamd_l       /* returns (1) if successful, (0) otherwise*/
 (				/* A and p arguments are modified on output */
     SuiteSparse_long n_row,     /* number of rows in A */
@@ -178,6 +185,7 @@ SuiteSparse_long colamd_l       /* returns (1) if successful, (0) otherwise*/
                                              * and error codes */
 ) ;
 
+COLAMD_EXPORT
 int symamd				/* return (1) if OK, (0) otherwise */
 (
     int n,				/* number of rows and columns of A */
@@ -194,6 +202,7 @@ int symamd				/* return (1) if OK, (0) otherwise */
     					/* mxFree (for MATLAB mexFunction) */
 ) ;
 
+COLAMD_EXPORT
 SuiteSparse_long symamd_l               /* return (1) if OK, (0) otherwise */
 (
     SuiteSparse_long n,                 /* number of rows and columns of A */
@@ -210,21 +219,25 @@ SuiteSparse_long symamd_l               /* return (1) if OK, (0) otherwise */
     					/* mxFree (for MATLAB mexFunction) */
 ) ;
 
+COLAMD_EXPORT
 void colamd_report
 (
     int stats [COLAMD_STATS]
 ) ;
 
+COLAMD_EXPORT
 void colamd_l_report
 (
     SuiteSparse_long stats [COLAMD_STATS]
 ) ;
 
+COLAMD_EXPORT
 void symamd_report
 (
     int stats [COLAMD_STATS]
 ) ;
 
+COLAMD_EXPORT
 void symamd_l_report
 (
     SuiteSparse_long stats [COLAMD_STATS]

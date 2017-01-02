@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_transpose
 (
     int n_row,
@@ -21,6 +22,7 @@ int umfpack_di_transpose
     double Rx [ ]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_transpose
 (
     SuiteSparse_long n_row,
@@ -35,6 +37,7 @@ SuiteSparse_long umfpack_dl_transpose
     double Rx [ ]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_transpose
 (
     int n_row,
@@ -50,6 +53,7 @@ int umfpack_zi_transpose
     int do_conjugate
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_transpose
 (
     SuiteSparse_long n_row,

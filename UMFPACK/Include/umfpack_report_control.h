@@ -7,21 +7,25 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 void umfpack_di_report_control
 (
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_dl_report_control
 (
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zi_report_control
 (
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zl_report_control
 (
     const double Control [UMFPACK_CONTROL]

@@ -34,6 +34,7 @@
 
 /* Order AA' or A(:,f)*A(:,f)' using CCOLAMD. */
 
+CHOLMOD_EXPORT
 int cholmod_ccolamd
 (
     /* ---- input ---- */
@@ -51,6 +52,7 @@ int cholmod_ccolamd
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_ccolamd (cholmod_sparse *, SuiteSparse_long *, size_t,
     SuiteSparse_long *, SuiteSparse_long *, cholmod_common *) ;
 
@@ -60,6 +62,7 @@ int cholmod_l_ccolamd (cholmod_sparse *, SuiteSparse_long *, size_t,
 
 /* Order A using CSYMAMD. */
 
+CHOLMOD_EXPORT
 int cholmod_csymamd
 (
     /* ---- input ---- */
@@ -71,6 +74,7 @@ int cholmod_csymamd
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_csymamd (cholmod_sparse *, SuiteSparse_long *,
     SuiteSparse_long *, cholmod_common *) ;
 
@@ -80,6 +84,7 @@ int cholmod_l_csymamd (cholmod_sparse *, SuiteSparse_long *,
 
 /* Order A using CAMD. */
 
+CHOLMOD_EXPORT
 int cholmod_camd
 (
     /* ---- input ---- */
@@ -93,6 +98,7 @@ int cholmod_camd
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_camd (cholmod_sparse *, SuiteSparse_long *, size_t,
     SuiteSparse_long *, SuiteSparse_long *, cholmod_common *) ;
 

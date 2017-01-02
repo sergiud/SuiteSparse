@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_report_matrix
 (
     int n_row,
@@ -18,6 +19,7 @@ int umfpack_di_report_matrix
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_report_matrix
 (
     SuiteSparse_long n_row,
@@ -29,6 +31,7 @@ SuiteSparse_long umfpack_dl_report_matrix
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_report_matrix
 (
     int n_row,
@@ -40,6 +43,7 @@ int umfpack_zi_report_matrix
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_report_matrix
 (
     SuiteSparse_long n_row,

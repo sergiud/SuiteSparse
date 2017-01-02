@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_numeric
 (
     const int Ap [ ],
@@ -18,6 +19,7 @@ int umfpack_di_numeric
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_numeric
 (
     const SuiteSparse_long Ap [ ],
@@ -29,6 +31,7 @@ SuiteSparse_long umfpack_dl_numeric
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_numeric
 (
     const int Ap [ ],
@@ -40,6 +43,7 @@ int umfpack_zi_numeric
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_numeric
 (
     const SuiteSparse_long Ap [ ],

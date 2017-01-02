@@ -16,6 +16,7 @@ extern "C" {
 
 #include "cholmod.h"
 #include "SuiteSparseQR_definitions.h"
+#include "spqr_export.h"
 
 #ifndef __cplusplus
 /* The C++ functions will return a pointer to a std::complex<double> array of
@@ -28,6 +29,7 @@ extern "C" {
 /* === SuiteSparseQR_C ====================================================== */
 /* ========================================================================== */
 
+SPQR_EXPORT
 SuiteSparse_long SuiteSparseQR_C /* returns rank(A) estimate, (-1) if failure */
 (
     /* inputs: */
@@ -54,6 +56,7 @@ SuiteSparse_long SuiteSparseQR_C /* returns rank(A) estimate, (-1) if failure */
 /* ========================================================================== */
 
 /* [Q,R,E] = qr(A), returning Q as a sparse matrix */
+SPQR_EXPORT
 SuiteSparse_long SuiteSparseQR_C_QR /* returns rank(A) est., (-1) if failure */
 (
     /* inputs: */
@@ -73,6 +76,7 @@ SuiteSparse_long SuiteSparseQR_C_QR /* returns rank(A) est., (-1) if failure */
 /* ========================================================================== */
 
 /* X = A\B where B is dense */
+SPQR_EXPORT
 cholmod_dense *SuiteSparseQR_C_backslash    /* returns X, NULL if failure */
 (
     int ordering,               /* all, except 3:given treated as 0:fixed */
@@ -87,6 +91,7 @@ cholmod_dense *SuiteSparseQR_C_backslash    /* returns X, NULL if failure */
 /* ========================================================================== */
 
 /* X = A\B where B is dense, using default ordering and tol */
+SPQR_EXPORT
 cholmod_dense *SuiteSparseQR_C_backslash_default /* returns X, NULL if failure*/
 (
     cholmod_sparse *A,          /* m-by-n sparse matrix */
@@ -99,6 +104,7 @@ cholmod_dense *SuiteSparseQR_C_backslash_default /* returns X, NULL if failure*/
 /* ========================================================================== */
 
 /* X = A\B where B is sparse */
+SPQR_EXPORT
 cholmod_sparse *SuiteSparseQR_C_backslash_sparse   /* returns X, or NULL */
 (
     /* inputs: */
@@ -128,6 +134,7 @@ typedef struct SuiteSparseQR_C_factorization_struct
 /* === SuiteSparseQR_C_factorize ============================================ */
 /* ========================================================================== */
 
+SPQR_EXPORT
 SuiteSparseQR_C_factorization *SuiteSparseQR_C_factorize
 (
     /* inputs: */
@@ -141,6 +148,7 @@ SuiteSparseQR_C_factorization *SuiteSparseQR_C_factorize
 /* === SuiteSparseQR_C_symbolic ============================================= */
 /* ========================================================================== */
 
+SPQR_EXPORT
 SuiteSparseQR_C_factorization *SuiteSparseQR_C_symbolic
 (
     /* inputs: */
@@ -154,6 +162,7 @@ SuiteSparseQR_C_factorization *SuiteSparseQR_C_symbolic
 /* === SuiteSparseQR_C_numeric ============================================== */
 /* ========================================================================== */
 
+SPQR_EXPORT
 int SuiteSparseQR_C_numeric
 (
     /* inputs: */
@@ -169,6 +178,7 @@ int SuiteSparseQR_C_numeric
 /* ========================================================================== */
 
 /* Free the QR factors computed by SuiteSparseQR_C_factorize */
+SPQR_EXPORT
 int SuiteSparseQR_C_free        /* returns TRUE (1) if OK, FALSE (0) otherwise*/
 (
     SuiteSparseQR_C_factorization **QR,
@@ -201,6 +211,7 @@ cholmod_dense* SuiteSparseQR_C_solve    /* returnx X, or NULL if failure */
     method SPQR_XQ  (3): Y = X*Q
 */
 
+SPQR_EXPORT
 cholmod_dense *SuiteSparseQR_C_qmult /* returns Y, or NULL on failure */
 (
     /* inputs: */

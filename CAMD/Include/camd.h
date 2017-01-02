@@ -32,7 +32,9 @@ extern "C" {
 #include <stddef.h>
 
 #include "SuiteSparse_config.h"
+#include "camd_export.h"
 
+CAMD_EXPORT
 int camd_order              /* returns CAMD_OK, CAMD_OK_BUT_JUMBLED,
                              * CAMD_INVALID, or CAMD_OUT_OF_MEMORY */
 (
@@ -45,6 +47,7 @@ int camd_order              /* returns CAMD_OK, CAMD_OK_BUT_JUMBLED,
     const int C [ ]         /* Constraint set of A, of size n; can be NULL */
 ) ;
 
+CAMD_EXPORT
 SuiteSparse_long camd_l_order   /* see above for description of arguments */
 (
     SuiteSparse_long n,
@@ -224,6 +227,7 @@ SuiteSparse_long camd_l_order   /* see above for description of arguments */
  * of the matrix for CAMD to destroy).  Refer to CAMD/Source/camd_2.c for a
  * description of each parameter. */
 
+CAMD_EXPORT
 void camd_2
 (
     int n,
@@ -245,6 +249,7 @@ void camd_2
     int BucketSet [ ] 
 ) ;
 
+CAMD_EXPORT
 void camd_l2
 (
     SuiteSparse_long n,
@@ -279,6 +284,7 @@ void camd_l2
  * of columns of the matrix.  For its use in CAMD, these must both equal n.
  */
 
+CAMD_EXPORT
 int camd_valid
 (
     int n_row,              /* # of rows */
@@ -287,6 +293,7 @@ int camd_valid
     const int Ai [ ]        /* row indices, of size Ap [n_col] */
 ) ;
 
+CAMD_EXPORT
 SuiteSparse_long camd_l_valid
 (
     SuiteSparse_long n_row,
@@ -302,12 +309,14 @@ SuiteSparse_long camd_l_valid
 /* Returns TRUE if the constraint set is valid as input to camd_order,
  * FALSE otherwise. */
 
+CAMD_EXPORT
 int camd_cvalid
 (
    int n,
    const int C [ ]
 ) ;
 
+CAMD_EXPORT
 SuiteSparse_long camd_l_cvalid
 (
    SuiteSparse_long n,
@@ -325,15 +334,21 @@ SuiteSparse_long camd_l_cvalid
 /* ------------------------------------------------------------------------- */
 
 /* camd_defaults:  sets the default control settings */
+CAMD_EXPORT
 void camd_defaults   (double Control [ ]) ;
+CAMD_EXPORT
 void camd_l_defaults (double Control [ ]) ;
 
 /* camd_control: prints the control settings */
+CAMD_EXPORT
 void camd_control    (double Control [ ]) ;
+CAMD_EXPORT
 void camd_l_control  (double Control [ ]) ;
 
 /* camd_info: prints the statistics */
+CAMD_EXPORT
 void camd_info       (double Info [ ]) ;
+CAMD_EXPORT
 void camd_l_info     (double Info [ ]) ;
 
 #define CAMD_CONTROL 5      /* size of Control array */

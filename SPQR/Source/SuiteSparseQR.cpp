@@ -987,7 +987,7 @@ template <typename Entry> Long SuiteSparseQR
 }
 
 
-template Long SuiteSparseQR <double>
+template SPQR_EXPORT Long SuiteSparseQR <double>
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -1019,7 +1019,7 @@ template Long SuiteSparseQR <double>
     cholmod_common *cc
 ) ;
 
-template Long SuiteSparseQR <Complex>
+template SPQR_EXPORT Long SuiteSparseQR <Complex>
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -1075,7 +1075,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR
     return (X) ;
 }
 
-template cholmod_dense *SuiteSparseQR <double>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR <double>
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,             // columns with 2-norm <= tol are treated as zero
@@ -1084,7 +1084,7 @@ template cholmod_dense *SuiteSparseQR <double>
     cholmod_common *cc      // workspace and parameters
 ) ;
 
-template cholmod_dense *SuiteSparseQR <Complex>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR <Complex>
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,             // columns with 2-norm <= tol are treated as zero
@@ -1110,14 +1110,14 @@ template <typename Entry> cholmod_dense *SuiteSparseQR
     return (X) ;
 }
 
-template cholmod_dense *SuiteSparseQR <double>
+template SPQR_EXPORT  cholmod_dense *SuiteSparseQR <double>
 (
     cholmod_sparse *A,      // m-by-n sparse matrix
     cholmod_dense  *B,      // m-by-nrhs
     cholmod_common *cc      // workspace and parameters
 ) ;
 
-template cholmod_dense *SuiteSparseQR <Complex>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR <Complex>
 (
     cholmod_sparse *A,      // m-by-n sparse matrix
     cholmod_dense  *B,      // m-by-nrhs
@@ -1146,7 +1146,7 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR
     return (X) ;
 }
 
-template cholmod_sparse *SuiteSparseQR <double>
+template SPQR_EXPORT cholmod_sparse *SuiteSparseQR <double>
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,             // columns with 2-norm <= tol are treated as zero
@@ -1155,7 +1155,7 @@ template cholmod_sparse *SuiteSparseQR <double>
     cholmod_common *cc      // workspace and parameters
 ) ;
 
-template cholmod_sparse *SuiteSparseQR <Complex>
+template SPQR_EXPORT cholmod_sparse *SuiteSparseQR <Complex>
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,             // columns with 2-norm <= tol are treated as zero
@@ -1207,7 +1207,7 @@ template Long SuiteSparseQR <Complex>     // returns rank(A) estimate
     cholmod_common *cc      // workspace and parameters
 ) ;
 
-template Long SuiteSparseQR <double>     // returns rank(A) estimate
+template SPQR_EXPORT Long SuiteSparseQR <double>     // returns rank(A) estimate
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,             // columns with 2-norm <= tol are treated as zero
@@ -1240,7 +1240,7 @@ template <typename Entry> Long SuiteSparseQR     // returns rank(A) estimate
         NULL, NULL, NULL, NULL, R, E, NULL, NULL, NULL, cc)) ;
 }
 
-template Long SuiteSparseQR <Complex>     // returns rank(A) estimate
+template SPQR_EXPORT Long SuiteSparseQR <Complex>     // returns rank(A) estimate
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,             // columns with 2-norm <= tol are treated as zero
@@ -1252,7 +1252,7 @@ template Long SuiteSparseQR <Complex>     // returns rank(A) estimate
     cholmod_common *cc      // workspace and parameters
 ) ;
 
-template Long SuiteSparseQR <double>     // returns rank(A) estimate
+template SPQR_EXPORT Long SuiteSparseQR <double>     // returns rank(A) estimate
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,             // columns with 2-norm <= tol are treated as zero
@@ -1288,7 +1288,7 @@ template <typename Entry> Long SuiteSparseQR
         NULL, C, R, E, NULL, NULL, NULL, cc)) ;
 }
 
-template Long SuiteSparseQR <double>
+template SPQR_EXPORT Long SuiteSparseQR <double>
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -1304,7 +1304,7 @@ template Long SuiteSparseQR <double>
 ) ;
 
 
-template Long SuiteSparseQR <Complex>
+template SPQR_EXPORT Long SuiteSparseQR <Complex>
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -1344,7 +1344,7 @@ template <typename Entry> Long SuiteSparseQR
         C, NULL, R, E, NULL, NULL, NULL, cc)) ;
 }
 
-template Long SuiteSparseQR <double>
+template SPQR_EXPORT Long SuiteSparseQR <double>
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -1360,7 +1360,7 @@ template Long SuiteSparseQR <double>
 ) ;
 
 
-template Long SuiteSparseQR <Complex>
+template SPQR_EXPORT Long SuiteSparseQR <Complex>
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -1400,7 +1400,7 @@ template <typename Entry> Long SuiteSparseQR
         NULL, NULL, NULL, NULL, R, E, H, HPinv, HTau, cc)) ;
 }
 
-template Long SuiteSparseQR <double>
+template SPQR_EXPORT Long SuiteSparseQR <double>
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -1416,7 +1416,7 @@ template Long SuiteSparseQR <double>
     cholmod_common *cc      // workspace and parameters
 ) ;
 
-template Long SuiteSparseQR <Complex>
+template SPQR_EXPORT Long SuiteSparseQR <Complex>
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed

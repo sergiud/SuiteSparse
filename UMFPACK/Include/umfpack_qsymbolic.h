@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_qsymbolic
 (
     int n_row,
@@ -20,6 +21,7 @@ int umfpack_di_qsymbolic
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_qsymbolic
 (
     SuiteSparse_long n_row,
@@ -33,6 +35,7 @@ SuiteSparse_long umfpack_dl_qsymbolic
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_qsymbolic
 (
     int n_row,
@@ -46,6 +49,7 @@ int umfpack_zi_qsymbolic
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_qsymbolic
 (
     SuiteSparse_long n_row,
@@ -59,6 +63,7 @@ SuiteSparse_long umfpack_zl_qsymbolic
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_di_fsymbolic
 (
     int n_row,
@@ -92,6 +97,7 @@ int umfpack_di_fsymbolic
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_fsymbolic
 (
     SuiteSparse_long n_row,
@@ -110,6 +116,7 @@ SuiteSparse_long umfpack_dl_fsymbolic
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_fsymbolic
 (
     int n_row,
@@ -126,6 +133,7 @@ int umfpack_zi_fsymbolic
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_fsymbolic
 (
     SuiteSparse_long n_row,

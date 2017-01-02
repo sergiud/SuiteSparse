@@ -55,6 +55,7 @@
  * a "simple" wrapper for this routine.
  */
 
+CHOLMOD_EXPORT
 int cholmod_super_symbolic
 (
     /* ---- input ---- */
@@ -68,6 +69,7 @@ int cholmod_super_symbolic
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_super_symbolic (cholmod_sparse *, cholmod_sparse *,
     SuiteSparse_long *, cholmod_factor *, cholmod_common *) ;
 
@@ -77,6 +79,7 @@ int cholmod_l_super_symbolic (cholmod_sparse *, cholmod_sparse *,
 
 /* Analyze for supernodal Cholesky or multifrontal QR */
 
+CHOLMOD_EXPORT
 int cholmod_super_symbolic2
 (
     /* ---- input ---- */
@@ -93,6 +96,7 @@ int cholmod_super_symbolic2
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_super_symbolic2 (int, cholmod_sparse *, cholmod_sparse *,
     SuiteSparse_long *, cholmod_factor *, cholmod_common *) ;
 
@@ -105,6 +109,7 @@ int cholmod_l_super_symbolic2 (int, cholmod_sparse *, cholmod_sparse *,
  * cholmod_factorize is a "simple" wrapper for this routine.
  */
 
+CHOLMOD_EXPORT
 int cholmod_super_numeric
 (
     /* ---- input ---- */
@@ -117,6 +122,7 @@ int cholmod_super_numeric
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_super_numeric (cholmod_sparse *, cholmod_sparse *, double *,
     cholmod_factor *, cholmod_common *) ;
 
@@ -128,6 +134,7 @@ int cholmod_l_super_numeric (cholmod_sparse *, cholmod_sparse *, double *,
  * need not call this routine directly.  cholmod_solve is a "simple" wrapper
  * for this routine. */
 
+CHOLMOD_EXPORT
 int cholmod_super_lsolve
 (
     /* ---- input ---- */
@@ -140,6 +147,7 @@ int cholmod_super_lsolve
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_super_lsolve (cholmod_factor *, cholmod_dense *, cholmod_dense *,
     cholmod_common *) ;
 
@@ -151,6 +159,7 @@ int cholmod_l_super_lsolve (cholmod_factor *, cholmod_dense *, cholmod_dense *,
  * need not call this routine directly.  cholmod_solve is a "simple" wrapper
  * for this routine. */
 
+CHOLMOD_EXPORT
 int cholmod_super_ltsolve
 (
     /* ---- input ---- */
@@ -163,6 +172,7 @@ int cholmod_super_ltsolve
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_super_ltsolve (cholmod_factor *, cholmod_dense *, cholmod_dense *,
     cholmod_common *) ;
 

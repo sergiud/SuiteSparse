@@ -94,7 +94,9 @@ extern "C" {
 #endif
 
 #include "SuiteSparse_config.h"
+#include "btf_export.h"
 
+BTF_EXPORT
 int btf_maxtrans    /* returns # of columns matched */
 (
     /* --- input, not modified: --- */
@@ -118,6 +120,7 @@ int btf_maxtrans    /* returns # of columns matched */
 ) ;
 
 /* long integer version (all "int" parameters become "SuiteSparse_long") */
+BTF_EXPORT
 SuiteSparse_long btf_l_maxtrans (SuiteSparse_long, SuiteSparse_long,
     SuiteSparse_long *, SuiteSparse_long *, double, double *,
     SuiteSparse_long *, SuiteSparse_long *) ;
@@ -145,6 +148,7 @@ SuiteSparse_long btf_l_maxtrans (SuiteSparse_long, SuiteSparse_long,
  * number of strongly connected components found.
  */
 
+BTF_EXPORT
 int btf_strongcomp  /* return # of strongly connected components */
 (
     /* input, not modified: */
@@ -165,6 +169,7 @@ int btf_strongcomp  /* return # of strongly connected components */
     int Work [ ]    /* size 4n */
 ) ;
 
+BTF_EXPORT
 SuiteSparse_long btf_l_strongcomp (SuiteSparse_long, SuiteSparse_long *,
     SuiteSparse_long *, SuiteSparse_long *, SuiteSparse_long *,
     SuiteSparse_long *, SuiteSparse_long *) ;
@@ -193,6 +198,7 @@ SuiteSparse_long btf_l_strongcomp (SuiteSparse_long, SuiteSparse_long *,
  * number of strongly connected components found.
  */
 
+BTF_EXPORT
 int btf_order       /* returns number of blocks found */
 (
     /* --- input, not modified: --- */
@@ -213,6 +219,7 @@ int btf_order       /* returns number of blocks found */
     int Work [ ]    /* size 5n */
 ) ;
 
+BTF_EXPORT
 SuiteSparse_long btf_l_order (SuiteSparse_long, SuiteSparse_long *,
     SuiteSparse_long *, double , double *, SuiteSparse_long *,
     SuiteSparse_long *, SuiteSparse_long *, SuiteSparse_long *,

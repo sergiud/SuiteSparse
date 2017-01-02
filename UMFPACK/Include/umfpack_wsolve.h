@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_wsolve
 (
     int sys,
@@ -22,6 +23,7 @@ int umfpack_di_wsolve
     double W [ ]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_wsolve
 (
     SuiteSparse_long sys,
@@ -37,6 +39,7 @@ SuiteSparse_long umfpack_dl_wsolve
     double W [ ]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_wsolve
 (
     int sys,
@@ -52,6 +55,7 @@ int umfpack_zi_wsolve
     double W [ ]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_wsolve
 (
     SuiteSparse_long sys,

@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_solve
 (
     int sys,
@@ -20,6 +21,7 @@ int umfpack_di_solve
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_solve
 (
     SuiteSparse_long sys,
@@ -33,6 +35,7 @@ SuiteSparse_long umfpack_dl_solve
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_solve
 (
     int sys,
@@ -46,6 +49,7 @@ int umfpack_zi_solve
     double Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_solve
 (
     SuiteSparse_long sys,

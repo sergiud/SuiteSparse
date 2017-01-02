@@ -201,6 +201,7 @@
 /* AMD routine definitions (not user-callable) */
 /* ------------------------------------------------------------------------- */
 
+AMD_EXPORT
 GLOBAL size_t AMD_aat
 (
     Int n,
@@ -211,6 +212,7 @@ GLOBAL size_t AMD_aat
     double Info [ ]
 ) ;
 
+AMD_EXPORT
 GLOBAL void AMD_1
 (
     Int n,
@@ -225,6 +227,7 @@ GLOBAL void AMD_1
     double Info [ ]
 ) ;
 
+AMD_EXPORT
 GLOBAL void AMD_postorder
 (
     Int nn,
@@ -237,6 +240,7 @@ GLOBAL void AMD_postorder
     Int Stack [ ]
 ) ;
 
+AMD_EXPORT
 GLOBAL Int AMD_post_tree
 (
     Int root,
@@ -250,6 +254,7 @@ GLOBAL Int AMD_post_tree
 #endif
 ) ;
 
+AMD_EXPORT
 GLOBAL void AMD_preprocess
 (
     Int n,
@@ -274,10 +279,13 @@ GLOBAL void AMD_preprocess
 #define EXTERN extern
 #endif
 
+AMD_EXPORT
 EXTERN Int AMD_debug ;
 
+AMD_EXPORT
 GLOBAL void AMD_debug_init ( char *s ) ;
 
+AMD_EXPORT
 GLOBAL void AMD_dump
 (
     Int n,

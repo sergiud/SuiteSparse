@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_col_to_triplet
 (
     int n_col,
@@ -14,6 +15,7 @@ int umfpack_di_col_to_triplet
     int Tj [ ]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_col_to_triplet
 (
     SuiteSparse_long n_col,
@@ -21,6 +23,7 @@ SuiteSparse_long umfpack_dl_col_to_triplet
     SuiteSparse_long Tj [ ]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_col_to_triplet
 (
     int n_col,
@@ -28,6 +31,7 @@ int umfpack_zi_col_to_triplet
     int Tj [ ]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_col_to_triplet
 (
     SuiteSparse_long n_col,

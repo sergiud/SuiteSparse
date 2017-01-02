@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_report_perm
 (
     int np,
@@ -14,6 +15,7 @@ int umfpack_di_report_perm
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_report_perm
 (
     SuiteSparse_long np,
@@ -21,6 +23,7 @@ SuiteSparse_long umfpack_dl_report_perm
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_report_perm
 (
     int np,
@@ -28,6 +31,7 @@ int umfpack_zi_report_perm
     const double Control [UMFPACK_CONTROL]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_report_perm
 (
     SuiteSparse_long np,

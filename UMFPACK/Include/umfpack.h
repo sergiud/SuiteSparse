@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #include "SuiteSparse_config.h"
+#include "umfpack_export.h"
 
 /* -------------------------------------------------------------------------- */
 /* size of Info and Control arrays */

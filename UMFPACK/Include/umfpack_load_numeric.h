@@ -7,24 +7,28 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_load_numeric
 (
     void **Numeric,
     char *filename
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_load_numeric
 (
     void **Numeric,
     char *filename
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_load_numeric
 (
     void **Numeric,
     char *filename
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_load_numeric
 (
     void **Numeric,

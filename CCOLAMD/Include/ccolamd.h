@@ -112,7 +112,9 @@ extern "C" {
 /* ========================================================================== */
 
 #include "SuiteSparse_config.h"
+#include "ccolamd_export.h"
 
+CCOLAMD_EXPORT
 size_t ccolamd_recommended	/* returns recommended value of Alen, */
 				/* or 0 if input arguments are erroneous */
 (
@@ -121,6 +123,7 @@ size_t ccolamd_recommended	/* returns recommended value of Alen, */
     int n_col			/* number of columns in A */
 ) ;
 
+CCOLAMD_EXPORT
 size_t ccolamd_l_recommended	/* returns recommended value of Alen, */
 				/* or 0 if input arguments are erroneous */
 (
@@ -129,16 +132,19 @@ size_t ccolamd_l_recommended	/* returns recommended value of Alen, */
     SuiteSparse_long n_col		/* number of columns in A */
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_set_defaults	/* sets default parameters */
 (				/* knobs argument is modified on output */
     double knobs [CCOLAMD_KNOBS]	/* parameter settings for ccolamd */
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_l_set_defaults	/* sets default parameters */
 (				/* knobs argument is modified on output */
     double knobs [CCOLAMD_KNOBS]	/* parameter settings for ccolamd */
 ) ;
 
+CCOLAMD_EXPORT
 int ccolamd			/* returns (1) if successful, (0) otherwise*/
 (				/* A and p arguments are modified on output */
     int n_row,			/* number of rows in A */
@@ -151,6 +157,7 @@ int ccolamd			/* returns (1) if successful, (0) otherwise*/
     int cmember [ ]		/* Constraint set of A, of size n_col */
 ) ;
 
+CCOLAMD_EXPORT
 SuiteSparse_long ccolamd_l      /* as ccolamd w/ SuiteSparse_long integers */
 (
     SuiteSparse_long n_row,
@@ -163,6 +170,7 @@ SuiteSparse_long ccolamd_l      /* as ccolamd w/ SuiteSparse_long integers */
     SuiteSparse_long cmember [ ]
 ) ;
 
+CCOLAMD_EXPORT
 int csymamd			/* return (1) if OK, (0) otherwise */
 (
     int n,			/* number of rows and columns of A */
@@ -179,6 +187,7 @@ int csymamd			/* return (1) if OK, (0) otherwise */
     int stype			/* 0: use both parts, >0: upper, <0: lower */
 ) ;
 
+CCOLAMD_EXPORT
 SuiteSparse_long csymamd_l      /* as csymamd, w/ SuiteSparse_long integers */
 (
     SuiteSparse_long n,
@@ -193,21 +202,25 @@ SuiteSparse_long csymamd_l      /* as csymamd, w/ SuiteSparse_long integers */
     SuiteSparse_long stype
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_report
 (
     int stats [CCOLAMD_STATS]
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_l_report
 (
     SuiteSparse_long stats [CCOLAMD_STATS]
 ) ;
 
+CCOLAMD_EXPORT
 void csymamd_report
 (
     int stats [CCOLAMD_STATS]
 ) ;
 
+CCOLAMD_EXPORT
 void csymamd_l_report
 (
     SuiteSparse_long stats [CCOLAMD_STATS]
@@ -223,6 +236,7 @@ void csymamd_l_report
  * be called directly by the user.
  */
 
+CCOLAMD_EXPORT
 int ccolamd2
 (				/* A and p arguments are modified on output */
     int n_row,			/* number of rows in A */
@@ -243,6 +257,7 @@ int ccolamd2
     int cmember [ ]		/* Constraint set of A */
 ) ;
 
+CCOLAMD_EXPORT
 SuiteSparse_long ccolamd2_l     /* as ccolamd2, w/ SuiteSparse_long integers */
 (
     SuiteSparse_long n_row,
@@ -262,6 +277,7 @@ SuiteSparse_long ccolamd2_l     /* as ccolamd2, w/ SuiteSparse_long integers */
     SuiteSparse_long cmember [ ]
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_apply_order
 (
     int Front [ ],
@@ -271,6 +287,7 @@ void ccolamd_apply_order
     int nfr
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_l_apply_order
 (
     SuiteSparse_long Front [ ],
@@ -280,7 +297,7 @@ void ccolamd_l_apply_order
     SuiteSparse_long nfr
 ) ;
 
-
+CCOLAMD_EXPORT
 void ccolamd_fsize
 (
     int nn,
@@ -291,6 +308,7 @@ void ccolamd_fsize
     int Npiv [ ]
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_l_fsize
 (
     SuiteSparse_long nn,
@@ -301,6 +319,7 @@ void ccolamd_l_fsize
     SuiteSparse_long Npiv [ ]
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_postorder
 (
     int nn,
@@ -315,6 +334,7 @@ void ccolamd_postorder
     int cmember [ ]
 ) ;
 
+CCOLAMD_EXPORT
 void ccolamd_l_postorder
 (
     SuiteSparse_long nn,
@@ -329,6 +349,7 @@ void ccolamd_l_postorder
     SuiteSparse_long cmember [ ]
 ) ;
 
+CCOLAMD_EXPORT
 int ccolamd_post_tree
 (
     int root,
@@ -339,6 +360,7 @@ int ccolamd_post_tree
     int Stack [ ]
 ) ;
 
+CCOLAMD_EXPORT
 SuiteSparse_long ccolamd_l_post_tree
 (
     SuiteSparse_long root,

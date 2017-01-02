@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_get_lunz
 (
     int *lnz,
@@ -17,6 +18,7 @@ int umfpack_di_get_lunz
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_get_lunz
 (
     SuiteSparse_long *lnz,
@@ -27,6 +29,7 @@ SuiteSparse_long umfpack_dl_get_lunz
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_get_lunz
 (
     int *lnz,
@@ -37,6 +40,7 @@ int umfpack_zi_get_lunz
     void *Numeric
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_get_lunz
 (
     SuiteSparse_long *lnz,

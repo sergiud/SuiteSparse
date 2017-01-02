@@ -52,6 +52,7 @@
  * (a downdate).  The factor object L need not be an LDL' factorization; it
  * is converted to one if it isn't. */
 
+CHOLMOD_EXPORT
 int cholmod_updown 
 (
     /* ---- input ---- */
@@ -63,6 +64,7 @@ int cholmod_updown
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_updown (int, cholmod_sparse *, cholmod_factor *,
     cholmod_common *) ;
 
@@ -76,6 +78,7 @@ int cholmod_l_updown (int, cholmod_sparse *, cholmod_factor *,
  * entries in DeltaB corresponding to columns modified in L are accessed; the
  * rest must be zero. */
 
+CHOLMOD_EXPORT
 int cholmod_updown_solve
 (
     /* ---- input ---- */
@@ -89,6 +92,7 @@ int cholmod_updown_solve
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_updown_solve (int, cholmod_sparse *, cholmod_factor *,
     cholmod_dense *, cholmod_dense *, cholmod_common *) ;
 
@@ -101,6 +105,7 @@ int cholmod_l_updown_solve (int, cholmod_sparse *, cholmod_factor *,
  * routine.  It is meant for use in LPDASA only.  See cholmod_updown.c for
  * a description of colmark. */
 
+CHOLMOD_EXPORT
 int cholmod_updown_mark
 (
     /* ---- input ---- */
@@ -115,6 +120,7 @@ int cholmod_updown_mark
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_updown_mark (int, cholmod_sparse *, SuiteSparse_long *,
     cholmod_factor *, cholmod_dense *, cholmod_dense *, cholmod_common *) ;
 
@@ -126,6 +132,7 @@ int cholmod_l_updown_mark (int, cholmod_sparse *, SuiteSparse_long *,
  * argument.  This routine is an "expert" routine.  It is meant for use in
  * LPDASA only.  See cholmod_updown.c for a description of mask. */
 
+CHOLMOD_EXPORT
 int cholmod_updown_mask
 (
     /* ---- input ---- */
@@ -141,10 +148,12 @@ int cholmod_updown_mask
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_updown_mask (int, cholmod_sparse *, SuiteSparse_long *,
     SuiteSparse_long *, cholmod_factor *, cholmod_dense *, cholmod_dense *,
     cholmod_common *) ;
 
+CHOLMOD_EXPORT
 int cholmod_updown_mask2
 (
     /* ---- input ---- */
@@ -161,6 +170,7 @@ int cholmod_updown_mask2
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_updown_mask2 (int, cholmod_sparse *, SuiteSparse_long *,
     SuiteSparse_long *, SuiteSparse_long, cholmod_factor *, cholmod_dense *,
     cholmod_dense *, cholmod_common *) ;
@@ -176,6 +186,7 @@ int cholmod_l_updown_mask2 (int, cholmod_sparse *, SuiteSparse_long *,
  * computed as the factorization of the kth row/column of the matrix to
  * factorize, which is provided as a single n-by-1 sparse matrix R. */
 
+CHOLMOD_EXPORT
 int cholmod_rowadd 
 (
     /* ---- input ---- */
@@ -187,6 +198,7 @@ int cholmod_rowadd
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_rowadd (size_t, cholmod_sparse *, cholmod_factor *,
     cholmod_common *) ;
 
@@ -198,6 +210,7 @@ int cholmod_l_rowadd (size_t, cholmod_sparse *, cholmod_factor *,
  * See cholmod_updown for a description of how Lx=b is updated.  There is on
  * additional parameter:  bk specifies the new kth entry of b. */
 
+CHOLMOD_EXPORT
 int cholmod_rowadd_solve
 (
     /* ---- input ---- */
@@ -212,6 +225,7 @@ int cholmod_rowadd_solve
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_rowadd_solve (size_t, cholmod_sparse *, double *,
     cholmod_factor *, cholmod_dense *, cholmod_dense *, cholmod_common *) ;
 
@@ -223,6 +237,7 @@ int cholmod_l_rowadd_solve (size_t, cholmod_sparse *, double *,
  * the update/downdate of the solution to Lx=b.  This routine is an "expert"
  * routine.  It is meant for use in LPDASA only.  */
 
+CHOLMOD_EXPORT
 int cholmod_rowadd_mark
 (
     /* ---- input ---- */
@@ -238,6 +253,7 @@ int cholmod_rowadd_mark
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_rowadd_mark (size_t, cholmod_sparse *, double *,
     SuiteSparse_long *, cholmod_factor *, cholmod_dense *, cholmod_dense *,
     cholmod_common *) ;
@@ -254,6 +270,7 @@ int cholmod_l_rowadd_mark (size_t, cholmod_sparse *, double *,
  * a little more time.
  */
 
+CHOLMOD_EXPORT
 int cholmod_rowdel 
 (
     /* ---- input ---- */
@@ -265,6 +282,7 @@ int cholmod_rowdel
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_rowdel (size_t, cholmod_sparse *, cholmod_factor *,
     cholmod_common *) ;
 
@@ -277,6 +295,7 @@ int cholmod_l_rowdel (size_t, cholmod_sparse *, cholmod_factor *,
  * a change to x, in addition to changes arising when L and b are modified.
  * If this is the case, the kth entry of y is required as input (yk) */
 
+CHOLMOD_EXPORT
 int cholmod_rowdel_solve
 (
     /* ---- input ---- */
@@ -291,6 +310,7 @@ int cholmod_rowdel_solve
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_rowdel_solve (size_t, cholmod_sparse *, double *,
     cholmod_factor *, cholmod_dense *, cholmod_dense *, cholmod_common *) ;
 
@@ -302,6 +322,7 @@ int cholmod_l_rowdel_solve (size_t, cholmod_sparse *, double *,
  * the update/downdate of the solution to Lx=b.  This routine is an "expert"
  * routine.  It is meant for use in LPDASA only.  */
 
+CHOLMOD_EXPORT
 int cholmod_rowdel_mark
 (
     /* ---- input ---- */
@@ -317,6 +338,7 @@ int cholmod_rowdel_mark
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_rowdel_mark (size_t, cholmod_sparse *, double *,
     SuiteSparse_long *, cholmod_factor *, cholmod_dense *, cholmod_dense *,
     cholmod_common *) ;

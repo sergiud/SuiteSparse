@@ -24,6 +24,10 @@ if (POLICY CMP0054)
   cmake_policy (SET CMP0054 NEW)
 endif (POLICY CMP0054)
 
+if (POLICY CMP0063)
+  cmake_policy (SET CMP0063 NEW)
+endif (POLICY CMP0063)
+
 #if (MSVC)
   #project (cxsparse CXX)
 #else (MSVC)
@@ -55,16 +59,21 @@ if (NOT CPack_CMake_INCLUDED)
   include (CPack)
 endif ()
 
-include (CMakePackageConfigHelpers)
-include (CMakePushCheckState)
 include (CheckCSourceCompiles)
 include (CheckIncludeFile)
 include (CheckLibraryExists)
 include (CheckStructHasMember)
 include (CheckSymbolExists)
 include (CheckTypeSize)
+include (CMakePackageConfigHelpers)
+include (CMakePushCheckState)
 include (ComponentVersion)
+include (GenerateExportHeader)
 include (GenerateSourceFiles)
+include (GNUInstallDirs)
+
+set (CMAKE_C_VISIBILITY_PRESET hidden)
+set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 check_include_file (complex.h HAVE_COMPLEX_H)
 
@@ -189,9 +198,19 @@ endif (MSVC)
 
 add_library (cxsparse ${SRCS})
 
+set (_CXSparse_EXPORT_HEADER ${CMAKE_CURRENT_BINARY_DIR}/include/cs_export.h)
+set (_CXSparse_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR}/CXSparse)
+set (_CXSparse_CMake_INSTALLDIR ${_CXSparse_CMake_LIBDIR}/cmake)
+set (_CXSparse_CMake_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/CXSparse)
+
+generate_export_header (cxsparse EXPORT_FILE_NAME ${_CXSparse_EXPORT_HEADER})
+
+target_sources (cxsparse PRIVATE ${_CXSparse_EXPORT_HEADER})
+
 target_include_directories (cxsparse PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>"
-  "$<INSTALL_INTERFACE:include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+  "$<INSTALL_INTERFACE:${_CXSparse_CMake_INCLUDEDIR}>"
 )
 
 target_link_libraries (cxsparse PUBLIC suitesparseconfig)
@@ -213,19 +232,21 @@ if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   target_compile_definitions (cxsparse PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 
-set_target_properties (cxsparse PROPERTIES PUBLIC_HEADER Include/cs.h)
+set (_CXSparse_HDRS Include/cs.h ${_CXSparse_EXPORT_HEADER})
+
+set_target_properties (cxsparse PROPERTIES PUBLIC_HEADER "${_CXSparse_HDRS}")
 set_target_properties (cxsparse PROPERTIES EXPORT_NAME CXSparse)
 
 install (TARGETS cxsparse
   EXPORT cxsparse-targets
-  RUNTIME DESTINATION bin
-  PUBLIC_HEADER DESTINATION include
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib)
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  PUBLIC_HEADER DESTINATION ${_CXSparse_CMake_INCLUDEDIR}
+  LIBRARY DESTINATION ${_CXSparse_CMake_LIBDIR}
+  ARCHIVE DESTINATION ${_CXSparse_CMake_LIBDIR})
 
 configure_package_config_file (cxsparse-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/cxsparse-config.cmake
-  INSTALL_DESTINATION lib/cmake/CXSparse
+  INSTALL_DESTINATION ${_CXSparse_CMake_INSTALLDIR}
   NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 write_basic_package_version_file (cxsparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
@@ -234,11 +255,11 @@ export (TARGETS cxsparse suitesparseconfig NAMESPACE CXSparse:: FILE cxsparse-ta
 export (PACKAGE CXSparse)
 
 install (EXPORT cxsparse-targets NAMESPACE CXSparse::
-  DESTINATION lib/cmake/CXSparse)
+  DESTINATION ${_CXSparse_CMake_INSTALLDIR})
 install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/cxsparse-config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/cxsparse-config-version.cmake
-  DESTINATION lib/cmake/CXSparse)
+  DESTINATION ${_CXSparse_CMake_INSTALLDIR})
 
 set_target_properties (cxsparse PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_component_version (cxsparse ${VERSION})

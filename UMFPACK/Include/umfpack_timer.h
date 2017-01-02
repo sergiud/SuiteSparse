@@ -7,6 +7,9 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+#include "umfpack_export.h"
+
+UMFPACK_EXPORT
 double umfpack_timer ( void ) ;
 
 /*

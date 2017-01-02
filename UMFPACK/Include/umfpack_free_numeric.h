@@ -7,21 +7,25 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 void umfpack_di_free_numeric
 (
     void **Numeric
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_dl_free_numeric
 (
     void **Numeric
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zi_free_numeric
 (
     void **Numeric
 ) ;
 
+UMFPACK_EXPORT
 void umfpack_zl_free_numeric
 (
     void **Numeric

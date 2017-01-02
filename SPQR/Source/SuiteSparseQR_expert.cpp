@@ -342,7 +342,7 @@ SuiteSparseQR_factorization <Entry> *SuiteSparseQR_factorize
         0, NULL, NULL, NULL, cc)) ;
 }
 
-template SuiteSparseQR_factorization <double> *SuiteSparseQR_factorize <double>
+template SPQR_EXPORT SuiteSparseQR_factorization <double> *SuiteSparseQR_factorize <double>
 (
     // inputs, not modified:
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -352,7 +352,7 @@ template SuiteSparseQR_factorization <double> *SuiteSparseQR_factorize <double>
     cholmod_common *cc
 ) ;
 
-template SuiteSparseQR_factorization <Complex> *SuiteSparseQR_factorize<Complex>
+template SPQR_EXPORT SuiteSparseQR_factorization <Complex> *SuiteSparseQR_factorize<Complex>
 (
     // inputs, not modified:
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -780,7 +780,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR_solve    // returns X
 }
 
 
-template cholmod_dense *SuiteSparseQR_solve <Complex>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR_solve <Complex>
 (
     // inputs, not modified:
     int system,                 // which system to solve
@@ -790,7 +790,7 @@ template cholmod_dense *SuiteSparseQR_solve <Complex>
     cholmod_common *cc
 ) ;
 
-template cholmod_dense *SuiteSparseQR_solve <double>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR_solve <double>
 (
     // inputs, not modified:
     int system,                 // which system to solve
@@ -837,7 +837,7 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR_solve    // returns X
     return (Xsparse) ;
 }
 
-template cholmod_sparse *SuiteSparseQR_solve <double>
+template SPQR_EXPORT cholmod_sparse *SuiteSparseQR_solve <double>
 (
     // inputs, not modified:
     int system,                 // which system to solve (0,1,2,3)
@@ -847,7 +847,7 @@ template cholmod_sparse *SuiteSparseQR_solve <double>
     cholmod_common *cc
 ) ;
 
-template cholmod_sparse *SuiteSparseQR_solve <Complex>
+template SPQR_EXPORT cholmod_sparse *SuiteSparseQR_solve <Complex>
 (
     // inputs, not modified:
     int system,                 // which system to solve (0,1,2,3)
@@ -1470,7 +1470,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR_qmult
 }
 
 
-template cholmod_dense *SuiteSparseQR_qmult <double>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR_qmult <double>
 (
     // inputs, not modified
     int method,             // 0,1,2,3
@@ -1482,7 +1482,7 @@ template cholmod_dense *SuiteSparseQR_qmult <double>
 ) ;
 
 
-template cholmod_dense *SuiteSparseQR_qmult <Complex>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR_qmult <Complex>
 (
     // inputs, not modified
     int method,             // 0,1,2,3
@@ -1531,7 +1531,7 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR_qmult
     return (Ysparse) ;
 }
 
-template cholmod_sparse *SuiteSparseQR_qmult <double>
+template SPQR_EXPORT cholmod_sparse *SuiteSparseQR_qmult <double>
 (
     // inputs, not modified
     int method,                 // 0,1,2,3
@@ -1541,7 +1541,7 @@ template cholmod_sparse *SuiteSparseQR_qmult <double>
     cholmod_common *cc
 ) ;
 
-template cholmod_sparse *SuiteSparseQR_qmult <Complex>
+template SPQR_EXPORT cholmod_sparse *SuiteSparseQR_qmult <Complex>
 (
     // inputs, not modified
     int method,                 // 0,1,2,3
@@ -1569,13 +1569,13 @@ template <typename Entry> int SuiteSparseQR_free
     return (TRUE) ;
 }
 
-template int SuiteSparseQR_free <double>
+template SPQR_EXPORT int SuiteSparseQR_free <double>
 (
     SuiteSparseQR_factorization <double> **QR,
     cholmod_common *cc
 ) ;
 
-template int SuiteSparseQR_free <Complex>
+template SPQR_EXPORT int SuiteSparseQR_free <Complex>
 (
     SuiteSparseQR_factorization <Complex> **QR,
     cholmod_common *cc
@@ -1653,7 +1653,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR_min2norm
     return (X) ;
 }
 
-template cholmod_dense *SuiteSparseQR_min2norm <double>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR_min2norm <double>
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,
@@ -1662,7 +1662,7 @@ template cholmod_dense *SuiteSparseQR_min2norm <double>
     cholmod_common *cc
 ) ;
 
-template cholmod_dense *SuiteSparseQR_min2norm <Complex>
+template SPQR_EXPORT cholmod_dense *SuiteSparseQR_min2norm <Complex>
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,
@@ -1716,7 +1716,7 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR_min2norm    // returns X
     return (Xsparse) ;
 }
 
-template cholmod_sparse *SuiteSparseQR_min2norm <double>
+template SPQR_EXPORT cholmod_sparse *SuiteSparseQR_min2norm <double>
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,
@@ -1725,7 +1725,7 @@ template cholmod_sparse *SuiteSparseQR_min2norm <double>
     cholmod_common *cc
 ) ;
 
-template cholmod_sparse *SuiteSparseQR_min2norm <Complex>
+template SPQR_EXPORT cholmod_sparse *SuiteSparseQR_min2norm <Complex>
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,

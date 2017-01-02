@@ -44,7 +44,9 @@ extern "C" {
 #include <stddef.h>
 
 #include "SuiteSparse_config.h"
+#include "amd_export.h"
 
+AMD_EXPORT
 int amd_order                  /* returns AMD_OK, AMD_OK_BUT_JUMBLED,
                                 * AMD_INVALID, or AMD_OUT_OF_MEMORY */
 (
@@ -56,6 +58,7 @@ int amd_order                  /* returns AMD_OK, AMD_OK_BUT_JUMBLED,
     double Info [ ]            /* output Info statistics, of size AMD_INFO */
 ) ;
 
+AMD_EXPORT
 SuiteSparse_long amd_l_order    /* see above for description of arguments */
 (
     SuiteSparse_long n,
@@ -235,6 +238,7 @@ SuiteSparse_long amd_l_order    /* see above for description of arguments */
  * of the matrix for AMD to destroy).  Refer to AMD/Source/amd_2.c for a
  * description of each parameter. */
 
+AMD_EXPORT
 void amd_2
 (
     int n,
@@ -254,6 +258,7 @@ void amd_2
     double Info [ ]
 ) ;
 
+AMD_EXPORT
 void amd_l2
 (
     SuiteSparse_long n,
@@ -287,6 +292,7 @@ void amd_l2
  * NOTE: this routine returned TRUE/FALSE in v1.2 and earlier.
  */
 
+AMD_EXPORT
 int amd_valid
 (
     int n_row,                 /* # of rows */
@@ -295,6 +301,7 @@ int amd_valid
     const int Ai [ ]           /* row indices, of size Ap [n_col] */
 ) ;
 
+AMD_EXPORT
 SuiteSparse_long amd_l_valid
 (
     SuiteSparse_long n_row,
@@ -314,15 +321,21 @@ SuiteSparse_long amd_l_valid
 /* ------------------------------------------------------------------------- */
 
 /* amd_defaults:  sets the default control settings */
+AMD_EXPORT
 void amd_defaults   (double Control [ ]) ;
+AMD_EXPORT
 void amd_l_defaults (double Control [ ]) ;
 
 /* amd_control: prints the control settings */
+AMD_EXPORT
 void amd_control    (double Control [ ]) ;
+AMD_EXPORT
 void amd_l_control  (double Control [ ]) ;
 
 /* amd_info: prints the statistics */
+AMD_EXPORT
 void amd_info       (double Info [ ]) ;
+AMD_EXPORT
 void amd_l_info     (double Info [ ]) ;
 
 #define AMD_CONTROL 5          /* size of Control array */

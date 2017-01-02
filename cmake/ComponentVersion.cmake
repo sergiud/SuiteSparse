@@ -7,7 +7,5 @@ macro (set_component_version _COMPONENT _VERSION)
   if (WIN32)
     set_target_properties (${_COMPONENT} PROPERTIES RUNTIME_OUTPUT_NAME
       ${_COMPONENT}-${_VERSION})
-    set_target_properties (${_COMPONENT} PROPERTIES RUNTIME_OUTPUT_NAME_DEBUG
-      ${_COMPONENT}-debug-${_VERSION})
   endif (WIN32)
 endmacro (set_component_version)

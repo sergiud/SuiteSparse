@@ -17,6 +17,8 @@ extern "C"
 #include "cholmod.h"
 }
 
+#include "spqr_export.h"
+
 // =============================================================================
 // === spqr_gpu ================================================================
 // =============================================================================
@@ -350,7 +352,7 @@ template <typename Entry> struct SuiteSparseQR_factorization
 //  SuiteSparseQR_qmult     Q'*X, Q*X, X*Q', or X*Q for X full or sparse
 
 // returns rank(A) estimate, or EMPTY on failure
-template <typename Entry> SuiteSparse_long SuiteSparseQR
+template <typename Entry> SPQR_EXPORT SuiteSparse_long SuiteSparseQR
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -388,7 +390,7 @@ template <typename Entry> SuiteSparse_long SuiteSparseQR
 ) ;
 
 // X = A\dense(B)
-template <typename Entry> cholmod_dense *SuiteSparseQR
+template <typename Entry> SPQR_EXPORT cholmod_dense *SuiteSparseQR
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,
@@ -398,7 +400,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR
 ) ;
 
 // X = A\dense(B) using default ordering and tolerance
-template <typename Entry> cholmod_dense *SuiteSparseQR
+template <typename Entry> SPQR_EXPORT cholmod_dense *SuiteSparseQR
 (
     cholmod_sparse *A,      // m-by-n sparse matrix
     cholmod_dense  *B,      // m-by-nrhs
@@ -406,7 +408,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR
 ) ;
 
 // X = A\sparse(B)
-template <typename Entry> cholmod_sparse *SuiteSparseQR
+template <typename Entry> SPQR_EXPORT cholmod_sparse *SuiteSparseQR
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,
@@ -416,7 +418,7 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR
 ) ;
 
 // [Q,R,E] = qr(A), returning Q as a sparse matrix
-template <typename Entry> SuiteSparse_long SuiteSparseQR
+template <typename Entry> SPQR_EXPORT SuiteSparse_long SuiteSparseQR
     // returns rank(A) estimate
 (
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -431,7 +433,7 @@ template <typename Entry> SuiteSparse_long SuiteSparseQR
 ) ;
 
 // [Q,R,E] = qr(A), discarding Q
-template <typename Entry> SuiteSparse_long SuiteSparseQR
+template <typename Entry> SPQR_EXPORT SuiteSparse_long SuiteSparseQR
     // returns rank(A) estimate
 (
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -445,7 +447,7 @@ template <typename Entry> SuiteSparse_long SuiteSparseQR
 ) ;
 
 // [C,R,E] = qr(A,B), where C and B are dense
-template <typename Entry> SuiteSparse_long SuiteSparseQR
+template <typename Entry> SPQR_EXPORT SuiteSparse_long SuiteSparseQR
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -461,7 +463,7 @@ template <typename Entry> SuiteSparse_long SuiteSparseQR
 ) ;
 
 // [C,R,E] = qr(A,B), where C and B are sparse
-template <typename Entry> SuiteSparse_long SuiteSparseQR
+template <typename Entry> SPQR_EXPORT SuiteSparse_long SuiteSparseQR
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -477,7 +479,7 @@ template <typename Entry> SuiteSparse_long SuiteSparseQR
 ) ;
 
 // [Q,R,E] = qr(A) where Q is returned in Householder form
-template <typename Entry> SuiteSparse_long SuiteSparseQR
+template <typename Entry> SPQR_EXPORT SuiteSparse_long SuiteSparseQR
 (
     // inputs, not modified
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -501,7 +503,7 @@ template <typename Entry> SuiteSparse_long SuiteSparseQR
 // by SuiteSparseQR (... H, HPinv, HTau, cc) above.
 
 // returns Y of size m-by-n (NULL on failure)
-template <typename Entry> cholmod_dense *SuiteSparseQR_qmult
+template <typename Entry> SPQR_EXPORT cholmod_dense *SuiteSparseQR_qmult
 (
     // inputs, no modified
     int method,         // 0,1,2,3
@@ -514,7 +516,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR_qmult
     cholmod_common *cc
 ) ;
 
-template <typename Entry> cholmod_sparse *SuiteSparseQR_qmult
+template <typename Entry> SPQR_EXPORT cholmod_sparse *SuiteSparseQR_qmult
 (
     // inputs, no modified
     int method,             // 0,1,2,3
@@ -538,7 +540,7 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR_qmult
 // find the minimum 2-norm solution to an undertermined system of equations.
 
 template <typename Entry>
-SuiteSparseQR_factorization <Entry> *SuiteSparseQR_factorize
+SPQR_EXPORT SuiteSparseQR_factorization <Entry> *SuiteSparseQR_factorize
 (
     // inputs, not modified:
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -548,7 +550,7 @@ SuiteSparseQR_factorization <Entry> *SuiteSparseQR_factorize
     cholmod_common *cc
 ) ;
 
-template <typename Entry> cholmod_dense *SuiteSparseQR_solve    // returns X
+template <typename Entry> SPQR_EXPORT cholmod_dense *SuiteSparseQR_solve    // returns X
 (
     // inputs, not modified:
     int system,                 // which system to solve
@@ -558,7 +560,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR_solve    // returns X
     cholmod_common *cc
 ) ;
 
-template <typename Entry> cholmod_sparse *SuiteSparseQR_solve    // returns X
+template <typename Entry> SPQR_EXPORT cholmod_sparse *SuiteSparseQR_solve    // returns X
 (
     // inputs, not modified:
     int system,                 // which system to solve (0,1,2,3)
@@ -569,7 +571,7 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR_solve    // returns X
 ) ;
 
 // returns Y of size m-by-n, or NULL on failure
-template <typename Entry> cholmod_dense *SuiteSparseQR_qmult
+template <typename Entry> SPQR_EXPORT cholmod_dense *SuiteSparseQR_qmult
 (
     // inputs, not modified
     int method,                 // 0,1,2,3 (same as SuiteSparseQR_qmult)
@@ -580,7 +582,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR_qmult
 ) ;
 
 // returns Y of size m-by-n, or NULL on failure
-template <typename Entry> cholmod_sparse *SuiteSparseQR_qmult
+template <typename Entry> SPQR_EXPORT cholmod_sparse *SuiteSparseQR_qmult
 (
     // inputs, not modified
     int method,                 // 0,1,2,3
@@ -591,14 +593,14 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR_qmult
 ) ;
 
 // free the QR object
-template <typename Entry> int SuiteSparseQR_free
+template <typename Entry> SPQR_EXPORT int SuiteSparseQR_free
 (
     SuiteSparseQR_factorization <Entry> **QR, // of an m-by-n sparse matrix A
     cholmod_common *cc
 ) ;
 
 // find the min 2-norm solution to a sparse linear system
-template <typename Entry> cholmod_dense *SuiteSparseQR_min2norm
+template <typename Entry> SPQR_EXPORT cholmod_dense *SuiteSparseQR_min2norm
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,
@@ -607,7 +609,7 @@ template <typename Entry> cholmod_dense *SuiteSparseQR_min2norm
     cholmod_common *cc
 ) ;
 
-template <typename Entry> cholmod_sparse *SuiteSparseQR_min2norm
+template <typename Entry> SPQR_EXPORT cholmod_sparse *SuiteSparseQR_min2norm
 (
     int ordering,           // all, except 3:given treated as 0:fixed
     double tol,
@@ -618,7 +620,7 @@ template <typename Entry> cholmod_sparse *SuiteSparseQR_min2norm
 
 // symbolic QR factorization; no singletons exploited
 template <typename Entry>
-SuiteSparseQR_factorization <Entry> *SuiteSparseQR_symbolic
+SPQR_EXPORT SuiteSparseQR_factorization <Entry> *SuiteSparseQR_symbolic
 (
     // inputs:
     int ordering,           // all, except 3:given treated as 0:fixed
@@ -629,7 +631,7 @@ SuiteSparseQR_factorization <Entry> *SuiteSparseQR_symbolic
 ) ;
 
 // numeric QR factorization;
-template <typename Entry> int SuiteSparseQR_numeric
+template <typename Entry> SPQR_EXPORT int SuiteSparseQR_numeric
 (
     // inputs:
     double tol,             // treat columns with 2-norm <= tol as zero

@@ -7,6 +7,7 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 int umfpack_di_get_determinant
 (
     double *Mx,
@@ -15,6 +16,7 @@ int umfpack_di_get_determinant
     double User_Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_dl_get_determinant
 (
     double *Mx,
@@ -23,6 +25,7 @@ SuiteSparse_long umfpack_dl_get_determinant
     double User_Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 int umfpack_zi_get_determinant
 (
     double *Mx,
@@ -32,6 +35,7 @@ int umfpack_zi_get_determinant
     double User_Info [UMFPACK_INFO]
 ) ;
 
+UMFPACK_EXPORT
 SuiteSparse_long umfpack_zl_get_determinant
 (
     double *Mx,

@@ -7,8 +7,10 @@
 /* All Rights Reserved.  See ../Doc/License.txt for License.                  */
 /* -------------------------------------------------------------------------- */
 
+UMFPACK_EXPORT
 void umfpack_tic (double stats [2]) ;
 
+UMFPACK_EXPORT
 void umfpack_toc (double stats [2]) ;
 
 

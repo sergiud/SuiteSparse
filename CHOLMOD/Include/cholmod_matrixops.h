@@ -38,6 +38,7 @@
 /* cholmod_drop:  drop entries with small absolute value */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_drop
 (
     /* ---- input ---- */
@@ -48,12 +49,14 @@ int cholmod_drop
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_drop (double, cholmod_sparse *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_norm_dense:  s = norm (X), 1-norm, inf-norm, or 2-norm */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 double cholmod_norm_dense
 (
     /* ---- input ---- */
@@ -63,12 +66,14 @@ double cholmod_norm_dense
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 double cholmod_l_norm_dense (cholmod_dense *, int, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_norm_sparse:  s = norm (A), 1-norm or inf-norm */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 double cholmod_norm_sparse
 (
     /* ---- input ---- */
@@ -78,6 +83,7 @@ double cholmod_norm_sparse
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 double cholmod_l_norm_sparse (cholmod_sparse *, int, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
@@ -107,6 +113,7 @@ cholmod_sparse *cholmod_l_horzcat (cholmod_sparse *, cholmod_sparse *, int,
 #define CHOLMOD_COL 2		/* A = A*diag(s) */
 #define CHOLMOD_SYM 3		/* A = diag(s)*A*diag(s) */
 
+CHOLMOD_EXPORT
 int cholmod_scale
 (
     /* ---- input ---- */
@@ -118,6 +125,7 @@ int cholmod_scale
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_scale (cholmod_dense *, int, cholmod_sparse *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
@@ -126,6 +134,7 @@ int cholmod_l_scale (cholmod_dense *, int, cholmod_sparse *, cholmod_common *) ;
 
 /* Sparse matrix times dense matrix */
 
+CHOLMOD_EXPORT
 int cholmod_sdmult
 (
     /* ---- input ---- */
@@ -140,6 +149,7 @@ int cholmod_sdmult
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_sdmult (cholmod_sparse *, int, double *, double *,
     cholmod_dense *, cholmod_dense *Y, cholmod_common *) ;
 
@@ -213,6 +223,7 @@ cholmod_sparse *cholmod_l_vertcat (cholmod_sparse *, cholmod_sparse *, int,
 /* cholmod_symmetry: determine if a sparse matrix is symmetric */
 /* -------------------------------------------------------------------------- */
 
+CHOLMOD_EXPORT
 int cholmod_symmetry
 (
     /* ---- input ---- */
@@ -227,6 +238,7 @@ int cholmod_symmetry
     cholmod_common *Common
 ) ;
 
+CHOLMOD_EXPORT
 int cholmod_l_symmetry (cholmod_sparse *, int, SuiteSparse_long *,
     SuiteSparse_long *, SuiteSparse_long *, SuiteSparse_long *,
     cholmod_common *) ;

@@ -484,11 +484,7 @@ GLOBAL Int UMF_local_search
 		for (j = 0 ; j < fnpiv ; j++)
 		{
 		    Entry Fuj = Flu [j] ;
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 		    for (i = j+1 ; i < fnpiv ; i++)
 		    {
 			/* Flu [i] -= Flublock [i + j*nb] * Flu [j] ; */
@@ -522,11 +518,7 @@ GLOBAL Int UMF_local_search
 	    Fuj = Flu [j] ;
 	    if (IS_NONZERO (Fuj))
 	    {
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 		for (i = 0 ; i < fnrows ; i++)
 		{
 		    /* Wy [i] -= Flblock [i+j*fnr_curr] * Fuj ; */

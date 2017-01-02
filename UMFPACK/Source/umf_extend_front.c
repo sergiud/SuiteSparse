@@ -31,11 +31,7 @@ PRIVATE void zero_front (
 	/* zero the new rows in the contribution block: */
 	F = Fj ;
 	Fj += fnr_curr ;
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 	for (i = fnrows ; i < fnrows_extended ; i++)
 	{
 	    /* CLEAR (Fcblock [i + j*fnr_curr]) ; */
@@ -49,11 +45,7 @@ PRIVATE void zero_front (
 	/* zero the new columns in the contribution block: */
 	F = Fj ;
 	Fj += fnr_curr ;
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 	for (i = 0 ; i < fnrows_extended ; i++)
 	{
 	    /* CLEAR (Fcblock [i + j*fnr_curr]) ; */
@@ -67,11 +59,7 @@ PRIVATE void zero_front (
 	/* zero the new rows in L block: */
 	F = Fj ;
 	Fj += fnr_curr ;
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 	for (i = fnrows ; i < fnrows_extended ; i++)
 	{
 	    /* CLEAR (Flblock [i + j*fnr_curr]) ; */
@@ -85,11 +73,7 @@ PRIVATE void zero_front (
 	/* zero the new columns in U block: */
 	F = Fi ;
 	Fi += fnc_curr ;
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 	for (j = fncols ; j < fncols_extended ; j++)
 	{
 	    /* CLEAR (Fublock [i*fnc_curr + j]) ; */

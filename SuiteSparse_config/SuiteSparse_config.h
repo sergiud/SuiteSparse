@@ -206,6 +206,12 @@ int SuiteSparse_version     /* returns SUITESPARSE_VERSION */
     int version [3]
 ) ;
 
+#if defined(_MSC_VER)
+#define SUITESPARSE_VECTORIZE __pragma(loop(ivdep))
+#else /* !defined(_MSC_VER) */
+#define SUITESPARSE_VECTORIZE _Pragma("ivdep")
+#endif /* defined(_MSC_VER) */
+
 /* Versions prior to 4.2.0 do not have the above function.  The following
    code fragment will work with any version of SuiteSparse:
 

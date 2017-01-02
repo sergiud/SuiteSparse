@@ -363,21 +363,13 @@ PRIVATE void get_L
     /* count the nonzeros in each row of L */
     /* ---------------------------------------------------------------------- */
 
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
     for (row = 0 ; row < n_inner ; row++)
     {
 	/* include the diagonal entry in the row counts */
 	Wi [row] = 1 ;
     }
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
     for (row = n_inner ; row < n_row ; row++)
     {
 	Wi [row] = 0 ;

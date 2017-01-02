@@ -77,11 +77,7 @@ GLOBAL void UMF_blas3_update
 		    Entry *c_ij, *l_is ;
 		    c_ij = & C [j*d] ;
 		    l_is = & L [0] ;
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 		    for (i = 0 ; i < m ; i++)
 		    {
 			/* C [i+j*d]-= L [i] * U [j] */
@@ -117,11 +113,7 @@ GLOBAL void UMF_blas3_update
 			Entry *u_ij, *u_sj ;
 			u_ij = & U [i*dc] ;
 			u_sj = & U [s*dc] ;
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 			for (j = 0 ; j < n ; j++)
 			{
 			    /* U [i*dc+j] -= LU [i+s*nb] * U [s*dc+j] ; */
@@ -156,11 +148,7 @@ GLOBAL void UMF_blas3_update
 			Entry *c_ij, *l_is ;
 			c_ij = & C [j*d] ;
 			l_is = & L [s*d] ;
-#ifdef _MSC_VER
-#pragma loop(ivdep)
-#else
-#pragma ivdep
-#endif
+SUITESPARSE_VECTORIZE
 			for (i = 0 ; i < m ; i++)
 			{
 			    /* C [i+j*d]-= L [i+s*d] * U [s*dc+j] */

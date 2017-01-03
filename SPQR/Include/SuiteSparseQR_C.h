@@ -16,7 +16,7 @@ extern "C" {
 
 #include "cholmod.h"
 #include "SuiteSparseQR_definitions.h"
-#include "spqr_export.h"
+#include "SuiteSparseQR_export.h"
 
 #ifndef __cplusplus
 /* The C++ functions will return a pointer to a std::complex<double> array of

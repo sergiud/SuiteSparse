@@ -1192,6 +1192,9 @@ set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack
 set_property (TARGET suitesparseconfig PROPERTY NAME_ALIAS SuiteSparse)
 set_property (TARGET suitesparseconfig PROPERTY HEADERS_VARIABLE
   SUITESPARSECONFIG_HDRS)
+set_property (TARGET spqr PROPERTY NAME_ALIAS SuiteSparseQR)
+set_property (TARGET spqr PROPERTY INSTALL_DESTINATION
+  ${SuiteSparse_SPQR_INCLUDE_DIR})
 set_property (TARGET suitesparseconfig PROPERTY INSTALL_DESTINATION
   ${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR})
 
@@ -1206,21 +1209,25 @@ if (TARGET gpuqrengine)
 endif (TARGET gpuqrengine)
 
 foreach (_target ${_SuiteSparse_TARGETS})
-  get_property (_upper_target TARGET ${_target} PROPERTY NAME_ALIAS)
+  get_property (_alias TARGET ${_target} PROPERTY NAME_ALIAS)
+  string (TOUPPER "${_target}" _upper_target)
 
-  if ("${_upper_target}" STREQUAL "")
-    string (TOUPPER "${_target}" _upper_target)
-  endif ("${_upper_target}" STREQUAL "")
+  if ("${_alias}" STREQUAL "")
+    set (_alias ${_upper_target})
+    set (_export_prefix ${_target})
+  else ("${_alias}" STREQUAL "")
+    set (_export_prefix ${_alias})
+  endif ("${_alias}" STREQUAL "")
 
   get_property (_target_include_dir TARGET ${_target} PROPERTY
     INSTALL_DESTINATION)
 
   if ("${_target_include_dir}" STREQUAL "")
-    set (_target_include_dir ${SuiteSparse_${_upper_target}_INCLUDE_DIR})
+    set (_target_include_dir ${SuiteSparse_${_alias}_INCLUDE_DIR})
   endif ("${_target_include_dir}" STREQUAL "")
 
   set (_export_header
-    ${CMAKE_CURRENT_BINARY_DIR}/${_target_include_dir}/${_upper_target}_export.h)
+    ${CMAKE_CURRENT_BINARY_DIR}/${_target_include_dir}/${_export_prefix}_export.h)
 
   # Generate an export header with the name <target>_export.h for each mandatory
   # target.

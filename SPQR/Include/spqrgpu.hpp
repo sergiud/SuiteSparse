@@ -2,7 +2,7 @@
 #define SPQRGPU_HPP_
 
 #include "GPUQREngine.hpp"
-#include "spqr_export.h"
+#include "SuiteSparseQR_export.h"
 
 SPQR_EXPORT
 void spqrgpu_kernel

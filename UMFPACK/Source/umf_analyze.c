@@ -90,7 +90,11 @@ GLOBAL Int UMF_analyze
     /* ==== initializations ================================================= */
     /* ====================================================================== */
 
+#ifdef _MSC_VER
+#pragma loop(ivdep)
+#else
 #pragma ivdep
+#endif
     for (j = 0 ; j < n_col ; j++)
     {
 	Link [j] = EMPTY ;

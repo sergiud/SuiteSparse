@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Sergiu Deitsch
+# Copyright (c) 2016, 2017 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -1383,7 +1383,7 @@ add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
 add_feature_info (Partition WITH_PARTITION "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
 add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
-add_feature_info (Threading WITH_TBB "Intel Threading Building Blocks support")
+add_feature_info (Threading WITH_TBB "Parallelization using Intel Threading Building Blocks")
 
 set_package_properties (TBB PROPERTIES
   URL "https://www.threadingbuildingblocks.org"
@@ -1397,16 +1397,24 @@ set_package_properties (METIS PROPERTIES
   DESCRIPTION "Serial programs for partitioning graphs, partitioning finite element meshes, and producing fill reducing orderings for sparse matrices"
 )
 
-set_package_properties (GPL PROPERTIES
-  PURPOSE "Enables modules with the GNU General Public License")
-set_package_properties (LGPL PROPERTIES
-  PURPOSE "Enables modules with the GNU Lesser General Public License")
-set_package_properties (Partition PROPERTIES
-  PURPOSE "Enables the partitioning module requiring METIS")
+set_package_properties (BLAS PROPERTIES
+  URL "http://www.netlib.org/blas"
+  DESCRIPTION "Basic Linear Algebra Subprograms"
+)
 
-set_feature_info (BLAS "Basic Linear Algebra Subprograms"
-  "http://www.netlib.org/blas")
-set_feature_info (LAPACK "Linear Algebra PACKage"
-  "http://www.netlib.org/lapack")
+set_package_properties (LAPACK PROPERTIES
+  URL "http://www.netlib.org/lapack"
+  DESCRIPTION "Linear Algebra PACKage"
+)
+
+set_package_properties (OpenMP PROPERTIES
+  DESCRIPTION "Multi-platform shared memory multiprocessing"
+  URL "http://www.openmp.org"
+  PURPOSE "Enables multithreading support"
+)
+
+set_package_properties (Threads PROPERTIES
+  DESCRIPTION "Multithreading support"
+)
 
 feature_summary (WHAT ALL)

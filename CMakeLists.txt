@@ -189,6 +189,8 @@ endif (HAVE_M)
 check_symbol_exists (feenableexcept "fenv.h" HAVE_FEENABLEEXCEPT)
 cmake_pop_check_state ()
 
+check_symbol_exists (_controlfp "float.h" HAVE__CONTROLFP)
+
 set (CMAKE_EXTRA_INCLUDE_FILES complex.h)
 check_type_size (_C_double_complex HAVE_C_DOUBLE_COMPLEX BUILTIN_TYPES_ONLY)
 

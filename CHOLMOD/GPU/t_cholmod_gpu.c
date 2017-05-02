@@ -90,7 +90,11 @@ int TEMPLATE2 (CHOLMOD (gpu_init))
     cudaError_t cudaErr ;
     size_t maxBytesSize, HostPinnedSize ;
 
+#ifdef HAVE_FEENABLEEXCEPT
     feenableexcept (FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW );
+#elif defined(HAVE__CONTROLFP)
+    _controlfp(_EM_ZERODIVIDE | _EM_INVALID | _EM_OVERFLOW, _MCW_EM);
+#endif /* defined(HAVE_FEENABLEEXCEPT) */
 
     maxSize = L->maxcsize;
 

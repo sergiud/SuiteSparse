@@ -32,6 +32,9 @@
 
 #include "cholmod_internal.h"
 #include "cholmod_core.h"
+#ifdef GPU_BLAS
+#include "cholmod_gpu.h"
+#endif
 
 /* ========================================================================== */
 /* === cholmod_start ======================================================== */

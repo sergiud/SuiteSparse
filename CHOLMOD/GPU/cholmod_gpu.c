@@ -371,7 +371,6 @@ int CHOLMOD(gpu_allocate) ( cholmod_common *Common )
     maxGpuMemFraction = Common->maxGpuMemFraction;
 
     /* ensure valid input */
-    if ( maxGpuMemBytes < 0 ) maxGpuMemBytes = 0;
     if ( maxGpuMemFraction < 0 ) maxGpuMemFraction = 0;
     if ( maxGpuMemFraction > 1 ) maxGpuMemFraction = 1;
 

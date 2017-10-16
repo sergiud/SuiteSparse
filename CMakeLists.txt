@@ -82,6 +82,8 @@ check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
 option (WITH_CUDA "Enable CUDA support" ON)
 option (WITH_OPENMP "Enable OpenMP support" ON)
 
+set (CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
+
 if (WITH_CUDA)
   find_package (CUDA 7.0)
 endif (WITH_CUDA)

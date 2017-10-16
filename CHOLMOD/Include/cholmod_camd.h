@@ -32,6 +32,11 @@
 /* cholmod_ccolamd */
 /* -------------------------------------------------------------------------- */
 
+/* make it easy for C++ programs to include CHOLMOD */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Order AA' or A(:,f)*A(:,f)' using CCOLAMD. */
 
 CHOLMOD_EXPORT
@@ -101,5 +106,9 @@ int cholmod_camd
 CHOLMOD_EXPORT
 int cholmod_l_camd (cholmod_sparse *, SuiteSparse_long *, size_t,
     SuiteSparse_long *, SuiteSparse_long *, cholmod_common *) ;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

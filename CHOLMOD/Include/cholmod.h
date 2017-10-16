@@ -29,7 +29,7 @@
  *	All routine names, data types, and CHOLMOD library files use the
  *	cholmod_ prefix.  All macros and other #define's use the CHOLMOD
  *	prefix.
- * 
+ *
  * Return value:
  * -------------
  *
@@ -72,11 +72,6 @@
 #ifndef CHOLMOD_H
 #define CHOLMOD_H
 
-/* make it easy for C++ programs to include CHOLMOD */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* assume large file support.  If problems occur, compile with -DNLARGEFILE */
 #include "cholmod_io64.h"
 
@@ -118,10 +113,6 @@ extern "C" {
 
 #ifdef GPU_BLAS
 #include "cholmod_gpu.h"
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif

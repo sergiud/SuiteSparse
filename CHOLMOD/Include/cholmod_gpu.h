@@ -31,7 +31,7 @@
 #define CHOLMOD_POTRF_LIMIT  512  /* required cols for POTRF & TRSM on GPU */
 
 /* # of host supernodes to perform before checking for free pinned buffers */
-#define CHOLMOD_GPU_SKIP     3    
+#define CHOLMOD_GPU_SKIP     3
 
 #define CHOLMOD_HANDLE_CUDA_ERROR(e,s) {if (e) {ERROR(CHOLMOD_GPU_PROBLEM,s);}}
 
@@ -46,6 +46,11 @@ typedef struct cholmod_gpu_pointers
     void   *d_RelativeMap ;
 
 } cholmod_gpu_pointers ;
+
+/* make it easy for C++ programs to include CHOLMOD */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 CHOLMOD_EXPORT
 int cholmod_gpu_memorysize   /* GPU memory size available, 1 if no GPU */
@@ -62,7 +67,7 @@ int cholmod_l_gpu_memorysize /* GPU memory size available, 1 if no GPU */
     size_t         *available_mem,
     cholmod_common *Common
 ) ;
- 
+
 CHOLMOD_EXPORT
 int cholmod_gpu_probe   ( cholmod_common *Common ) ;
 CHOLMOD_EXPORT
@@ -82,5 +87,9 @@ CHOLMOD_EXPORT
 int cholmod_gpu_allocate   ( cholmod_common *Common ) ;
 CHOLMOD_EXPORT
 int cholmod_l_gpu_allocate ( cholmod_common *Common ) ;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

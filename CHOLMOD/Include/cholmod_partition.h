@@ -37,6 +37,11 @@
 #include "cholmod_core.h"
 #include "cholmod_camd.h"
 
+/* make it easy for C++ programs to include CHOLMOD */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* -------------------------------------------------------------------------- */
 /* cholmod_nested_dissection */
 /* -------------------------------------------------------------------------- */
@@ -133,7 +138,7 @@ SuiteSparse_long cholmod_metis_bisector	/* returns separator size */
     /* ---- input ---- */
     cholmod_sparse *A,	/* matrix to bisect */
     int *Anw,		/* size A->nrow, node weights, can be NULL, */
-                        /* which means the graph is unweighted. */ 
+                        /* which means the graph is unweighted. */
     int *Aew,		/* size nz, edge weights (silently ignored). */
                         /* This option was available with METIS 4, but not */
                         /* in METIS 5.  This argument is now unused, but */
@@ -174,5 +179,9 @@ SuiteSparse_long cholmod_collapse_septree
 CHOLMOD_EXPORT
 SuiteSparse_long cholmod_l_collapse_septree (size_t, size_t, double, size_t,
     SuiteSparse_long *, SuiteSparse_long *, cholmod_common *) ;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

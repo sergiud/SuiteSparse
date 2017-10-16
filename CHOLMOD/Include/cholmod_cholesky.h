@@ -68,11 +68,16 @@
 /* cholmod_analyze:  order and analyze (simplicial or supernodal) */
 /* -------------------------------------------------------------------------- */
 
+/* make it easy for C++ programs to include CHOLMOD */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Orders and analyzes A, AA', PAP', or PAA'P' and returns a symbolic factor
  * that can later be passed to cholmod_factorize. */
 
 CHOLMOD_EXPORT
-cholmod_factor *cholmod_analyze 
+cholmod_factor *cholmod_analyze
 (
     /* ---- input ---- */
     cholmod_sparse *A,	/* matrix to order and analyze */
@@ -141,7 +146,7 @@ cholmod_factor *cholmod_l_analyze_p2 (int, cholmod_sparse *, SuiteSparse_long *,
  * pattern as that passed to cholmod_analyze. */
 
 CHOLMOD_EXPORT
-int cholmod_factorize 
+int cholmod_factorize
 (
     /* ---- input ---- */
     cholmod_sparse *A,	/* matrix to factorize */
@@ -550,7 +555,7 @@ int cholmod_l_row_lsubtree (cholmod_sparse *, SuiteSparse_long *, size_t,
  * in contrast to cholmod_resymbol_noperm (which can be lower or unsym). */
 
 CHOLMOD_EXPORT
-int cholmod_resymbol 
+int cholmod_resymbol
 (
     /* ---- input ---- */
     cholmod_sparse *A,	/* matrix to analyze */
@@ -628,5 +633,9 @@ SuiteSparse_long cholmod_postorder	/* return # of nodes postordered */
 CHOLMOD_EXPORT
 SuiteSparse_long cholmod_l_postorder (SuiteSparse_long *, size_t,
     SuiteSparse_long *, SuiteSparse_long *, cholmod_common *) ;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

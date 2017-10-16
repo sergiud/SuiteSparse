@@ -14,8 +14,9 @@
 extern "C"
 {
 #include "SuiteSparseQR_definitions.h"
-#include "cholmod.h"
 }
+
+#include "cholmod.h"
 
 #include "SuiteSparseQR_export.h"
 

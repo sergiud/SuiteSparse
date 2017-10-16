@@ -70,6 +70,11 @@
 /* cholmod_check_common:  check the Common object */
 /* -------------------------------------------------------------------------- */
 
+/* make it easy for C++ programs to include CHOLMOD */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 CHOLMOD_EXPORT
 int cholmod_check_common
 (
@@ -395,7 +400,7 @@ cholmod_dense *cholmod_read_dense
 ) ;
 
 CHOLMOD_EXPORT
-cholmod_dense *cholmod_l_read_dense (FILE *, cholmod_common *) ; 
+cholmod_dense *cholmod_l_read_dense (FILE *, cholmod_common *) ;
 
 /* -------------------------------------------------------------------------- */
 /* cholmod_read_matrix: read a sparse or dense matrix from a file */
@@ -467,4 +472,9 @@ int cholmod_write_dense
 CHOLMOD_EXPORT
 int cholmod_l_write_dense (FILE *, cholmod_dense *, const char *,
     cholmod_common *) ;
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

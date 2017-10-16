@@ -1054,6 +1054,11 @@ typedef struct cholmod_common_struct
 /* cholmod_start:  first call to CHOLMOD */
 /* -------------------------------------------------------------------------- */
 
+/* make it easy for C++ programs to include CHOLMOD */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 CHOLMOD_EXPORT
 int cholmod_start
 (
@@ -2570,6 +2575,10 @@ int cholmod_l_version (int version [3]) ;
 #define CHOLMOD_IS_GT_ZERO(x)	((x) > 0.)
 #define CHOLMOD_IS_LE_ZERO(x)	((x) <= 0.)
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

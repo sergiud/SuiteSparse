@@ -44,6 +44,11 @@
 
 #include "cholmod_core.h"
 
+/* make it easy for C++ programs to include CHOLMOD */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* -------------------------------------------------------------------------- */
 /* cholmod_updown:  multiple rank update/downdate */
 /* -------------------------------------------------------------------------- */
@@ -53,7 +58,7 @@
  * is converted to one if it isn't. */
 
 CHOLMOD_EXPORT
-int cholmod_updown 
+int cholmod_updown
 (
     /* ---- input ---- */
     int update,		/* TRUE for update, FALSE for downdate */
@@ -187,7 +192,7 @@ int cholmod_l_updown_mask2 (int, cholmod_sparse *, SuiteSparse_long *,
  * factorize, which is provided as a single n-by-1 sparse matrix R. */
 
 CHOLMOD_EXPORT
-int cholmod_rowadd 
+int cholmod_rowadd
 (
     /* ---- input ---- */
     size_t k,		/* row/column index to add */
@@ -271,7 +276,7 @@ int cholmod_l_rowadd_mark (size_t, cholmod_sparse *, double *,
  */
 
 CHOLMOD_EXPORT
-int cholmod_rowdel 
+int cholmod_rowdel
 (
     /* ---- input ---- */
     size_t k,		/* row/column index to delete */
@@ -342,5 +347,9 @@ CHOLMOD_EXPORT
 int cholmod_l_rowdel_mark (size_t, cholmod_sparse *, double *,
     SuiteSparse_long *, cholmod_factor *, cholmod_dense *, cholmod_dense *,
     cholmod_common *) ;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

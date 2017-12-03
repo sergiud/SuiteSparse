@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Matrix_subassign_[SCALAR]: assign a scalar to matrix, via scalar expansion
+// GxB_Matrix_subassign_[SCALAR]: assign a scalar to matrix, via scalar expansion
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -14,7 +14,7 @@
 #include "GB.h"
 
 #define ASSIGN(type,T,ampersand)                                               \
-GrB_Info GrB_Matrix_subassign_ ## T    /* C(I,J)<Mask> = accum (C(I,J),x)      */ \
+GrB_Info GxB_Matrix_subassign_ ## T    /* C(I,J)<Mask> = accum (C(I,J),x)      */ \
 (                                                                              \
     GrB_Matrix C,                   /* input/output matrix for results      */ \
     const GrB_Matrix Mask,          /* optional mask for C(I,J)             */ \
@@ -27,7 +27,7 @@ GrB_Info GrB_Matrix_subassign_ ## T    /* C(I,J)<Mask> = accum (C(I,J),x)      *
     const GrB_Descriptor desc       /* descriptor for C(I,J) and Mask       */ \
 )                                                                              \
 {                                                                              \
-    WHERE ("GrB_Matrix_subassign_" GB_STR(T) " (C, Mask, accum, x, I, ni, J, nj, desc)") ; \
+    WHERE ("GxB_Matrix_subassign_" GB_STR(T) " (C, Mask, accum, x, I, ni, J, nj, desc)") ; \
     RETURN_IF_NULL_OR_UNINITIALIZED (C) ;                                      \
     RETURN_IF_UNINITIALIZED (Mask) ;                                           \
     return (GB_subassign_scalar (C, Mask, accum,                                  \

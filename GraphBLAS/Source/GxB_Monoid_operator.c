@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_UnaryOp_ztype: return the type of z for z=f(x)
+// GxB_Monoid_operator: return the op of a monoid
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,10 +9,10 @@
 
 #include "GB.h"
 
-GrB_Info GrB_UnaryOp_ztype          // return the type of z
+GrB_Info GxB_Monoid_operator        // return the monoid operator
 (
-    GrB_Type *ztype,                // return type of output z
-    const GrB_UnaryOp unaryop       // unary operator
+    GrB_BinaryOp *op,               // returns the binary op of the monoid
+    const GrB_Monoid monoid         // monoid to query
 )
 {
 
@@ -20,16 +20,16 @@ GrB_Info GrB_UnaryOp_ztype          // return the type of z
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_UnaryOp_ztype (&ztype, unaryop)") ;
-    RETURN_IF_NULL (ztype) ;
-    RETURN_IF_NULL_OR_UNINITIALIZED (unaryop) ;
-    ASSERT_OK (GB_check (unaryop, "unaryop for ztype", 0)) ;
+    WHERE ("GxB_Monoid_operator (&op, monoid)") ;
+    RETURN_IF_NULL (op) ;
+    RETURN_IF_NULL_OR_UNINITIALIZED (monoid) ;
+    ASSERT_OK (GB_check (monoid, "monoid for op", 0)) ;
 
     //--------------------------------------------------------------------------
     // return the ztype
     //--------------------------------------------------------------------------
 
-    (*ztype) = unaryop->ztype ;
+    (*op) = monoid->op ;
     return (REPORT_SUCCESS) ;
 }
 

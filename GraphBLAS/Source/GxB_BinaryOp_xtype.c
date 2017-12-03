@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Matrix_type: return the type of a matrix
+// GxB_BinaryOp_xtype: return the type of x for z=f(x,y)
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,10 +9,10 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Matrix_type    // get the type of a matrix
+GrB_Info GxB_BinaryOp_xtype         // return the type of x
 (
-    GrB_Type *type,         // returns the type of the matrix
-    const GrB_Matrix A      // matrix to query
+    GrB_Type *xtype,                // return type of input x
+    const GrB_BinaryOp binaryop     // binary operator to query
 )
 {
 
@@ -20,13 +20,16 @@ GrB_Info GrB_Matrix_type    // get the type of a matrix
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Matrix_type (&type, A)") ;
-    RETURN_IF_NULL_OR_UNINITIALIZED (A) ;
+    WHERE ("GxB_BinaryOp_xtype (&xtype, binaryop)") ;
+    RETURN_IF_NULL (xtype) ;
+    RETURN_IF_NULL_OR_UNINITIALIZED (binaryop) ;
+    ASSERT_OK (GB_check (binaryop, "binaryop for xtype", 0)) ;
 
     //--------------------------------------------------------------------------
-    // get the type
+    // return the xtype
     //--------------------------------------------------------------------------
 
-    return (GB_Matrix_type (type, A)) ;
+    (*xtype) = binaryop->xtype ;
+    return (REPORT_SUCCESS) ;
 }
 

@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Vector_subassign: w(I)<mask> = accum (w(I),u)
+// GxB_Vector_subassign: w(I)<mask> = accum (w(I),u)
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,7 +9,7 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Vector_subassign       // w(I)<mask> = accum (w(I),u)
+GrB_Info GxB_Vector_subassign       // w(I)<mask> = accum (w(I),u)
 (
     GrB_Vector w,                   // input/output matrix for results
     const GrB_Vector mask,          // optional mask for w(I), unused if NULL
@@ -25,7 +25,7 @@ GrB_Info GrB_Vector_subassign       // w(I)<mask> = accum (w(I),u)
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Vector_subassign (w, mask, accum, u, I, ni, desc)") ;
+    WHERE ("GxB_Vector_subassign (w, mask, accum, u, I, ni, desc)") ;
 
     RETURN_IF_NULL_OR_UNINITIALIZED (w) ;
     RETURN_IF_UNINITIALIZED (mask) ;

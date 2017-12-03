@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_BinaryOp_xtype: return the type of x for z=f(x,y)
+// GxB_SelectOp_xtype: return the type of x for z=f(x)
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,10 +9,10 @@
 
 #include "GB.h"
 
-GrB_Info GrB_BinaryOp_xtype         // return the type of x
+GrB_Info GxB_SelectOp_xtype         // return the type of x or NULL if generic
 (
     GrB_Type *xtype,                // return type of input x
-    const GrB_BinaryOp binaryop     // binary operator to query
+    const GxB_SelectOp selectop     // select operator
 )
 {
 
@@ -20,16 +20,16 @@ GrB_Info GrB_BinaryOp_xtype         // return the type of x
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_BinaryOp_xtype (&xtype, binaryop)") ;
+    WHERE ("GxB_SelectOp_xtype (&xtype, selectop)") ;
     RETURN_IF_NULL (xtype) ;
-    RETURN_IF_NULL_OR_UNINITIALIZED (binaryop) ;
-    ASSERT_OK (GB_check (binaryop, "binaryop for xtype", 0)) ;
+    RETURN_IF_NULL_OR_UNINITIALIZED (selectop) ;
+    ASSERT_OK (GB_check (selectop, "selectop for xtype", 0)) ;
 
     //--------------------------------------------------------------------------
     // return the xtype
     //--------------------------------------------------------------------------
 
-    (*xtype) = binaryop->xtype ;
+    (*xtype) = selectop->xtype ;
     return (REPORT_SUCCESS) ;
 }
 

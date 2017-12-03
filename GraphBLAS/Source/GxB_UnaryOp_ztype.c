@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Semiring_add: return the additive monoid of a semiring
+// GxB_UnaryOp_ztype: return the type of z for z=f(x)
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,10 +9,10 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Semiring_add           // return the additive monoid of a semiring
+GrB_Info GxB_UnaryOp_ztype          // return the type of z
 (
-    GrB_Monoid *add,                // returns additive monoid of the semiring
-    const GrB_Semiring semiring     // semiring to query
+    GrB_Type *ztype,                // return type of output z
+    const GrB_UnaryOp unaryop       // unary operator
 )
 {
 
@@ -20,16 +20,16 @@ GrB_Info GrB_Semiring_add           // return the additive monoid of a semiring
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Semiring_add (&add, semiring)") ;
-    RETURN_IF_NULL (add) ;
-    RETURN_IF_NULL_OR_UNINITIALIZED (semiring) ;
-    ASSERT_OK (GB_check (semiring, "semiring for add", 0)) ;
+    WHERE ("GxB_UnaryOp_ztype (&ztype, unaryop)") ;
+    RETURN_IF_NULL (ztype) ;
+    RETURN_IF_NULL_OR_UNINITIALIZED (unaryop) ;
+    ASSERT_OK (GB_check (unaryop, "unaryop for ztype", 0)) ;
 
     //--------------------------------------------------------------------------
     // return the ztype
     //--------------------------------------------------------------------------
 
-    (*add) = semiring->add ;
+    (*ztype) = unaryop->ztype ;
     return (REPORT_SUCCESS) ;
 }
 

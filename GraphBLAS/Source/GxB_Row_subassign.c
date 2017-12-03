@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Row_subassign: C(i,J)<mask'> = accum (C(i,J),u')
+// GxB_Row_subassign: C(i,J)<mask'> = accum (C(i,J),u')
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,7 +9,7 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Row_subassign          // C(i,J)<mask'> = accum (C(i,J),u')
+GrB_Info GxB_Row_subassign          // C(i,J)<mask'> = accum (C(i,J),u')
 (
     GrB_Matrix C,                   // input/output matrix for results
     const GrB_Vector mask,          // optional mask for C(i,J), unused if NULL
@@ -26,7 +26,7 @@ GrB_Info GrB_Row_subassign          // C(i,J)<mask'> = accum (C(i,J),u')
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Row_subassign (C, mask, accum, u, i, J, nj, desc)") ;
+    WHERE ("GxB_Row_subassign (C, mask, accum, u, i, J, nj, desc)") ;
 
     RETURN_IF_NULL_OR_UNINITIALIZED (C) ;
     RETURN_IF_UNINITIALIZED (mask) ;

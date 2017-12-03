@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_BinaryOp_ytype: return the type of y for z=f(x,y)
+// GxB_Semiring_multiply: return the multiply operator of a semiring
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,10 +9,10 @@
 
 #include "GB.h"
 
-GrB_Info GrB_BinaryOp_ytype         // return the type of y
+GrB_Info GxB_Semiring_multiply      // return multiply operator of a semiring
 (
-    GrB_Type *ytype,                // return type of input y
-    const GrB_BinaryOp binaryop     // binary operator to query
+    GrB_BinaryOp *multiply,         // returns multiply operator of the semiring
+    const GrB_Semiring semiring     // semiring to query
 )
 {
 
@@ -20,16 +20,16 @@ GrB_Info GrB_BinaryOp_ytype         // return the type of y
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_BinaryOp_ytype (&ytype, binaryop)") ;
-    RETURN_IF_NULL (ytype) ;
-    RETURN_IF_NULL_OR_UNINITIALIZED (binaryop) ;
-    ASSERT_OK (GB_check (binaryop, "binaryop for ytype", 0)) ;
+    WHERE ("GxB_Semiring_multiply (&multiply, semiring)") ;
+    RETURN_IF_NULL (multiply) ;
+    RETURN_IF_NULL_OR_UNINITIALIZED (semiring) ;
+    ASSERT_OK (GB_check (semiring, "semiring for mult", 0)) ;
 
     //--------------------------------------------------------------------------
-    // return the ytype
+    // return the ztype
     //--------------------------------------------------------------------------
 
-    (*ytype) = binaryop->ytype ;
+    (*multiply) = semiring->multiply ;
     return (REPORT_SUCCESS) ;
 }
 

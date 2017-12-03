@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Descriptor_get: get a field in a descriptor
+// GxB_Descriptor_get: get a field in a descriptor
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,7 +9,7 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Descriptor_get     // get a parameter from a descriptor
+GrB_Info GxB_Descriptor_get     // get a parameter from a descriptor
 (
     GrB_Desc_Value *val,        // value of the parameter
     const GrB_Descriptor desc,  // descriptor to query; NULL is ok
@@ -21,7 +21,7 @@ GrB_Info GrB_Descriptor_get     // get a parameter from a descriptor
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Descriptor_get (&value, desc, field)") ;
+    WHERE ("GxB_Descriptor_get (&value, desc, field)") ;
     RETURN_IF_NULL (val) ;
     RETURN_IF_UNINITIALIZED (desc) ;
 
@@ -31,10 +31,10 @@ GrB_Info GrB_Descriptor_get     // get a parameter from a descriptor
 
     switch (field)
     {
-        case GrB_OUTP: (*val) = (desc==NULL) ? GrB_DEFAULT : desc->out  ; break;
-        case GrB_MASK: (*val) = (desc==NULL) ? GrB_DEFAULT : desc->mask ; break;
-        case GrB_INP0: (*val) = (desc==NULL) ? GrB_DEFAULT : desc->in0  ; break;
-        case GrB_INP1: (*val) = (desc==NULL) ? GrB_DEFAULT : desc->in1  ; break;
+        case GrB_OUTP: (*val) = (desc==NULL) ? GxB_DEFAULT : desc->out  ; break;
+        case GrB_MASK: (*val) = (desc==NULL) ? GxB_DEFAULT : desc->mask ; break;
+        case GrB_INP0: (*val) = (desc==NULL) ? GxB_DEFAULT : desc->in0  ; break;
+        case GrB_INP1: (*val) = (desc==NULL) ? GxB_DEFAULT : desc->in1  ; break;
         default:
             return (ERROR (GrB_INVALID_VALUE, (LOG,
                 "invalid descriptor field"))) ;

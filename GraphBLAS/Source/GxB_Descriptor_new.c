@@ -7,7 +7,7 @@
 
 //------------------------------------------------------------------------------
 
-// Default values are set to GrB_DEFAULT
+// Default values are set to GxB_DEFAULT
 
 #include "GB.h"
 
@@ -39,10 +39,10 @@ GrB_Info GrB_Descriptor_new     // create a new descriptor
     // initialize the descriptor
     GrB_Descriptor desc = *descriptor ;
     desc->magic = MAGIC ;
-    desc->out  = GrB_DEFAULT ;     // descriptor for output
-    desc->mask = GrB_DEFAULT ;     // descriptor for the mask input
-    desc->in0  = GrB_DEFAULT ;     // descriptor for the first input
-    desc->in1  = GrB_DEFAULT ;     // descriptor for the second input
+    desc->out  = GxB_DEFAULT ;     // descriptor for output
+    desc->mask = GxB_DEFAULT ;     // descriptor for the mask input
+    desc->in0  = GxB_DEFAULT ;     // descriptor for the first input
+    desc->in1  = GxB_DEFAULT ;     // descriptor for the second input
     return (REPORT_SUCCESS) ;
 }
 

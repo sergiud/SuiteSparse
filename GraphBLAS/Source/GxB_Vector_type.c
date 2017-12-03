@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Vector_type: return the type of a vector
+// GxB_Vector_type: return the type of a vector
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,7 +9,7 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Vector_type    // get the type of a vector
+GrB_Info GxB_Vector_type    // get the type of a vector
 (
     GrB_Type *type,         // returns the type of the vector
     const GrB_Vector v      // vector to query
@@ -20,7 +20,7 @@ GrB_Info GrB_Vector_type    // get the type of a vector
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Vector_type (&type, v)") ;
+    WHERE ("GxB_Vector_type (&type, v)") ;
     RETURN_IF_NULL_OR_UNINITIALIZED (v) ;
 
     //--------------------------------------------------------------------------

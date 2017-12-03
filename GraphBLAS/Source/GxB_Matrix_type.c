@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Monoid_identity: return the identity of a monoid
+// GxB_Matrix_type: return the type of a matrix
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,10 +9,10 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Monoid_identity        // return the monoid identity
+GrB_Info GxB_Matrix_type    // get the type of a matrix
 (
-    void *identity,                 // returns the identity of the monoid
-    const GrB_Monoid monoid         // monoid to query
+    GrB_Type *type,         // returns the type of the matrix
+    const GrB_Matrix A      // matrix to query
 )
 {
 
@@ -20,16 +20,13 @@ GrB_Info GrB_Monoid_identity        // return the monoid identity
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Monoid_identity (&identity, monoid)") ;
-    RETURN_IF_NULL (identity) ;
-    RETURN_IF_NULL_OR_UNINITIALIZED (monoid) ;
-    ASSERT_OK (GB_check (monoid, "monoid for idenitity", 0)) ;
+    WHERE ("GxB_Matrix_type (&type, A)") ;
+    RETURN_IF_NULL_OR_UNINITIALIZED (A) ;
 
     //--------------------------------------------------------------------------
-    // return the identity
+    // get the type
     //--------------------------------------------------------------------------
 
-    memcpy (identity, monoid->identity, monoid->op->ztype->size) ;
-    return (REPORT_SUCCESS) ;
+    return (GB_Matrix_type (type, A)) ;
 }
 

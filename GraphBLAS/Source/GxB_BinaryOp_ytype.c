@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_BinaryOp_ztype: return the type of z for z=f(x,y)
+// GxB_BinaryOp_ytype: return the type of y for z=f(x,y)
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,9 +9,9 @@
 
 #include "GB.h"
 
-GrB_Info GrB_BinaryOp_ztype         // return the type of z
+GrB_Info GxB_BinaryOp_ytype         // return the type of y
 (
-    GrB_Type *ztype,                // return type of output z
+    GrB_Type *ytype,                // return type of input y
     const GrB_BinaryOp binaryop     // binary operator to query
 )
 {
@@ -20,16 +20,16 @@ GrB_Info GrB_BinaryOp_ztype         // return the type of z
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_BinaryOp_ztype (&ztype, binaryop)") ;
-    RETURN_IF_NULL (ztype) ;
+    WHERE ("GxB_BinaryOp_ytype (&ytype, binaryop)") ;
+    RETURN_IF_NULL (ytype) ;
     RETURN_IF_NULL_OR_UNINITIALIZED (binaryop) ;
-    ASSERT_OK (GB_check (binaryop, "binaryop for ztype", 0)) ;
+    ASSERT_OK (GB_check (binaryop, "binaryop for ytype", 0)) ;
 
     //--------------------------------------------------------------------------
-    // return the ztype
+    // return the ytype
     //--------------------------------------------------------------------------
 
-    (*ztype) = binaryop->ztype ;
+    (*ytype) = binaryop->ytype ;
     return (REPORT_SUCCESS) ;
 }
 

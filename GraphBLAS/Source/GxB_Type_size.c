@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Monoid_operator: return the op of a monoid
+// GxB_Type_size: return the size of a type
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,27 +9,26 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Monoid_operator        // return the monoid operator
+GrB_Info GxB_Type_size          // determine the size of the type
 (
-    GrB_BinaryOp *op,               // returns the binary op of the monoid
-    const GrB_Monoid monoid         // monoid to query
+    size_t *size,               // the sizeof the type
+    GrB_Type type               // type to determine the sizeof
 )
 {
-
+    
     //--------------------------------------------------------------------------
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Monoid_operator (&op, monoid)") ;
-    RETURN_IF_NULL (op) ;
-    RETURN_IF_NULL_OR_UNINITIALIZED (monoid) ;
-    ASSERT_OK (GB_check (monoid, "monoid for op", 0)) ;
+    WHERE ("GxB_Type_size (&size, type)") ;
+    RETURN_IF_NULL (size) ;
+    RETURN_IF_NULL_OR_UNINITIALIZED (type) ;
 
     //--------------------------------------------------------------------------
-    // return the ztype
+    // return the size
     //--------------------------------------------------------------------------
 
-    (*op) = monoid->op ;
+    (*size) = type->size ;
     return (REPORT_SUCCESS) ;
 }
 

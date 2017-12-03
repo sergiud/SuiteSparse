@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// GrB_Semiring_multiply: return the multiply operator of a semiring
+// GxB_Monoid_identity: return the identity of a monoid
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017, All Rights Reserved.
@@ -9,10 +9,10 @@
 
 #include "GB.h"
 
-GrB_Info GrB_Semiring_multiply      // return multiply operator of a semiring
+GrB_Info GxB_Monoid_identity        // return the monoid identity
 (
-    GrB_BinaryOp *multiply,         // returns multiply operator of the semiring
-    const GrB_Semiring semiring     // semiring to query
+    void *identity,                 // returns the identity of the monoid
+    const GrB_Monoid monoid         // monoid to query
 )
 {
 
@@ -20,16 +20,16 @@ GrB_Info GrB_Semiring_multiply      // return multiply operator of a semiring
     // check inputs
     //--------------------------------------------------------------------------
 
-    WHERE ("GrB_Semiring_multiply (&multiply, semiring)") ;
-    RETURN_IF_NULL (multiply) ;
-    RETURN_IF_NULL_OR_UNINITIALIZED (semiring) ;
-    ASSERT_OK (GB_check (semiring, "semiring for mult", 0)) ;
+    WHERE ("GxB_Monoid_identity (&identity, monoid)") ;
+    RETURN_IF_NULL (identity) ;
+    RETURN_IF_NULL_OR_UNINITIALIZED (monoid) ;
+    ASSERT_OK (GB_check (monoid, "monoid for idenitity", 0)) ;
 
     //--------------------------------------------------------------------------
-    // return the ztype
+    // return the identity
     //--------------------------------------------------------------------------
 
-    (*multiply) = semiring->multiply ;
+    memcpy (identity, monoid->identity, monoid->op->ztype->size) ;
     return (REPORT_SUCCESS) ;
 }
 

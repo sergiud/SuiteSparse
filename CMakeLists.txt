@@ -748,7 +748,7 @@ if (HAVE_FEENABLEEXCEPT)
 endif (HAVE_FEENABLEEXCEPT)
 
 if (TARGET blas AND TARGET lapack)
-  set (LAPACK_DEPENDENCY "find_dependency (LAPACK ${LAPACK_VERSION})")
+  set (LAPACK_DEPENDENCY "find_dependency (LAPACK ${LAPACK_VERSION} NO_MODULE)")
   target_link_libraries (cholmod PUBLIC blas lapack)
 else (TARGET blas AND TARGET lapack)
   target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES} colamd)

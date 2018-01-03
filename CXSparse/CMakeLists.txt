@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Sergiu Deitsch
+# Copyright (c) 2016, 2018 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -71,6 +71,8 @@ include (ComponentVersion)
 include (GenerateExportHeader)
 include (GenerateSourceFiles)
 include (GNUInstallDirs)
+
+set (SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse)
 
 set (CMAKE_C_VISIBILITY_PRESET hidden)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -213,7 +215,35 @@ target_include_directories (cxsparse PUBLIC
   "$<INSTALL_INTERFACE:${_CXSparse_CMake_INCLUDEDIR}>"
 )
 
-target_link_libraries (cxsparse PUBLIC suitesparseconfig)
+set (SUITESPARSECONFIG_HDRS
+  ../SuiteSparse_config/SuiteSparse_config.h
+)
+
+add_library (cxsparseconfig
+  ../SuiteSparse_config/SuiteSparse_config.c
+  ${SUITESPARSECONFIG_HDRS}
+)
+
+target_include_directories (cxsparseconfig PUBLIC
+  "$<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../SuiteSparse_config>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
+)
+
+if (HAVE_M)
+  target_link_libraries (cxsparseconfig PUBLIC m)
+endif (HAVE_M)
+
+set_property (TARGET cxsparseconfig PROPERTY NAME_ALIAS CXSparse)
+set_property (TARGET cxsparseconfig PROPERTY HEADERS_VARIABLE
+  SUITESPARSECONFIG_HDRS)
+set_property (TARGET cxsparseconfig PROPERTY INSTALL_DESTINATION
+  ${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR})
+
+set_component_version (cxsparseconfig "${VERSION}")
+set_target_properties (cxsparseconfig PROPERTIES EXPORT_NAME Config)
+
+target_link_libraries (cxsparse PUBLIC cxsparseconfig)
 
 if (HAVE_M)
   target_link_libraries (cxsparse PUBLIC m)
@@ -237,7 +267,7 @@ set (_CXSparse_HDRS Include/cs.h ${_CXSparse_EXPORT_HEADER})
 set_target_properties (cxsparse PROPERTIES PUBLIC_HEADER "${_CXSparse_HDRS}")
 set_target_properties (cxsparse PROPERTIES EXPORT_NAME CXSparse)
 
-install (TARGETS cxsparse
+install (TARGETS cxsparse cxsparseconfig
   EXPORT cxsparse-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   PUBLIC_HEADER DESTINATION ${_CXSparse_CMake_INCLUDEDIR}
@@ -251,7 +281,7 @@ configure_package_config_file (cxsparse-config.cmake.in
 write_basic_package_version_file (cxsparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
-export (TARGETS cxsparse suitesparseconfig NAMESPACE CXSparse:: FILE cxsparse-targets.cmake)
+export (TARGETS cxsparse cxsparseconfig NAMESPACE CXSparse:: FILE cxsparse-targets.cmake)
 export (PACKAGE CXSparse)
 
 install (EXPORT cxsparse-targets NAMESPACE CXSparse::

@@ -110,7 +110,7 @@ if (HAVE__CMULCC AND HAVE__CMULCR AND HAVE__DCOMPLEX_
   set (HAVE_C99_COMPLEX_SUBSET ON)
 endif ()
 
-source_group ("Generated Files" REGULAR_EXPRESSION "^[^_]+_[^_]+_[^\\.]+\\.c$")
+source_group ("Generated Files" REGULAR_EXPRESSION ".+_(di|dl|zi|zl)(_.+)?\\.c$")
 
 set (HDRS
   Include/cs.h

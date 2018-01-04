@@ -140,6 +140,11 @@ if (NOT TARGET tbb::tbb)
   add_library (tbb::tbb UNKNOWN IMPORTED)
 endif (NOT TARGET tbb::tbb)
 
+if (MSVC)
+  set_target_properties (tbb::tbb PROPERTIES INTERFACE_COMPILE_DEFINITIONS
+    __TBB_NO_IMPLICIT_LINKAGE=1)
+endif (MSVC)
+
 if (TBB_INCLUDE_DIR)
   set_target_properties (tbb::tbb PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
     ${TBB_INCLUDE_DIR})
@@ -150,11 +155,6 @@ if (TBB_LIBRARY_DEBUG)
   set_property (TARGET tbb::tbb APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
   set_target_properties (tbb::tbb PROPERTIES IMPORTED_LOCATION_DEBUG
     ${TBB_LIBRARY_DEBUG})
-
-  if (MSVC)
-    set_target_properties (tbb::tbb PROPERTIES INTERFACE_COMPILE_DEFINITIONS
-      __TBB_NO_IMPLICIT_LINKAGE=1)
-  endif (MSVC)
 endif (TBB_LIBRARY_DEBUG)
 
 if (TBB_LIBRARY_RELEASE)

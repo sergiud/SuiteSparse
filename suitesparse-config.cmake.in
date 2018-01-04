@@ -6,6 +6,7 @@ cmake_policy (VERSION 3.9)
 include (CMakeFindDependencyMacro)
 
 @LAPACK_DEPENDENCY@
+@TBB_DEPENDENCY@
 
 # Add the targets after the dependecies were found since SuiteSparse targets
 # depend on the external targets.

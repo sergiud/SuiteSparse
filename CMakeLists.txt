@@ -840,11 +840,10 @@ if (WITH_CUDA AND CUDA_FOUND)
 endif (WITH_CUDA AND CUDA_FOUND)
 
 if (WITH_TBB AND TBB_FOUND)
-  target_include_directories (spqr SYSTEM PRIVATE ${TBB_INCLUDE_DIRS})
-  target_include_directories (spqr SYSTEM PUBLIC
-    $<BUILD_INTERFACE:${TBB_INCLUDE_DIRS}>)
-  target_link_libraries (spqr PUBLIC ${TBB_LIBRARIES})
+  target_link_libraries (spqr PUBLIC tbb::tbb)
   target_compile_definitions (spqr PRIVATE HAVE_TBB)
+
+  set (TBB_DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
 endif (WITH_TBB AND TBB_FOUND)
 
 set (SUITESPARSECONFIG_HDRS

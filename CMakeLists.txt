@@ -1,4 +1,4 @@
-# Copyright (c) 2016, 2017 Sergiu Deitsch
+# Copyright (c) 2016-2018 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -844,10 +844,8 @@ if (WITH_CUDA AND CUDA_FOUND)
 endif (WITH_CUDA AND CUDA_FOUND)
 
 if (WITH_TBB AND TBB_FOUND)
-  target_link_libraries (spqr PUBLIC tbb::tbb)
+  target_link_libraries (spqr PRIVATE tbb::tbb)
   target_compile_definitions (spqr PRIVATE HAVE_TBB)
-
-  set (TBB_DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
 endif (WITH_TBB AND TBB_FOUND)
 
 set (SUITESPARSECONFIG_HDRS

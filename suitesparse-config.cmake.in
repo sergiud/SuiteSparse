@@ -1,3 +1,4 @@
+cmake_policy (PUSH)
 cmake_policy (VERSION 3.9)
 
 @PACKAGE_INIT@
@@ -22,3 +23,5 @@ foreach (_comp ${SuiteSparse_FIND_COMPONENTS})
 endforeach (_comp)
 
 check_required_components (SuiteSparse)
+
+cmake_policy (POP)

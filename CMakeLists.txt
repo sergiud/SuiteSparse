@@ -168,7 +168,11 @@ endif (NOT LAPACK_FOUND)
 
 cmake_push_check_state (RESET)
 
-set (CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+if (TARGET blas AND TARGET lapack)
+  set (CMAKE_REQUIRED_LIBRARIES blas lapack)
+else (TARGET blas AND TARGET lapack)
+  set (CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+endif (TARGET blas AND TARGET lapack)
 
 check_function_exists (sgemm HAVE_BLAS_NO_UNDERSCORE)
 check_function_exists (sgemm_ HAVE_BLAS_UNDERSCORE)

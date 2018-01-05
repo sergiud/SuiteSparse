@@ -846,6 +846,8 @@ endif (WITH_CUDA AND CUDA_FOUND)
 if (WITH_TBB AND TBB_FOUND)
   target_link_libraries (spqr PRIVATE tbb::tbb)
   target_compile_definitions (spqr PRIVATE HAVE_TBB)
+
+  set (TBB_DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
 endif (WITH_TBB AND TBB_FOUND)
 
 set (SUITESPARSECONFIG_HDRS

@@ -4,6 +4,7 @@ cmake_policy (VERSION 3.9)
 
 include (CMakeFindDependencyMacro)
 
+@BLAS_DEPENDENCY@
 @LAPACK_DEPENDENCY@
 @TBB_DEPENDENCY@
 

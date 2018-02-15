@@ -160,10 +160,20 @@ include (CheckTypeSize)
 include (ComponentVersion)
 include (GenerateSourceFiles)
 
+find_package (CBLAS NO_MODULE)
 find_package (LAPACK QUIET NO_MODULE)
+
+if (CBLAS_FOUND)
+  set (BLAS_DEPENDENCY "find_dependency (CBLAS ${CBLAS_VERSION})")
+  set (CBLAS_FIND_REQUIRED ON)
+else (CBLAS_FOUND)
+  find_package (BLAS REQUIRED)
+endif (CBLAS_FOUND)
 
 if (NOT LAPACK_FOUND)
   find_package (LAPACK MODULE REQUIRED)
+else (NOT LAPACK_FOUND)
+  set (LAPACK_FIND_REQUIRED ON)
 endif (NOT LAPACK_FOUND)
 
 cmake_push_check_state (RESET)

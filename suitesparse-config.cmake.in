@@ -16,10 +16,12 @@ set (_SuiteSparse_NAMESPACE "@SuiteSparse_NAMESPACE@")
 
 foreach (_comp ${SuiteSparse_FIND_COMPONENTS})
   set (_TARGET ${_SuiteSparse_NAMESPACE}${_comp})
+
   if (TARGET ${_TARGET})
     set (SuiteSparse_${_comp}_FOUND TRUE)
   else (TARGET ${_TARGET})
     set (SuiteSparse_${_comp}_FOUND FALSE)
+    set (SuiteSparse_NOT_FOUND_MESSAGE "SuiteSparse could not be found because the component ${_comp} could not be found.")
   endif (TARGET ${_TARGET})
 endforeach (_comp)
 

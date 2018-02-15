@@ -1,4 +1,6 @@
-cmake_policy (VERSION 2.8.11)
+if (CMAKE_VERSION VERSION_LESS 2.8.11)
+  message (FATAL_ERROR "CMake >= 2.8.11 required")
+endif (CMAKE_VERSION VERSION_LESS 2.8.11)
 
 @PACKAGE_INIT@
 

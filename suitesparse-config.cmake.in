@@ -1,4 +1,6 @@
-cmake_policy (VERSION 3.9)
+if (CMAKE_VERSION VERSION_LESS 3.9)
+  message (FATAL_ERROR "CMake >= 3.9 required")
+endif (CMAKE_VERSION VERSION_LESS 3.9)
 
 @PACKAGE_INIT@
 

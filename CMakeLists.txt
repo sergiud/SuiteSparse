@@ -1270,21 +1270,79 @@ foreach (_target ${_SuiteSparse_TARGETS})
     ${_target_include_dir} COMPONENT Development)
 endforeach (_target)
 
+set (SuiteSparse_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR}/SuiteSparse)
+# suitesparse-config.cmake relative install directory
+set (SuiteSparse_CMake_INSTALLDIR ${SuiteSparse_CMake_LIBDIR}/cmake)
 
-set (_SuiteSparse_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR}/SuiteSparse)
-set (_SuiteSparse_CMake_INSTALLDIR ${_SuiteSparse_CMake_LIBDIR}/cmake)
+set (SuiteSparse_CMake_DIR SuiteSparse/cmake)
+set (SuiteSparse_CMake_DATADIR ${CMAKE_INSTALL_DATAROOTDIR}/${SuiteSparse_CMake_DIR})
+set (SuiteSparse_BINARY_CMake_DATADIR ${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CMake_DATADIR})
+
+set (SuiteSparse_CMake_MODULES
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindTBB.cmake
+)
+
+set (_output_CMake_MODULES
+  ${SuiteSparse_BINARY_CMake_DATADIR}/FindTBB.cmake
+)
+
+target_sources (suitesparseconfig PRIVATE ${_output_CMake_MODULES})
+
+add_custom_command (OUTPUT ${_output_CMake_MODULES}
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+  ${SuiteSparse_BINARY_CMake_DATADIR}
+  COMMAND ${CMAKE_COMMAND} -E copy ${SuiteSparse_CMake_MODULES}
+  ${SuiteSparse_BINARY_CMake_DATADIR}
+  DEPENDS ${SuiteSparse_CMake_MODULES}
+  COMMENT "Copying find modules..."
+)
+
+install (DIRECTORY ${SuiteSparse_BINARY_CMake_DATADIR}
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/SuiteSparse
+  COMPONENT Development
+)
+
+set (SuiteSparse_FULL_CMake_DATADIR
+  ${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CMake_DATADIR})
+
+configure_file (suitesparse-modules.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-modules.cmake @ONLY)
+
+get_filename_component (_PREFIX "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+
+# Directory containing the find modules relative to the config install
+# directory.
+file (RELATIVE_PATH SuiteSparse_REL_CMake_MODULES
+  ${_PREFIX}/${SuiteSparse_CMake_INSTALLDIR}
+  ${_PREFIX}/${SuiteSparse_CMake_DATADIR}/SuiteSparse-modules.cmake)
+
+get_filename_component (SuiteSparse_REL_CMake_DATADIR ${SuiteSparse_REL_CMake_MODULES}
+  DIRECTORY)
+
+install (CODE
+"
+set (SuiteSparse_FULL_CMake_DATADIR \"\\\${CMAKE_CURRENT_LIST_DIR}/${SuiteSparse_REL_CMake_DATADIR}\")
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/suitesparse-modules.cmake.in
+  \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/suitesparse-modules.cmake\" @ONLY)
+file (INSTALL
+  \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/suitesparse-modules.cmake\"
+  DESTINATION
+  \"\${CMAKE_INSTALL_PREFIX}/${SuiteSparse_CMake_INSTALLDIR}\")
+"
+  COMPONENT Development
+)
 
 install (TARGETS ${_SuiteSparse_TARGETS}
   EXPORT suitesparse-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
-  LIBRARY DESTINATION ${_SuiteSparse_CMake_LIBDIR} COMPONENT Development
-  ARCHIVE DESTINATION ${_SuiteSparse_CMake_LIBDIR} COMPONENT Development)
+  LIBRARY DESTINATION ${SuiteSparse_CMake_LIBDIR} COMPONENT Development
+  ARCHIVE DESTINATION ${SuiteSparse_CMake_LIBDIR} COMPONENT Development)
 
 set (SuiteSparse_NAMESPACE SuiteSparse::)
 
 configure_package_config_file (suitesparse-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config.cmake
-  INSTALL_DESTINATION ${_SuiteSparse_CMake_INSTALLDIR})
+  INSTALL_DESTINATION ${SuiteSparse_CMake_INSTALLDIR})
 write_basic_package_version_file (suitesparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
@@ -1293,11 +1351,11 @@ export (TARGETS ${_SuiteSparse_TARGETS} NAMESPACE ${SuiteSparse_NAMESPACE} FILE
 export (PACKAGE SuiteSparse)
 
 install (EXPORT suitesparse-targets NAMESPACE ${SuiteSparse_NAMESPACE}
-  DESTINATION ${_SuiteSparse_CMake_INSTALLDIR})
+  DESTINATION ${SuiteSparse_CMake_INSTALLDIR})
 install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config-version.cmake
-  DESTINATION ${_SuiteSparse_CMake_INSTALLDIR}
+  DESTINATION ${SuiteSparse_CMake_INSTALLDIR}
   COMPONENT Development)
 
 set_component_version (amd 2.4.6)

@@ -164,8 +164,6 @@ find_package (CBLAS NO_MODULE)
 
 if (NOT CBLAS_FOUND)
   find_package (BLAS MODULE REQUIRED)
-
-  set (BLAS_DEPENDENCY "find_dependency (BLAS MODULE)")
 else (NOT CBLAS_FOUND)
   set (BLAS_DEPENDENCY "find_dependency (CBLAS ${CBLAS_VERSION} NO_MODULE)")
   set (CBLAS_FIND_REQUIRED ON)
@@ -175,8 +173,6 @@ find_package (LAPACK NO_MODULE)
 
 if (NOT LAPACK_FOUND)
   find_package (LAPACK MODULE REQUIRED)
-
-  set (LAPACK_DEPENDENCY "find_dependency (LAPACK ${LAPACK_VERSION} MODULE)")
 else (NOT LAPACK_FOUND)
   set (LAPACK_DEPENDENCY "find_dependency (LAPACK ${LAPACK_VERSION} NO_MODULE)")
   set (LAPACK_FIND_REQUIRED ON)

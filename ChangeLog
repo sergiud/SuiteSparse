@@ -1,3 +1,33 @@
+Dec 23, 2017: SuiteSparse 5.1.2
+
+    * improved build process for GraphBLAS
+    * minor change to CSparse/Lib/Makefile, no change in CSparse version
+
+Dec 17, 2017: SuiteSparse 5.1.1
+
+    * GraphBLAS added to top-level SuiteSparse/Makefile
+    * GraphBLAS 1.1.1: bug fix to *assign, split AxB for faster compile,
+        added memory usage statistics, AxB performance improvment
+    * minor update to [AMD CAMD KLU]/Doc/Makefile's, no change to
+        version numbers of AMD, CAMD, or KLU
+
+Dec 1, 2017: SuiteSparse 5.1.0
+
+    * GraphBLAS 1.1.0
+    * minor update to SPQR Makefile (version remains unchanged;
+        no change to source)
+
+Nov 25, 2017: SuiteSparse 5.0.0
+
+    * added GraphBLAS Version 1.0.0
+    * replaced UFget with ssget
+
+Oct 3, 2017: SuiteSparse 4.5.6
+
+    * changed COLAMD, CAMD, and CCOLAMD to BSD 3-clause,
+        to match AMD.  No other changes; version numbers of
+        packages unchanged.
+
 Apr 17, 2017: SuiteSparse 4.5.5
 
     * minor fix to SuiteSparse/Makefile for 'make install'

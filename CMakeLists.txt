@@ -1351,7 +1351,7 @@ configure_package_config_file (suitesparse-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/suitesparse-config.cmake
   INSTALL_DESTINATION ${SuiteSparse_CMake_INSTALLDIR})
 write_basic_package_version_file (suitesparse-config-version.cmake
-  VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
+  VERSION ${VERSION} COMPATIBILITY AnyNewerVersion)
 
 export (TARGETS ${_SuiteSparse_TARGETS} NAMESPACE ${SuiteSparse_NAMESPACE} FILE
   suitesparse-targets.cmake)

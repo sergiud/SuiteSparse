@@ -161,7 +161,7 @@ include (CheckLibraryExists)
 include (CheckSymbolExists)
 include (CheckTypeSize)
 include (ComponentVersion)
-include (GenerateSourceFiles)
+include (CreateObjects)
 
 if (DEFINED ENV{BLA_VENDOR} OR DEFINED BLA_VENDOR)
   # In case the user set the BLA_VENDOR environment or CMake variable, use the
@@ -593,45 +593,6 @@ set (LDL_SRCS
   LDL/Source/ldl.c
 )
 
-generate_source_files (GEN_AMD_SRCS_DINT FILES "${AMD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_AMD_SRCS_DLONG FILES "${AMD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_BTF_SRCS_DINT FILES "${BTF_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_BTF_SRCS_DLONG FILES "${BTF_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_CAMD_SRCS_DINT FILES "${CAMD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_CAMD_SRCS_DLONG FILES "${CAMD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_CCOLAMD_SRCS_DINT FILES "${CCOLAMD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_CCOLAMD_SRCS_DLONG FILES "${CCOLAMD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_COLAMD_SRCS_DINT FILES "${COLAMD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_COLAMD_SRCS_DLONG FILES "${COLAMD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_CHOLMOD_SRCS_DINT FILES "${CHOLMOD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_CHOLMOD_SRCS_DLONG FILES "${CHOLMOD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES "${UMFPACK_INT_SRCS}" SUFFIX
-  _di COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES "${UMFPACK_INT_SRCS}" SUFFIX
-  _dl COMPILE_DEFINITIONS DLONG)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES "${UMFPACK_ZINT_SRCS}"
-  SUFFIX _zi COMPILE_DEFINITIONS ZINT)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES "${UMFPACK_ZINT_SRCS}"
-  SUFFIX _zl COMPILE_DEFINITIONS ZLONG)
-
 generate_source_files (GEN_KLU_SRCS_DINT FILES "${KLU_SRCS}" SUFFIX _di
   COMPILE_DEFINITIONS DINT)
 generate_source_files (GEN_KLU_SRCS_DLONG FILES "${KLU_SRCS}" SUFFIX _dl
@@ -641,84 +602,6 @@ generate_source_files (GEN_LDL_SRCS_DINT FILES "${LDL_SRCS}" SUFFIX _di
   COMPILE_DEFINITIONS DINT)
 generate_source_files (GEN_LDL_SRCS_DLONG FILES "${LDL_SRCS}" SUFFIX _dl
   COMPILE_DEFINITIONS LDL_LONG)
-
-if (HAVE_COMPLEX_H)
-  #list (APPEND PROJECT_SRCS Source/cs_convert.c)
-endif (HAVE_COMPLEX_H)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_ltsolve.c UMFPACK/Source/umf_utsolve.c SUFFIX _di_c
-  COMPILE_DEFINITIONS DINT CONJUGATE_SOLVE)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_ltsolve.c UMFPACK/Source/umf_utsolve.c SUFFIX _dl_c
-  COMPILE_DEFINITIONS DLONG CONJUGATE_SOLVE)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_ltsolve.c UMFPACK/Source/umf_utsolve.c SUFFIX _zi_c
-  COMPILE_DEFINITIONS ZINT CONJUGATE_SOLVE)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_ltsolve.c UMFPACK/Source/umf_utsolve.c SUFFIX _zl_c
-  COMPILE_DEFINITIONS ZLONG CONJUGATE_SOLVE)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umfpack_solve.c SUFFIX _di_w COMPILE_DEFINITIONS DINT WSOLVE)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umfpack_solve.c SUFFIX _dl_w COMPILE_DEFINITIONS DLONG WSOLVE)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umfpack_solve.c SUFFIX _zi_w COMPILE_DEFINITIONS ZINT WSOLVE)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umfpack_solve.c SUFFIX _zl_w COMPILE_DEFINITIONS ZLONG WSOLVE)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _di_fixq COMPILE_DEFINITIONS DINT FIXQ)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _dl_fixq COMPILE_DEFINITIONS DLONG FIXQ)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _zi_fixq COMPILE_DEFINITIONS ZINT FIXQ)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _zl_fixq COMPILE_DEFINITIONS ZLONG FIXQ)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_store_lu.c SUFFIX _di_drop COMPILE_DEFINITIONS DINT DROP)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_store_lu.c SUFFIX _dl_drop COMPILE_DEFINITIONS DLONG DROP)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_store_lu.c SUFFIX _zi_drop COMPILE_DEFINITIONS ZINT DROP)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_store_lu.c SUFFIX _zl_drop COMPILE_DEFINITIONS ZLONG DROP)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _di_fixq COMPILE_DEFINITIONS DINT FIXQ)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _di_map_nox COMPILE_DEFINITIONS DINT DO_MAP)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _di_nomap_x COMPILE_DEFINITIONS DINT DO_VALUES)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _di_map_x COMPILE_DEFINITIONS DINT DO_MAP DO_VALUES)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _dl_map_nox COMPILE_DEFINITIONS DLONG DO_MAP)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _dl_nomap_x COMPILE_DEFINITIONS DLONG DO_VALUES)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _dl_map_x COMPILE_DEFINITIONS DLONG
-  DO_MAP DO_VALUES)
-
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zi_map_nox COMPILE_DEFINITIONS ZINT DO_MAP)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zi_nomap_x COMPILE_DEFINITIONS ZINT DO_VALUES)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zi_map_x COMPILE_DEFINITIONS ZINT DO_MAP
-  DO_VALUES)
-
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zl_map_nox COMPILE_DEFINITIONS ZLONG DO_MAP)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zl_nomap_x COMPILE_DEFINITIONS ZLONG DO_VALUES)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zl_map_x COMPILE_DEFINITIONS ZLONG DO_MAP
-  DO_VALUES)
 
 if (MSVC)
   add_definitions (-D_CRT_SECURE_NO_WARNINGS)
@@ -731,32 +614,64 @@ set (OUTPUT_DIR ${CMAKE_BINARY_DIR})
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 
+add_library (amd_int OBJECT ${AMD_SRCS})
+target_include_directories (amd_int PRIVATE $<TARGET_PROPERTY:amd,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (amd_int PRIVATE DINT)
+
+add_library (amd_long OBJECT ${AMD_SRCS})
+target_include_directories (amd_long PRIVATE $<TARGET_PROPERTY:amd,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (amd_long PRIVATE DLONG)
+
 add_library (amd
   AMD/Include/amd_internal.h
   ${AMD_HDRS}
-  ${GEN_AMD_SRCS_DINT}
-  ${GEN_AMD_SRCS_DLONG}
+  $<TARGET_OBJECTS:amd_int>
+  $<TARGET_OBJECTS:amd_long>
 )
+
+add_library (btf_int OBJECT ${BTF_SRCS})
+target_include_directories (btf_int PRIVATE $<TARGET_PROPERTY:btf,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (btf_int PRIVATE DINT)
+
+add_library (btf_long OBJECT ${BTF_SRCS})
+target_include_directories (btf_long PRIVATE $<TARGET_PROPERTY:btf,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (btf_long PRIVATE DLONG)
 
 add_library (btf
   BTF/Include/btf_internal.h
   ${BTF_HDRS}
-  ${GEN_BTF_SRCS_DINT}
-  ${GEN_BTF_SRCS_DLONG}
+  $<TARGET_OBJECTS:btf_int>
+  $<TARGET_OBJECTS:btf_long>
 )
+
+add_library (camd_int OBJECT ${CAMD_SRCS})
+target_include_directories (camd_int PRIVATE $<TARGET_PROPERTY:camd,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (camd_int PRIVATE DINT)
+
+add_library (camd_long OBJECT ${CAMD_SRCS})
+target_include_directories (camd_long PRIVATE $<TARGET_PROPERTY:camd,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (camd_long PRIVATE DLONG)
 
 add_library (camd
   CAMD/Include/camd_internal.h
   ${CAMD_HDRS}
-  ${GEN_CAMD_SRCS_DINT}
-  ${GEN_CAMD_SRCS_DLONG}
+  $<TARGET_OBJECTS:camd_int>
+  $<TARGET_OBJECTS:camd_long>
 )
+
+add_library (cholmod_int OBJECT ${CHOLMOD_SRCS})
+target_include_directories (cholmod_int PRIVATE $<TARGET_PROPERTY:cholmod,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (cholmod_int PRIVATE DINT)
+
+add_library (cholmod_long OBJECT ${CHOLMOD_SRCS})
+target_include_directories (cholmod_long PRIVATE $<TARGET_PROPERTY:cholmod,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (cholmod_long PRIVATE DLONG)
 
 add_library (cholmod
   CHOLMOD/Include/cholmod_internal.h
   ${CHOLMOD_HDRS}
-  ${GEN_CHOLMOD_SRCS_DINT}
-  ${GEN_CHOLMOD_SRCS_DLONG}
+  $<TARGET_OBJECTS:cholmod_int>
+  $<TARGET_OBJECTS:cholmod_long>
 )
 
 target_include_directories (cholmod PUBLIC
@@ -792,16 +707,32 @@ if (WITH_PARTITION AND METIS_FOUND)
   target_link_libraries (cholmod PUBLIC ${METIS_LIBRARIES})
 endif (WITH_PARTITION AND METIS_FOUND)
 
+add_library (ccolamd_int OBJECT ${CCOLAMD_SRCS})
+target_include_directories (ccolamd_int PRIVATE $<TARGET_PROPERTY:ccolamd,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (ccolamd_int PRIVATE DINT)
+
+add_library (ccolamd_long OBJECT ${CCOLAMD_SRCS})
+target_include_directories (ccolamd_long PRIVATE $<TARGET_PROPERTY:ccolamd,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (ccolamd_long PRIVATE DLONG)
+
 add_library (ccolamd
   ${CCOLAMD_HDRS}
-  ${GEN_CCOLAMD_SRCS_DINT}
-  ${GEN_CCOLAMD_SRCS_DLONG}
+  $<TARGET_OBJECTS:ccolamd_int>
+  $<TARGET_OBJECTS:ccolamd_long>
 )
+
+add_library (colamd_int OBJECT ${COLAMD_SRCS})
+target_include_directories (colamd_int PRIVATE $<TARGET_PROPERTY:colamd,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (colamd_int PRIVATE DINT)
+
+add_library (colamd_long OBJECT ${COLAMD_SRCS})
+target_include_directories (colamd_long PRIVATE $<TARGET_PROPERTY:colamd,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (colamd_long PRIVATE DLONG)
 
 add_library (colamd
   ${COLAMD_HDRS}
-  ${GEN_COLAMD_SRCS_DINT}
-  ${GEN_COLAMD_SRCS_DLONG}
+  $<TARGET_OBJECTS:colamd_int>
+  $<TARGET_OBJECTS:colamd_long>
 )
 
 set (SPQR_SRCS
@@ -922,18 +853,179 @@ set (UMFPACK_HDRS
   UMFPACK/Include/umfpack_wsolve.h
 )
 
+add_library (umfpack_int OBJECT ${UMFPACK_INT_SRCS})
+target_include_directories (umfpack_int PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int PRIVATE DINT)
+
+add_library (umfpack_long OBJECT ${UMFPACK_INT_SRCS})
+target_include_directories (umfpack_long PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long PRIVATE DLONG)
+
+add_library (umfpack_zint OBJECT ${UMFPACK_ZINT_SRCS})
+target_include_directories (umfpack_zint PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint PRIVATE ZINT)
+
+add_library (umfpack_zlong OBJECT ${UMFPACK_ZINT_SRCS})
+target_include_directories (umfpack_zlong PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong PRIVATE ZLONG)
+
+set (UMFPACK_SOLVE_SRCS
+  UMFPACK/Source/umf_ltsolve.c
+  UMFPACK/Source/umf_utsolve.c
+)
+
+add_library (umfpack_int_solve OBJECT ${UMFPACK_SOLVE_SRCS})
+target_include_directories (umfpack_int_solve PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_solve PRIVATE DINT CONJUGATE_SOLVE)
+
+add_library (umfpack_long_solve OBJECT ${UMFPACK_SOLVE_SRCS})
+target_include_directories (umfpack_long_solve PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_solve PRIVATE DLONG CONJUGATE_SOLVE)
+
+add_library (umfpack_zint_solve OBJECT ${UMFPACK_SOLVE_SRCS})
+target_include_directories (umfpack_zint_solve PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_solve PRIVATE ZINT CONJUGATE_SOLVE)
+
+add_library (umfpack_zlong_solve OBJECT ${UMFPACK_SOLVE_SRCS})
+target_include_directories (umfpack_zlong_solve PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_solve PRIVATE ZLONG CONJUGATE_SOLVE)
+
+add_library (umfpack_int_wsolve OBJECT UMFPACK/Source/umfpack_solve.c)
+target_include_directories (umfpack_int_wsolve PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_wsolve PRIVATE DINT WSOLVE)
+
+add_library (umfpack_long_wsolve OBJECT UMFPACK/Source/umfpack_solve.c)
+target_include_directories (umfpack_long_wsolve PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_wsolve PRIVATE DLONG WSOLVE)
+
+add_library (umfpack_zint_wsolve OBJECT UMFPACK/Source/umfpack_solve.c)
+target_include_directories (umfpack_zint_wsolve PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_wsolve PRIVATE ZINT WSOLVE)
+
+add_library (umfpack_zlong_wsolve OBJECT UMFPACK/Source/umfpack_solve.c)
+target_include_directories (umfpack_zlong_wsolve PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_wsolve PRIVATE ZLONG WSOLVE)
+
+add_library (umfpack_int_fixq OBJECT UMFPACK/Source/umf_assemble.c)
+target_include_directories (umfpack_int_fixq PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_fixq PRIVATE DINT FIXQ)
+
+add_library (umfpack_long_fixq OBJECT UMFPACK/Source/umf_assemble.c)
+target_include_directories (umfpack_long_fixq PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_fixq PRIVATE DLONG FIXQ)
+
+add_library (umfpack_zint_fixq OBJECT UMFPACK/Source/umf_assemble.c)
+target_include_directories (umfpack_zint_fixq PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_fixq PRIVATE ZINT FIXQ)
+
+add_library (umfpack_zlong_fixq OBJECT UMFPACK/Source/umf_assemble.c)
+target_include_directories (umfpack_zlong_fixq PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_fixq PRIVATE ZLONG FIXQ)
+
+add_library (umfpack_int_drop OBJECT UMFPACK/Source/umf_store_lu.c)
+target_include_directories (umfpack_int_drop PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_drop PRIVATE DINT DROP)
+
+add_library (umfpack_long_drop OBJECT UMFPACK/Source/umf_store_lu.c)
+target_include_directories (umfpack_long_drop PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_drop PRIVATE DLONG DROP)
+
+add_library (umfpack_zint_drop OBJECT UMFPACK/Source/umf_store_lu.c)
+target_include_directories (umfpack_zint_drop PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_drop PRIVATE ZINT DROP)
+
+add_library (umfpack_zlong_drop OBJECT UMFPACK/Source/umf_store_lu.c)
+target_include_directories (umfpack_zlong_drop PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_drop PRIVATE ZLONG DROP)
+
+add_library (umfpack_int_map_nox OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_int_map_nox PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_map_nox PRIVATE DINT DO_MAP)
+
+add_library (umfpack_long_map_nox OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_long_map_nox PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_map_nox PRIVATE DLONG DO_MAP)
+
+add_library (umfpack_zint_map_nox OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zint_map_nox PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_map_nox PRIVATE ZINT DO_MAP)
+
+add_library (umfpack_zlong_map_nox OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zlong_map_nox PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_map_nox PRIVATE ZLONG DO_MAP)
+
+add_library (umfpack_int_nomap_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_int_nomap_x PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_nomap_x PRIVATE DINT DO_VALUES)
+
+add_library (umfpack_long_nomap_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_long_nomap_x PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_nomap_x PRIVATE DLONG DO_VALUES)
+
+add_library (umfpack_zint_nomap_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zint_nomap_x PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_nomap_x PRIVATE ZINT DO_VALUES)
+
+add_library (umfpack_zlong_nomap_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zlong_nomap_x PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_nomap_x PRIVATE ZLONG DO_VALUES)
+
+add_library (umfpack_int_map_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_int_map_x PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_map_x PRIVATE DINT DO_MAP DO_VALUES)
+
+add_library (umfpack_long_map_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_long_map_x PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_map_x PRIVATE DLONG DO_MAP DO_VALUES)
+
+add_library (umfpack_zint_map_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zint_map_x PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_map_x PRIVATE ZINT DO_MAP DO_VALUES)
+
+add_library (umfpack_zlong_map_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zlong_map_x PRIVATE $<TARGET_PROPERTY:umfpack,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_map_x PRIVATE ZLONG DO_MAP DO_VALUES)
+
 add_library (umfpack
-  ${GEN_UMFPACK_INT_SRCS_DINT}
-  ${GEN_UMFPACK_INT_SRCS_DLONG}
-  ${GEN_UMFPACK_ZINT_SRCS_DZINT}
-  ${GEN_UMFPACK_ZINT_SRCS_DZLONG}
+  $<TARGET_OBJECTS:umfpack_int>
+  $<TARGET_OBJECTS:umfpack_int_drop>
+  $<TARGET_OBJECTS:umfpack_int_fixq>
+  $<TARGET_OBJECTS:umfpack_int_map_nox>
+  $<TARGET_OBJECTS:umfpack_int_map_x>
+  $<TARGET_OBJECTS:umfpack_int_nomap_x>
+  $<TARGET_OBJECTS:umfpack_int_solve>
+  $<TARGET_OBJECTS:umfpack_long>
+  $<TARGET_OBJECTS:umfpack_long_drop>
+  $<TARGET_OBJECTS:umfpack_long_fixq>
+  $<TARGET_OBJECTS:umfpack_long_map_nox>
+  $<TARGET_OBJECTS:umfpack_long_map_x>
+  $<TARGET_OBJECTS:umfpack_long_nomap_x>
+  $<TARGET_OBJECTS:umfpack_long_solve>
+  $<TARGET_OBJECTS:umfpack_zint>
+  $<TARGET_OBJECTS:umfpack_zint_drop>
+  $<TARGET_OBJECTS:umfpack_zint_fixq>
+  $<TARGET_OBJECTS:umfpack_zint_map_nox>
+  $<TARGET_OBJECTS:umfpack_zint_map_x>
+  $<TARGET_OBJECTS:umfpack_zint_nomap_x>
+  $<TARGET_OBJECTS:umfpack_zint_solve>
+  $<TARGET_OBJECTS:umfpack_zlong>
+  $<TARGET_OBJECTS:umfpack_zlong_drop>
+  $<TARGET_OBJECTS:umfpack_zlong_fixq>
+  $<TARGET_OBJECTS:umfpack_zlong_map_nox>
+  $<TARGET_OBJECTS:umfpack_zlong_map_x>
+  $<TARGET_OBJECTS:umfpack_zlong_nomap_x>
+  $<TARGET_OBJECTS:umfpack_zlong_solve>
+  $<TARGET_OBJECTS:umfpack_int_wsolve>
+  $<TARGET_OBJECTS:umfpack_long_wsolve>
+  $<TARGET_OBJECTS:umfpack_zint_wsolve>
+  $<TARGET_OBJECTS:umfpack_zlong_wsolve>
+  ${UMFPACK_HDRS}
   UMFPACK/Source/umfpack_global.c
   UMFPACK/Source/umfpack_tictoc.c
   UMFPACK/Source/umfpack_timer.c
-  ${UMFPACK_HDRS}
 )
 
-# NOTE cholmod already dependens on LAPACK
+# NOTE cholmod already depends on LAPACK
 target_link_libraries (umfpack PUBLIC cholmod)
 
 set (KLU_HDRS
@@ -1030,6 +1122,7 @@ target_include_directories (spqr PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SPQR_INCLUDE_DIR}>")
 target_include_directories (umfpack PUBLIC
   "$<INSTALL_INTERFACE:${SuiteSparse_UMFPACK_INCLUDE_DIR}>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Source>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_UMFPACK_INCLUDE_DIR}>"
@@ -1054,23 +1147,6 @@ target_link_libraries (spqr PUBLIC cholmod suitesparseconfig)
 target_link_libraries (klu PUBLIC suitesparseconfig)
 target_link_libraries (ldl PUBLIC suitesparseconfig)
 target_link_libraries (umfpack PUBLIC amd suitesparseconfig)
-
-#add_library (SuiteSparse ${PROJECT_SRCS})
-
-#target_include_directories (SuiteSparse PUBLIC
-#  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>")
-
-if (NOT HAVE_COMPLEX_H)
-  #target_compile_definitions (SuiteSparse PUBLIC NCOMPLEX)
-endif (NOT HAVE_COMPLEX_H)
-
-if (HAVE_C_DOUBLE_COMPLEX)
-  #target_compile_definitions (SuiteSparse PUBLIC HAVE_C_DOUBLE_COMPLEX)
-endif (HAVE_C_DOUBLE_COMPLEX)
-
-if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-  #target_compile_definitions (SuiteSparse PRIVATE _CRT_SECURE_NO_WARNINGS)
-endif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 
 # CUDA support
 if (WITH_CUDA AND CUDA_FOUND)

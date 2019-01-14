@@ -16,121 +16,18 @@
 # limitations under the License.
 #
 
-cmake_minimum_required (VERSION 3.9)
+cmake_minimum_required (VERSION 3.18)
 
-if (POLICY CMP0007)
-  cmake_policy (SET CMP0007 NEW)
-endif (POLICY CMP0007)
-
-if (POLICY CMP0022)
-  cmake_policy (SET CMP0022 NEW)
-endif (POLICY CMP0022)
-
-if (POLICY CMP0023)
-  cmake_policy (SET CMP0023 NEW)
-endif (POLICY CMP0023)
-
-if (POLICY CMP0042)
-  cmake_policy (SET CMP0042 NEW)
-endif (POLICY CMP0042)
-
-if (POLICY CMP0054)
-  cmake_policy (SET CMP0054 NEW)
-endif (POLICY CMP0054)
-
-if (POLICY CMP0063)
-  cmake_policy (SET CMP0063 NEW)
-endif (POLICY CMP0063)
-
-include (CheckLanguage)
-
-option (BUILD_CXSPARSE "Build CXSparse" ON)
-
-option (WITH_FORTRAN "Enables Fortran support" ON)
-
-if (WITH_FORTRAN)
-  check_language (Fortran)
-
-  if (CMAKE_Fortran_COMPILER)
-    enable_language (Fortran)
-  endif (CMAKE_Fortran_COMPILER)
-endif (WITH_FORTRAN)
+if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set (CMAKE_CUDA_ARCHITECTURES 75)
+endif (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 
 project (SuiteSparse LANGUAGES C CXX VERSION 5.10.1
   DESCRIPTION "A suite of sparse matrix packages"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
 )
 
-set (CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
-
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set (CMAKE_DEBUG_POSTFIX _debug)
-
-include (CheckCCompilerFlag)
-include (CheckFunctionExists)
-include (CMakeDependentOption)
-include (FeatureSummary)
-include (GenerateExportHeader)
-include (GNUInstallDirs)
-
-set (CMAKE_C_VISIBILITY_PRESET hidden)
-set (CMAKE_CXX_VISIBILITY_PRESET hidden)
-set (CMAKE_POSITION_INDEPENDENT_CODE ON)
-set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-
-check_c_compiler_flag (-fPIC HAVE_FPIC)
-check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
-
-option (WITH_CUDA "Enable CUDA support" ON)
-option (WITH_OPENMP "Enable OpenMP support" ON)
-
-set (CUDA_LINK_LIBRARIES_KEYWORD PRIVATE)
-
-if (WITH_CUDA)
-  find_package (CUDA 7.0)
-endif (WITH_CUDA)
-
-if (WITH_OPENMP)
-  find_package (OpenMP)
-endif (WITH_OPENMP)
-
-find_package (METIS 5.0)
-
-option (WITH_DEMOS "Build demos" ON)
-option (WITH_PRINT "Print diagnostic messages" OFF)
-option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
-option (WITH_LGPL "Enable GNU LGPL modules" ON)
-cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD
-in Partition module" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_PARTITION "Enable the Partition module" ON
-  "WITH_LGPL AND METIS_FOUND" OFF)
-cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON
-  "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON
-  "WITH_GPL" OFF)
-cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON
-  "WITH_GPL" OFF)
-cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON
-  "WITH_GPL" OFF)
-
-function (check_options)
-  foreach (_OPT ${ARGV})
-    if (NOT DEFINED WITH_${_OPT})
-      message (FATAL_ERROR "Option WITH_${_OPT} is not  defined")
-    endif (NOT DEFINED WITH_${_OPT})
-
-    if (NOT WITH_${_OPT})
-      set (N${_OPT} 1 PARENT_SCOPE)
-    else (NOT WITH_${_OPT})
-      set (N${_OPT} 0 PARENT_SCOPE)
-    endif (NOT WITH_${_OPT})
-  endforeach (_OPT)
-endfunction (check_options)
-
-check_options (CAMD CHECK CHOLESKY GPL MATRIXOPS MODIFY PARTITION PRINT
-  SUPERNODAL)
 
 # SuiteSparse version
 set (MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
@@ -152,63 +49,125 @@ set (CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION})
 set (CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 set (CPACK_PACKAGE_VERSION ${SHORT_VERSION})
 
-include (CMakePackageConfigHelpers)
-include (CMakePushCheckState)
-include (CPack)
+include (CheckCCompilerFlag)
+include (CheckFunctionExists)
 include (CheckIncludeFile)
+include (CheckLanguage)
 include (CheckLibraryExists)
 include (CheckSymbolExists)
 include (CheckTypeSize)
+include (CMakeDependentOption)
+include (CMakePackageConfigHelpers)
+include (CMakePushCheckState)
 include (ComponentVersion)
-include (GenerateSourceFiles)
+include (CPack)
+include (FeatureSummary)
+include (GenerateExportHeader)
+include (GNUInstallDirs)
 
-if (DEFINED ENV{BLA_VENDOR} OR DEFINED BLA_VENDOR)
-  # In case the user set the BLA_VENDOR environment or CMake variable, use the
-  # find module because the CBLAS does not support different vendors.
-  find_package (BLAS MODULE REQUIRED)
-  find_package (LAPACK MODULE REQUIRED)
-else (DEFINED ENV{BLA_VENDOR} OR DEFINED BLA_VENDOR)
-  find_package (CBLAS NO_MODULE)
+option (BUILD_CXSPARSE "Build CXSparse" ON)
+option (WITH_CUDA "Enable CUDA support" ON)
+option (WITH_DEMOS "Build demos" ON)
+option (WITH_FORTRAN "Enables Fortran support" ON)
+option (WITH_LGPL "Enable GNU LGPL modules" ON)
+option (WITH_METIS "Enables METIS support" ON)
+option (WITH_OPENMP "Enable OpenMP support" ON)
+option (WITH_PRINT "Print diagnostic messages" OFF)
+option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 
-  if (NOT CBLAS_FOUND)
-    find_package (BLAS MODULE REQUIRED)
-  else (NOT CBLAS_FOUND)
-    set (BLAS_DEPENDENCY "find_dependency (CBLAS ${CBLAS_VERSION} NO_MODULE)")
-    set (CBLAS_FIND_REQUIRED ON)
-  endif (NOT CBLAS_FOUND)
+cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD in Partition module" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON "WITH_GPL" OFF)
+cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON "WITH_GPL" OFF)
+cmake_dependent_option (WITH_PARTITION "Enable the Partition module" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON "WITH_GPL" OFF)
 
-  find_package (LAPACK NO_MODULE)
+if (WITH_CUDA)
+  check_language (CUDA)
 
-  if (NOT LAPACK_FOUND)
-    find_package (LAPACK MODULE REQUIRED)
-  else (NOT LAPACK_FOUND)
-    set (LAPACK_DEPENDENCY "find_dependency (LAPACK ${LAPACK_VERSION} NO_MODULE)")
-    set (LAPACK_FIND_REQUIRED ON)
-  endif (NOT LAPACK_FOUND)
-endif (DEFINED ENV{BLA_VENDOR} OR DEFINED BLA_VENDOR)
+  if (CMAKE_CUDA_COMPILER)
+    enable_language (CUDA)
+  endif (CMAKE_CUDA_COMPILER)
+else (WITH_CUDA)
+  set (CMAKE_FIND_PACKAGE_DISABLE_CUDAToolkit ON)
+endif (WITH_CUDA)
+
+if (WITH_FORTRAN)
+  check_language (Fortran)
+
+  if (CMAKE_Fortran_COMPILER)
+    enable_language (Fortran)
+  endif (CMAKE_Fortran_COMPILER)
+endif (WITH_FORTRAN)
+
+set (CMAKE_DEBUG_POSTFIX _debug)
+set (CMAKE_C_VISIBILITY_PRESET hidden)
+set (CMAKE_CXX_VISIBILITY_PRESET hidden)
+set (CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+set (CMAKE_POSITION_INDEPENDENT_CODE ON)
+set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
+check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
+
+if (NOT WITH_METIS)
+  set (CMAKE_FIND_PACKAGE_DISABLE_METIS ON)
+endif (NOT WITH_METIS)
+
+if (NOT WITH_OPENMP)
+  set (CMAKE_FIND_PACKAGE_DISABLE_OpenMP ON)
+endif (NOT WITH_OPENMP)
+
+if (NOT WITH_TBB)
+  set (CMAKE_FIND_PACKAGE_DISABLE_TBB ON)
+endif (NOT WITH_TBB)
+
+find_package (BLAS)
+find_package (CUDAToolkit)
+find_package (LAPACK)
+find_package (METIS 5.0)
+find_package (OpenMP COMPONENTS C)
+find_package (TBB 4.2 NO_MODULE)
+
+function (check_options)
+  foreach (_OPT ${ARGV})
+    if (NOT DEFINED WITH_${_OPT})
+      message (FATAL_ERROR "Option WITH_${_OPT} is not defined")
+    endif (NOT DEFINED WITH_${_OPT})
+
+    if (NOT WITH_${_OPT})
+      set (N${_OPT} 1 PARENT_SCOPE)
+    else (NOT WITH_${_OPT})
+      set (N${_OPT} 0 PARENT_SCOPE)
+    endif (NOT WITH_${_OPT})
+  endforeach (_OPT)
+endfunction (check_options)
+
+check_options (
+  CAMD
+  CHECK
+  CHOLESKY
+  GPL
+  MATRIXOPS
+  MODIFY
+  PARTITION
+  PRINT
+  SUPERNODAL
+)
+
+if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+  set (CUDA_DEPENDENCY "find_dependency (CUDAToolkit ${CUDAToolkit_VERSION})")
+endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 
 cmake_push_check_state (RESET)
 
-if (TARGET blas)
-  list (APPEND CMAKE_REQUIRED_LIBRARIES blas)
-else (TARGET blas)
-  list (APPEND CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES})
-endif (TARGET blas)
-
-if (TARGET lapack)
-  list (APPEND CMAKE_REQUIRED_LIBRARIES lapack)
-else (TARGET lapack)
-  list (APPEND CMAKE_REQUIRED_LIBRARIES ${LAPACK_LIBRARIES})
-endif (TARGET lapack)
+list (APPEND CMAKE_REQUIRED_LIBRARIES BLAS::BLAS LAPACK::LAPACK)
 
 check_function_exists (sgemm HAVE_BLAS_NO_UNDERSCORE)
 check_function_exists (sgemm_ HAVE_BLAS_UNDERSCORE)
 
 cmake_pop_check_state ()
-
-if (WITH_TBB)
-  find_package (TBB 4.2 NO_MODULE)
-endif (WITH_TBB)
 
 check_include_file (complex.h HAVE_COMPLEX_H)
 check_include_file (fenv.h HAVE_FENV_H)
@@ -252,18 +211,10 @@ set (AMD_SRCS
   AMD/Source/amd_valid.c
 )
 
-set (AMD_HDRS
-  AMD/Include/amd.h
-)
-
 set (BTF_SRCS
   BTF/Source/btf_maxtrans.c
   BTF/Source/btf_order.c
   BTF/Source/btf_strongcomp.c
-)
-
-set (BTF_HDRS
-  BTF/Include/btf.h
 )
 
 set (CAMD_SRCS
@@ -279,10 +230,6 @@ set (CAMD_SRCS
   CAMD/Source/camd_postorder.c
   CAMD/Source/camd_preprocess.c
   CAMD/Source/camd_valid.c
-)
-
-set (CAMD_HDRS
-  CAMD/Include/camd.h
 )
 
 set (CHOLMOD_SRCS
@@ -358,52 +305,28 @@ set (CHOLMOD_SRCS
 
 if (NOT WITH_PARTITION OR NOT METIS_FOUND)
   set_property (SOURCE
+    CHOLMOD/Check/cholmod_check.c
+    CHOLMOD/Cholesky/cholmod_analyze.c
     CHOLMOD/Partition/cholmod_camd.c
     CHOLMOD/Partition/cholmod_ccolamd.c
     CHOLMOD/Partition/cholmod_csymamd.c
     CHOLMOD/Partition/cholmod_m.c
     CHOLMOD/Partition/cholmod_metis.c
     CHOLMOD/Partition/cholmod_nesdis.c
+    SPQR/Source/spqr_1colamd.cpp
+    SPQR/Source/spqr_analyze.cpp
     APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
 endif (NOT WITH_PARTITION OR NOT METIS_FOUND)
 
 configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
 
-set (CHOLMOD_HDRS
-  CHOLMOD/Include/cholmod.h
-  CHOLMOD/Include/cholmod_blas.h
-  CHOLMOD/Include/cholmod_camd.h
-  CHOLMOD/Include/cholmod_check.h
-  CHOLMOD/Include/cholmod_cholesky.h
-  CHOLMOD/Include/cholmod_complexity.h
-  ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h
-  CHOLMOD/Include/cholmod_core.h
-  CHOLMOD/Include/cholmod_function.h
-  CHOLMOD/Include/cholmod_gpu.h
-  CHOLMOD/Include/cholmod_gpu_kernels.h
-  CHOLMOD/Include/cholmod_io64.h
-  CHOLMOD/Include/cholmod_matrixops.h
-  CHOLMOD/Include/cholmod_modify.h
-  CHOLMOD/Include/cholmod_partition.h
-  CHOLMOD/Include/cholmod_supernodal.h
-  CHOLMOD/Include/cholmod_template.h
-)
-
 set (CCOLAMD_SRCS
   CCOLAMD/Source/ccolamd.c
 )
 
-set (CCOLAMD_HDRS
-  CCOLAMD/Include/ccolamd.h
-)
-
 set (COLAMD_SRCS
   COLAMD/Source/colamd.c
-)
-
-set (COLAMD_HDRS
-  COLAMD/Include/colamd.h
 )
 
 set (UMFPACK_INT_SRCS
@@ -588,137 +511,6 @@ set (KLU
   KLU/Include/klu_version.h
 )
 
-set (LDL_SRCS
-  LDL/Source/ldl.c
-)
-
-generate_source_files (GEN_AMD_SRCS_DINT FILES "${AMD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_AMD_SRCS_DLONG FILES "${AMD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_BTF_SRCS_DINT FILES "${BTF_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_BTF_SRCS_DLONG FILES "${BTF_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_CAMD_SRCS_DINT FILES "${CAMD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_CAMD_SRCS_DLONG FILES "${CAMD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_CCOLAMD_SRCS_DINT FILES "${CCOLAMD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_CCOLAMD_SRCS_DLONG FILES "${CCOLAMD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_COLAMD_SRCS_DINT FILES "${COLAMD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_COLAMD_SRCS_DLONG FILES "${COLAMD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_CHOLMOD_SRCS_DINT FILES "${CHOLMOD_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_CHOLMOD_SRCS_DLONG FILES "${CHOLMOD_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES "${UMFPACK_INT_SRCS}" SUFFIX
-  _di COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES "${UMFPACK_INT_SRCS}" SUFFIX
-  _dl COMPILE_DEFINITIONS DLONG)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES "${UMFPACK_ZINT_SRCS}"
-  SUFFIX _zi COMPILE_DEFINITIONS ZINT)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES "${UMFPACK_ZINT_SRCS}"
-  SUFFIX _zl COMPILE_DEFINITIONS ZLONG)
-
-generate_source_files (GEN_KLU_SRCS_DINT FILES "${KLU_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_KLU_SRCS_DLONG FILES "${KLU_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_LDL_SRCS_DINT FILES "${LDL_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_LDL_SRCS_DLONG FILES "${LDL_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS LDL_LONG)
-
-if (HAVE_COMPLEX_H)
-  #list (APPEND PROJECT_SRCS Source/cs_convert.c)
-endif (HAVE_COMPLEX_H)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_ltsolve.c UMFPACK/Source/umf_utsolve.c SUFFIX _di_c
-  COMPILE_DEFINITIONS DINT CONJUGATE_SOLVE)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_ltsolve.c UMFPACK/Source/umf_utsolve.c SUFFIX _dl_c
-  COMPILE_DEFINITIONS DLONG CONJUGATE_SOLVE)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_ltsolve.c UMFPACK/Source/umf_utsolve.c SUFFIX _zi_c
-  COMPILE_DEFINITIONS ZINT CONJUGATE_SOLVE)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_ltsolve.c UMFPACK/Source/umf_utsolve.c SUFFIX _zl_c
-  COMPILE_DEFINITIONS ZLONG CONJUGATE_SOLVE)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umfpack_solve.c SUFFIX _di_w COMPILE_DEFINITIONS DINT WSOLVE)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umfpack_solve.c SUFFIX _dl_w COMPILE_DEFINITIONS DLONG WSOLVE)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umfpack_solve.c SUFFIX _zi_w COMPILE_DEFINITIONS ZINT WSOLVE)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umfpack_solve.c SUFFIX _zl_w COMPILE_DEFINITIONS ZLONG WSOLVE)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _di_fixq COMPILE_DEFINITIONS DINT FIXQ)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _dl_fixq COMPILE_DEFINITIONS DLONG FIXQ)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _zi_fixq COMPILE_DEFINITIONS ZINT FIXQ)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _zl_fixq COMPILE_DEFINITIONS ZLONG FIXQ)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_store_lu.c SUFFIX _di_drop COMPILE_DEFINITIONS DINT DROP)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_store_lu.c SUFFIX _dl_drop COMPILE_DEFINITIONS DLONG DROP)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_store_lu.c SUFFIX _zi_drop COMPILE_DEFINITIONS ZINT DROP)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_store_lu.c SUFFIX _zl_drop COMPILE_DEFINITIONS ZLONG DROP)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_assemble.c SUFFIX _di_fixq COMPILE_DEFINITIONS DINT FIXQ)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _di_map_nox COMPILE_DEFINITIONS DINT DO_MAP)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _di_nomap_x COMPILE_DEFINITIONS DINT DO_VALUES)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _di_map_x COMPILE_DEFINITIONS DINT DO_MAP DO_VALUES)
-
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _dl_map_nox COMPILE_DEFINITIONS DLONG DO_MAP)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _dl_nomap_x COMPILE_DEFINITIONS DLONG DO_VALUES)
-generate_source_files (GEN_UMFPACK_INT_SRCS_DLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _dl_map_x COMPILE_DEFINITIONS DLONG
-  DO_MAP DO_VALUES)
-
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zi_map_nox COMPILE_DEFINITIONS ZINT DO_MAP)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zi_nomap_x COMPILE_DEFINITIONS ZINT DO_VALUES)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZINT FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zi_map_x COMPILE_DEFINITIONS ZINT DO_MAP
-  DO_VALUES)
-
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zl_map_nox COMPILE_DEFINITIONS ZLONG DO_MAP)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zl_nomap_x COMPILE_DEFINITIONS ZLONG DO_VALUES)
-generate_source_files (GEN_UMFPACK_ZINT_SRCS_DZLONG FILES
-  UMFPACK/Source/umf_triplet.c SUFFIX _zl_map_x COMPILE_DEFINITIONS ZLONG DO_MAP
-  DO_VALUES)
-
 if (MSVC)
   add_definitions (-D_CRT_SECURE_NO_WARNINGS)
 endif (MSVC)
@@ -730,49 +522,104 @@ set (OUTPUT_DIR ${CMAKE_BINARY_DIR})
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIR})
 
+add_library (amd_int OBJECT ${AMD_SRCS})
+target_include_directories (amd_int PRIVATE $<TARGET_PROPERTY:amd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (amd_int PRIVATE DINT)
+target_compile_definitions (amd_int PRIVATE amd_EXPORTS)
+
+add_library (amd_long OBJECT ${AMD_SRCS})
+target_include_directories (amd_long PRIVATE $<TARGET_PROPERTY:amd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (amd_long PRIVATE DLONG)
+target_compile_definitions (amd_long PRIVATE amd_EXPORTS)
+
 add_library (amd
+  $<TARGET_OBJECTS:amd_int>
+  $<TARGET_OBJECTS:amd_long>
+  AMD/Include/amd.h
   AMD/Include/amd_internal.h
-  ${AMD_HDRS}
-  ${GEN_AMD_SRCS_DINT}
-  ${GEN_AMD_SRCS_DLONG}
 )
+
+add_library (btf_int OBJECT ${BTF_SRCS})
+target_include_directories (btf_int PRIVATE $<TARGET_PROPERTY:btf,INCLUDE_DIRECTORIES>)
+target_compile_definitions (btf_int PRIVATE DINT)
+target_compile_definitions (btf_int PRIVATE btf_EXPORTS)
+
+add_library (btf_long OBJECT ${BTF_SRCS})
+target_include_directories (btf_long PRIVATE $<TARGET_PROPERTY:btf,INCLUDE_DIRECTORIES>)
+target_compile_definitions (btf_long PRIVATE DLONG)
+target_compile_definitions (btf_long PRIVATE btf_EXPORTS)
 
 add_library (btf
+  $<TARGET_OBJECTS:btf_int>
+  $<TARGET_OBJECTS:btf_long>
+  BTF/Include/btf.h
   BTF/Include/btf_internal.h
-  ${BTF_HDRS}
-  ${GEN_BTF_SRCS_DINT}
-  ${GEN_BTF_SRCS_DLONG}
 )
+
+target_include_directories (btf PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>
+)
+
+add_library (camd_int OBJECT ${CAMD_SRCS})
+target_include_directories (camd_int PRIVATE $<TARGET_PROPERTY:camd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (camd_int PRIVATE DINT)
+target_compile_definitions (camd_int PRIVATE camd_EXPORTS)
+
+add_library (camd_long OBJECT ${CAMD_SRCS})
+target_include_directories (camd_long PRIVATE $<TARGET_PROPERTY:camd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (camd_long PRIVATE DLONG)
+target_compile_definitions (camd_long PRIVATE camd_EXPORTS)
 
 add_library (camd
+  $<TARGET_OBJECTS:camd_int>
+  $<TARGET_OBJECTS:camd_long>
+  CAMD/Include/camd.h
   CAMD/Include/camd_internal.h
-  ${CAMD_HDRS}
-  ${GEN_CAMD_SRCS_DINT}
-  ${GEN_CAMD_SRCS_DLONG}
 )
 
+add_library (cholmod_int OBJECT ${CHOLMOD_SRCS})
+target_include_directories (cholmod_int PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+target_compile_definitions (cholmod_int PRIVATE DINT)
+target_compile_definitions (cholmod_int PRIVATE cholmod_EXPORTS)
+
+add_library (cholmod_long OBJECT ${CHOLMOD_SRCS})
+target_include_directories (cholmod_long PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+target_compile_definitions (cholmod_long PRIVATE DLONG)
+target_compile_definitions (cholmod_long PRIVATE cholmod_EXPORTS)
+
 add_library (cholmod
+  $<TARGET_OBJECTS:cholmod_int>
+  $<TARGET_OBJECTS:cholmod_long>
+  ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h
+  CHOLMOD/Include/cholmod.h
+  CHOLMOD/Include/cholmod_blas.h
+  CHOLMOD/Include/cholmod_camd.h
+  CHOLMOD/Include/cholmod_check.h
+  CHOLMOD/Include/cholmod_cholesky.h
+  CHOLMOD/Include/cholmod_complexity.h
+  CHOLMOD/Include/cholmod_core.h
+  CHOLMOD/Include/cholmod_function.h
+  CHOLMOD/Include/cholmod_gpu.h
+  CHOLMOD/Include/cholmod_gpu_kernels.h
   CHOLMOD/Include/cholmod_internal.h
-  ${CHOLMOD_HDRS}
-  ${GEN_CHOLMOD_SRCS_DINT}
-  ${GEN_CHOLMOD_SRCS_DLONG}
+  CHOLMOD/Include/cholmod_io64.h
+  CHOLMOD/Include/cholmod_matrixops.h
+  CHOLMOD/Include/cholmod_modify.h
+  CHOLMOD/Include/cholmod_partition.h
+  CHOLMOD/Include/cholmod_supernodal.h
+  CHOLMOD/Include/cholmod_template.h
 )
 
 target_include_directories (cholmod PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
 )
 
-if (WITH_OPENMP AND OPENMP_FOUND)
+if (OpenMP_FOUND)
   target_compile_definitions (cholmod PRIVATE HAVE_OPENMP)
-  target_compile_options (cholmod PRIVATE ${OpenMP_C_FLAGS})
+  target_link_libraries (cholmod PRIVATE OpenMP::OpenMP_C)
 
-  if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    set_property (TARGET cholmod APPEND PROPERTY LINK_LIBRARIES
-      ${OpenMP_C_FLAGS})
-    set_property (TARGET cholmod APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-      ${OpenMP_C_FLAGS})
-  endif (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-endif (WITH_OPENMP AND OPENMP_FOUND)
+  set (OpenMP_DEPENDENCY "find_dependency (OpenMP ${OpenMP_C_VERSION} COMPONENTS C)")
+endif (OpenMP_FOUND)
 
 if (HAVE_FEENABLEEXCEPT)
   target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
@@ -785,23 +632,42 @@ if (WITH_PARTITION AND METIS_FOUND)
   target_link_libraries (cholmod PRIVATE ${METIS_LIBRARIES})
 endif (WITH_PARTITION AND METIS_FOUND)
 
+add_library (ccolamd_int OBJECT ${CCOLAMD_SRCS})
+target_include_directories (ccolamd_int PRIVATE $<TARGET_PROPERTY:ccolamd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (ccolamd_int PRIVATE DINT)
+target_compile_definitions (ccolamd_int PRIVATE ccolamd_EXPORTS)
+
+add_library (ccolamd_long OBJECT ${CCOLAMD_SRCS})
+target_include_directories (ccolamd_long PRIVATE $<TARGET_PROPERTY:ccolamd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (ccolamd_long PRIVATE DLONG)
+target_compile_definitions (ccolamd_long PRIVATE ccolamd_EXPORTS)
+
 add_library (ccolamd
-  ${CCOLAMD_HDRS}
-  ${GEN_CCOLAMD_SRCS_DINT}
-  ${GEN_CCOLAMD_SRCS_DLONG}
+  $<TARGET_OBJECTS:ccolamd_int>
+  $<TARGET_OBJECTS:ccolamd_long>
+  CCOLAMD/Include/ccolamd.h
 )
+
+add_library (colamd_int OBJECT ${COLAMD_SRCS})
+target_include_directories (colamd_int PRIVATE $<TARGET_PROPERTY:colamd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (colamd_int PRIVATE DINT)
+target_compile_definitions (colamd_int PRIVATE colamd_EXPORTS)
+
+add_library (colamd_long OBJECT ${COLAMD_SRCS})
+target_include_directories (colamd_long PRIVATE $<TARGET_PROPERTY:colamd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (colamd_long PRIVATE DLONG)
+target_compile_definitions (colamd_long PRIVATE colamd_EXPORTS)
 
 add_library (colamd
-  ${COLAMD_HDRS}
-  ${GEN_COLAMD_SRCS_DINT}
-  ${GEN_COLAMD_SRCS_DLONG}
+  $<TARGET_OBJECTS:colamd_int>
+  $<TARGET_OBJECTS:colamd_long>
+  COLAMD/Include/colamd.h
 )
 
-set (SPQR_SRCS
-  SPQR/Source/SuiteSparseQR.cpp
-  SPQR/Source/SuiteSparseQR_C.cpp
-  SPQR/Source/SuiteSparseQR_expert.cpp
-  SPQR/Source/SuiteSparseQR_qmult.cpp
+add_library (spqr
+  SPQR/Include/SuiteSparseQR.hpp
+  SPQR/Include/SuiteSparseQR_C.h
+  SPQR/Include/SuiteSparseQR_definitions.h
   SPQR/Source/spqr_1colamd.cpp
   SPQR/Source/spqr_1factor.cpp
   SPQR/Source/spqr_1fixed.cpp
@@ -838,20 +704,13 @@ set (SPQR_SRCS
   SPQR/Source/spqr_tol.cpp
   SPQR/Source/spqr_trapezoidal.cpp
   SPQR/Source/spqr_type.cpp
+  SPQR/Source/SuiteSparseQR.cpp
+  SPQR/Source/SuiteSparseQR_C.cpp
+  SPQR/Source/SuiteSparseQR_expert.cpp
+  SPQR/Source/SuiteSparseQR_qmult.cpp
 )
 
-set (SPQR_HDRS
-  SPQR/Include/SuiteSparseQR.hpp
-  SPQR/Include/SuiteSparseQR_C.h
-  SPQR/Include/SuiteSparseQR_definitions.h
-)
-
-add_library (spqr
-  ${SPQR_SRCS}
-  ${SPQR_HDRS}
-)
-
-if (WITH_CUDA AND CUDA_FOUND)
+if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
   target_sources (spqr PRIVATE
     SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
     SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
@@ -861,7 +720,7 @@ if (WITH_CUDA AND CUDA_FOUND)
   target_include_directories (spqr PRIVATE ${CUDA_INCLUDE_DIRS})
   target_link_libraries (spqr PRIVATE ${CUDA_LIBRARIES})
   target_link_libraries (spqr PRIVATE suitesparsecuda)
-endif (WITH_CUDA AND CUDA_FOUND)
+endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 
 if (WITH_TBB AND FOUND)
   target_link_libraries (spqr PRIVATE TBB::tbb)
@@ -879,7 +738,204 @@ add_library (suitesparseconfig
   ${SUITESPARSECONFIG_HDRS}
 )
 
-set (UMFPACK_HDRS
+add_library (umfpack_int OBJECT ${UMFPACK_INT_SRCS})
+target_include_directories (umfpack_int PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int PRIVATE DINT)
+target_compile_definitions (umfpack_int PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_long OBJECT ${UMFPACK_INT_SRCS})
+target_include_directories (umfpack_long PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long PRIVATE DLONG)
+target_compile_definitions (umfpack_long PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zint OBJECT ${UMFPACK_ZINT_SRCS})
+target_include_directories (umfpack_zint PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint PRIVATE ZINT)
+target_compile_definitions (umfpack_zint PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zlong OBJECT ${UMFPACK_ZINT_SRCS})
+target_include_directories (umfpack_zlong PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong PRIVATE ZLONG)
+target_compile_definitions (umfpack_zlong PRIVATE umfpack_EXPORTS)
+
+set (UMFPACK_SOLVE_SRCS
+  UMFPACK/Source/umf_ltsolve.c
+  UMFPACK/Source/umf_utsolve.c
+)
+
+add_library (umfpack_int_solve OBJECT ${UMFPACK_SOLVE_SRCS})
+target_include_directories (umfpack_int_solve PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_solve PRIVATE DINT CONJUGATE_SOLVE)
+target_compile_definitions (umfpack_int_solve PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_long_solve OBJECT ${UMFPACK_SOLVE_SRCS})
+target_include_directories (umfpack_long_solve PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_solve PRIVATE DLONG CONJUGATE_SOLVE)
+target_compile_definitions (umfpack_long_solve PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zint_solve OBJECT ${UMFPACK_SOLVE_SRCS})
+target_include_directories (umfpack_zint_solve PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_solve PRIVATE ZINT CONJUGATE_SOLVE)
+target_compile_definitions (umfpack_zint_solve PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zlong_solve OBJECT ${UMFPACK_SOLVE_SRCS})
+target_include_directories (umfpack_zlong_solve PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_solve PRIVATE ZLONG CONJUGATE_SOLVE)
+target_compile_definitions (umfpack_zlong_solve PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_int_wsolve OBJECT UMFPACK/Source/umfpack_solve.c)
+target_include_directories (umfpack_int_wsolve PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_wsolve PRIVATE DINT WSOLVE)
+target_compile_definitions (umfpack_int_wsolve PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_long_wsolve OBJECT UMFPACK/Source/umfpack_solve.c)
+target_include_directories (umfpack_long_wsolve PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_wsolve PRIVATE DLONG WSOLVE)
+target_compile_definitions (umfpack_long_wsolve PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zint_wsolve OBJECT UMFPACK/Source/umfpack_solve.c)
+target_include_directories (umfpack_zint_wsolve PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_wsolve PRIVATE ZINT WSOLVE)
+target_compile_definitions (umfpack_zint_wsolve PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zlong_wsolve OBJECT UMFPACK/Source/umfpack_solve.c)
+target_include_directories (umfpack_zlong_wsolve PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_wsolve PRIVATE ZLONG WSOLVE)
+target_compile_definitions (umfpack_zlong_wsolve PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_int_fixq OBJECT UMFPACK/Source/umf_assemble.c)
+target_include_directories (umfpack_int_fixq PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_fixq PRIVATE DINT FIXQ)
+target_compile_definitions (umfpack_int_fixq PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_long_fixq OBJECT UMFPACK/Source/umf_assemble.c)
+target_include_directories (umfpack_long_fixq PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_fixq PRIVATE DLONG FIXQ)
+target_compile_definitions (umfpack_long_fixq PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zint_fixq OBJECT UMFPACK/Source/umf_assemble.c)
+target_include_directories (umfpack_zint_fixq PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_fixq PRIVATE ZINT FIXQ)
+target_compile_definitions (umfpack_zint_fixq PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zlong_fixq OBJECT UMFPACK/Source/umf_assemble.c)
+target_include_directories (umfpack_zlong_fixq PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_fixq PRIVATE ZLONG FIXQ)
+target_compile_definitions (umfpack_zlong_fixq PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_int_drop OBJECT UMFPACK/Source/umf_store_lu.c)
+target_include_directories (umfpack_int_drop PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_drop PRIVATE DINT DROP)
+target_compile_definitions (umfpack_int_drop PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_long_drop OBJECT UMFPACK/Source/umf_store_lu.c)
+target_include_directories (umfpack_long_drop PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_drop PRIVATE DLONG DROP)
+target_compile_definitions (umfpack_long_drop PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zint_drop OBJECT UMFPACK/Source/umf_store_lu.c)
+target_include_directories (umfpack_zint_drop PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_drop PRIVATE ZINT DROP)
+target_compile_definitions (umfpack_zint_drop PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zlong_drop OBJECT UMFPACK/Source/umf_store_lu.c)
+target_include_directories (umfpack_zlong_drop PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_drop PRIVATE ZLONG DROP)
+target_compile_definitions (umfpack_zlong_drop PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_int_map_nox OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_int_map_nox PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_map_nox PRIVATE DINT DO_MAP)
+target_compile_definitions (umfpack_int_map_nox PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_long_map_nox OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_long_map_nox PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_map_nox PRIVATE DLONG DO_MAP)
+target_compile_definitions (umfpack_long_map_nox PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zint_map_nox OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zint_map_nox PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_map_nox PRIVATE ZINT DO_MAP)
+target_compile_definitions (umfpack_zint_map_nox PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zlong_map_nox OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zlong_map_nox PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_map_nox PRIVATE ZLONG DO_MAP)
+target_compile_definitions (umfpack_zlong_map_nox PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_int_nomap_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_int_nomap_x PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_nomap_x PRIVATE DINT DO_VALUES)
+target_compile_definitions (umfpack_int_nomap_x PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_long_nomap_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_long_nomap_x PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_nomap_x PRIVATE DLONG DO_VALUES)
+target_compile_definitions (umfpack_long_nomap_x PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zint_nomap_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zint_nomap_x PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_nomap_x PRIVATE ZINT DO_VALUES)
+target_compile_definitions (umfpack_zint_nomap_x PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zlong_nomap_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zlong_nomap_x PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_nomap_x PRIVATE ZLONG DO_VALUES)
+target_compile_definitions (umfpack_zlong_nomap_x PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_int_map_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_int_map_x PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_int_map_x PRIVATE DINT DO_MAP DO_VALUES)
+target_compile_definitions (umfpack_int_map_x PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_long_map_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_long_map_x PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_long_map_x PRIVATE DLONG DO_MAP DO_VALUES)
+target_compile_definitions (umfpack_long_map_x PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zint_map_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zint_map_x PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zint_map_x PRIVATE ZINT DO_MAP DO_VALUES)
+target_compile_definitions (umfpack_zint_map_x PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack_zlong_map_x OBJECT UMFPACK/Source/umf_triplet.c)
+target_include_directories (umfpack_zlong_map_x PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
+target_compile_definitions (umfpack_zlong_map_x PRIVATE ZLONG DO_MAP DO_VALUES)
+target_compile_definitions (umfpack_zlong_map_x PRIVATE umfpack_EXPORTS)
+
+add_library (umfpack
+  $<TARGET_OBJECTS:umfpack_int>
+  $<TARGET_OBJECTS:umfpack_int_drop>
+  $<TARGET_OBJECTS:umfpack_int_fixq>
+  $<TARGET_OBJECTS:umfpack_int_map_nox>
+  $<TARGET_OBJECTS:umfpack_int_map_x>
+  $<TARGET_OBJECTS:umfpack_int_nomap_x>
+  $<TARGET_OBJECTS:umfpack_int_solve>
+  $<TARGET_OBJECTS:umfpack_int_wsolve>
+  $<TARGET_OBJECTS:umfpack_long>
+  $<TARGET_OBJECTS:umfpack_long_drop>
+  $<TARGET_OBJECTS:umfpack_long_fixq>
+  $<TARGET_OBJECTS:umfpack_long_map_nox>
+  $<TARGET_OBJECTS:umfpack_long_map_x>
+  $<TARGET_OBJECTS:umfpack_long_nomap_x>
+  $<TARGET_OBJECTS:umfpack_long_solve>
+  $<TARGET_OBJECTS:umfpack_long_wsolve>
+  $<TARGET_OBJECTS:umfpack_zint>
+  $<TARGET_OBJECTS:umfpack_zint_drop>
+  $<TARGET_OBJECTS:umfpack_zint_fixq>
+  $<TARGET_OBJECTS:umfpack_zint_map_nox>
+  $<TARGET_OBJECTS:umfpack_zint_map_x>
+  $<TARGET_OBJECTS:umfpack_zint_nomap_x>
+  $<TARGET_OBJECTS:umfpack_zint_solve>
+  $<TARGET_OBJECTS:umfpack_zint_wsolve>
+  $<TARGET_OBJECTS:umfpack_zlong>
+  $<TARGET_OBJECTS:umfpack_zlong_drop>
+  $<TARGET_OBJECTS:umfpack_zlong_fixq>
+  $<TARGET_OBJECTS:umfpack_zlong_map_nox>
+  $<TARGET_OBJECTS:umfpack_zlong_map_x>
+  $<TARGET_OBJECTS:umfpack_zlong_nomap_x>
+  $<TARGET_OBJECTS:umfpack_zlong_solve>
+  $<TARGET_OBJECTS:umfpack_zlong_wsolve>
   UMFPACK/Include/umfpack.h
   UMFPACK/Include/umfpack_col_to_triplet.h
   UMFPACK/Include/umfpack_defaults.h
@@ -913,54 +969,56 @@ set (UMFPACK_HDRS
   UMFPACK/Include/umfpack_transpose.h
   UMFPACK/Include/umfpack_triplet_to_col.h
   UMFPACK/Include/umfpack_wsolve.h
-)
-
-add_library (umfpack
-  ${GEN_UMFPACK_INT_SRCS_DINT}
-  ${GEN_UMFPACK_INT_SRCS_DLONG}
-  ${GEN_UMFPACK_ZINT_SRCS_DZINT}
-  ${GEN_UMFPACK_ZINT_SRCS_DZLONG}
   UMFPACK/Source/umfpack_global.c
   UMFPACK/Source/umfpack_tictoc.c
   UMFPACK/Source/umfpack_timer.c
-  ${UMFPACK_HDRS}
 )
 
-if (TARGET blas AND TARGET lapack)
-  target_link_libraries (cholmod PRIVATE blas lapack)
-  target_link_libraries (spqr PRIVATE blas lapack)
-  target_link_libraries (umfpack PRIVATE blas lapack)
-else (TARGET blas AND TARGET lapack)
-  target_link_libraries (cholmod PRIVATE ${LAPACK_LIBRARIES} colamd)
-  target_link_libraries (spqr PRIVATE ${LAPACK_LIBRARIES})
-  target_link_libraries (umfpack PRIVATE ${LAPACK_LIBRARIES})
-endif (TARGET blas AND TARGET lapack)
+target_link_libraries (cholmod PRIVATE BLAS::BLAS LAPACK::LAPACK)
+target_link_libraries (spqr PRIVATE BLAS::BLAS LAPACK::LAPACK)
+target_link_libraries (umfpack PRIVATE BLAS::BLAS LAPACK::LAPACK)
 
-# NOTE cholmod already dependens on LAPACK
+# NOTE cholmod already depends on LAPACK
 target_link_libraries (umfpack PRIVATE cholmod)
 
-set (KLU_HDRS
-  KLU/Include/klu.h
-  KLU/Include/klu_version.h
-)
+add_library (klu_int OBJECT ${KLU_SRCS})
+target_include_directories (klu_int PRIVATE $<TARGET_PROPERTY:klu,INCLUDE_DIRECTORIES>)
+target_compile_definitions (klu_int PRIVATE DINT)
+target_compile_definitions (klu_int PRIVATE klu_EXPORTS)
+
+add_library (klu_long OBJECT ${KLU_SRCS})
+target_include_directories (klu_long PRIVATE $<TARGET_PROPERTY:klu,INCLUDE_DIRECTORIES>)
+target_compile_definitions (klu_long PRIVATE DLONG)
+target_compile_definitions (klu_long PRIVATE klu_EXPORTS)
 
 add_library (klu
+  $<TARGET_OBJECTS:klu_int>
+  $<TARGET_OBJECTS:klu_long>
+  KLU/Include/klu.h
   KLU/Include/klu_internal.h
-  ${GEN_KLU_SRCS_DINT}
-  ${GEN_KLU_SRCS_DLONG}
-  ${KLU_HDRS}
+  KLU/Include/klu_version.h
 )
 
 target_link_libraries (klu PRIVATE amd btf colamd)
 
-set (LDL_HDRS
-  LDL/Include/ldl.h
+set (LDL_SRCS
+  LDL/Source/ldl.c
 )
 
+add_library (ldl_int OBJECT ${LDL_SRCS})
+target_include_directories (ldl_int PRIVATE $<TARGET_PROPERTY:ldl,INCLUDE_DIRECTORIES>)
+target_compile_definitions (ldl_int PRIVATE DINT)
+target_compile_definitions (ldl_int PRIVATE ldl_EXPORTS)
+
+add_library (ldl_long OBJECT ${LDL_SRCS})
+target_include_directories (ldl_long PRIVATE $<TARGET_PROPERTY:ldl,INCLUDE_DIRECTORIES>)
+target_compile_definitions (ldl_long PRIVATE LDL_LONG)
+target_compile_definitions (ldl_long PRIVATE ldl_EXPORTS)
+
 add_library (ldl
-  ${GEN_LDL_SRCS_DINT}
-  ${GEN_LDL_SRCS_DLONG}
-  ${LDL_HDRS}
+  $<TARGET_OBJECTS:ldl_int>
+  $<TARGET_OBJECTS:ldl_long>
+  LDL/Include/ldl.h
 )
 
 set (SuiteSparse_AMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/AMD)
@@ -998,53 +1056,54 @@ if (HAVE_M)
 endif (HAVE_M)
 
 target_include_directories (amd PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_AMD_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>")
+  $<INSTALL_INTERFACE:${SuiteSparse_AMD_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>)
 target_include_directories (btf PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_BTF_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_BTF_INCLUDE_DIR}>")
+  $<INSTALL_INTERFACE:${SuiteSparse_BTF_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_BTF_INCLUDE_DIR}>)
 target_include_directories (camd PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_CAMD_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CAMD/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CAMD_INCLUDE_DIR}>")
+  $<INSTALL_INTERFACE:${SuiteSparse_CAMD_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CAMD/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CAMD_INCLUDE_DIR}>)
 target_include_directories (ccolamd PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_CCOLAMD_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CCOLAMD/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CCOLAMD_INCLUDE_DIR}>")
+  $<INSTALL_INTERFACE:${SuiteSparse_CCOLAMD_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CCOLAMD/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CCOLAMD_INCLUDE_DIR}>)
 target_include_directories (colamd PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_COLAMD_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/COLAMD/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>")
+  $<INSTALL_INTERFACE:${SuiteSparse_COLAMD_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/COLAMD/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>)
 target_include_directories (cholmod PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_CHOLMOD_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Cholesky>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Core>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/MatrixOps>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Modify>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Supernodal>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CHOLMOD_INCLUDE_DIR}>"
+  $<INSTALL_INTERFACE:${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Cholesky>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Core>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/MatrixOps>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Modify>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Supernodal>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
 )
 target_include_directories (spqr PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_SPQR_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SPQR_INCLUDE_DIR}>")
+  $<INSTALL_INTERFACE:${SuiteSparse_SPQR_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SPQR_INCLUDE_DIR}>)
 target_include_directories (umfpack PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_UMFPACK_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Source>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_UMFPACK_INCLUDE_DIR}>"
+  $<INSTALL_INTERFACE:${SuiteSparse_UMFPACK_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Source>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_UMFPACK_INCLUDE_DIR}>
 )
 target_include_directories (klu PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_KLU_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_KLU_INCLUDE_DIR}>")
+  $<INSTALL_INTERFACE:${SuiteSparse_KLU_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_KLU_INCLUDE_DIR}>)
 target_include_directories (ldl PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_LDL_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/LDL/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_LDL_INCLUDE_DIR}>")
+  $<INSTALL_INTERFACE:${SuiteSparse_LDL_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/LDL/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_LDL_INCLUDE_DIR}>)
 
 target_link_libraries (amd PUBLIC suitesparseconfig)
 target_link_libraries (btf PUBLIC suitesparseconfig)
@@ -1058,39 +1117,9 @@ target_link_libraries (klu PUBLIC suitesparseconfig)
 target_link_libraries (ldl PUBLIC suitesparseconfig)
 target_link_libraries (umfpack PUBLIC amd suitesparseconfig)
 
-#add_library (SuiteSparse ${PROJECT_SRCS})
-
-#target_include_directories (SuiteSparse PUBLIC
-#  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>")
-
-if (NOT HAVE_COMPLEX_H)
-  #target_compile_definitions (SuiteSparse PUBLIC NCOMPLEX)
-endif (NOT HAVE_COMPLEX_H)
-
-if (HAVE_C_DOUBLE_COMPLEX)
-  #target_compile_definitions (SuiteSparse PUBLIC HAVE_C_DOUBLE_COMPLEX)
-endif (HAVE_C_DOUBLE_COMPLEX)
-
-if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-  #target_compile_definitions (SuiteSparse PRIVATE _CRT_SECURE_NO_WARNINGS)
-endif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-
 # CUDA support
-if (WITH_CUDA AND CUDA_FOUND)
-  list (APPEND CUDA_NVCC_FLAGS -std=c++11)
-
-  # Workaround for GCC >= 6.2.x (and CUDA 8.0)
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION
-      VERSION_GREATER "6.1")
-    list (APPEND CUDA_NVCC_FLAGS -Xcompiler -D__CORRECT_ISO_CPP11_MATH_H_PROTO)
-  endif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION
-      VERSION_GREATER "6.1")
-
-  if (HAVE_FPIC)
-    list (APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
-  endif (HAVE_FPIC)
-
-  cuda_add_library (suitesparsecuda
+if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+  add_library (suitesparsecuda
     SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Runtime.hpp
     SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Workspace.hpp
     SuiteSparse_GPURuntime/Include/SuiteSparseGPU_debug.hpp
@@ -1108,16 +1137,14 @@ if (WITH_CUDA AND CUDA_FOUND)
     $<INSTALL_INTERFACE:${SuiteSparse_GPURuntime_INCLUDE_DIR}>
   )
 
-  target_link_libraries (suitesparsecuda PUBLIC suitesparseconfig)
+  target_link_libraries (suitesparsecuda
+    PUBLIC suitesparseconfig
+    PRIVATE CUDA::cudart
+  )
 
   # GPUQREngine
 
-  cuda_include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}/GPUQREngine/Include
-    ${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include
-  )
-
-  cuda_add_library (gpuqrengine
+  add_library (gpuqrengine
     GPUQREngine/Include/GPUQREngine.hpp
     GPUQREngine/Include/GPUQREngine_BucketList.hpp
     GPUQREngine/Include/GPUQREngine_Common.hpp
@@ -1196,27 +1223,34 @@ if (WITH_CUDA AND CUDA_FOUND)
     ${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include
   )
 
-  target_link_libraries (gpuqrengine PRIVATE suitesparsecuda)
+  target_link_libraries (gpuqrengine
+    PUBLIC CUDA::cublas
+    PRIVATE suitesparsecuda
+  )
 
   set (CHOLMOD_GPU_SRCS CHOLMOD/GPU/cholmod_gpu.c)
 
-  generate_source_files (GEN_CHOLMOD_GPU_SRCS_DLONG FILES "${CHOLMOD_GPU_SRCS}" SUFFIX _dl
-    COMPILE_DEFINITIONS DLONG)
+  add_library (cholmod_gpu_int OBJECT ${CHOLMOD_GPU_SRCS})
+  target_include_directories (cholmod_gpu_int PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+  target_compile_definitions (cholmod_gpu_int PRIVATE DINT)
+  target_compile_definitions (cholmod_gpu_int PRIVATE cholmod_EXPORTS)
 
-  cuda_wrap_srcs (cholmod OBJ GEN_CHOLMOD_GPU_KERNELS
-    CHOLMOD/GPU/cholmod_gpu_kernels.cu)
+  add_library (cholmod_gpu_long OBJECT ${CHOLMOD_GPU_SRCS})
+  target_include_directories (cholmod_gpu_long PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+  target_compile_definitions (cholmod_gpu_long PRIVATE DLONG)
+  target_compile_definitions (cholmod_gpu_long PRIVATE cholmod_EXPORTS)
 
   target_sources (cholmod PRIVATE
-    ${CHOLMOD_GPU_SRCS}
+    $<TARGET_OBJECTS:cholmod_gpu_int>
+    $<TARGET_OBJECTS:cholmod_gpu_long>
     CHOLMOD/GPU/cholmod_gpu_kernels.cu
-    ${GEN_CHOLMOD_GPU_KERNELS}
-    ${GEN_CHOLMOD_GPU_SRCS_DLONG}
   )
 
   target_compile_definitions (cholmod PUBLIC GPU_BLAS)
-  target_include_directories (cholmod PRIVATE ${CUDA_INCLUDE_DIRS})
-  target_link_libraries (cholmod PRIVATE ${CUDA_LIBRARIES}
-    ${CUDA_CUBLAS_LIBRARIES} suitesparsecuda)
+  target_link_libraries (cholmod
+    PRIVATE CUDA::cudart suitesparsecuda
+    PUBLIC CUDA::cublas
+  )
 
   # SPQR GPU
   target_sources (spqr PRIVATE
@@ -1226,7 +1260,7 @@ if (WITH_CUDA AND CUDA_FOUND)
   )
 
   target_link_libraries (spqr PRIVATE gpuqrengine)
-endif (WITH_CUDA AND CUDA_FOUND)
+endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 
 set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack
   klu ldl suitesparseconfig)

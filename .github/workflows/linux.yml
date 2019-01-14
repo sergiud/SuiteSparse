@@ -4,12 +4,13 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: GCC-${{matrix.build_type}}
+    name: GCC-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
           build_type: [Release, Debug]
+          lib: [shared, static]
 
     steps:
     - uses: actions/checkout@v2
@@ -21,7 +22,6 @@ jobs:
         DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
           build-essential \
           cmake \
-          gcc-8 \
           gfortran \
           libblas-dev \
           liblapack-dev \
@@ -36,7 +36,7 @@ jobs:
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
               -G Ninja \
-              -D CUDA_HOST_COMPILER=/usr/bin/gcc-8
+              -DBUILD_SHARED_LIBS=$([[ ${{matrix.lib}} == static ]] && echo OFF || echo ON)
     - name: Build
       shell: bash
       run: |

@@ -55,7 +55,7 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 if (NOT CPack_CMake_INCLUDED)
   include (CPack)
-endif ()
+endif (NOT CPack_CMake_INCLUDED)
 
 include (CheckCSourceCompiles)
 include (CheckIncludeFile)
@@ -67,7 +67,6 @@ include (CMakePackageConfigHelpers)
 include (CMakePushCheckState)
 include (ComponentVersion)
 include (GenerateExportHeader)
-include (GenerateSourceFiles)
 include (GNUInstallDirs)
 
 set (SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse)
@@ -108,13 +107,14 @@ if (HAVE__CMULCC AND HAVE__CMULCR AND HAVE__DCOMPLEX_
   set (HAVE_C99_COMPLEX_SUBSET ON)
 endif ()
 
-source_group ("Generated Files" REGULAR_EXPRESSION ".+_(di|dl|zi|zl)(_.+)?\\.c$")
+set (_CXSparse_EXPORT_HEADER ${CMAKE_CURRENT_BINARY_DIR}/include/cs_export.h)
 
-set (HDRS
+set (CXSparse_HDRS
+  ${_CXSparse_EXPORT_HEADER}
   Include/cs.h
 )
 
-set (PROJECT_SRCS
+set (CXSparse_SRCS
   Source/cs_add.c
   Source/cs_amd.c
   Source/cs_chol.c
@@ -168,37 +168,47 @@ set (PROJECT_SRCS
   Source/cs_utsolve.c
 )
 
-generate_source_files (GEN_SRCS_DINT FILES "${PROJECT_SRCS}" SUFFIX _di)
-generate_source_files (GEN_SRCS_DLONG FILES "${PROJECT_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS CS_LONG)
+add_library (cxsparse_int OBJECT ${CXSparse_SRCS})
+target_compile_definitions (cxsparse_int PRIVATE $<TARGET_PROPERTY:cxsparse,COMPILE_DEFINITIONS>)
+target_compile_definitions (cxsparse_int PRIVATE cxsparse_EXPORTS)
+target_include_directories (cxsparse_int PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
 
-if (NOT HAVE_C99_COMPLEX STREQUAL "" OR HAVE_C99_COMPLEX_SUBSET)
-  generate_source_files (GEN_SRCS_DINT_COMPLEX FILES "${PROJECT_SRCS}" SUFFIX
-    _ci COMPILE_DEFINITIONS CS_COMPLEX)
-  generate_source_files (GEN_SRCS_DLONG_COMPLEX FILES "${PROJECT_SRCS}" SUFFIX
-    _cl COMPILE_DEFINITIONS CS_LONG CS_COMPLEX)
-endif (NOT HAVE_C99_COMPLEX STREQUAL "" OR HAVE_C99_COMPLEX_SUBSET)
-
-set (SRCS
-  ${HDRS}
-  ${SRCS}
-  ${GEN_SRCS_DINT}
-  ${GEN_SRCS_DLONG}
-  ${GEN_SRCS_DINT_COMPLEX}
-  ${GEN_SRCS_DLONG_COMPLEX}
-)
-
-if (HAVE_COMPLEX_H)
-  list (APPEND SRCS Source/cs_convert.c)
-endif (HAVE_COMPLEX_H)
+add_library (cxsparse_long OBJECT ${CXSparse_SRCS})
+target_compile_definitions (cxsparse_long PRIVATE CS_LONG $<TARGET_PROPERTY:cxsparse,COMPILE_DEFINITIONS>)
+target_compile_definitions (cxsparse_long PRIVATE cxsparse_EXPORTS)
+target_include_directories (cxsparse_long PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
 
 if (MSVC)
   #set_source_files_properties (${SRCS} PROPERTIES LANGUAGE CXX)
 endif (MSVC)
 
-add_library (cxsparse ${SRCS})
+add_library (cxsparse
+  $<TARGET_OBJECTS:cxsparse_int>
+  $<TARGET_OBJECTS:cxsparse_long>
+  ${CXSparse_HDRS}
+)
 
-set (_CXSparse_EXPORT_HEADER ${CMAKE_CURRENT_BINARY_DIR}/include/cs_export.h)
+if (HAVE_COMPLEX_H)
+  target_sources (cxsparse PRIVATE Source/cs_convert.c)
+endif (HAVE_COMPLEX_H)
+
+if (NOT HAVE_C99_COMPLEX STREQUAL "" OR HAVE_C99_COMPLEX_SUBSET)
+  add_library (cxsparse_complex_int OBJECT ${CXSparse_SRCS})
+  target_compile_definitions (cxsparse_complex_int PRIVATE CS_COMPLEX $<TARGET_PROPERTY:cxsparse,COMPILE_DEFINITIONS>)
+  target_compile_definitions (cxsparse_complex_int PRIVATE cxsparse_EXPORTS)
+  target_include_directories (cxsparse_complex_int PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
+
+  add_library (cxsparse_complex_long OBJECT ${CXSparse_SRCS})
+  target_compile_definitions (cxsparse_complex_long PRIVATE CS_LONG CS_COMPLEX $<TARGET_PROPERTY:cxsparse,COMPILE_DEFINITIONS>)
+  target_compile_definitions (cxsparse_complex_long PRIVATE cxsparse_EXPORTS)
+  target_include_directories (cxsparse_complex_long PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
+
+  target_sources (cxsparse PRIVATE
+    $<TARGET_OBJECTS:cxsparse_complex_int>
+    $<TARGET_OBJECTS:cxsparse_complex_long>
+  )
+endif (NOT HAVE_C99_COMPLEX STREQUAL "" OR HAVE_C99_COMPLEX_SUBSET)
+
 set (_CXSparse_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR}/CXSparse)
 set (_CXSparse_CMake_INSTALLDIR ${_CXSparse_CMake_LIBDIR}/cmake)
 set (_CXSparse_CMake_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/CXSparse)
@@ -208,9 +218,9 @@ generate_export_header (cxsparse EXPORT_FILE_NAME ${_CXSparse_EXPORT_HEADER})
 target_sources (cxsparse PRIVATE ${_CXSparse_EXPORT_HEADER})
 
 target_include_directories (cxsparse PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-  "$<INSTALL_INTERFACE:${_CXSparse_CMake_INCLUDEDIR}>"
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<INSTALL_INTERFACE:${_CXSparse_CMake_INCLUDEDIR}>
 )
 
 set (SUITESPARSECONFIG_HDRS
@@ -223,9 +233,9 @@ add_library (cxsparseconfig
 )
 
 target_include_directories (cxsparseconfig PUBLIC
-  "$<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../SuiteSparse_config>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
+  $<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../SuiteSparse_config>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
 )
 
 if (HAVE_M)
@@ -258,9 +268,7 @@ if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   target_compile_definitions (cxsparse PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 
-set (_CXSparse_HDRS Include/cs.h ${_CXSparse_EXPORT_HEADER})
-
-set_target_properties (cxsparse PROPERTIES PUBLIC_HEADER "${_CXSparse_HDRS}")
+set_target_properties (cxsparse PROPERTIES PUBLIC_HEADER "${CXSparse_HDRS}")
 set_target_properties (cxsparse PROPERTIES EXPORT_NAME CXSparse)
 
 install (TARGETS cxsparse cxsparseconfig

@@ -8,13 +8,14 @@ defaults:
 
 jobs:
   build:
-    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}
+    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: windows-latest
     strategy:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
         sys: [mingw32, mingw64]
+        lib: [shared, static]
         include:
           - sys: mingw32
             env: i686
@@ -42,7 +43,8 @@ jobs:
         CC: ${{matrix.env}}-w64-mingw32-gcc
         CXX: ${{matrix.env}}-w64-mingw32-g++
       run: |
-        cmake -S . -B build_${{matrix.build_type}}/ -G Ninja -DBUILD_SHARED_LIBS=ON
+        cmake -S . -B build_${{matrix.build_type}}/ -G Ninja \
+          -DBUILD_SHARED_LIBS=$([[ ${{matrix.lib}} == static ]] && echo OFF || echo ON)
     - name: Build
       run: |
         cmake --build build_${{matrix.build_type}}/ --config ${{matrix.build_type}}

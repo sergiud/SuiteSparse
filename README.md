@@ -26,10 +26,23 @@ The original SuiteSparse `README` can be found [here](./README.md.suitesparse).
 
 Besides full CMake support, this branch provides the following additions:
 
+* CUDA support
 * DLL export on Windows and hidden symbols by default (`-fvisibility=hidden`)
   which enables link time optimization (LTO)
 * MinGW BLAS/LAPACK can be used to compile SuiteSparse using Visual Studio
 * CPack support
+
+## Requirements
+
+* C and C++ compilers
+* CMake 3.18 or newer
+* SuiteSparse only (not required for CXSparse):
+    - BLAS
+    - LAPACK
+    - (optional) CUDA compiler and toolkit
+    - (optional) Fortran compiler
+    - (optional) METIS
+    - (optional) TBB
 
 ## Usage
 

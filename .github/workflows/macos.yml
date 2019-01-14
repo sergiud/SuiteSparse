@@ -4,12 +4,14 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: AppleClang-${{matrix.build_type}}
-    runs-on: macos-10.15
+    name: AppleClang-${{matrix.build_type}}-${{matrix.lib}}
+    runs-on: macos-latest
     strategy:
       fail-fast: true
       matrix:
           build_type: [Release, Debug]
+          shared: [ON, OFF]
+          lib: [shared, static]
 
     steps:
     - uses: actions/checkout@v2
@@ -23,7 +25,8 @@ jobs:
       shell: bash
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
-              -G Ninja
+              -G Ninja \
+              -DBUILD_SHARED_LIBS=$([[ ${{matrix.lib}} == static ]] && echo OFF || echo ON)
     - name: Build
       shell: bash
       run: |

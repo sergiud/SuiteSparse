@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2018 Sergiu Deitsch
+# Copyright (c) 2016-2019 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,10 @@ if (WITH_FORTRAN)
   endif (CMAKE_Fortran_COMPILER)
 endif (WITH_FORTRAN)
 
-project (SuiteSparse C CXX)
+project (SuiteSparse LANGUAGES C CXX VERSION 5.4.0
+  DESCRIPTION "A suite of sparse matrix packages"
+  HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
+)
 
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
 
@@ -131,9 +134,9 @@ check_options (CAMD CHECK CHOLESKY GPL MATRIXOPS MODIFY PARTITION PRINT
   SUPERNODAL)
 
 # SuiteSparse version
-set (MAJOR_VERSION 5)
-set (MINOR_VERSION 4)
-set (VERSION_PATCH 0)
+set (MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
+set (MINOR_VERSION ${PROJECT_VERSION_MINOR})
+set (VERSION_PATCH ${PROJECT_VERSION_PATCH})
 
 set (SHORT_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
 
@@ -141,7 +144,7 @@ if (NOT VERSION_PATCH EQUAL 0)
   set (SHORT_VERSION "${SHORT_VERSION}.${VERSION_PATCH}")
 endif (NOT VERSION_PATCH EQUAL 0)
 
-set (VERSION "${MAJOR_VERSION}.${MINOR_VERSION}.${VERSION_PATCH}")
+set (VERSION ${PROJECT_VERSION})
 
 set (CPACK_PACKAGE_NAME SuiteSparse)
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "SuiteSparse: an extended version of CSparse")

@@ -1,4 +1,4 @@
-# Copyright (c) 2016, 2018 Sergiu Deitsch
+# Copyright (c) 2016, 2018-2019 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.0)
 
 if (POLICY CMP0054)
   cmake_policy (SET CMP0054 NEW)
@@ -31,12 +31,12 @@ endif (POLICY CMP0063)
 #if (MSVC)
   #project (cxsparse CXX)
 #else (MSVC)
-project (cxsparse C)
+project (cxsparse LANGUAGES C VERSION 3.1.9)
 #endif (MSVC)
 
-set (MAJOR_VERSION 3)
-set (MINOR_VERSION 1)
-set (VERSION_PATCH 9)
+set (MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
+set (MINOR_VERSION ${PROJECT_VERSION_MINOR})
+set (VERSION_PATCH ${PROJECT_VERSION_PATCH})
 
 set (SHORT_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
 
@@ -44,7 +44,7 @@ if (NOT VERSION_PATCH EQUAL 0)
   set (SHORT_VERSION "${SHORT_VERSION}.${VERSION_PATCH}")
 endif (NOT VERSION_PATCH EQUAL 0)
 
-set (VERSION "${MAJOR_VERSION}.${MINOR_VERSION}.${VERSION_PATCH}")
+set (VERSION ${PROJECT_VERSION})
 
 set (CPACK_PACKAGE_NAME cxsparse)
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "cxsparse: an extended version of CSparse")

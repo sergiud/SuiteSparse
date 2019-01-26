@@ -132,7 +132,7 @@ check_options (CAMD CHECK CHOLESKY GPL MATRIXOPS MODIFY PARTITION PRINT
 
 # SuiteSparse version
 set (MAJOR_VERSION 5)
-set (MINOR_VERSION 2)
+set (MINOR_VERSION 4)
 set (VERSION_PATCH 0)
 
 set (SHORT_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
@@ -1369,13 +1369,13 @@ set_component_version (amd 2.4.6)
 set_component_version (btf 1.2.6)
 set_component_version (camd 2.4.6)
 set_component_version (ccolamd 2.9.6)
-set_component_version (cholmod 3.0.12)
+set_component_version (cholmod 3.0.13)
 set_component_version (colamd 2.9.6)
 set_component_version (klu 1.3.9)
 set_component_version (ldl 2.2.6)
-set_component_version (spqr 2.0.8)
+set_component_version (spqr 2.0.9)
 set_component_version (suitesparseconfig "${VERSION}")
-set_component_version (umfpack 5.7.6)
+set_component_version (umfpack 5.7.8)
 
 if (TARGET suitesparsecuda)
   set_component_version (suitesparsecuda 1.0.5)

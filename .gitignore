@@ -202,20 +202,18 @@ GraphBLAS/Demo/tri_demo.out
 GraphBLAS/Test/errlog.txt
 GraphBLAS/Test/log.txt
 GraphBLAS/Doc/GraphBLAS_UserGuide.out
-GraphBLAS/Tcov/cover_GB_2type_template.c
-GraphBLAS/Tcov/cover_GB_AxB_compare_template.c
-GraphBLAS/Tcov/cover_GB_AxB_factory.c
-GraphBLAS/Tcov/cover_GB_AxB_template.c
-GraphBLAS/Tcov/cover_GB_assoc_template.c
-GraphBLAS/Tcov/cover_GB_ops_template.c
-GraphBLAS/Tcov/cover_GB_qsort_template.c
-GraphBLAS/Tcov/cover_GB_semiring_template.c
-GraphBLAS/Tcov/cover_GB_subref_template.c
-GraphBLAS/Tcov/cover_gb.c
-GraphBLAS/Tcov/cover_gb_exp.c
 GraphBLAS/Tcov/errlog.txt
 GraphBLAS/Tcov/log.txt
 GraphBLAS/Tcov/gbstat.mat
+
+tri/tri_main
+ktruss/allktruss_graphblas_main
+ktruss/allktruss_main
+ktruss/ktruss_graphblas_main
+ktruss/ktruss_main
+
+ssget/files/ss_index_old.mat
+ssget/files/ssstats_old.csv
 
 # Do not ignore this file
 !.gitignore

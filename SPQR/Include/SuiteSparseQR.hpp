@@ -11,10 +11,15 @@
 // include files
 // -----------------------------------------------------------------------------
 
+#ifdef GPU_BLAS
+#include <cublas_v2.h>
+#endif
+#define SUITESPARSE_GPU_EXTERN_ON
 extern "C"
 {
 #include "SuiteSparseQR_definitions.h"
 }
+#undef SUITESPARSE_GPU_EXTERN_ON
 
 #include "cholmod.h"
 

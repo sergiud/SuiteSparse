@@ -2,14 +2,15 @@
 // GrB_transpose: transpose a sparse matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // C<M> = accum (C,A') or accum (C,A)
 
-#include "GB.h"
+#include "GB_transpose.h"
+#include "GB_accum_mask.h"
 
 GrB_Info GrB_transpose              // C<M> = accum(C,A') or accum(C,A)
 (
@@ -25,7 +26,7 @@ GrB_Info GrB_transpose              // C<M> = accum(C,A') or accum(C,A)
     // check inputs
     //--------------------------------------------------------------------------
 
-    ASSERT (GB_ALIAS_OK2 (C, M, A)) ;
+    // C may be aliased with M and/or A
 
     GB_WHERE ("GrB_transpose (C, M, accum, A, desc)") ;
     GB_RETURN_IF_NULL_OR_FAULTY (C) ;
@@ -65,7 +66,7 @@ GrB_Info GrB_transpose              // C<M> = accum(C,A') or accum(C,A)
     GB_RETURN_IF_QUICK_MASK (C, C_replace, M, Mask_comp) ;
 
     // delete any lingering zombies and assemble any pending tuples
-    GB_WAIT (C) ;
+    // GB_WAIT (C) ;
     GB_WAIT (M) ;
     GB_WAIT (A) ;
 
@@ -84,6 +85,7 @@ GrB_Info GrB_transpose              // C<M> = accum(C,A') or accum(C,A)
 
     if (!A_transpose)
     {
+
         // T = A', the default behavior.  This step may seem counter-intuitive,
         // but method computes C<M>=A' by default when A_transpose is false.
 
@@ -100,8 +102,8 @@ GrB_Info GrB_transpose              // C<M> = accum(C,A') or accum(C,A)
             // If the accum operator is present, entries in the intersection of
             // T and C are typecasted into the accum->ytype, while entries in T
             // but not C are typecasted directly into C->type.  Thus, the
-            // typecast of T (if any) must wait, and be done in call to
-            // GB_add in GB_accum_mask.
+            // typecast of T (if any) must wait, and be done in call to GB_add
+            // in GB_accum_mask.
             // transpose: no typecast, no op, not in place
             info = GB_transpose (&T, A->type, C_is_csc, A, NULL, Context) ;
         }
@@ -110,6 +112,7 @@ GrB_Info GrB_transpose              // C<M> = accum(C,A') or accum(C,A)
     }
     else
     { 
+
         // T = A, a pure shallow copy; nothing at all is allocated.  No
         // typecasting is done since the types of T and A are the same.  If the
         // A_transpose descriptor is true, A is viewed as transposed first.
@@ -118,7 +121,7 @@ GrB_Info GrB_transpose              // C<M> = accum(C,A') or accum(C,A)
         // typecasted eventually, into the type of C if the types of T and C
         // differ.  That can be postponed at no cost since the following step
         // is free.
-        info = GB_shallow_cast (&T, A->type, C_is_csc, A, Context) ;
+        info = GB_shallow_copy (&T, C_is_csc, A, Context) ;
     }
 
     if (info != GrB_SUCCESS)
@@ -128,12 +131,13 @@ GrB_Info GrB_transpose              // C<M> = accum(C,A') or accum(C,A)
     }
 
     ASSERT (T->is_csc == C->is_csc) ;
+    ASSERT_OK (GB_check (T, "T for GrB_transpose", GB0)) ;
+    ASSERT_OK (GB_check (C, "C for GrB_transpose", GB0)) ;
 
     //--------------------------------------------------------------------------
     // C<M> = accum (C,T): accumulate the results into C via the mask M
     //--------------------------------------------------------------------------
 
-    ASSERT_OK (GB_check (T, "T for GrB_transpose", GB0)) ;
     return (GB_accum_mask (C, M, NULL, accum, &T, C_replace, Mask_comp,
         Context)) ;
 }

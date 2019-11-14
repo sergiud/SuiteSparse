@@ -1,20 +1,20 @@
 //------------------------------------------------------------------------------
-// GB_qsort_template: sort an n-by-GB_K list of integers
+// GB_qsort_template: quicksort of a K-by-n array
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
-// This file is #include'd in GB_qsort*.c to create specific versions for GB_K
-// = 1, 2, and 3.  Requires an inline or macro definition of the GB_lt
-// function.  The GB_lt function has the form GB_lt (A,i,B,j) and returns true
-// if A[i]<B[j].
+// This file is #include'd in GB_qsort*.c to create specific versions for
+// different kinds of sort keys and auxiliary arrays.  Requires an inline or
+// macro definition of the GB_lt function.  The GB_lt function has the form
+// GB_lt (A,i,B,j) and returns true if A[i] < B[j].
 
 // All of these functions are static; there will be versions of them in each
-// variant of GB_qsort*, with the same names.  They are called only by the
-// GB_qsort* function in the #include'ing file.
+// variant of GB_qsort*, and given unique names via #define's in the
+// #include'ing file.
 
 //------------------------------------------------------------------------------
 // GB_partition: use a pivot to partition an array
@@ -26,20 +26,18 @@
 
 static inline int64_t GB_partition
 (
-    GB_args (int64_t, A),
-    const int64_t n,
-    uint64_t *seed          // random number seed
+    GB_args (A),            // array(s) to partition
+    const int64_t n,        // size of the array(s) to partition
+    uint64_t *seed          // random number seed, modified on output
 )
 {
 
     // select a pivot at random
     int64_t pivot = ((n < GB_RAND_MAX) ? GB_rand15 (seed) : GB_rand (seed)) % n;
 
-    // get the pivot entry
+    // get the Pivot
     int64_t Pivot_0 [1] ; Pivot_0 [0] = A_0 [pivot] ;
     #if GB_K > 1
-    // GB_qsort_2a: ignore gcc warning for Pivot_1
-    #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
     int64_t Pivot_1 [1] ; Pivot_1 [0] = A_1 [pivot] ;
     #endif
     #if GB_K > 2
@@ -86,13 +84,13 @@ static inline int64_t GB_partition
 }
 
 //------------------------------------------------------------------------------
-// GB_quicksort
+// GB_quicksort: recursive quicksort
 //------------------------------------------------------------------------------
 
 static void GB_quicksort    // sort A [0:n-1]
 (
-    GB_args (int64_t, A),   // array(s) to sort
-    const int64_t n,        // size of A
+    GB_args (A),            // array(s) to sort
+    const int64_t n,        // size of the array(s) to sort
     uint64_t *seed          // random number seed
 )
 {

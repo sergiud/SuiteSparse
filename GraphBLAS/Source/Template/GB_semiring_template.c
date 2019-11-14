@@ -2,7 +2,7 @@
 // GB_semiring_template.c: built-in unary and binary functions and operators
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -11,22 +11,22 @@
 // semirings.  That file has defined either GB_BOOLEAN, or GB_TYPE as one of
 // the 10 non-boolean types.
 
-// Using built-in types and operators, 960 unique semirings can be built.  This
-// count excludes redundant Boolean operators (for example GrB_TIMES_BOOL and
-// GrB_LAND are different operators but they are redundant since they always
-// return the same result):
+// Using built-in types and operators, 1040 unique semirings can be built.
+// This count excludes redundant Boolean operators (for example GrB_TIMES_BOOL
+// and GrB_LAND are different operators but they are redundant since they
+// always return the same result):
 
-// 680 semirings with a multiply operator TxT -> T where T is non-Boolean, from
+// 760 semirings with a multiply operator TxT -> T where T is non-Boolean, from
 // the complete cross product of:
 
 //      4 add monoids (MIN, MAX, PLUS, TIMES)
-//      17 multiply operators:
-//          (FIRST, SECOND, MIN, MAX, PLUS, MINUS, TIMES, DIV,
+//      19 multiply operators:
+//          (FIRST, SECOND, MIN, MAX, PLUS, MINUS, RMINUS, TIMES, DIV, RDIV
 //           ISEQ, ISNE, ISGT, ISLT, ISGE, ISLE,
 //           LOR, LAND, LXOR)
 //      10 non-Boolean types, T
 
-//      a single instance of this file creates 4*17 = 68 semirings of this
+//      a single instance of this file creates 4*19 = 76 semirings of this
 //      form, of one type T, when T is not BOOL
 
 // 240 semirings with a comparison operator TxT -> bool, where T is
@@ -114,21 +114,23 @@ GB_SEMIRING_DEFINE ( EQ   , GrB_, LE     )
 #else
 
 //------------------------------------------------------------------------------
-// 68 semirings of the form TxT->T
+// 76 semirings of the form TxT->T
 //------------------------------------------------------------------------------
 
 // All types in these 68 semirings are the same.  These are defined for
 // the 10 non-Boolean types, not when T is BOOL.
 
-// 17 semirings with MIN monoid; the 2nd argument is the multiply operator
+// 19 semirings with MIN monoid; the 2nd argument is the multiply operator
 GB_SEMIRING_DEFINE ( MIN   , GrB_, FIRST  )
 GB_SEMIRING_DEFINE ( MIN   , GrB_, SECOND )
 GB_SEMIRING_DEFINE ( MIN   , GrB_, MIN    )
 GB_SEMIRING_DEFINE ( MIN   , GrB_, MAX    )
 GB_SEMIRING_DEFINE ( MIN   , GrB_, PLUS   )
 GB_SEMIRING_DEFINE ( MIN   , GrB_, MINUS  )
+GB_SEMIRING_DEFINE ( MIN   , GxB_, RMINUS )
 GB_SEMIRING_DEFINE ( MIN   , GrB_, TIMES  )
 GB_SEMIRING_DEFINE ( MIN   , GrB_, DIV    )
+GB_SEMIRING_DEFINE ( MIN   , GxB_, RDIV   )
 GB_SEMIRING_DEFINE ( MIN   , GxB_, ISEQ   )
 GB_SEMIRING_DEFINE ( MIN   , GxB_, ISNE   )
 GB_SEMIRING_DEFINE ( MIN   , GxB_, ISGT   )
@@ -139,15 +141,17 @@ GB_SEMIRING_DEFINE ( MIN   , GxB_, LOR    )
 GB_SEMIRING_DEFINE ( MIN   , GxB_, LAND   )
 GB_SEMIRING_DEFINE ( MIN   , GxB_, LXOR   )
 
-// 17 semirings with MAX monoid; the 2nd argument is the multiply operator
+// 19 semirings with MAX monoid; the 2nd argument is the multiply operator
 GB_SEMIRING_DEFINE ( MAX   , GrB_, FIRST  )
 GB_SEMIRING_DEFINE ( MAX   , GrB_, SECOND )
 GB_SEMIRING_DEFINE ( MAX   , GrB_, MIN    )
 GB_SEMIRING_DEFINE ( MAX   , GrB_, MAX    )
 GB_SEMIRING_DEFINE ( MAX   , GrB_, PLUS   )
 GB_SEMIRING_DEFINE ( MAX   , GrB_, MINUS  )
+GB_SEMIRING_DEFINE ( MAX   , GxB_, RMINUS )
 GB_SEMIRING_DEFINE ( MAX   , GrB_, TIMES  )
 GB_SEMIRING_DEFINE ( MAX   , GrB_, DIV    )
+GB_SEMIRING_DEFINE ( MAX   , GxB_, RDIV   )
 GB_SEMIRING_DEFINE ( MAX   , GxB_, ISEQ   )
 GB_SEMIRING_DEFINE ( MAX   , GxB_, ISNE   )
 GB_SEMIRING_DEFINE ( MAX   , GxB_, ISGT   )
@@ -158,15 +162,17 @@ GB_SEMIRING_DEFINE ( MAX   , GxB_, LOR    )
 GB_SEMIRING_DEFINE ( MAX   , GxB_, LAND   )
 GB_SEMIRING_DEFINE ( MAX   , GxB_, LXOR   )
 
-// 17 semirings with PLUS monoid; the 2nd argument is the multiply operator
+// 19 semirings with PLUS monoid; the 2nd argument is the multiply operator
 GB_SEMIRING_DEFINE ( PLUS  , GrB_, FIRST  )
 GB_SEMIRING_DEFINE ( PLUS  , GrB_, SECOND )
 GB_SEMIRING_DEFINE ( PLUS  , GrB_, MIN    )
 GB_SEMIRING_DEFINE ( PLUS  , GrB_, MAX    )
 GB_SEMIRING_DEFINE ( PLUS  , GrB_, PLUS   )
 GB_SEMIRING_DEFINE ( PLUS  , GrB_, MINUS  )
+GB_SEMIRING_DEFINE ( PLUS  , GxB_, RMINUS )
 GB_SEMIRING_DEFINE ( PLUS  , GrB_, TIMES  )
 GB_SEMIRING_DEFINE ( PLUS  , GrB_, DIV    )
+GB_SEMIRING_DEFINE ( PLUS  , GxB_, RDIV   )
 GB_SEMIRING_DEFINE ( PLUS  , GxB_, ISEQ   )
 GB_SEMIRING_DEFINE ( PLUS  , GxB_, ISNE   )
 GB_SEMIRING_DEFINE ( PLUS  , GxB_, ISGT   )
@@ -177,15 +183,17 @@ GB_SEMIRING_DEFINE ( PLUS  , GxB_, LOR    )
 GB_SEMIRING_DEFINE ( PLUS  , GxB_, LAND   )
 GB_SEMIRING_DEFINE ( PLUS  , GxB_, LXOR   )
 
-// 17 semirings with TIMES monoid; the 2nd argument is the multiply operator
+// 19 semirings with TIMES monoid; the 2nd argument is the multiply operator
 GB_SEMIRING_DEFINE ( TIMES , GrB_, FIRST  )
 GB_SEMIRING_DEFINE ( TIMES , GrB_, SECOND )
 GB_SEMIRING_DEFINE ( TIMES , GrB_, MIN    )
 GB_SEMIRING_DEFINE ( TIMES , GrB_, MAX    )
 GB_SEMIRING_DEFINE ( TIMES , GrB_, PLUS   )
 GB_SEMIRING_DEFINE ( TIMES , GrB_, MINUS  )
+GB_SEMIRING_DEFINE ( TIMES , GxB_, RMINUS )
 GB_SEMIRING_DEFINE ( TIMES , GrB_, TIMES  )
 GB_SEMIRING_DEFINE ( TIMES , GrB_, DIV    )
+GB_SEMIRING_DEFINE ( TIMES , GxB_, RDIV   )
 GB_SEMIRING_DEFINE ( TIMES , GxB_, ISEQ   )
 GB_SEMIRING_DEFINE ( TIMES , GxB_, ISNE   )
 GB_SEMIRING_DEFINE ( TIMES , GxB_, ISGT   )

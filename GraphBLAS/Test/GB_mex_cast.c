@@ -2,7 +2,7 @@
 // GB_mex_cast: cast a MATLAB array using C-style casting rules
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ void mexFunction
         void *C = mxGetData (pargout [0]) ;
 
         // cast the data from X to C
-        GB_cast_array (C, ctype->code, X, xtype->code, nrows*ncols) ;
+        GB_cast_array (C, ctype->code, X, xtype->code, nrows*ncols, Context) ;
 
         // X is a shallow copy that must not be freed
     }

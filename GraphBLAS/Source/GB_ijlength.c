@@ -2,7 +2,7 @@
 // GB_ijlength: get the length and kind of an index list I
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 // Determine the length of I, and process the colon notation I = begin:inc:end.
 // No error checking is done.
 
-#include "GB.h"
+#include "GB_ij.h"
 
 // ensure an unsigned integer does not cause signed integer overflow
 #define GB_LIMIT(u) (int64_t) (GB_IMIN (u, INT64_MAX))
@@ -215,7 +215,6 @@ void GB_ijlength            // get the length and kind of an index list I
         Icolon [GxB_END  ] = 0 ;
 
         (*nI) = ni ;
-
     }
 }
 

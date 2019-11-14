@@ -1,7 +1,7 @@
 function test05
 %TEST05 test GrB_*_setElement
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 A = sparse (5,5) ;
@@ -17,14 +17,14 @@ X = [4 5 6 3]' ;
 
 A1 = GB_mex_setElement (A, I0, J0, int8(X))  ;
 
-%% A1_matrix = A1.matrix
+% A1_matrix = A1.matrix
 
 B = A ;
 for k = 1:length(I)
     B (I (k), J (k)) = X (k) ;
 end
 
-%% B
+% B
 
 assert (isequal (A1.matrix, B)) 
 

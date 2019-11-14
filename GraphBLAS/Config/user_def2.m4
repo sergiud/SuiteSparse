@@ -9,9 +9,9 @@ GrB_Info GB_AxB_user
 
     GrB_Matrix *GB_Chandle,
     const GrB_Matrix GB_M,
-    const GrB_Matrix GB_A,
+    const GrB_Matrix GB_A,          // not used for dot2 method
     const GrB_Matrix GB_B,
-    bool GB_flipxy,                // if true, A and B have been swapped
+    bool GB_flipxy,
 
     // for heap method only:
     int64_t *restrict GB_List,
@@ -19,20 +19,24 @@ GrB_Info GB_AxB_user
     GB_Element *restrict GB_Heap,
     const int64_t GB_bjnz_max,
 
-    // for Gustavson method only:
+    // for Gustavson's method only:
     GB_Sauna GB_C_Sauna,
 
-    GB_Context Context
+    // for dot method only:
+    const GrB_Matrix *GB_Aslice,    // for dot2 only
+    int64_t *restrict GB_B_slice,   // for dot2 only
+    const int GB_dot_nthreads,      // for dot2 and dot3
+    const int GB_naslice,           // for dot2 only
+    const int GB_nbslice,           // for dot2 only
+    int64_t **GB_C_counts,          // for dot2 only
+
+    // for dot3 method only:
+    const GB_task_struct *restrict GB_TaskList,
+    const int GB_ntasks
 )
 {
-    GrB_Info GB_info = GrB_INVALID_OBJECT ;
-
+    GrB_Info GB_info = GrB_SUCCESS ;
     GB_semirings()
-
-    if (GB_info == GrB_INVALID_OBJECT)
-    {
-        return (GB_ERROR (GrB_INVALID_OBJECT, (GB_LOG, "undefined semiring"))) ;
-    }
     return (GB_info) ;
 }
 

@@ -2,7 +2,7 @@
 // GB_mex_rdiv2: compute C=A*B with the rdiv2 operator
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -22,7 +22,6 @@
     GB_MATRIX_FREE (&B) ;               \
     GB_MATRIX_FREE (&B64) ;             \
     GB_MATRIX_FREE (&C) ;               \
-    GB_Sauna_free (&Sauna) ;            \
     GrB_free (&My_rdiv2) ;              \
     GrB_free (&My_plus_rdiv2) ;         \
     GB_mx_put_global (true, 0) ;        \
@@ -42,20 +41,18 @@ int64_t bnrows = 0 ;
 int64_t bncols = 0 ;
 GrB_Desc_Value AxB_method = GxB_DEFAULT, AxB_method_used ;
 bool flipxy = false ;
-GB_Sauna Sauna = NULL ;
+
+GrB_Info axb (GB_Context Context) ;
 
 #ifndef MY_RDIV
 GrB_Semiring My_plus_rdiv2 = NULL ;
 GrB_BinaryOp My_rdiv2 = NULL ;
 
-void my_rdiv2
-(
-    double *z,
-    const double *x,
-    const float *y
-)
+void my_rdiv2 (double *z, const double *x, const float *y) ;
+
+void my_rdiv2 (double *z, const double *x, const float *y)
 {
-    (*z) = (*y) / (*x) ;
+    (*z) = ((double) (*y)) / (*x) ;
 }
 #endif
 
@@ -79,13 +76,19 @@ GrB_Info axb (GB_Context Context)
 
     // GB_check (My_plus_rdiv2, "My_plus_rdiv2", GB0) ;
 
-    // C = A*B (not user-callable)
-    info = GB_AxB_meta (&C, true /* CSC */,
-        NULL /* no MT returned */,
-        NULL /* no Mask */,
-        A, B, My_plus_rdiv2,
-        atranspose, btranspose, flipxy, &ignore,
-        AxB_method, &AxB_method_used, &Sauna, Context) ;
+    // C = A*B
+    info = GB_AxB_meta (&C,
+        true,       // CSC
+        NULL,       // no MT returned
+        NULL,       // no Mask
+        false,      // mask not complemented
+        A, B,
+        My_plus_rdiv2,
+        atranspose,
+        btranspose,
+        flipxy,
+        &ignore,    // mask_applied
+        AxB_method, &AxB_method_used, Context) ;
 
     // does nothing if the objects are pre-compiled
     GrB_free (&My_rdiv2) ;
@@ -194,6 +197,5 @@ void mexFunction
     pargout [0] = GB_mx_Matrix_to_mxArray (&C, "C AxB result", false) ;
 
     FREE_ALL ;
-    GrB_finalize ( ) ;
 }
 

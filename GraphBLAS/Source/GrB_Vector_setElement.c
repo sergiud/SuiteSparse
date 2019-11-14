@@ -2,7 +2,7 @@
 // GrB_Vector_setElement: set an entry in a vector, w (row) = x
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -16,7 +16,7 @@
 GrB_Info GrB_Vector_setElement_ ## T    /* w(row) = x    */                 \
 (                                                                           \
     GrB_Vector w,                       /* vector to modify           */    \
-    const type x,                       /* scalar to assign to w(row) */    \
+    type x,                             /* scalar to assign to w(row) */    \
     GrB_Index row                       /* row index                  */    \
 )                                                                           \
 {                                                                           \

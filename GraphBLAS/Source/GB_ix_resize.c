@@ -2,7 +2,7 @@
 // GB_ix_resize:  reallocate a matrix with some slack for future growth
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ GrB_Info GB_ix_resize           // resize a matrix
         if (info != GrB_SUCCESS)
         { 
             // out of memory
-            GB_CONTENT_FREE (A) ;
+            GB_PHIX_FREE (A) ;
             return (info) ;
         }
         ASSERT_OK (GB_check (A, "A increased in size", GB0)) ;

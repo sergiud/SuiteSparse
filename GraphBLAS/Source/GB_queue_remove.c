@@ -2,7 +2,7 @@
 // GB_queue_remove: remove a matrix from the matrix queue
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ bool GB_queue_remove            // remove matrix from queue
     bool ok = true ;
 
     if (A->enqueued)
-    {
+    { 
         // remove the matrix from the queue
 
         // define the work to do inside the critical section
@@ -42,7 +42,7 @@ bool GB_queue_remove            // remove matrix from queue
                 if (Prev == NULL)                                           \
                 {                                                           \
                     /* matrix is at head of the queue; update the head */   \
-                    GB_Global.queue_head = Next ;                           \
+                    GB_Global_queue_head_set (Next) ;                       \
                 }                                                           \
                 else                                                        \
                 {                                                           \

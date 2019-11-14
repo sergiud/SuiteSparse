@@ -2,7 +2,7 @@
 // GxB_Vector_fprint: print and check a GrB_Vector object
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ GrB_Info GxB_Vector_fprint          // print and check a GrB_Vector
     GxB_Print_Level pr,             // print level
     FILE *f                         // file for output
 )
-{ 
+{
 
     //--------------------------------------------------------------------------
     // check inputs
@@ -40,7 +40,7 @@ GrB_Info GxB_Vector_fprint          // print and check a GrB_Vector
             "vector invalid: indices out of order [%s]", GB_NAME))) ;
     }
     else
-    {
+    { 
         return (info) ;
     }
 }

@@ -2,14 +2,18 @@
 // GB_AxB_heap_mask:  compute C<M>=A*B using the heap method, with M present
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
-// This file is #include'd in GB_AxB_heap.c, and Template/GB_AxB.c, the
-// latter of which expands into Generated/GB_AxB__* for all built-in semirings.
+//------------------------------------------------------------------------------
+
+// This file is #include'd in GB_AxB_heap_meta.c.
 
 // if GB_MASK_CASE is defined, then the mask matrix M is present.  Otherwise it
-// is not present.
+// is not present.  However, this method takes Omega(nnz(M)) time when
+// exploiting the mask, so a very dense mask can be costly to exploit.  Thus,
+// the mask is not passed to the heap method if the total flop count is less
+// than nnz(M).
 
 #ifndef GB_HEAP_FREE_WORK
 #define GB_HEAP_FREE_WORK
@@ -18,14 +22,20 @@
 {
 
     //--------------------------------------------------------------------------
-    // get the mask
+    // get M
     //--------------------------------------------------------------------------
 
     #ifdef GB_MASK_CASE
+    const int64_t *restrict Mp = M->p ;
+    const int64_t *restrict Mh = M->h ;
     const int64_t *restrict Mi = M->i ;
     const GB_void *restrict Mx = M->x ;
-    GB_cast_function cast_M = GB_cast_factory (GB_BOOL_code, M->type->code) ;
+    GB_cast_function cast_M = GB_cast_factory (GB_BOOL_code, M->type->code);
     size_t msize = M->type->size ;
+    const int64_t mnvec = M->nvec ;
+    int64_t mpleft = 0 ;
+    int64_t mpright = mnvec - 1 ;
+    bool M_is_hyper = GB_IS_HYPER (M) ;
     #endif
 
     //--------------------------------------------------------------------------
@@ -55,30 +65,28 @@
     // C<M> = A*B
     //--------------------------------------------------------------------------
 
-    #ifdef GB_MASK_CASE
-    GB_for_each_vector2 (B, M)
-    #else
-    GB_for_each_vector (B)
-    #endif
+    GBI_for_each_vector (B)
     {
 
         //----------------------------------------------------------------------
-        // get B(:,j) and M(:,j)
+        // get B(:,j)
+        //----------------------------------------------------------------------
+
+        GBI_jth_iteration (j, pB_start, pB_end) ;
+        int64_t bjnz = pB_end - pB_start ;
+        // no work to do if B(:,j) is empty
+        if (bjnz == 0) continue ;
+
+        //----------------------------------------------------------------------
+        // get M(:,j)
         //----------------------------------------------------------------------
 
         #ifdef GB_MASK_CASE
-        int64_t GBI2_initj (Iter, j, pB_start, pB_end, pM, pM_end) ;
-        #else
-        int64_t GBI1_initj (Iter, j, pB_start, pB_end) ;
-        #endif
-
-        // C(:,j) is empty if either M(:,j) or B(:,j) are empty
-        int64_t bjnz = pB_end - pB_start ;
-        if (bjnz == 0) continue ;
-
-        #ifdef GB_MASK_CASE
-        int64_t mjnz = pM_end - pM ;
-        if (mjnz == 0) continue ;
+        // find vector j in M
+        int64_t pM, pM_end ;
+        GB_lookup (M_is_hyper, Mh, Mp, &mpleft, mpright, j, &pM, &pM_end) ;
+        // no work to do if M(:,j) is empty
+        if (pM == pM_end) continue ;
 
         // M(:,j) has at least one entry; get the first and last index in M(:,j)
         int64_t im_first = Mi [pM] ;
@@ -237,40 +245,28 @@
                 // ensure enough space exists in C
                 if (cnz == C->nzmax)
                 {
-                    GrB_Info info = GB_ix_realloc (C, 2*(C->nzmax), true,
-                        Context) ;
+                    GrB_Info info = GB_ix_realloc (C, 2*(C->nzmax), true, NULL);
                     if (info != GrB_SUCCESS)
                     { 
                         // out of memory
-                        GB_MATRIX_FREE (Chandle) ;
+                        ASSERT (!(C->enqueued)) ;
+                        GB_free (Chandle) ;
                         GB_HEAP_FREE_WORK ;
                         return (info) ;
                     }
                     Ci = C->i ;
                     Cx = C->x ;
-                    // reacquire cij since C->x has moved
-                    GB_CIJ_REACQUIRE ;
+                    // reacquire the pointer cij since C->x has moved
+                    GB_CIJ_REACQUIRE (cij, cnz) ;
                 }
             }
             #endif
 
             //------------------------------------------------------------------
-            // cij = 0
-            //------------------------------------------------------------------
-
-            #ifdef GB_MASK_CASE
-            if (mij)
-            #endif
-            {
-                // cij = 0
-                GB_CIJ_CLEAR ;
-            }
-
-            //------------------------------------------------------------------
             // cij = A (i,List)' * B (List,j), in topological order
             //------------------------------------------------------------------
 
-            for (int64_t t = nlist-1 ; t >= 0 ; t--)
+            for (int64_t klist = nlist-1 ; klist >= 0 ; klist--)
             {
 
                 //--------------------------------------------------------------
@@ -280,7 +276,7 @@
                 // the index k is implicit; it has been renamed as kk if
                 // B(k,j) is the kk-th nonzero in B(:,j).
                 // get k from the list and the position of A(i,k)
-                int64_t p = List [t] ;          ASSERT (p >= 1 && p <= nheap) ;
+                int64_t p = List [klist] ;      ASSERT (p >= 1 && p <= nheap) ;
                 int64_t kk = Heap [p].name ;    ASSERT (kk >= 0 && kk < bjnz) ;
                 int64_t pA     = pA_pair [kk].start ;
                 int64_t pA_end = pA_pair [kk].end ;
@@ -302,8 +298,18 @@
                 if (mij)
                 #endif
                 {
-                    // cij += A(i,k) * B(k,j)
-                    GB_CIJ_MULTADD (pA, pB_start + kk) ;
+                    GB_GETA (aik, Ax, pA) ;
+                    GB_GETB (bkj, Bx, pB_start + kk) ;
+                    if (klist == nlist-1)
+                    { 
+                        // first entry: cij = A(i,k) * B(k,j)
+                        GB_MULT (cij, aik, bkj) ;
+                    }
+                    else
+                    { 
+                        // cij += A(i,k) * B(k,j)
+                        GB_MULTADD (cij, aik, bkj) ;
+                    }
                 }
 
                 //--------------------------------------------------------------
@@ -331,36 +337,40 @@
                 //--------------------------------------------------------------
 
                 pA_pair [kk].start = pA ;
+                bool do_heapify = true ;
                 if (pA < pA_end)
                 { 
                     // advance p to the next entry in A(:,k) or M(:,j).
                     // kk < bjnz refers to A(:,k), and kk=bjnz is M(:,j).
                     Heap [p].key = Ai [pA] ;
                     ASSERT (Heap [p].key > i && Heap [p].key < cvlen) ;
-                    GB_heapify (p, Heap, nheap) ;
                 }
                 else
                 {
                     // A(:,k) is exhausted.  Either delete it from the Heap
-                    // if safe to do so, or give it a terminal key.
+                    // if safe to do so, or give it a maximal key.
                     ASSERT (nheap > 0) ;
                     if (Heap [nheap].key > i)
                     { 
                         // safe to delete p from the Heap
                         GB_heap_delete (p, Heap, &nheap) ;
+                        do_heapify = false ;
                     }
                     else
                     { 
                         // Heap [nheap].key == i, so the last node in the
                         // Heap is an entry in the List [0..nlist-1] that
                         // has not yet been processed in this for-loop.  It
-                        // is not safe to delete.  Give node p a terminal
+                        // is not safe to delete.  Give node p a maximal
                         // key so and heapify it is no longer considered.
                         Heap [p].key = cvlen ;
-                        GB_heapify (p, Heap, nheap) ;
                     }
                     // one less live node in the Heap
                     --nlive ;
+                }
+                if (do_heapify)
+                { 
+                    GB_heapify (p, Heap, nheap) ;
                 }
             }
 
@@ -408,7 +418,7 @@
             { 
                 Ci [cnz] = i ;
                 // Cx [cnz] = cij ;
-                GB_CIJ_SAVE ;
+                GB_CIJ_SAVE (cij, cnz) ;
                 cnz++ ;
             }
         }
@@ -425,7 +435,9 @@
         if (nheap == 1)
         {
             // get the last A(:,k)
+            #ifdef GB_DEBUG
             int64_t ilast = Heap [1].key ;
+            #endif
             ASSERT (ilast >= 0 && ilast < cvlen) ;
             int64_t kk = Heap [1].name ;
             ASSERT (kk >= 0 && kk < bjnz) ;
@@ -440,23 +452,23 @@
             // ensure enough space exists in C
             if (cnz + aknz > C->nzmax)
             {
-                GrB_Info info = GB_ix_realloc (C, 2*(cnz + aknz), true,
-                    Context) ;
+                GrB_Info info = GB_ix_realloc (C, 2*(cnz + aknz), true, NULL) ;
                 if (info != GrB_SUCCESS)
                 { 
                     // out of memory
-                    GB_MATRIX_FREE (Chandle) ;
+                    ASSERT (!(C->enqueued)) ;
+                    GB_free (Chandle) ;
                     GB_HEAP_FREE_WORK ;
                     return (info) ;
                 }
                 Ci = C->i ;
                 Cx = C->x ;
                 // reacquire cij since C->x has moved
-                GB_CIJ_REACQUIRE ;
+                GB_CIJ_REACQUIRE (cij, cnz) ;
             }
 
-            // bkj = Bx [] ;
-            GB_CIJ_GETB (pB_start + kk) ;
+            // bkj = Bx [ ] ;
+            GB_GETB (bkj, Bx, pB_start + kk) ;
 
             // C(ilast:end,j) = A (ilast:end,k) * B (k,j)
             for ( ; pA < pA_end ; pA++)
@@ -465,11 +477,12 @@
                 int64_t i = Ai [pA] ;
 
                 // cij = A(i,k) * B(k,j)
-                GB_CIJ_MULT (pA) ;
+                GB_GETA (aik, Ax, pA) ;
+                GB_MULT (cij, aik, bkj) ;
 
                 Ci [cnz] = i ;
                 // Cx [cnz] = cij ;
-                GB_CIJ_SAVE ;
+                GB_CIJ_SAVE (cij, cnz) ;
                 cnz++ ;
             }
         }
@@ -481,7 +494,7 @@
 
         // this cannot fail since C->plen is the upper bound: the number
         // of non-empty vectors of B.
-        info = GB_jappend (C, j, &jlast, cnz, &cnz_last, Context) ;
+        info = GB_jappend (C, j, &jlast, cnz, &cnz_last, NULL) ;
         ASSERT (info == GrB_SUCCESS) ;
     }
 

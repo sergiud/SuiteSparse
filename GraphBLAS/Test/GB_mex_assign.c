@@ -2,7 +2,7 @@
 // GB_mex_assign: C<Mask>(I,J) = accum (C (I,J), A)
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 // This function is a wrapper for GrB_Matrix_assign, GrB_Matrix_assign_T
@@ -49,6 +49,21 @@ bool ignore ;
 bool malloc_debug = false ;
 GrB_Info info = GrB_SUCCESS ;
 int kind = 0 ;
+GrB_Info assign (void) ;
+
+GrB_Info many_assign
+(
+    int nwork,
+    int fA,
+    int fI,
+    int fJ,
+    int faccum,
+    int fMask,
+    int fdesc,
+    mxClassID cclass,
+    int fkind,
+    const mxArray *pargin [ ]
+) ;
 
 //------------------------------------------------------------------------------
 // assign: perform a single assignment
@@ -65,6 +80,7 @@ int kind = 0 ;
 
 GrB_Info assign ( )
 {
+    GB_WHERE ("assign") ;
     bool at = (desc != NULL && desc->in0 == GrB_TRAN) ;
     GrB_Info info ;
 
@@ -258,7 +274,9 @@ GrB_Info assign ( )
     }
 
     ASSERT_OK (GB_check (C, "Final C before wait", GB0)) ;
+    // double tt [2], t ; simple_tic (tt) ;
     OK (GrB_wait ( )) ;
+    // t = simple_toc (tt) ; printf ("wait %g sec\n", t) ;
     return (info) ;
 }
 
@@ -282,6 +300,7 @@ GrB_Info many_assign
     const mxArray *pargin [ ]
 )
 {
+    GB_WHERE ("many_assign") ;
     GrB_Info info = GrB_SUCCESS ;
 
     for (int64_t k = 0 ; k < nwork ; k++)
@@ -296,8 +315,8 @@ GrB_Info many_assign
         mxArray *p ;
 
         // [ turn off malloc debugging
-        bool save = GB_Global.malloc_debug ;
-        GB_Global.malloc_debug = false ;
+        bool save = GB_Global_malloc_debug_get ( ) ;
+        GB_Global_malloc_debug_set (false) ;
 
         // get Mask (shallow copy)
         Mask = NULL ;
@@ -377,7 +396,7 @@ GrB_Info many_assign
         }
 
         // restore malloc debugging to test the method
-        GB_Global.malloc_debug = save ;   // ]
+        GB_Global_malloc_debug_set (save) ; // ]
 
         //----------------------------------------------------------------------
         // C<Mask>(I,J) = A

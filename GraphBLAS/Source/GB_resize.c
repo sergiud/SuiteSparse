@@ -2,12 +2,14 @@
 // GB_resize: change the size of a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
-#include "GB.h"
+#include "GB_select.h"
+
+#define GB_FREE_ALL GB_PHIX_FREE (A) ;
 
 GrB_Info GB_resize              // change the size of a matrix
 (
@@ -25,32 +27,11 @@ GrB_Info GB_resize              // change the size of a matrix
     ASSERT_OK (GB_check (A, "A to resize", GB0)) ;
 
     //--------------------------------------------------------------------------
-    // free the Sauna
-    //--------------------------------------------------------------------------
-
-    // It would be possible to keep the Sauna if the vector length is not
-    // changing (# of rows of a CSC matrix, or # of columns of a CSR matrix).
-    // However, resizing a matrix is a user-accessible way to free the Sauna.
-    // The user can free the Sauna and force completion of a matrix A by
-    // "resizing" it to its same size:
-    //
-    //      GrB_Matrix_nrows (&nrows, A) ;
-    //      GrB_Matrix_ncols (&ncols, A) ;
-    //      GxB_Matrix_resize (A, nrows, ncols) ;
-
-    GB_Sauna_free (&(A->Sauna)) ;
-
-    //--------------------------------------------------------------------------
-    // delete any lingering zombies and assemble any pending tuples
-    //--------------------------------------------------------------------------
-
-    GB_WAIT (A) ;
-    ASSERT_OK (GB_check (A, "A to resize, wait", GB0)) ;
-
-    //--------------------------------------------------------------------------
     // handle the CSR/CSC format
     //--------------------------------------------------------------------------
 
+    int64_t vdim_old = A->vdim ;
+    int64_t vlen_old = A->vlen ;
     int64_t vlen_new, vdim_new ;
     if (A->is_csc)
     { 
@@ -64,6 +45,30 @@ GrB_Info GB_resize              // change the size of a matrix
     }
 
     //--------------------------------------------------------------------------
+    // determine the max # of threads to use here
+    //--------------------------------------------------------------------------
+
+    // GB_selector (RESIZE) will use a different # of threads
+
+    GB_GET_NTHREADS_MAX (nthreads_max, chunk, Context) ;
+    int nthreads = GB_nthreads (vdim_new - vdim_old, chunk, nthreads_max) ;
+
+    //--------------------------------------------------------------------------
+    // delete any lingering zombies and assemble any pending tuples
+    //--------------------------------------------------------------------------
+
+    // only do so if either dimension is shrinking, or if pending tuples exist
+    // and vdim_old <= 1 and vdim_new > 1, since in that case, Pending->j has
+    // not been allocated yet, but would be required in the resized matrix.
+
+    if (vdim_new < vdim_old || vlen_new < vlen_old ||
+        (GB_PENDING (A) && vdim_old <= 1 && vdim_new > 1))
+    { 
+        GB_WAIT (A) ;
+        ASSERT_OK (GB_check (A, "A to resize, wait", GB0)) ;
+    }
+
+    //--------------------------------------------------------------------------
     // check for early conversion to hypersparse
     //--------------------------------------------------------------------------
 
@@ -71,19 +76,16 @@ GrB_Info GB_resize              // change the size of a matrix
     // space for the non-hypersparse A->p component.  So convert the matrix to
     // hypersparse if that happens.
 
-    int64_t vdim_old = A->vdim ;
+    GrB_Info info ;
 
-    GrB_Info info = GrB_SUCCESS ;
+    if (A->nvec_nonempty < 0)
+    { 
+        A->nvec_nonempty = GB_nvec_nonempty (A, Context) ;
+    }
 
     if (GB_to_hyper_test (A, A->nvec_nonempty, vdim_new))
     { 
-        info = GB_to_hyper (A, Context) ;
-    }
-
-    if (info != GrB_SUCCESS)
-    { 
-        // out of memory; all content of A has been freed
-        return (info) ;
+        GB_OK (GB_to_hyper (A, Context)) ;
     }
 
     //--------------------------------------------------------------------------
@@ -95,7 +97,6 @@ GrB_Info GB_resize              // change the size of a matrix
     int64_t *restrict Ah = A->h ;
     int64_t *restrict Ap = A->p ;
     A->vdim = vdim_new ;
-    bool recount = false ;
 
     if (A->is_hyper)
     {
@@ -112,15 +113,16 @@ GrB_Info GB_resize              // change the size of a matrix
             Ap = A->p ;
             Ah = A->h ;
         }
-        // descrease A->nvec to delete the vectors outside the range
-        // 0...vdim_new-1.
-        int64_t pleft = 0 ;
-        int64_t pright = GB_IMIN (A->nvec, vdim_new) - 1 ;
-        bool found ;
-        GB_BINARY_SPLIT_SEARCH (vdim_new, Ah, pleft, pright, found) ;
-        A->nvec = pleft ;
-        A->nvec_nonempty = A->nvec ;
-
+        if (vdim_new < vdim_old)
+        { 
+            // descrease A->nvec to delete the vectors outside the range
+            // 0...vdim_new-1.
+            int64_t pleft = 0 ;
+            int64_t pright = GB_IMIN (A->nvec, vdim_new) - 1 ;
+            bool found ;
+            GB_BINARY_SPLIT_SEARCH (vdim_new, Ah, pleft, pright, found) ;
+            A->nvec = pleft ;
+        }
     }
     else
     {
@@ -137,9 +139,8 @@ GrB_Info GB_resize              // change the size of a matrix
             if (!ok)
             { 
                 // out of memory
-                GB_CONTENT_FREE (A) ;
-                double memory = GBYTES (vdim_new+1, sizeof (int64_t)) ;
-                return (GB_OUT_OF_MEMORY (memory)) ;
+                GB_FREE_ALL ;
+                return (GB_OUT_OF_MEMORY) ;
             }
             Ap = A->p ;
             A->plen = vdim_new ;
@@ -149,19 +150,21 @@ GrB_Info GB_resize              // change the size of a matrix
         {
             // number of vectors is increasing, extend the vector pointers
             int64_t anz = GB_NNZ (A) ;
+            #pragma omp parallel for num_threads(nthreads) schedule(static)
             for (int64_t j = vdim_old + 1 ; j <= vdim_new ; j++)
             { 
                 Ap [j] = anz ;
             }
             // A->nvec_nonempty does not change
         }
-        else
-        { 
-            // number of vectors is decreasing, need to count the new number of
-            // non-empty vectors, unless it is done during pruning, just below.
-            recount = true ;
-        }
         A->nvec = vdim_new ;
+    }
+
+    if (vdim_new < vdim_old)
+    { 
+        // number of vectors is decreasing, need to count the new number of
+        // non-empty vectors, unless it is done during pruning, just below.
+        A->nvec_nonempty = -1 ;         // compute when needed
     }
 
     //--------------------------------------------------------------------------
@@ -169,27 +172,16 @@ GrB_Info GB_resize              // change the size of a matrix
     //--------------------------------------------------------------------------
 
     // if vlen is shrinking, delete entries outside the new matrix
-    if (vlen_new < A->vlen)
+    if (vlen_new < vlen_old)
     { 
-        // compare with zombie pruning in GB_wait
-        // also compute A->nvec_nonempty
-        int64_t vdim = vdim_new ;
-        int64_t anz ;
-        #define GB_PRUNE if (i >= vlen_new) break ;
-        #include "GB_prune_inplace.c"
-        recount = false ;
+        GB_OK (GB_selector (NULL, GB_RESIZE_opcode, NULL, false, A, vlen_new-1,
+            NULL, Context)) ;
     }
 
     //--------------------------------------------------------------------------
-    // explicit count of non-empty vectors may be required
-    //--------------------------------------------------------------------------
-
-    if (recount)
-    { 
-        A->nvec_nonempty = GB_nvec_nonempty (A) ;
-    }
-
     // vlen has been resized
+    //--------------------------------------------------------------------------
+
     A->vlen = vlen_new ;
     ASSERT_OK (GB_check (A, "A vlen resized", GB0)) ;
 

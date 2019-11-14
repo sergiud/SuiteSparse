@@ -16,10 +16,18 @@
 // degree.  This will increase the probability that low degree nodes are
 // selected and larger sets are selected.
 
-void mis_score (float *result, uint32_t *degree)
+// this unary operator was used in V2.3.4, but it is not thread-safe
+void mis_score (double *result, uint32_t *degree)
 {
     // add 1 to prevent divide by zero
-    float x = simple_rand_x ( ) ;
-    (*result) = (0.0001f + x / (1. + 2.* (*degree))) ;
+    double x = simple_rand_x ( ) ;
+    (*result) = (0.0001 + x / (1. + 2.* (*degree))) ;
+}
+
+// a binary operator is thread-safe, where xrand is an entry from a
+// vector of random numbers
+void mis_score2 (double *result, uint32_t *degree, double *xrand)
+{
+    (*result) = (0.0001 + (*xrand) / (1. + 2.* (*degree))) ;
 }
 

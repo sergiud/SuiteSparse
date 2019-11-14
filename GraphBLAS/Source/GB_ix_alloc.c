@@ -2,7 +2,7 @@
 // GB_ix_alloc: allocate a matrix to hold a given number of entries
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -13,6 +13,10 @@
 // A->x is freed but not reallocated.
 
 // If this method fails, all content of A is freed (including A->p and A->h).
+
+// GB_ix_alloc is only called by GB_create, so the matrix is not in the queue.
+// The function never accessed the global matrix queue, and thus it
+// cannot return GrB_PANIC.
 
 #include "GB.h"
 
@@ -29,19 +33,13 @@ GrB_Info GB_ix_alloc        // allocate A->i and A->x space in a matrix
     // check inputs
     //--------------------------------------------------------------------------
 
-    // GB_new does not always initialize A->p; GB_check fails in this case.  So
-    // the following assertion is not possible here.  This is by design.
-    // Thus, ASSERT_OK (GB_check (A, "A", ...)) ;  cannot be used here.
-    ASSERT (A != NULL && A->p != NULL) ;
-    ASSERT ((!(A->is_hyper) || A->h != NULL)) ;
-
-    double memory = GBYTES (nzmax,
-        sizeof (int64_t) + (numeric ? A->type->size : 0)) ;
+    // GB_new does not always initialize or even allocate A->p
+    ASSERT (A != NULL) ;
 
     if (nzmax > GB_INDEX_MAX)
     { 
         // problem too large
-        return (GB_OUT_OF_MEMORY (memory)) ;
+        return (GB_OUT_OF_MEMORY) ;
     }
 
     //--------------------------------------------------------------------------
@@ -63,8 +61,8 @@ GrB_Info GB_ix_alloc        // allocate A->i and A->x space in a matrix
     if (A->i == NULL || (numeric && A->x == NULL))
     { 
         // out of memory
-        GB_CONTENT_FREE (A) ;
-        return (GB_OUT_OF_MEMORY (memory)) ;
+        GB_PHIX_FREE (A) ;
+        return (GB_OUT_OF_MEMORY) ;
     }
 
     return (GrB_SUCCESS) ;

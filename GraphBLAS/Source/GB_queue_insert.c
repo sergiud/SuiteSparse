@@ -2,7 +2,7 @@
 // GB_queue_insert:  insert a matrix at the head of the matrix queue
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -31,18 +31,18 @@ bool GB_queue_insert            // insert matrix at the head of queue
 
     bool ok = true ;
 
-    if ((A->n_pending > 0 || A->nzombies > 0) && !(A->enqueued))
-    {
+    if ((A->Pending != NULL || A->nzombies > 0) && !(A->enqueued))
+    { 
         // A is not in the queue yet, but needs to be there
 
         // define the work to do inside the critical section
         #define GB_CRITICAL_SECTION                                         \
         {                                                                   \
             /* check again to be safe, then add A to the head of queue */   \
-            if ((A->n_pending > 0 || A->nzombies > 0) && !(A->enqueued))    \
+            if ((A->Pending != NULL || A->nzombies > 0) && !(A->enqueued))  \
             {                                                               \
                 /* add the matrix to the head of the queue */               \
-                GrB_Matrix Head = (GrB_Matrix) (GB_Global.queue_head) ;     \
+                GrB_Matrix Head = (GrB_Matrix) (GB_Global_queue_head_get ( )) ;\
                 A->queue_next = Head ;                                      \
                 A->queue_prev = NULL ;                                      \
                 A->enqueued = true ;                                        \
@@ -50,7 +50,7 @@ bool GB_queue_insert            // insert matrix at the head of queue
                 {                                                           \
                     Head->queue_prev = A ;                                  \
                 }                                                           \
-                GB_Global.queue_head = A ;                                  \
+                GB_Global_queue_head_set (A) ;                              \
             }                                                               \
         }
 

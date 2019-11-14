@@ -2,7 +2,7 @@
 // GB_mx_mxArray_to_BinaryOp
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -30,6 +30,7 @@ bool GB_mx_mxArray_to_BinaryOp         // true if successful, false otherwise
     const bool YisComplex
 )
 {
+    GB_WHERE ("GB_mx_mxArray_to_BinaryOp") ;
 
     (*handle) = NULL ;
 

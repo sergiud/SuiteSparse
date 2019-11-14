@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 // This file is constructed automatically by cmake and m4 when GraphBLAS is
-// compiled, from the Config/user_def*.m4 and User/*.m4 files.  Do not edit
+// compiled, from the Config/user_def*.m4 and *.m4 files in User/.  Do not edit
 // this file directly.  It contains references to internally-defined functions
 // and objects inside GraphBLAS, which are not user-callable.
 
@@ -12,6 +12,8 @@
 //------------------------------------------------------------------------------
 // SuiteSparse/GraphBLAS/Config/user_def1.m4: define user-defined objects
 //------------------------------------------------------------------------------
+
+
 
 
 
@@ -41,7 +43,10 @@ GrB_Info GB_AxB_user
     const GrB_Matrix GB_M,
     const GrB_Matrix GB_A,
     const GrB_Matrix GB_B,
-    bool GB_flipxy,                // if true, A and B have been swapped
+    bool GB_flipxy,
+
+    // for dot method only:
+    const bool GB_mask_comp,
 
     // for heap method only:
     int64_t *restrict GB_List,
@@ -50,21 +55,13 @@ GrB_Info GB_AxB_user
     const int64_t GB_bjnz_max,
 
     // for Gustavson method only:
-    GB_Sauna GB_C_Sauna,
-
-    GB_Context Context
+    GB_Sauna GB_C_Sauna
 )
 {
-    GrB_Info GB_info = GrB_INVALID_OBJECT ;
-
+    GrB_Info GB_info = GrB_SUCCESS ;
     if (0)
     {
         ;
-    }
-
-    if (GB_info == GrB_INVALID_OBJECT)
-    {
-        return (GB_ERROR (GrB_INVALID_OBJECT, (GB_LOG, "undefined semiring"))) ;
     }
     return (GB_info) ;
 }

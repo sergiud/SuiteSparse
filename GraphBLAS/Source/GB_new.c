@@ -2,13 +2,15 @@
 // GB_new: create a new GraphBLAS matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // Creates a new matrix but does not allocate space for A->i and A->x.
 // See GB_create instead.
+
+// This function is called via the GB_NEW(...) macro.
 
 // If the Ap_option is GB_Ap_calloc, the A->p and A->h are allocated and
 // initialized, and A->magic is set to GB_MAGIC to denote a valid matrix.
@@ -41,7 +43,7 @@ GrB_Info GB_new                 // create matrix, except for indices & values
     const GrB_Type type,        // matrix type
     const int64_t vlen,         // length of each vector
     const int64_t vdim,         // number of vectors
-    const GB_Ap_code Ap_option, // calloc/malloc A->p and A->h, or leave NULL
+    const GB_Ap_code Ap_option, // allocate A->p and A->h, or leave NULL
     const bool is_csc,          // true if CSC, false if CSR
     const int hyper_option,     // 1:hyper, 0:nonhyper, -1:auto
     const double hyper_ratio,   // A->hyper_ratio, unless auto
@@ -70,7 +72,8 @@ GrB_Info GB_new                 // create matrix, except for indices & values
         GB_CALLOC_MEMORY (*Ahandle, 1, sizeof (struct GB_Matrix_opaque)) ;
         if (*Ahandle == NULL)
         { 
-            return (GB_NO_MEMORY) ;
+            // out of memory
+            return (GB_OUT_OF_MEMORY) ;
         }
         allocated_header = true ;
     }
@@ -107,7 +110,7 @@ GrB_Info GB_new                 // create matrix, except for indices & values
         // if the global hyper_ratio is negative.  This is only used by
         // GrB_Matrix_new, and in a special case in GB_mask.
         ASSERT (hyper_option == GB_AUTO_HYPER) ;
-        double hyper_ratio = GB_Global.hyper_ratio ;
+        double hyper_ratio = GB_Global_hyper_ratio_get ( ) ;
         A->hyper_ratio = hyper_ratio ;
         is_hyper = !(vdim <= 1 || 0 > hyper_ratio) ;
     }
@@ -131,37 +134,25 @@ GrB_Info GB_new                 // create matrix, except for indices & values
     }
     A->p = NULL ;
     A->h = NULL ;
+    A->hfirst = 0 ;
+    A->is_slice = false ;       // true if A is a slice or hyperslice
     A->p_shallow = false ;
     A->h_shallow = false ;
-    A->nvec_nonempty = 0 ;      // all vectors are emtpy
+    A->nvec_nonempty = 0 ;      // all vectors are empty
 
     // content that is freed or reset in GB_ix_free
-    // (GB_ix_free then calls GB_pending_free and GB_queue_remove):
     A->i = NULL ;
     A->x = NULL ;
     A->nzmax = 0 ;              // GB_NNZ(A) checks nzmax==0 before Ap[nvec]
     A->i_shallow = false ;
     A->x_shallow = false ;
     A->nzombies = 0 ;
-
-    // content that is freed or reset by GB_pending_free:
-    A->n_pending = 0 ;
-    A->max_n_pending = 0 ;
-    A->sorted_pending = true ;
-    A->i_pending = NULL ;
-    A->j_pending = NULL ;
-    A->s_pending = NULL ;
-    A->operator_pending = NULL ;
-    A->type_pending = NULL ;
-    A->type_pending_size = 0 ;
+    A->Pending = NULL ;
 
     // content freed or reset by GB_queue_remove:
     A->queue_next = NULL ;
     A->queue_prev = NULL ;
     A->enqueued = false ;
-
-    // A has no Sauna yet
-    A->Sauna = NULL ;
 
     // method used in GrB_mxm, vxm, and mxv
     A->AxB_method_used = GxB_DEFAULT ;
@@ -170,19 +161,16 @@ GrB_Info GB_new                 // create matrix, except for indices & values
     // Allocate A->p and A->h if requested
     //--------------------------------------------------------------------------
 
-    double memory = 0 ;
     bool ok ;
     if (Ap_option == GB_Ap_calloc)
     {
         // Sets the vector pointers to zero, which defines all vectors as empty
         A->magic = GB_MAGIC ;
-        memory += GBYTES (A->plen+1, sizeof (int64_t)) ;
         GB_CALLOC_MEMORY (A->p, A->plen+1, sizeof (int64_t)) ;
         ok = (A->p != NULL) ;
         if (is_hyper)
         { 
-            // since nvec is zero, there is never any need to calloc A->h
-            memory += GBYTES (A->plen, sizeof (int64_t)) ;
+            // since nvec is zero, there is never any need to initialize A->h
             GB_MALLOC_MEMORY (A->h, A->plen, sizeof (int64_t)) ;
             ok = ok && (A->h != NULL) ;
         }
@@ -195,12 +183,10 @@ GrB_Info GB_new                 // create matrix, except for indices & values
         // returning the matrix to the user application.  GB_NNZ(A) must check
         // A->nzmax == 0 since A->p [A->nvec] is undefined.
         A->magic = GB_MAGIC2 ;
-        memory += GBYTES (A->plen+1, sizeof (int64_t)) ;
         GB_MALLOC_MEMORY (A->p, A->plen+1, sizeof (int64_t)) ;
         ok = (A->p != NULL) ;
         if (is_hyper)
         { 
-            memory += GBYTES (A->plen, sizeof (int64_t)) ;
             GB_MALLOC_MEMORY (A->h, A->plen, sizeof (int64_t)) ;
             ok = ok && (A->h != NULL) ;
         }
@@ -223,7 +209,7 @@ GrB_Info GB_new                 // create matrix, except for indices & values
             // only free the header if it was allocated here
             GB_MATRIX_FREE (Ahandle) ;
         }
-        return (GB_OUT_OF_MEMORY (memory)) ;
+        return (GB_OUT_OF_MEMORY) ;
     }
 
     // The vector pointers A->p are initialized only if Ap_calloc is true

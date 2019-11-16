@@ -2,14 +2,15 @@
 // GB_AxB_heap_meta: compute C<M>=A*B or C=A*B using a heap-based method
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 {
-    const GB_atype *restrict Ax = A->x ;
-    const GB_btype *restrict Bx = B->x ;
+
+    const GB_ATYPE *restrict Ax = A_is_pattern ? NULL : A->x ;
+    const GB_BTYPE *restrict Bx = B_is_pattern ? NULL : B->x ;
 
     if (M != NULL)
     { 

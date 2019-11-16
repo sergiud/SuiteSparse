@@ -1,8 +1,8 @@
 //------------------------------------------------------------------------------
-// GxB_Matrix_option_get: get an option in a matrix
+// GxB_Matrix_Option_get: get an option in a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -30,42 +30,50 @@ GrB_Info GxB_Matrix_Option_get      // gets the current option of a matrix
     //--------------------------------------------------------------------------
 
     va_list ap ;
-    double *hyper_ratio, hyper ;
-    GxB_Format_Value *format ;
-    bool is_csc ;
-
-    hyper  = A->hyper_ratio ;
-    is_csc = A->is_csc ;
 
     switch (field)
     {
 
         case GxB_HYPER : 
 
-            va_start (ap, field) ;
-            hyper_ratio = va_arg (ap, double *) ;
-            va_end (ap) ;
-
-            GB_RETURN_IF_NULL (hyper_ratio) ;
-            (*hyper_ratio) = hyper ;
+            {
+                va_start (ap, field) ;
+                double *hyper_ratio = va_arg (ap, double *) ;
+                va_end (ap) ;
+                GB_RETURN_IF_NULL (hyper_ratio) ;
+                (*hyper_ratio) = A->hyper_ratio ;
+            }
             break ;
 
         case GxB_FORMAT : 
 
-            va_start (ap, field) ;
-            format = va_arg (ap, GxB_Format_Value *) ;
-            va_end (ap) ;
+            {
+                va_start (ap, field) ;
+                GxB_Format_Value *format = va_arg (ap, GxB_Format_Value *) ;
+                va_end (ap) ;
+                GB_RETURN_IF_NULL (format) ;
+                (*format) = (A->is_csc) ? GxB_BY_COL : GxB_BY_ROW ;
+            }
+            break ;
 
-            GB_RETURN_IF_NULL (format) ;
-            (*format) = (is_csc) ? GxB_BY_COL : GxB_BY_ROW ;
+        case GxB_IS_HYPER : 
+
+            {
+                va_start (ap, field) ;
+                bool *is_hyper = va_arg (ap, bool *) ;
+                va_end (ap) ;
+                GB_RETURN_IF_NULL (is_hyper) ;
+                (*is_hyper) = A->is_hyper ;
+            }
             break ;
 
         default : 
 
             return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,
                     "invalid option field [%d], must be one of:\n"
-                    "GxB_HYPER [%d] or GxB_FORMAT [%d]",
-                    (int) field, (int) GxB_HYPER, (int) GxB_FORMAT))) ;
+                    "GxB_HYPER [%d], GxB_FORMAT [%d], or GxB_IS_HYPER [%d]",
+                    (int) field, (int) GxB_HYPER, (int) GxB_FORMAT,
+                    (int) GxB_IS_HYPER))) ;
 
     }
     return (GrB_SUCCESS) ;

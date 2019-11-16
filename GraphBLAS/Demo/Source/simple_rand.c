@@ -2,7 +2,7 @@
 /* GraphBLAS/Demo/Source/simple_rand.c: a very simple random number generator */
 /* -------------------------------------------------------------------------- */
 
-/* SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved*/
+/* SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved*/
 /* http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.        */
 
 /* -------------------------------------------------------------------------- */
@@ -46,12 +46,6 @@ uint64_t simple_rand_getseed (void)
    return (simple_rand_next) ;
 }
 
-/* return a random double between 0 and 1, inclusive */
-double simple_rand_x ( )
-{
-    return (((double) simple_rand ( )) / ((double) SIMPLE_RAND_MAX)) ;
-}
-
 /* return a random uint64_t */
 uint64_t simple_rand_i ( )
 {
@@ -63,3 +57,8 @@ uint64_t simple_rand_i ( )
     return (i) ;
 }
 
+/* return a random double between 0 and 1, inclusive */
+double simple_rand_x ( )
+{
+    return (((double) simple_rand_i ( )) / ((double) UINT64_MAX)) ;
+}

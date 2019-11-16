@@ -2,7 +2,7 @@
 // GxB_UnaryOp_ztype: return the type of z for z=f(x)
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -12,7 +12,7 @@
 GrB_Info GxB_UnaryOp_ztype          // return the type of z
 (
     GrB_Type *ztype,                // return type of output z
-    const GrB_UnaryOp unaryop       // unary operator
+    GrB_UnaryOp unaryop             // unary operator
 )
 { 
 

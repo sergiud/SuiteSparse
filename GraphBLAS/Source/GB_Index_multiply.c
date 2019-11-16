@@ -2,7 +2,7 @@
 // GB_Index_multiply:  multiply two integers and guard against overflow
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ bool GB_Index_multiply      // true if ok, false if overflow
     const int64_t a,
     const int64_t b
 )
-{ 
+{
 
     ASSERT (c != NULL) ;
 
@@ -34,9 +34,10 @@ bool GB_Index_multiply      // true if ok, false if overflow
         return (false) ;
     }
 
-    // a + b is now safe to compute
-    if ((a + b) > (GB_INDEX_MAX / GB_IMIN (a,b)))
-    { 
+    double da = ceil (log2 ((double) a)) ;
+    double db = ceil (log2 ((double) b)) ;
+    if (da + db > 60)
+    {
         // a * b may overflow
         return (false) ;
     }

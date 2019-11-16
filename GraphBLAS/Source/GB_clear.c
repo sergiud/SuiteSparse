@@ -2,7 +2,7 @@
 // GB_clear: clears the content of a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -37,14 +37,13 @@ GrB_Info GB_clear           // clear a matrix, type and dimensions unchanged
     ASSERT (A->magic == GB_MAGIC || A->magic == GB_MAGIC2) ;
 
     // zombies and pending tuples have no effect; about to delete them anyway
-    ASSERT (GB_PENDING_OK (A)) ;
-    ASSERT (GB_ZOMBIES_OK (A)) ;
+    ASSERT (GB_PENDING_OK (A)) ; ASSERT (GB_ZOMBIES_OK (A)) ;
 
     //--------------------------------------------------------------------------
     // clear the content of A
     //--------------------------------------------------------------------------
 
-    // free all content, but not the Sauna
+    // free all content
     GB_PHIX_FREE (A) ;
 
     // no more zombies or pending tuples
@@ -86,8 +85,8 @@ GrB_Info GB_clear           // clear a matrix, type and dimensions unchanged
         if (A->p == NULL || A->h == NULL)
         { 
             // out of memory
-            GB_CONTENT_FREE (A) ;
-            return (GB_NO_MEMORY) ;
+            GB_PHIX_FREE (A) ;
+            return (GB_OUT_OF_MEMORY) ;
         }
 
     }
@@ -106,8 +105,8 @@ GrB_Info GB_clear           // clear a matrix, type and dimensions unchanged
         if (A->p == NULL)
         { 
             // out of memory
-            GB_CONTENT_FREE (A) ;
-            return (GB_OUT_OF_MEMORY (GBYTES (plen+1, sizeof (int64_t)))) ;
+            GB_PHIX_FREE (A) ;
+            return (GB_OUT_OF_MEMORY) ;
         }
     }
 

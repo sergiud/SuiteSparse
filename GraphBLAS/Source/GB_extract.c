@@ -2,22 +2,26 @@
 // GB_extract: C<M> = accum(C,A(I,J))
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // Not user-callable.  Implements the user-callable GrB_*_extract functions.
-//
+
 // C<M> = accum (C, A (Rows,Cols)) or
+
 // C<M> = accum (C, AT(Rows,Cols)) where AT = A'
-//
+
 // equivalently:
-//
+
 // C<M> = accum (C, A(Rows,Cols) )
+
 // C<M> = accum (C, A(Cols,Rows)')
 
-#include "GB.h"
+#include "GB_extract.h"
+#include "GB_subref.h"
+#include "GB_accum_mask.h"
 
 GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
 (
@@ -40,7 +44,7 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     // check inputs
     //--------------------------------------------------------------------------
 
-    ASSERT (GB_ALIAS_OK2 (C, M, A)) ;
+    // C may be aliased with M and/or A
 
     GB_RETURN_IF_NULL (Rows) ;
     GB_RETURN_IF_NULL (Cols) ;
@@ -63,19 +67,19 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     int64_t cncols = GB_NCOLS (C) ;
 
     int64_t nRows, nCols, RowColon [3], ColColon [3] ;
-    int RowsKind, ColsKind ;
+    int rkind, ckind ;
 
     if (!A_transpose)
     { 
         // T = A(Rows,Cols)
-        GB_ijlength (Rows, nRows_in, GB_NROWS (A), &nRows, &RowsKind, RowColon);
-        GB_ijlength (Cols, nCols_in, GB_NCOLS (A), &nCols, &ColsKind, ColColon);
+        GB_ijlength (Rows, nRows_in, GB_NROWS (A), &nRows, &rkind, RowColon) ;
+        GB_ijlength (Cols, nCols_in, GB_NCOLS (A), &nCols, &ckind, ColColon) ;
     }
     else
     { 
         // T = A(Cols,Rows)
-        GB_ijlength (Rows, nRows_in, GB_NCOLS (A), &nRows, &RowsKind, RowColon);
-        GB_ijlength (Cols, nCols_in, GB_NROWS (A), &nCols, &ColsKind, ColColon);
+        GB_ijlength (Rows, nRows_in, GB_NCOLS (A), &nRows, &rkind, RowColon) ;
+        GB_ijlength (Cols, nCols_in, GB_NROWS (A), &nCols, &ckind, ColColon) ;
     }
 
     if (cnrows != nRows || cncols != nCols)
@@ -91,7 +95,7 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     GB_RETURN_IF_QUICK_MASK (C, C_replace, M, Mask_comp) ;
 
     // delete any lingering zombies and assemble any pending tuples
-    GB_WAIT (C) ;
+    // GB_WAIT (C) ;
     GB_WAIT (M) ;
     GB_WAIT (A) ;
 
@@ -149,9 +153,9 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     // T has the same hypersparsity as A.
 
     // If T and C have different CRS/CSC formats, then GB_accum_mask must
-    // transpose T, and thus T can be returned from GB_subref_numeric with
+    // transpose T, and thus T can be returned from GB_subref with
     // jumbled indices.  If T and C have the same CSR/CSC formats, then
-    // GB_subref_numeric must return T with sorted indices in each vector
+    // GB_subref must return T with sorted indices in each vector
     // because GB_accum_mask will not transpose T.
 
     // If T is a single column or a single row, it must be sorted, because the
@@ -164,10 +168,9 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     //--------------------------------------------------------------------------
 
     GrB_Matrix T ;
-    info = GB_subref_numeric (&T, T_is_csc, A, I, ni, J, nj, must_sort,
-        Context) ;
+    info = GB_subref (&T, T_is_csc, A, I, ni, J, nj, false, must_sort, Context);
     if (info != GrB_SUCCESS)
-    {
+    { 
         return (info) ;
     }
 

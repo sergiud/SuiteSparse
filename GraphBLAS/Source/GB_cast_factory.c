@@ -2,12 +2,12 @@
 // GB_cast_factory: return a pointer to a typecasting function
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
-// return a pointer to a function f(z,x,s) that copies its input x into its
+// Returns a pointer to a function f(z,x,s) that copies its input x into its
 // output z, casting as needed.  That is, it computes z = (type of z) x.
 // s is the size for user-defined types, which can only be copied.
 
@@ -33,7 +33,8 @@ GB_cast_function GB_cast_factory   // returns pointer to function to cast x to z
     //--------------------------------------------------------------------------
 
     // the worker selects a typecast function and returns it to the caller
-    #define GB_WORKER(ztype,xtype) return (&GB_cast_ ## ztype ## _ ## xtype) ;
+    #define GB_WORKER(ignore1,ignore2,ztype,ignore3,xtype) \
+        return (&GB_cast_ ## ztype ## _ ## xtype) ;
 
     //--------------------------------------------------------------------------
     // launch the switch factory
@@ -41,7 +42,7 @@ GB_cast_function GB_cast_factory   // returns pointer to function to cast x to z
 
     // switch factory for two built-in types; user types are skipped.
     // no generic worker so the switch factory cannot be disabled.
-    #include "GB_2type_template.c"
+    #include "GB_2type_factory.c"
 
     //--------------------------------------------------------------------------
     // user-defined types fall through the switch factory to here

@@ -2,7 +2,7 @@
 // GB_mex_semiring: parse a semiring, for testing; returns nothing
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ void mexFunction
     GB_mx_mxArray_to_Semiring (&semiring, pargin [0], "semiring",
         mxDOUBLE_CLASS) ;
 
-    GrB_Info info = GB_check (semiring, "semiring", GB3) ;
+    GrB_Info info = GB_check (semiring, "semiring", GxB_COMPLETE) ;
     if (info != GrB_SUCCESS)
     {
         mexErrMsgTxt (GrB_error ( )) ;

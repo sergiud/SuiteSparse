@@ -2,12 +2,14 @@
 // GB_transplant_conform: transplant T into C, then conform C
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
-// C = (type) T, then conform C to its desired hypersparsity.  T is freed
+// C = (type) T, then conform C to its desired hypersparsity.  T is freed.
+// All prior content of C is cleared; zombies and pending tuples are abandoned
+// in C.
 
 #include "GB.h"
 
@@ -28,6 +30,8 @@ GrB_Info GB_transplant_conform      // transplant and conform hypersparsity
     ASSERT (Thandle != NULL) ;
     ASSERT_OK (GB_check (*Thandle, "T to transplant into C", GB0)) ;
     ASSERT_OK (GB_check (ctype, "ctype for transplant into C", GB0)) ;
+    ASSERT (GB_ZOMBIES_OK (*Thandle)) ;
+    ASSERT (!GB_PENDING (*Thandle)) ;
 
     //--------------------------------------------------------------------------
     // transplant and typecast T into C, and free T

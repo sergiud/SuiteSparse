@@ -2,7 +2,7 @@
 // GrB_Vector_new: create a new vector
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -17,7 +17,7 @@
 GrB_Info GrB_Vector_new     // create a new vector with no entries
 (
     GrB_Vector *v,          // handle of vector to create
-    const GrB_Type type,    // type of vector to create
+    GrB_Type type,          // type of vector to create
     GrB_Index n             // dimension is n-by-1
 )
 {
@@ -54,7 +54,7 @@ GrB_Info GrB_Vector_new     // create a new vector with no entries
 
     // *v == NULL ;                 // allocate a new header for v
     GB_NEW ((GrB_Matrix *) v, type, vlen, 1, GB_Ap_calloc, true,
-        GB_AUTO_HYPER, GB_HYPER_DEFAULT, 1) ;
+        GB_AUTO_HYPER, GB_HYPER_DEFAULT, 1, Context) ;
     ASSERT (GB_IMPLIES (info == GrB_SUCCESS, GB_VECTOR_OK (*v))) ;
     return (info) ;
 }

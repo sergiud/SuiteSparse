@@ -2,7 +2,7 @@
 // GB_mx_object_to_mxArray
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -23,8 +23,8 @@
 // should not appear in a MATLAB matrix but MATLAB handles them without
 // difficulty.  They are returned to MATLAB in C.matrix.  If any work is done
 // in MATLAB on the matrix, these entries will get dropped.  If they are to be
-// preserved, do C.pattern = spones (C.matrix) in MATLAB before modifying
-// C.matrix.
+// preserved, do C.pattern = GB_spones_mex (C.matrix) in MATLAB before
+// modifying C.matrix.
 
 #include "GB_mex.h"
 
@@ -37,7 +37,6 @@ mxArray *GB_mx_object_to_mxArray   // returns the MATLAB mxArray
     const bool create_struct        // if true, then return a struct
 )
 {
-    
     GB_WHERE ("GB_mx_object_to_mxArray") ;
 
     // get the inputs
@@ -95,7 +94,7 @@ mxArray *GB_mx_object_to_mxArray   // returns the MATLAB mxArray
     {
         ASSERT (C->nzmax == 0 && cnz == 0) ;
         GB_CALLOC_MEMORY (C->p, C->vdim + 1, sizeof (int64_t)) ;
-        C->i_shallow = false ;
+        C->p_shallow = false ;
     }
 
     /*
@@ -152,7 +151,7 @@ mxArray *GB_mx_object_to_mxArray   // returns the MATLAB mxArray
         // otherwise C is cast into a MATLAB double sparse matrix
         A = mxCreateSparse (0, 0, 0, mxREAL) ;
         GB_MALLOC_MEMORY (double *Sx, cnz+1, sizeof (double)) ;
-        GB_cast_array (Sx, GB_FP64_code, C->x, C->type->code, cnz) ;
+        GB_cast_array (Sx, GB_FP64_code, C->x, C->type->code, cnz, Context) ;
         mexMakeMemoryPersistent (Sx) ;
         mxSetPr (A, Sx) ;
 

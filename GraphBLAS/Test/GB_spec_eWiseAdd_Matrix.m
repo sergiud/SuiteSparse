@@ -1,4 +1,4 @@
-function C = GB_spec_eWiseAdd_Matrix (C, Mask, accum, add, A, B, descriptor)
+function C = GB_spec_eWiseAdd_Matrix (C, Mask, accum, add, A, B, descriptor, ignore)
 %GB_SPEC_EWISEADD_MATRIX a MATLAB mimic of GrB_eWiseAdd_Matrix
 %
 % Usage:
@@ -7,14 +7,14 @@ function C = GB_spec_eWiseAdd_Matrix (C, Mask, accum, add, A, B, descriptor)
 % Computes C<Mask> = accum(C,T), in GraphBLAS notation, where T =A+B, A'+B,
 % A+B' or A'+B'.  The pattern of T is the union of A and B.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 %-------------------------------------------------------------------------------
 % get inputs
 %-------------------------------------------------------------------------------
 
-if (nargout > 1 || nargin ~= 7)
+if (nargout > 1 || ~(nargin == 7 || nargin == 8))
     error ('usage: C = GB_spec_eWiseAdd_Matrix (C, Mask, accum, add, A, B, descriptor)') ;
 end
 

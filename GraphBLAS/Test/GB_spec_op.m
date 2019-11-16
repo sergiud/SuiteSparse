@@ -8,8 +8,8 @@ function C = GB_spec_op (op, A, B)
 %
 % op or op.opname is a string with just the operator name.  Valid names of
 % binary operators are 'first', 'second', 'min', 'max', 'plus', 'minus',
-% 'times', 'div', 'eq', 'ne', 'gt', 'lt', 'ge', 'le', 'or', 'and', 'xor'.
-% 'iseq', 'isne', 'isgt', 'islt', 'isge', 'le'.
+% 'rminus', 'times', 'div', 'rdiv', 'eq', 'ne', 'gt', 'lt', 'ge', 'le', 'or',
+% 'and', 'xor'.  'iseq', 'isne', 'isgt', 'islt', 'isge', 'le'.
 %
 % Unary operators are 'one', 'identity', 'ainv', 'abs', 'minv', and 'not'
 %
@@ -23,7 +23,7 @@ function C = GB_spec_op (op, A, B)
 %  6 valid operators z=f(x,y) where x and y are any of the 11 classes, but
 %  z is logical: 'eq', 'ne', 'gt', 'lt', 'ge', 'le'
 %
-% This gives a total of (8 numeric, 6 'is', 3 bool) * 11 types = 187 ops
+% This gives a total of (10 numeric, 6 'is', 3 bool) * 11 types = 209 ops
 % for which x, y, and z have the same type, and 6*11 = 66 unary operators
 % z=f(x) where z and x have the same type.
 %
@@ -38,7 +38,7 @@ function C = GB_spec_op (op, A, B)
 % Also, typecasting in MATLAB and GraphBLAS differs under underflow and
 % overflow conditions.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 % get the operator name and class
@@ -66,18 +66,18 @@ end
 
 switch opname
 
-    % 8 binary operators, result is opclass
+    % 10 binary operators, result is opclass
     case 'first'
         z = x ;
     case 'second'
         z = y ;
     case 'min'
-        % min(x,y) in SuiteSparse:GraphBLAS is min(x,y,'includenan') in MATLAB.
+        % min(x,y) in SuiteSparse:GraphBLAS is min(x,y,'omitnan') in MATLAB.
         % see discussion in SuiteSparse/GraphBLAS/Source/GB.h
-        % z = min (x,y,'includenan') ;
+        % z = min (x,y,'omitnan') ;
         z = GB_mex_op (op, x, y) ;
     case 'max'
-        % z = max (x,y,'includenan') ;
+        % z = max (x,y,'omitnan') ;
         z = GB_mex_op (op, x, y) ;
     case 'plus'
         if (use_matlab)
@@ -91,6 +91,12 @@ switch opname
         else
             z = GB_mex_op (op, x, y) ;
         end
+    case 'rminus'
+        if (use_matlab)
+            z = y - x ;
+        else
+            z = GB_mex_op (op, x, y) ;
+        end
     case 'times'
         if (use_matlab)
             z = x .* y ;
@@ -100,6 +106,12 @@ switch opname
     case 'div'
         if (use_matlab)
             z = x ./ y ;
+        else
+            z = GB_mex_op (op, x, y) ;
+        end
+    case 'rdiv'
+        if (use_matlab)
+            z = y ./ x ;
         else
             z = GB_mex_op (op, x, y) ;
         end

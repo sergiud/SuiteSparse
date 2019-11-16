@@ -2,7 +2,7 @@
 // GrB_Vector_clear: clears the content of a vector
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ GrB_Info GrB_Vector_clear   // clear a vector of all entries;
     ASSERT (GB_VECTOR_OK (v)) ;
 
     //--------------------------------------------------------------------------
-    // clear the vector (but keep the v->Sauna)
+    // clear the vector
     //--------------------------------------------------------------------------
 
     return (GB_clear ((GrB_Matrix) v, Context)) ;

@@ -2,7 +2,7 @@
 // GB_UnaryOp_new: create a new unary operator
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -19,11 +19,11 @@ GrB_Info GB_UnaryOp_new             // create a new user-defined unary operator
 (
     GrB_UnaryOp *unaryop,           // handle for the new unary operator
     GxB_unary_function function,    // pointer to the unary function
-    const GrB_Type ztype,           // type of output z
-    const GrB_Type xtype,           // type of input x
+    GrB_Type ztype,                 // type of output z
+    GrB_Type xtype,                 // type of input x
     const char *name                // name of the function
 )
-{ 
+{
 
     //--------------------------------------------------------------------------
     // check inputs
@@ -44,7 +44,8 @@ GrB_Info GB_UnaryOp_new             // create a new user-defined unary operator
     GB_CALLOC_MEMORY (*unaryop, 1, sizeof (struct GB_UnaryOp_opaque)) ;
     if (*unaryop == NULL)
     { 
-        return (GB_NO_MEMORY) ;
+        // out of memory
+        return (GB_OUT_OF_MEMORY) ;
     }
 
     // initialize the unary operator

@@ -2,7 +2,7 @@
 // GB_ix_realloc: reallocate a matrix to hold a given number of entries
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -34,16 +34,12 @@ GrB_Info GB_ix_realloc      // reallocate space in a matrix
     ASSERT (!A->i_shallow && !A->x_shallow) ;
 
     // This function tolerates pending tuples and zombies
-    ASSERT (GB_PENDING_OK (A)) ;
-    ASSERT (GB_ZOMBIES_OK (A)) ;
-
-    double memory = GBYTES (nzmax,
-        sizeof (int64_t) + (numeric ? A->type->size : 0)) ;
+    ASSERT (GB_PENDING_OK (A)) ; ASSERT (GB_ZOMBIES_OK (A)) ;
 
     if (nzmax > GB_INDEX_MAX)
     { 
         // problem too large
-        return (GB_OUT_OF_MEMORY (memory)) ;
+        return (GB_OUT_OF_MEMORY) ;
     }
 
     //--------------------------------------------------------------------------
@@ -71,12 +67,11 @@ GrB_Info GB_ix_realloc      // reallocate space in a matrix
         A->nzmax = nzmax1 ;
     }
 
-    // The matrix is always left in a valid state.  If realloc fails it just
-    // won't have the requested size (and ok is false in this case).
-
+    // The matrix is always left in a valid state.  If the reallocation fails
+    // it just won't have the requested size (and ok is false in this case).
     if (!ok)
     { 
-        return (GB_OUT_OF_MEMORY (memory)) ;
+        return (GB_OUT_OF_MEMORY) ;
     }
 
     return (GrB_SUCCESS) ;

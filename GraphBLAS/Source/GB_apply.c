@@ -2,15 +2,18 @@
 // GB_apply: apply a unary operator; optionally transpose a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // C<M> = accum (C, op(A)) or accum (C, op(A)')
+
 // GB_apply does the work for GrB_*_apply.  Compare this with GrB_transpose.
 
-#include "GB.h"
+#include "GB_apply.h"
+#include "GB_transpose.h"
+#include "GB_accum_mask.h"
 
 GrB_Info GB_apply                   // C<M> = accum (C, op(A)) or op(A')
 (
@@ -30,7 +33,7 @@ GrB_Info GB_apply                   // C<M> = accum (C, op(A)) or op(A')
     // check inputs
     //--------------------------------------------------------------------------
 
-    ASSERT (GB_ALIAS_OK2 (C, M, A)) ;
+    // C may be aliased with M and/or A
 
     GB_RETURN_IF_FAULTY (accum) ;
     GB_RETURN_IF_NULL_OR_FAULTY (op) ;
@@ -77,7 +80,7 @@ GrB_Info GB_apply                   // C<M> = accum (C, op(A)) or op(A')
     GB_RETURN_IF_QUICK_MASK (C, C_replace, M, Mask_comp) ;
 
     // delete any lingering zombies and assemble any pending tuples
-    GB_WAIT (C) ;
+    // GB_WAIT (C) ;
     GB_WAIT (M) ;
     GB_WAIT (A) ;
 
@@ -96,7 +99,7 @@ GrB_Info GB_apply                   // C<M> = accum (C, op(A)) or op(A')
 
     if (A_transpose)
     { 
-        // T = op (A'), typecastint to op->ztype
+        // T = op (A'), typecasting to op->ztype
         // transpose: typecast, apply an op, not in place
         info = GB_transpose (&T, T_type, C_is_csc, A, op, Context) ;
     }

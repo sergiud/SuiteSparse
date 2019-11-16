@@ -2,8 +2,10 @@
 // GB_hyper_realloc: reallocate a matrix hyperlist
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
+//------------------------------------------------------------------------------
 
 // Change the size of the A->h and A->p hyperlist.
 // No change is made if A is not hypersparse.
@@ -51,8 +53,8 @@ GrB_Info GB_hyper_realloc
         if (!ok)
         { 
             // out of memory
-            GB_CONTENT_FREE (A) ;
-            return (GB_OUT_OF_MEMORY (GBYTES (2*plen_new+1, sizeof (int64_t))));
+            GB_PHIX_FREE (A) ;
+            return (GB_OUT_OF_MEMORY) ;
         }
 
         // size of A->p and A->h has been changed

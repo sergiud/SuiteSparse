@@ -2,7 +2,7 @@
 // GrB_Descriptor_set: set a field in a descriptor
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -12,8 +12,8 @@
 GrB_Info GrB_Descriptor_set     // set a parameter in a descriptor
 (
     GrB_Descriptor desc,        // descriptor to modify
-    const GrB_Desc_Field field, // parameter to change
-    const GrB_Desc_Value value  // value to change it to
+    GrB_Desc_Field field,       // parameter to change
+    GrB_Desc_Value value        // value to change it to
 )
 {
 

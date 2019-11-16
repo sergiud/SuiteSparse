@@ -2,7 +2,7 @@
 // GB_ix_free: free A->i, A->x, pending tuples, zombies; A->p, A->h unchanged
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 // Since A->p and A->h are unchanged, the matrix is still valid (unless it was
 // invalid on input).  nnz(A) would report zero, and so would GrB_Matrix_nvals.
 
-#include "GB.h"
+#include "GB_Pending.h"
 
 GrB_Info GB_ix_free             // free A->i and A->x of a matrix
 (
@@ -32,8 +32,7 @@ GrB_Info GB_ix_free             // free A->i and A->x of a matrix
     //--------------------------------------------------------------------------
 
     // zombies and pending tuples are about to be deleted
-    ASSERT (GB_PENDING_OK (A)) ;
-    ASSERT (GB_ZOMBIES_OK (A)) ;
+    ASSERT (GB_PENDING_OK (A)) ; ASSERT (GB_ZOMBIES_OK (A)) ;
 
     // free A->i unless it is shallow
     if (!A->i_shallow)
@@ -58,11 +57,11 @@ GrB_Info GB_ix_free             // free A->i and A->x of a matrix
     // no zombies remain
     A->nzombies = 0 ;
 
-    // free pending tuples
-    GB_pending_free (A) ;
+    // free the list of pending tuples
+    GB_Pending_free (&(A->Pending)) ;
 
     // remove from the queue, if present; panic if critical section fails
-    GB_CRITICAL (GB_queue_remove (A)) ;
+    if (!GB_queue_remove (A)) return (GrB_PANIC) ;
 
     return (GrB_SUCCESS) ;
 }

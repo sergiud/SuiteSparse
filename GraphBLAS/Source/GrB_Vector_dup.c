@@ -2,7 +2,7 @@
 // GrB_Vector_dup: make a deep copy of a sparse vector
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -31,6 +31,6 @@ GrB_Info GrB_Vector_dup     // make an exact copy of a vector
     // duplicate the vector
     //--------------------------------------------------------------------------
 
-    return (GB_dup ((GrB_Matrix *) w, (GrB_Matrix) u, Context)) ;
+    return (GB_dup ((GrB_Matrix *) w, (GrB_Matrix) u, true, NULL, Context)) ;
 }
 

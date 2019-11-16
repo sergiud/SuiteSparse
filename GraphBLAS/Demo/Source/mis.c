@@ -34,7 +34,8 @@
 GrB_Info mis                    // compute a maximal independent set
 (
     GrB_Vector *iset_output,    // iset(i) = true if i is in the set
-    const GrB_Matrix A          // symmetric Boolean matrix
+    const GrB_Matrix A,         // symmetric Boolean matrix
+    int64_t seed                // random number seed
 )
 {
 
@@ -50,15 +51,15 @@ GrB_Info mis                    // compute a maximal independent set
     GrB_Semiring Boolean = NULL ;       // Boolean semiring
     GrB_Descriptor r_desc = NULL ;
     GrB_Descriptor sr_desc = NULL ;
-    GrB_UnaryOp set_random = NULL ;
+    GrB_BinaryOp set_random = NULL ;
     GrB_Vector degrees = NULL ;
 
     GrB_Index n ;
 
     GrB_Matrix_nrows (&n, A) ;                 // n = # of nodes in graph
 
-    GrB_Vector_new (&prob, GrB_FP32, n) ;
-    GrB_Vector_new (&neighbor_max, GrB_FP32, n) ;
+    GrB_Vector_new (&prob, GrB_FP64, n) ;
+    GrB_Vector_new (&neighbor_max, GrB_FP64, n) ;
     GrB_Vector_new (&new_members, GrB_BOOL, n) ;
     GrB_Vector_new (&new_neighbors, GrB_BOOL, n) ;
     GrB_Vector_new (&candidates, GrB_BOOL, n) ;
@@ -67,8 +68,8 @@ GrB_Info mis                    // compute a maximal independent set
     GrB_Vector_new (&iset, GrB_BOOL, n) ;
 
     // create the maxSelect1st semiring
-    GrB_Monoid_new (&Max, GrB_MAX_FP32, (float) 0.0) ;
-    GrB_Semiring_new (&maxSelect1st, Max, GrB_FIRST_FP32) ;
+    GrB_Monoid_new (&Max, GrB_MAX_FP64, (double) 0.0) ;
+    GrB_Semiring_new (&maxSelect1st, Max, GrB_FIRST_FP64) ;
 
     // create the OR-AND-BOOL semiring
     GrB_Monoid_new (&Lor, GrB_LOR, (bool) false) ;
@@ -78,13 +79,19 @@ GrB_Info mis                    // compute a maximal independent set
     GrB_Descriptor_new (&r_desc) ;
     GrB_Descriptor_set (r_desc, GrB_OUTP, GrB_REPLACE) ;
 
+    // create the random number seeds
+    GrB_Vector Seed, X ;
+    prand_init ( ) ;
+    prand_seed (&Seed, seed, n, 0) ;
+    GrB_Vector_new (&X, GrB_FP64, n) ;
+
     // descriptor: C_replace + structural complement of mask
     GrB_Descriptor_new (&sr_desc) ;
     GrB_Descriptor_set (sr_desc, GrB_MASK, GrB_SCMP) ;
     GrB_Descriptor_set (sr_desc, GrB_OUTP, GrB_REPLACE) ;
 
-    // create the mis_score unary operator
-    GrB_UnaryOp_new (&set_random, mis_score, GrB_FP32, GrB_UINT32) ;
+    // create the mis_score binary operator
+    GrB_BinaryOp_new (&set_random, mis_score2, GrB_FP64, GrB_UINT32, GrB_FP64) ;
 
     // compute the degree of each nodes
     GrB_Vector_new (&degrees, GrB_FP64, n) ;
@@ -106,8 +113,13 @@ GrB_Info mis                    // compute a maximal independent set
 
     while (nvals > 0)
     {
+        // sparsify the random number seeds (just keep it for each candidate) 
+        GrB_assign (Seed, candidates, NULL, Seed, GrB_ALL, n, r_desc) ;
+
         // compute a random probability scaled by inverse of degree
-        GrB_apply (prob, candidates, NULL, set_random, degrees, r_desc) ;
+        // GrB_apply (prob, candidates, NULL, set_random, degrees, r_desc) ;
+        prand_xget (X, Seed) ;
+        GrB_eWiseMult (prob, candidates, NULL, set_random, degrees, X, r_desc) ;
 
         // compute the max probability of all neighbors
         GrB_vxm (neighbor_max, candidates, NULL, maxSelect1st,
@@ -160,6 +172,10 @@ GrB_Info mis                    // compute a maximal independent set
     GrB_free (&sr_desc) ;
     GrB_free (&set_random) ;
     GrB_free (&degrees) ;
+
+    GrB_free (&Seed) ;
+    GrB_free (&X) ;
+    prand_finalize ( ) ;
 
     return (GrB_SUCCESS) ;
 }

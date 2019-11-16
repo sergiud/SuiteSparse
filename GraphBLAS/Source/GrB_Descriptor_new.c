@@ -2,7 +2,7 @@
 // GrB_Descriptor_new: create a new descriptor
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -33,7 +33,8 @@ GrB_Info GrB_Descriptor_new     // create a new descriptor
     GB_CALLOC_MEMORY (*descriptor, 1, sizeof (struct GB_Descriptor_opaque)) ;
     if (*descriptor == NULL)
     { 
-        return (GB_NO_MEMORY) ;
+        // out of memory
+        return (GB_OUT_OF_MEMORY) ;
     }
 
     // initialize the descriptor
@@ -44,6 +45,8 @@ GrB_Info GrB_Descriptor_new     // create a new descriptor
     desc->in0  = GxB_DEFAULT ;     // descriptor for the first input
     desc->in1  = GxB_DEFAULT ;     // descriptor for the second input
     desc->axb  = GxB_DEFAULT ;     // descriptor for C=A*B
+    desc->nthreads_max = GxB_DEFAULT ;
+    desc->chunk = GxB_DEFAULT ;
     return (GrB_SUCCESS) ;
 }
 

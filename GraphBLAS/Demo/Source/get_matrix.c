@@ -2,7 +2,7 @@
 // GraphBLAS/Demo/Source/get_matrix.c: get matrix from file, or create random
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -99,17 +99,6 @@ GrB_Info get_matrix         // get a matrix from stdin, or create random one
             OK (wathen (&A, nx, ny, false, method, NULL)) ;
             GrB_Matrix_nvals (&nvals, A) ;
             GrB_Matrix_nrows (&nrows, A) ;
-            t = simple_toc (tic) ;
-
-            printf (
-                "Wathen: nx %.16g ny %.16g n %.16g nz %.16g method %d,"
-                " time: %.3f sec\n", (double) nx, (double) ny, (double) nrows,
-                (double) nvals, method, t) ;
-
-            fprintf (stderr,
-                "Wathen: nx %.16g ny %.16g n %.16g nz %.16g method %d,"
-                " time: %.3f sec\n", (double) nx, (double) ny, (double) nrows,
-                (double) nvals, method, t) ;
 
             // remove the self edges from the matrix
             if (no_self_edges)
@@ -134,6 +123,21 @@ GrB_Info get_matrix         // get a matrix from stdin, or create random one
                 GrB_free (&Mask) ;
                 GrB_free (&desc) ;
             }
+
+            // force completion, just to check timing
+            OK (GrB_Matrix_nvals (&nvals, A)) ;
+            t = simple_toc (tic) ;
+
+            printf (
+                "Wathen: nx %.16g ny %.16g n %.16g nz %.16g method %d,"
+                " time: %.3f sec\n", (double) nx, (double) ny, (double) nrows,
+                (double) nvals, method, t) ;
+
+            fprintf (stderr,
+                "Wathen: nx %.16g ny %.16g n %.16g nz %.16g method %d,"
+                " time: %.3f sec\n", (double) nx, (double) ny, (double) nrows,
+                (double) nvals, method, t) ;
+
         }
 
     }
@@ -173,7 +177,7 @@ GrB_Info get_matrix         // get a matrix from stdin, or create random one
     //--------------------------------------------------------------------------
 
     // print a short description of the matrix (about 30 entries)
-    OK (GxB_Matrix_fprint (A, "from get_matrix:", GxB_SHORT, stdout)) ;
+//  OK (GxB_Matrix_fprint (A, "from get_matrix:", GxB_SHORT, stdout)) ;
 
     *A_output = A ;
     A = NULL ;

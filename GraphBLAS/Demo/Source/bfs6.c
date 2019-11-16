@@ -11,6 +11,15 @@
 // instead of GrB_mxv.  It now more closely matches the BFS example in the
 // GraphBLAS C API Specification.
 
+// A must not have any explicit zeros.
+
+// NOTE: this method can be *slow*, in special cases (v very sparse on output,
+// A in CSC format instead of the default CSR, or if A has any explicit values
+// equal to zero in its pattern).  See LAGraph_bfs_pushpull for a faster method
+// that handles these cases.  Do not benchmark this code!  It is just for
+// simple illustration.  Use the LAGraph_bfs_pushpull for benchmarking and
+// production use.
+
 #include "demos.h"
 
 //------------------------------------------------------------------------------
@@ -45,6 +54,9 @@ GrB_Info bfs6               // BFS of a graph (using unary operator)
 
     GrB_Matrix_nrows (&n, A) ;             // n = # of rows of A
     GrB_Vector_new (&v, GrB_INT32, n) ;    // Vector<int32_t> v(n) = 0
+    GrB_assign (v, NULL, NULL, 0, GrB_ALL, n, NULL) ;   // make v dense
+    GrB_Vector_nvals (&n, v) ;             // finish pending work on v
+
     GrB_Vector_new (&q, GrB_BOOL, n) ;     // Vector<bool> q(n) = false
     GrB_Vector_setElement (q, true, s) ;   // q[s] = true, false elsewhere
 
@@ -68,9 +80,10 @@ GrB_Info bfs6               // BFS of a graph (using unary operator)
     // BFS traversal and label the nodes
     //--------------------------------------------------------------------------
 
-    GrB_Index nvals = 1 ;
-    for (level = 1 ; nvals > 0 && level <= n ; level++)
+    bool successor = true ; // true when some successor found
+    for (level = 1 ; successor && level <= n ; level++)
     {
+
         // v[q] = level, using apply.  This function applies the unary operator
         // to the entries in q, which are the unvisited successors, and then
         // writes their levels to v, thus updating the levels of those nodes in
@@ -81,8 +94,13 @@ GrB_Info bfs6               // BFS of a graph (using unary operator)
         // successors from current q, using !v as the mask
         GrB_vxm (q, v, NULL, Boolean, q, A, desc) ;
 
-        GrB_Vector_nvals (&nvals, q) ;
+        // successor = ||(q)
+        GrB_reduce (&successor, NULL, Lor, q, NULL) ;
     }
+
+    // make v sparse
+    GrB_Descriptor_set (desc, GrB_MASK, GxB_DEFAULT) ;  // mask not inverted
+    GrB_assign (v, v, NULL, v, GrB_ALL, n, desc) ;
 
     *v_output = v ;         // return result
 

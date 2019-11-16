@@ -2,7 +2,7 @@
 // GB_extractTuples: extract all the tuples from a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -60,6 +60,7 @@ GrB_Info GB_extractTuples       // extract all tuples from a matrix
     if (anz == 0)
     { 
         // no work to do
+        (*p_nvals) = 0 ;
         return (GrB_SUCCESS) ;
     }
 
@@ -72,6 +73,13 @@ GrB_Info GB_extractTuples       // extract all tuples from a matrix
             "output arrays I,J,X are not big enough: nvals "GBd" < "
             "number of entries "GBd, nvals, anz))) ;
     }
+
+    //--------------------------------------------------------------------------
+    // determine the number of threads to use
+    //--------------------------------------------------------------------------
+
+    GB_GET_NTHREADS_MAX (nthreads_max, chunk, Context) ;
+    int nthreads = GB_nthreads (anz + A->nvec, chunk, nthreads_max) ;
 
     //-------------------------------------------------------------------------
     // handle the CSR/CSC format
@@ -95,7 +103,7 @@ GrB_Info GB_extractTuples       // extract all tuples from a matrix
 
     if (I != NULL)
     { 
-        memcpy (I, A->i, anz * sizeof (int64_t)) ;
+        GB_memcpy (I, A->i, anz * sizeof (int64_t), nthreads) ;
     }
 
     //--------------------------------------------------------------------------
@@ -104,12 +112,10 @@ GrB_Info GB_extractTuples       // extract all tuples from a matrix
 
     if (J != NULL)
     {
-        GB_for_each_vector (A)
+        if (!GB_extract_vector_list ((int64_t *) J, A, nthreads))
         {
-            GB_for_each_entry (j, p, pend)
-            { 
-                J [p] = j ;
-            }
+            // out of memory
+            return (GB_OUT_OF_MEMORY) ;
         }
     }
 
@@ -126,12 +132,12 @@ GrB_Info GB_extractTuples       // extract all tuples from a matrix
             // user-defined type, but this can't be checked.  For built-in
             // types, xcode has already been determined by the type of X in the
             // function signature of the caller.
-            memcpy (X, A->x, anz * A->type->size) ;
+            GB_memcpy (X, A->x, anz * A->type->size, nthreads) ;
         }
         else
         { 
             // typecast the values from A into X, for built-in types only
-            GB_cast_array (X, xcode, A->x, A->type->code, anz) ;
+            GB_cast_array (X, xcode, A->x, A->type->code, anz, Context) ;
         }
     }
 

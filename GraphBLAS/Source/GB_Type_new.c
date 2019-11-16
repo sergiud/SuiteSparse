@@ -2,7 +2,7 @@
 // GB_Type_new: create a new user-defined type
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2018, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -15,10 +15,10 @@
 GrB_Info GB_Type_new
 (
     GrB_Type *type,             // handle of user type to create
-    const size_t sizeof_ctype,  // size of the user type
+    size_t sizeof_ctype,        // size of the user type
     const char *name            // name of the type, as "sizeof (ctype)"
 )
-{ 
+{
 
     //--------------------------------------------------------------------------
     // check inputs
@@ -28,6 +28,17 @@ GrB_Info GB_Type_new
     GB_RETURN_IF_NULL (type) ;
     (*type) = NULL ;
 
+    #ifdef PGI_COMPILER_BUG
+
+        if (sizeof_ctype > PGI_COMPILER_BUG_MAXSIZE_FOR_ANY_GRB_TYPE)
+        {
+            return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG, "Due to a PGI"
+                "compiler bug, user-defined types are limited to %d bytes",
+                PGI_COMPILER_BUG_MAXSIZE_FOR_ANY_GRB_TYPE))) ;
+        }
+
+    #endif
+
     //--------------------------------------------------------------------------
     // create the type
     //--------------------------------------------------------------------------
@@ -36,7 +47,8 @@ GrB_Info GB_Type_new
     GB_CALLOC_MEMORY (*type, 1, sizeof (struct GB_Type_opaque)) ;
     if (*type == NULL)
     { 
-        return (GB_NO_MEMORY) ;
+        // out of memory
+        return (GB_OUT_OF_MEMORY) ;
     }
 
     // initialize the type

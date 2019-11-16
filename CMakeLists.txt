@@ -1378,7 +1378,7 @@ set_component_version (klu 1.3.9)
 set_component_version (ldl 2.2.6)
 set_component_version (spqr 2.0.9)
 set_component_version (suitesparseconfig "${VERSION}")
-set_component_version (umfpack 5.7.8)
+set_component_version (umfpack 5.7.9)
 
 if (TARGET suitesparsecuda)
   set_component_version (suitesparsecuda 1.0.5)

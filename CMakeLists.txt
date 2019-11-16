@@ -58,7 +58,7 @@ if (WITH_FORTRAN)
   endif (CMAKE_Fortran_COMPILER)
 endif (WITH_FORTRAN)
 
-project (SuiteSparse LANGUAGES C CXX VERSION 5.4.0
+project (SuiteSparse LANGUAGES C CXX VERSION 5.6.0
   DESCRIPTION "A suite of sparse matrix packages"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
 )

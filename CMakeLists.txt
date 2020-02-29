@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2019 Sergiu Deitsch
+# Copyright (c) 2016-2020 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -163,23 +163,30 @@ include (CheckTypeSize)
 include (ComponentVersion)
 include (GenerateSourceFiles)
 
-find_package (CBLAS NO_MODULE)
-
-if (NOT CBLAS_FOUND)
+if (DEFINED ENV{BLA_VENDOR} OR DEFINED BLA_VENDOR)
+  # In case the user set the BLA_VENDOR environment or CMake variable, use the
+  # find module because the CBLAS does not support different vendors.
   find_package (BLAS MODULE REQUIRED)
-else (NOT CBLAS_FOUND)
-  set (BLAS_DEPENDENCY "find_dependency (CBLAS ${CBLAS_VERSION} NO_MODULE)")
-  set (CBLAS_FIND_REQUIRED ON)
-endif (NOT CBLAS_FOUND)
-
-find_package (LAPACK NO_MODULE)
-
-if (NOT LAPACK_FOUND)
   find_package (LAPACK MODULE REQUIRED)
-else (NOT LAPACK_FOUND)
-  set (LAPACK_DEPENDENCY "find_dependency (LAPACK ${LAPACK_VERSION} NO_MODULE)")
-  set (LAPACK_FIND_REQUIRED ON)
-endif (NOT LAPACK_FOUND)
+else (DEFINED ENV{BLA_VENDOR} OR DEFINED BLA_VENDOR)
+  find_package (CBLAS NO_MODULE)
+
+  if (NOT CBLAS_FOUND)
+    find_package (BLAS MODULE REQUIRED)
+  else (NOT CBLAS_FOUND)
+    set (BLAS_DEPENDENCY "find_dependency (CBLAS ${CBLAS_VERSION} NO_MODULE)")
+    set (CBLAS_FIND_REQUIRED ON)
+  endif (NOT CBLAS_FOUND)
+
+  find_package (LAPACK NO_MODULE)
+
+  if (NOT LAPACK_FOUND)
+    find_package (LAPACK MODULE REQUIRED)
+  else (NOT LAPACK_FOUND)
+    set (LAPACK_DEPENDENCY "find_dependency (LAPACK ${LAPACK_VERSION} NO_MODULE)")
+    set (LAPACK_FIND_REQUIRED ON)
+  endif (NOT LAPACK_FOUND)
+endif (DEFINED ENV{BLA_VENDOR} OR DEFINED BLA_VENDOR)
 
 cmake_push_check_state (RESET)
 

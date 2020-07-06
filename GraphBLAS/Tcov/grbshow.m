@@ -1,8 +1,12 @@
 function grbshow
 %GBSHOW create a test coverage report in tmp_cover/
 
-%  SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
-%  http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
+% http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
+if (ispc)
+    error ('The tests in Tcov are not ported to Windows') ;
+end
 
 infiles = [ dir('tmp_source/*.*') ; dir('tmp_include/*.*') ] ;
 

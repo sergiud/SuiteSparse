@@ -2,15 +2,16 @@
 // GB_Vector_check: print a GraphBLAS GrB_Vector and check if it is valid
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // GrB_Vector: same as GrB_Matrix, except it has exactly one column
 
-#include "GB_printf.h"
+#include "GB.h"
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_Vector_check    // check a GraphBLAS vector
 (
     const GrB_Vector v,     // GraphBLAS vector to print and check

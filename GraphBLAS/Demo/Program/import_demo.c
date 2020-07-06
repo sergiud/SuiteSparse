@@ -2,7 +2,7 @@
 // GraphBLAS/Demo/Program/import_demo.c: test import/export
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -11,18 +11,20 @@
 //
 //  mis_demo < infile
 
-#include "demos.h"
-
 // macro used by OK(...) to free workspace if an error occurs
-#define FREE_ALL                \
-    GrB_free (&A) ;             \
+#define FREE_ALL            \
+    GrB_Matrix_free (&A) ;  \
+
+#include "graphblas_demos.h"
 
 int main (int argc, char **argv)
 {
     GrB_Matrix A = NULL ;
     GrB_Info info ;
     OK (GrB_init (GrB_NONBLOCKING)) ;
-    fprintf (stderr, "import_demo:\n") ;
+    int nthreads ;
+    OK (GxB_Global_Option_get (GxB_GLOBAL_NTHREADS, &nthreads)) ;
+    fprintf (stderr, "import_demo: nthreads: %d\n", nthreads) ;
 
     //--------------------------------------------------------------------------
     // get a matrix
@@ -53,8 +55,8 @@ int main (int argc, char **argv)
             for (int format = 0 ; format <= 3 ; format++)
             {
 
-                OK (GxB_set (A, GxB_HYPER, h)) ;
-                OK (GxB_set (A, GxB_FORMAT, f)) ;
+                OK (GxB_Matrix_Option_set (A, GxB_HYPER, h)) ;
+                OK (GxB_Matrix_Option_set (A, GxB_FORMAT, f)) ;
                 OK (import_test (&A, format, dump)) ;
             }
         }

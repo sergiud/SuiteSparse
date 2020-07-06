@@ -2,7 +2,7 @@
 // GxB_Matrix_import_CSR: import a matrix in CSR format
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -32,6 +32,7 @@ GrB_Info GxB_Matrix_import_CSR      // import a CSR matrix
 
     GB_WHERE ("GxB_Matrix_import_CSR (&A, type, nrows, ncols, nvals,"
         " nonempty, &Ap, &Aj, &Ax, desc)") ;
+    GB_BURBLE_START ("GxB_Matrix_import_CSR") ;
     GB_IMPORT_CHECK ;
 
     GB_RETURN_IF_NULL (Ap) ;
@@ -46,7 +47,7 @@ GrB_Info GxB_Matrix_import_CSR      // import a CSR matrix
     //--------------------------------------------------------------------------
 
     // allocate just the header of the matrix, not the content
-    GB_NEW (A, type, ncols, nrows, GB_Ap_null, false,
+    info = GB_new (A, type, ncols, nrows, GB_Ap_null, false,
         GB_FORCE_NONHYPER, GB_Global_hyper_ratio_get ( ), 0, Context) ;
     if (info != GrB_SUCCESS)
     { 
@@ -67,8 +68,8 @@ GrB_Info GxB_Matrix_import_CSR      // import a CSR matrix
     if (nvals == 0)
     { 
         // free the user input Aj and Ax arrays, if they exist
-        if (Aj != NULL) GB_FREE_MEMORY (*Aj, nvals, sizeof (GrB_Index)) ;
-        if (Ax != NULL) GB_FREE_MEMORY (*Ax, nvals, type->size) ;
+        if (Aj != NULL) GB_FREE (*Aj) ;
+        if (Ax != NULL) GB_FREE (*Ax) ;
     }
     else
     { 
@@ -90,7 +91,8 @@ GrB_Info GxB_Matrix_import_CSR      // import a CSR matrix
     ASSERT (*Ap == NULL) ;
     ASSERT (*Aj == NULL) ;
     ASSERT (*Ax == NULL) ;
-    ASSERT_OK (GB_check (*A, "A CSR imported", GB0)) ;
+    ASSERT_MATRIX_OK ((*A), "A CSR imported", GB0) ;
+    GB_BURBLE_END ;
     return (GrB_SUCCESS) ;
 }
 

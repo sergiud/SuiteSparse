@@ -2,7 +2,7 @@
 // gb_get_shallow: create a shallow copy of a MATLAB sparse matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -73,16 +73,16 @@ GrB_Matrix gb_get_shallow   // return a shallow copy of MATLAB sparse matrix
         // get the scalar info
         mxArray *opaque = mxGetField (X, 0, "s") ;
         IF (opaque == NULL, ".s missing") ;
-        double *s = mxGetDoubles (opaque) ;
-        A->hyper_ratio   = s [0] ;
-        A->plen          = (int64_t) s [1] ;
-        A->vlen          = (int64_t) s [2] ;
-        A->vdim          = (int64_t) s [3] ;
-        A->nvec          = (int64_t) s [4] ;
-        A->nvec_nonempty = (int64_t) s [5] ;
-        A->is_hyper      = (int64_t) s [6] ;
-        A->is_csc        = (int64_t) s [7] ;    // format already defined
-        A->nzmax         = (int64_t) s [8] ;
+        int64_t *s = mxGetInt64s (opaque) ;
+        A->hyper_ratio   = GxB_HYPER_DEFAULT ;
+        A->plen          = s [0] ;
+        A->vlen          = s [1] ;
+        A->vdim          = s [2] ;
+        A->nvec          = s [3] ;
+        A->nvec_nonempty = s [4] ;
+        A->is_hyper      = (bool) (s [5]) ;
+        A->is_csc        = (bool) (s [6]) ;
+        A->nzmax         = s [7] ;
 
         // get the pointers
         mxArray *Ap = mxGetField (X, 0, "p") ;
@@ -171,65 +171,74 @@ GrB_Matrix gb_get_shallow   // return a shallow copy of MATLAB sparse matrix
             // MATLAB sparse or dense double matrix
             Xx = mxGetDoubles (X) ;
         }
-        #ifdef GB_COMPLEX_TYPE
-        else if (type == gb_complex_type)
-        {
+        else if (type == GxB_FC64)
+        { 
             // MATLAB sparse or dense double complex matrix
             Xx = mxGetComplexDoubles (X) ;
         }
-        #endif
         else if (type == GrB_BOOL)
         { 
             // MATLAB sparse or dense logical matrix
-            Xx = mxGetData (X) ;
+            Xx = mxGetData (X) ;        // OK:bool
+        }
+        else if (X_is_sparse)
+        {
+            // MATLAB does not support any other kinds of sparse matrices
+            ERROR ("unsupported type") ;
+        }
+        else if (type == GrB_INT8)
+        { 
+            // dense int8 matrix
+            Xx = mxGetInt8s (X) ;
+        }
+        else if (type == GrB_INT16)
+        { 
+            // dense int16 matrix
+            Xx = mxGetInt16s (X) ;
+        }
+        else if (type == GrB_INT32)
+        { 
+            // dense int32 matrix
+            Xx = mxGetInt32s (X) ;
+        }
+        else if (type == GrB_INT64)
+        { 
+            // dense int64 matrix
+            Xx = mxGetInt64s (X) ;
+        }
+        else if (type == GrB_UINT8)
+        { 
+            // dense uint8 matrix
+            Xx = mxGetUint8s (X) ;
+        }
+        else if (type == GrB_UINT16)
+        { 
+            // dense uint16 matrix
+            Xx = mxGetUint16s (X) ;
+        }
+        else if (type == GrB_UINT32)
+        { 
+            // dense uint32 matrix
+            Xx = mxGetUint32s (X) ;
+        }
+        else if (type == GrB_UINT64)
+        { 
+            // dense uint64 matrix
+            Xx = mxGetUint64s (X) ;
+        }
+        else if (type == GrB_FP32)
+        { 
+            // dense single matrix
+            Xx = mxGetSingles (X) ;
+        }
+        else if (type == GxB_FC32)
+        { 
+            // dense single complex matrix
+            Xx = mxGetComplexSingles (X) ;
         }
         else
         {
-            // MATLAB does not support any other kinds of sparse matrices
-            if (X_is_sparse)
-            {
-                ERROR ("unsupported type") ;
-            }
-            else if (type == GrB_INT8)
-            { 
-                Xx = mxGetInt8s (X) ;
-            }
-            else if (type == GrB_INT16)
-            { 
-                Xx = mxGetInt16s (X) ;
-            }
-            else if (type == GrB_INT32)
-            { 
-                Xx = mxGetInt32s (X) ;
-            }
-            else if (type == GrB_INT64)
-            { 
-                Xx = mxGetInt64s (X) ;
-            }
-            else if (type == GrB_UINT8)
-            { 
-                Xx = mxGetUint8s (X) ;
-            }
-            else if (type == GrB_UINT16)
-            { 
-                Xx = mxGetUint16s (X) ;
-            }
-            else if (type == GrB_UINT32)
-            { 
-                Xx = mxGetUint32s (X) ;
-            }
-            else if (type == GrB_UINT64)
-            { 
-                Xx = mxGetUint64s (X) ;
-            }
-            else if (type == GrB_FP32)
-            { 
-                Xx = mxGetSingles (X) ;
-            }
-            else
-            {
-                ERROR ("unsupported type") ;
-            }
+            ERROR ("unsupported type") ;
         }
 
         // import the matrix in CSC format.  This sets Xp, Xi, and Xx to NULL,

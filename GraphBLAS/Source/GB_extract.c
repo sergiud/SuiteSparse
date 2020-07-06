@@ -2,7 +2,7 @@
 // GB_extract: C<M> = accum(C,A(I,J))
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -23,12 +23,15 @@
 #include "GB_subref.h"
 #include "GB_accum_mask.h"
 
+#define GB_FREE_ALL ;
+
 GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
 (
     GrB_Matrix C,                   // input/output matrix for results
     const bool C_replace,           // C matrix descriptor
     const GrB_Matrix M,             // optional mask for C, unused if NULL
     const bool Mask_comp,           // mask descriptor
+    const bool Mask_struct,         // if true, use the only structure of M
     const GrB_BinaryOp accum,       // optional accum for Z=accum(C,T)
     const GrB_Matrix A,             // input matrix
     const bool A_transpose,         // A matrix descriptor
@@ -46,21 +49,18 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
 
     // C may be aliased with M and/or A
 
+    GrB_Info info ;
     GB_RETURN_IF_NULL (Rows) ;
     GB_RETURN_IF_NULL (Cols) ;
     GB_RETURN_IF_FAULTY (accum) ;
 
-    ASSERT_OK (GB_check (C, "C input for GB_Matrix_extract", GB0)) ;
-    ASSERT_OK_OR_NULL (GB_check (M, "M for GB_Matrix_extract", GB0)) ;
-    ASSERT_OK_OR_NULL (GB_check (accum, "accum for GB_Matrix_extract", GB0)) ;
-    ASSERT_OK (GB_check (A, "A input for GB_Matrix_extract", GB0)) ;
+    ASSERT_MATRIX_OK (C, "C input for GB_Matrix_extract", GB0) ;
+    ASSERT_MATRIX_OK_OR_NULL (M, "M for GB_Matrix_extract", GB0) ;
+    ASSERT_BINARYOP_OK_OR_NULL (accum, "accum for GB_Matrix_extract", GB0) ;
+    ASSERT_MATRIX_OK (A, "A input for GB_Matrix_extract", GB0) ;
 
     // check domains and dimensions for C<M> = accum (C,T)
-    GrB_Info info = GB_compatible (C->type, C, M, accum, A->type, Context) ;
-    if (info != GrB_SUCCESS)
-    { 
-        return (info) ;
-    }
+    GB_OK (GB_compatible (C->type, C, M, accum, A->type, Context)) ;
 
     // check the dimensions of C
     int64_t cnrows = GB_NROWS (C) ;
@@ -86,8 +86,8 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     { 
         return (GB_ERROR (GrB_DIMENSION_MISMATCH, (GB_LOG,
             "Dimensions not compatible:\n"
-            "required size of output is "GBd"-by-"GBd"\n"
-            "but actual size output is  "GBd"-by-"GBd"\n",
+            "required size of output is " GBd "-by-" GBd "\n"
+            "but actual size output is  " GBd "-by-" GBd "\n",
             nRows, nCols, cnrows, cncols))) ;
     }
 
@@ -95,9 +95,8 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     GB_RETURN_IF_QUICK_MASK (C, C_replace, M, Mask_comp) ;
 
     // delete any lingering zombies and assemble any pending tuples
-    // GB_WAIT (C) ;
-    GB_WAIT (M) ;
-    GB_WAIT (A) ;
+    GB_MATRIX_WAIT (M) ;
+    GB_MATRIX_WAIT (A) ;
 
     //--------------------------------------------------------------------------
     // handle the CSR/CSC format and transpose; T = A (I,J) or T = A (J,I)
@@ -168,19 +167,16 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     //--------------------------------------------------------------------------
 
     GrB_Matrix T ;
-    info = GB_subref (&T, T_is_csc, A, I, ni, J, nj, false, must_sort, Context);
-    if (info != GrB_SUCCESS)
-    { 
-        return (info) ;
-    }
+    GB_OK (GB_subref (&T, T_is_csc, A, I, ni, J, nj, false, must_sort,
+        Context)) ;
 
     if (must_sort)
     { 
-        ASSERT_OK (GB_check (T, "T extracted", GB0)) ;
+        ASSERT_MATRIX_OK (T, "T extracted", GB0) ;
     }
     else
     { 
-        ASSERT_OK_OR_JUMBLED (GB_check (T, "T extracted (jumbled OK)", GB0)) ;
+        ASSERT_MATRIX_OK_OR_JUMBLED (T, "T extracted (jumbled OK)", GB0) ;
     }
 
     //--------------------------------------------------------------------------
@@ -188,6 +184,6 @@ GrB_Info GB_extract                 // C<M> = accum (C, A(I,J))
     //--------------------------------------------------------------------------
 
     return (GB_accum_mask (C, M, NULL, accum, &T, C_replace, Mask_comp,
-        Context)) ;
+        Mask_struct, Context)) ;
 }
 

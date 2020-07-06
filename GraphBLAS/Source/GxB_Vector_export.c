@@ -2,7 +2,7 @@
 // GxB_Vector_export: export a vector in CSR/CSC format
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -10,6 +10,8 @@
 // The indices are returned in sorted order.
 
 #include "GB_export.h"
+
+#define GB_FREE_ALL ;
 
 GrB_Info GxB_Vector_export  // export and free a vector
 (
@@ -29,12 +31,14 @@ GrB_Info GxB_Vector_export  // export and free a vector
     //--------------------------------------------------------------------------
 
     GB_WHERE ("GxB_Vector_export (&v, &type, &n, &nvals, &vi, &vx, desc)") ;
+    GB_BURBLE_START ("GxB_Vector_export") ;
     GB_RETURN_IF_NULL (v) ;
     GB_RETURN_IF_NULL_OR_FAULTY (*v) ;
-    ASSERT_OK (GB_check (*v, "v to export", GB0)) ;
+    ASSERT_VECTOR_OK (*v, "v to export", GB0) ;
 
     // finish any pending work
-    GB_WAIT (*v) ;
+    GrB_Info info ;
+    GB_VECTOR_WAIT (*v) ;
 
     // check these after forcing completion
     GB_RETURN_IF_NULL (type) ;
@@ -74,6 +78,7 @@ GrB_Info GxB_Vector_export  // export and free a vector
     // which has already been removed above.
     GB_VECTOR_FREE (v) ;
     ASSERT (*v == NULL) ;
+    GB_BURBLE_END ;
     return (GrB_SUCCESS) ;
 }
 

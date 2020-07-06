@@ -2,7 +2,7 @@
 // GraphBLAS/Demo/Source/read_matrix.c: read a matrix from stdin
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -15,6 +15,8 @@
 // where i and j are the row and column indices, and x is the value.
 // The matrix is read in double precision.
 
+#include "GraphBLAS.h"
+
 // free all workspace; this used by the OK(...) macro if an error occurs
 #define FREE_ALL                    \
     if (I  != NULL) free (I) ;      \
@@ -23,14 +25,16 @@
     if (I2 != NULL) free (I2) ;     \
     if (J2 != NULL) free (J2) ;     \
     if (X2 != NULL) free (X2) ;     \
-    GrB_free (&scale2_op) ;         \
-    GrB_free (&dt2) ;               \
-    GrB_free (&dt1) ;               \
-    GrB_free (&A) ;                 \
-    GrB_free (&B) ;                 \
-    GrB_free (&C) ;
+    GrB_UnaryOp_free (&scale2_op) ; \
+    GrB_Descriptor_free (&dt2) ;    \
+    GrB_Descriptor_free (&dt1) ;    \
+    GrB_Matrix_free (&A) ;          \
+    GrB_Matrix_free (&B) ;          \
+    GrB_Matrix_free (&C) ;
 
-#include "demos.h"
+#undef GB_PUBLIC
+#define GB_LIBRARY
+#include "graphblas_demos.h"
 
 //------------------------------------------------------------------------------
 // unary operator to divide by 2
@@ -45,6 +49,7 @@ void scale2 (double *z, const double *x)
 // read a matrix from a file
 //------------------------------------------------------------------------------
 
+GB_PUBLIC
 GrB_Info read_matrix        // read a double-precision or boolean matrix
 (
     GrB_Matrix *A_output,   // handle of matrix to create
@@ -75,8 +80,8 @@ GrB_Info read_matrix        // read a double-precision or boolean matrix
     //--------------------------------------------------------------------------
 
     size_t xsize = ((boolean) ? sizeof (bool) : sizeof (double)) ;
-    GrB_Index *I = malloc (len * sizeof (int64_t)), *I2 = NULL ;
-    GrB_Index *J = malloc (len * sizeof (int64_t)), *J2 = NULL ;
+    GrB_Index *I = (GrB_Index *) malloc (len * sizeof (GrB_Index)), *I2 = NULL ;
+    GrB_Index *J = (GrB_Index *) malloc (len * sizeof (GrB_Index)), *J2 = NULL ;
     void *X = malloc (len * xsize) ;
     bool *Xbool ;
     double *Xdouble ;
@@ -104,8 +109,8 @@ GrB_Info read_matrix        // read a double-precision or boolean matrix
         int64_t j = (int64_t) j2 ;
         if (ntuples >= len)
         {
-            I2 = realloc (I, 2 * len * sizeof (int64_t)) ;
-            J2 = realloc (J, 2 * len * sizeof (int64_t)) ;
+            I2 = (GrB_Index *) realloc (I, 2 * len * sizeof (GrB_Index)) ;
+            J2 = (GrB_Index *) realloc (J, 2 * len * sizeof (GrB_Index)) ;
             X2 = realloc (X, 2 * len * xsize) ;
             if (I2 == NULL || J2 == NULL || X2 == NULL)
             {
@@ -214,42 +219,15 @@ GrB_Info read_matrix        // read a double-precision or boolean matrix
 
     if (boolean)
     {
-        OK (GrB_Matrix_build (C, I, J, Xbool, ntuples, xop)) ;
+        OK (GrB_Matrix_build_BOOL (C, I, J, Xbool, ntuples, xop)) ;
     }
     else
     {
-        OK (GrB_Matrix_build (C, I, J, Xdouble, ntuples, xop)) ;
+        OK (GrB_Matrix_build_FP64 (C, I, J, Xdouble, ntuples, xop)) ;
     }
     t1 = simple_toc (tic) ;
     if (pr) printf ("time to build the graph with GrB_Matrix_build: %12.6f\n",
         t1) ;
-
-#ifdef TEST_SETELEMENT
-    {
-        // This is just for testing performance of GrB_setElement and comparing
-        // with GrB_build.  It is not needed if this function is used in 
-        // production.
-
-        // setElement will be just about as fast as build (perhaps 10% to 50%
-        // more time) with non-blocking mode.  If blocking mode is enabled,
-        // setElement will be extremely and painfully slow since the matrix is
-        // rebuilt every time a single entry is added.
-
-        simple_tic (tic) ;
-        OK (GrB_Matrix_new (&B, xtype, nrows, ncols)) ;
-        for (int64_t k = 0 ; k < ntuples ; k++)
-        {
-            // B (I[k], J[k]) = X [k]
-            GrB_Matrix_setElement (B, X [k], I [k], J [k]) ;
-        }
-        // force completion of B
-        GrB_Matrix_nvals (&nvals, B) ;
-        double t2 = simple_toc (tic) ;
-        if (pr) printf ("time to build the graph with GrB_setElement:"
-            "   %12.6f\n", t2) ;
-        GrB_free (&B) ;
-    }
-#endif
 
     free (I) ; I = NULL ;
     free (J) ; J = NULL ;
@@ -290,8 +268,8 @@ GrB_Info read_matrix        // read a double-precision or boolean matrix
             double tic [2], t ;
             simple_tic (tic) ;
             OK (GrB_Matrix_new (&A, xtype, nrows, nrows)) ;
-            OK (GrB_eWiseAdd (A, NULL, NULL, xop, C, C, dt2)) ;
-            OK (GrB_free (&C)) ;
+            OK (GrB_Matrix_eWiseAdd_BinaryOp (A, NULL, NULL, xop, C, C, dt2)) ;
+            OK (GrB_Matrix_free (&C)) ;
 
             if (boolean)
             {
@@ -301,10 +279,11 @@ GrB_Info read_matrix        // read a double-precision or boolean matrix
             else
             {
                 OK (GrB_Matrix_new (&C, xtype, nrows, nrows)) ;
-                OK (GrB_UnaryOp_new (&scale2_op, scale2, xtype, xtype)) ;
-                OK (GrB_apply (C, NULL, NULL, scale2_op, A, NULL)) ;
-                OK (GrB_free (&A)) ;
-                OK (GrB_free (&scale2_op)) ;
+                OK (GrB_UnaryOp_new (&scale2_op, 
+                    (GxB_unary_function) scale2, xtype, xtype)) ;
+                OK (GrB_Matrix_apply (C, NULL, NULL, scale2_op, A, NULL)) ;
+                OK (GrB_Matrix_free (&A)) ;
+                OK (GrB_UnaryOp_free (&scale2_op)) ;
                 *A_output = C ;
                 C = NULL ;
             }
@@ -338,11 +317,11 @@ GrB_Info read_matrix        // read a double-precision or boolean matrix
             J_range [GxB_END  ] = ncols+nrows-1 ;
 
             // A (nrows:n-1, 0:nrows-1) += C'
-            OK (GrB_assign (A, NULL, xop2, // or NULL,
+            OK (GrB_Matrix_assign (A, NULL, xop2, // or NULL,
                 C, J_range, GxB_RANGE, I_range, GxB_RANGE, dt1)) ;
 
             // A (0:nrows-1, nrows:n-1) += C
-            OK (GrB_assign (A, NULL, xop2, // or NULL,
+            OK (GrB_Matrix_assign (A, NULL, xop2, // or NULL,
                 C, I_range, GxB_RANGE, J_range, GxB_RANGE, NULL)) ;
 
             // force completion; if this statement does not appear, the
@@ -378,7 +357,8 @@ GrB_Info read_matrix        // read a double-precision or boolean matrix
 
     FREE_ALL ;
     if (pr) printf ("\nMatrix from file:\n") ;
-    GxB_print (*A_output, pr ? GxB_SHORT : GxB_SILENT) ;
+    GxB_Matrix_fprint (*A_output, "*A_output", pr ? GxB_SHORT : GxB_SILENT,
+        stdout) ;
     return (GrB_SUCCESS) ;
 }
 

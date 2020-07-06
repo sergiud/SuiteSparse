@@ -9,12 +9,14 @@ function test06 (A,B,fulltests,method_list)
 % matrix id number from the SuiteSparse collection otherwise A is the sparse
 % matrix to use in the test
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 fprintf ('test06: GrB_mxm on all semirings\n') ;
 
-[mult_ops, ~, add_ops, classes, ~, ~] = GB_spec_opsall ;
+[binops, ~, add_ops, types, ~, ~] = GB_spec_opsall ;
+mult_ops = binops.all ;
+types = types.all ;
 
 if (nargin < 3)
     fprintf ('\n-------------- GrB_mxm on all semirings\n') ;
@@ -95,10 +97,10 @@ tm3 = toc ;
 
 tic
 C = A'*B' ;
-tm4 = toc ;
+tm5 = toc ;
 
 if (n > 500)
-    fprintf ('MATLAB time: %g %g %g %g\n', tm1, tm2, tm3, tm4) ;
+    fprintf ('MATLAB time: %g %g %g %g\n', tm1, tm2, tm3, tm5) ;
     fprintf ('with mask:\n') ;
 end
 
@@ -116,10 +118,10 @@ tmm3 = toc ;
 
 tic
 C = (A'*B') .* Mask ;
-tmm4 = toc ;
+tmm5 = toc ;
 
 if (n > 500)
-    fprintf ('MATLAB time: %g %g %g %g\n', tmm1, tmm2, tmm3, tmm4) ;
+    fprintf ('MATLAB time: %g %g %g %g\n', tmm1, tmm2, tmm3, tmm5) ;
 end
 
 dnn = struct ;
@@ -130,12 +132,12 @@ dtt = struct ( 'inp0', 'tran', 'inp1', 'tran' ) ;
 n_semirings = 0 ;
 
 if (fulltests)
-    k1_list = 1:length(mult_ops) ;
-    k2_list = 1:length(add_ops) ;
-    k3_list = 1:length (classes) ;
+    k1_list = 1:length (mult_ops) ;
+    k2_list = 1:length (add_ops) ;
+    k3_list = 1:length (types) ;
 else
     % just use plus-times-double semiring
-    k1_list = 8 ;
+    k1_list = 4 ;
     k2_list = 3 ;
     k3_list = 11 ;
 end
@@ -151,23 +153,24 @@ for k1 = k1_list % 1:length(mult_ops)
     for k2 = k2_list % 1:length(add_ops)
         addop = add_ops {k2} ;
 
-        for k3 = k3_list % 1:length (classes)
-            clas = classes {k3} ;
+        for k3 = k3_list % 1:length (types)
+            semiring_type = types {k3} ;
             if (n <= 500)
                fprintf ('.') ;
             end
 
             semiring.multiply = mulop ;
             semiring.add = addop ;
-            semiring.class = clas ;
+            semiring.class = semiring_type ;
 
             % create the semiring.  some are not valid because the or,and,xor,eq
             % monoids can only be used when z is boolean for z=mult(x,y).
             try
                 [mult_op add_op id] = GB_spec_semiring (semiring) ;
-                [mult_opname mult_opclass zclass] = GB_spec_operator (mult_op) ;
-                [ add_opname  add_opclass] = GB_spec_operator (add_op) ;
-                identity = GB_spec_identity (semiring.add, add_opclass) ;
+                [mult_opname mult_optype ztype xtype ytype] = ...
+                    GB_spec_operator (mult_op) ;
+                [ add_opname  add_optype] = GB_spec_operator (add_op) ;
+                identity = GB_spec_identity (semiring.add, add_optype) ;
             catch me
                 if (~isempty (strfind (me.message, 'gotcha')))
                     semiring
@@ -176,37 +179,19 @@ for k1 = k1_list % 1:length(mult_ops)
                 continue
             end
 
-            % there are 1440 semirings that pass this test:
-            % 19 ops: 10:(1st, 2nd, min, max, plus, minus, rminus, times,
-            %            div, rdiv)
-            %         6:(is*)
-            %         3:(or,and,xor)
-            %       TxT->T
-            %       each has 44 monoids: all 11 types: max,min,plus,times
-            %       and 4 for boolean or,and,xor,eq
-            %       17*48 = 912
-            % 6 ops: eq,ne,gt,lt,ge,le
-            %       TxT->bool
-            %       each has 11 types
-            %       and 8 monoids (max,min,plus,times,or,and,xor,eq)
-            %       6*11*8 = 528
-            % 912 + 528 = 1440
-            % but only 1040 are unique.
-            % see GrB_AxB_builtin for details.
-
             n_semirings = n_semirings + 1 ;
 
             for method = method_list % 0:3
 
                 if (n > 500)
                     fprintf ('%3d ', n_semirings) ;
-                    fprintf ('[%6s %6s %8s] : ', mulop, addop, clas) ;
+                    fprintf ('[%6s %6s %8s] : ', mulop, addop, semiring_type) ;
                 end
 
                 if (method == 1)
-                    algo = 'heap' ;
+                    algo = 'hash' ;
                     if (n > 500)
-                        fprintf ('heap ') ;
+                        fprintf ('hash ') ;
                     end
                 elseif (method == 2)
                     algo = 'gustavson' ;
@@ -224,7 +209,6 @@ for k1 = k1_list % 1:length(mult_ops)
                         fprintf ('auto ') ;
                     end
                 end
-
                 if (isequal (algo, 'dot'))
                     ok = (n < 1000) ;
                 else
@@ -286,7 +270,7 @@ for k1 = k1_list % 1:length(mult_ops)
                     fprintf (...
                     'speedups %10.4f(%s) %10.4f(%s) %10.4f(%s) %10.4f(%s) ', ...
                     tm1/t1, method1(1), tm2/t2, method2(1), ...
-                    tm3/t3, method3(1), tm4/t4, method4(1)) ;
+                    tm3/t3, method3(1), tm5/t4, method4(1)) ;
                 end
 
                 % C = A*B, with mask
@@ -329,7 +313,7 @@ for k1 = k1_list % 1:length(mult_ops)
                     fprintf (...
                     'speedups %10.4f(%s) %10.4f(%s) %10.4f(%s) %10.4f(%s) ', ...
                     tmm1/t1, method1m(1), tmm2/t2, method2m(1), ...
-                    tmm3/t3, method3m(1), tmm4/t4, method4m(1)) ;
+                    tmm3/t3, method3m(1), tmm5/t4, method4m(1)) ;
                     fprintf ('\n') ;
                 end
 

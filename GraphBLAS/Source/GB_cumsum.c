@@ -2,7 +2,7 @@
 // GB_cumsum: cumlative sum of an array
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -20,11 +20,14 @@
 
 #include "GB.h"
 
-void GB_cumsum                  // compute the cumulative sum of an array
+// TODO for GPU: add error handling and GrB_Info return value
+
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
+void GB_cumsum                      // cumulative sum of an array
 (
-    int64_t *restrict count,    // size n+1, input/output
+    int64_t *GB_RESTRICT count,     // size n+1, input/output
     const int64_t n,
-    int64_t *restrict kresult,  // return k, if needed by the caller
+    int64_t *GB_RESTRICT kresult,   // return k, if needed by the caller
     int nthreads
 )
 {
@@ -55,7 +58,19 @@ void GB_cumsum                  // compute the cumulative sum of an array
     //--------------------------------------------------------------------------
 
     if (kresult == NULL)
-    { 
+    {
+
+#if 0
+        // FIXME
+        #if defined ( GBCUDA )
+        if (GB_cuda_is_on_GPU (count))
+        {
+            // 'count' is already on the GPU: compute the cumulative sum there
+            GB_cuda_cumsum (count, n) ;
+        }
+        else
+        #endif
+#endif
 
         if (nthreads <= 2)
         {
@@ -81,11 +96,20 @@ void GB_cumsum                  // compute the cumulative sum of an array
             // cumsum with multiple threads
             //------------------------------------------------------------------
 
-            int64_t ws [GB_PGI_NTHREADS(nthreads)+1] ;
-            #pragma omp parallel num_threads(nthreads)
+            // allocate workspace
+            int64_t *ws = GB_MALLOC (nthreads, int64_t) ;
+            if (ws == NULL)
+            { 
+                // out of memory; use a single thread instead
+                GB_cumsum (count, n, NULL, 1) ;
+                return ;
+            }
+
+            int tid ;
+            #pragma omp parallel for num_threads(nthreads) schedule(static)
+            for (tid = 0 ; tid < nthreads ; tid++)
             {
-                // each thread sums up its own part
-                int tid = GB_OPENMP_THREAD_ID ;
+                // each task sums up its own part
                 int64_t istart, iend ;
                 GB_PARTITION (istart, iend, n, tid, nthreads) ;
                 int64_t s = 0 ;
@@ -94,11 +118,15 @@ void GB_cumsum                  // compute the cumulative sum of an array
                     s += count [i] ;
                 }
                 ws [tid] = s ;
+            }
 
-                #pragma omp barrier
-
-                // each thread computes the cumsum of its own part
-                s = 0 ;
+            #pragma omp parallel for num_threads(nthreads) schedule(static)
+            for (tid = 0 ; tid < nthreads ; tid++)
+            {
+                // each tasks computes the cumsum of its own part
+                int64_t istart, iend ;
+                GB_PARTITION (istart, iend, n, tid, nthreads) ;
+                int64_t s = 0 ;
                 for (int i = 0 ; i < tid ; i++)
                 { 
                     s += ws [i] ;
@@ -115,11 +143,26 @@ void GB_cumsum                  // compute the cumulative sum of an array
                 }
             }
 
+            // free workspace
+            GB_FREE (ws) ;
         }
 
     }
     else
-    { 
+    {
+
+#if 0
+        // TODO for GPU: pop count on the GPU for GB_cumsum
+        #if defined ( GBCUDA )
+        if (GB_cuda_is_on_GPU (count))
+        {
+            // 'count' is already on the GPU: compute the cumulative sum there
+            (*kresult) = GB_cuda_population_count_int64 (count, n) ;
+            GB_cuda_cumsum (count, n) ;
+        }
+        else
+        #endif
+#endif
 
         if (nthreads <= 2)
         {
@@ -148,13 +191,20 @@ void GB_cumsum                  // compute the cumulative sum of an array
             // cumsum with multiple threads, also compute k
             //------------------------------------------------------------------
 
-            int64_t ws [GB_PGI_NTHREADS(nthreads)+1] ;
-            int64_t wk [GB_PGI_NTHREADS(nthreads)+1] ;
+            int64_t *ws = GB_MALLOC (2*nthreads, int64_t) ;
+            if (ws == NULL)
+            { 
+                // out of memory; use a single thread instead
+                GB_cumsum (count, n, kresult, 1) ;
+                return ;
+            }
+            int64_t *wk = ws + nthreads ;
 
-            #pragma omp parallel num_threads(nthreads)
+            int tid ;
+            #pragma omp parallel for num_threads(nthreads) schedule(static)
+            for (tid = 0 ; tid < nthreads ; tid++)
             {
-                // each thread sums up its own part
-                int tid = GB_OPENMP_THREAD_ID ;
+                // each task sums up its own part
                 int64_t istart, iend ;
                 GB_PARTITION (istart, iend, n, tid, nthreads) ;
                 int64_t k = 0 ;
@@ -167,11 +217,15 @@ void GB_cumsum                  // compute the cumulative sum of an array
                 }
                 ws [tid] = s ;
                 wk [tid] = k ;
+            }
 
-                #pragma omp barrier
-
-                // each thread computes the cumsum of its own part
-                s = 0 ;
+            #pragma omp parallel for num_threads(nthreads) schedule(static)
+            for (tid = 0 ; tid < nthreads ; tid++)
+            {
+                // each task computes the cumsum of its own part
+                int64_t istart, iend ;
+                GB_PARTITION (istart, iend, n, tid, nthreads) ;
+                int64_t s = 0 ;
                 for (int i = 0 ; i < tid ; i++)
                 { 
                     s += ws [i] ;
@@ -194,6 +248,9 @@ void GB_cumsum                  // compute the cumulative sum of an array
                 k += wk [tid] ;
             }
             (*kresult) = k ;
+
+            // free workspace
+            GB_FREE (ws) ;
         }
     }
 }

@@ -2,7 +2,7 @@
 // GB_mex_ipagerank: compute pagerank with an integer semiring
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 // This is for testing only.
 
 #include "GB_mex.h"
-#include "demos.h"
+#include "graphblas_demos.h"
 
 #define USAGE "[r,irank] = GB_mex_ipagerank (A)"
 

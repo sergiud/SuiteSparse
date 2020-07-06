@@ -1,11 +1,11 @@
 function test56
 %TEST56 test GrB_*_build
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 op.opname = 'min'
-op.opclass = 'uint32'
+op.optype = 'uint32'
 
 fprintf ('ktriplets:\n') ;
 I = uint64 ([0 0 0]') ;

@@ -2,7 +2,7 @@
 // GB_Mask_compatible: check input and operators for type compatibility
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -48,8 +48,8 @@ GrB_Info GB_Mask_compatible     // check type and dimensions of mask
         if (GB_NROWS (M) != cnrows || GB_NCOLS (M) != cncols)
         { 
             return (GB_ERROR (GrB_DIMENSION_MISMATCH, (GB_LOG,
-                "M is "GBd"-by-"GBd"; "
-                "does not match output dimensions ("GBu"-by-"GBu")",
+                "M is " GBd "-by-" GBd "; "
+                "does not match output dimensions (" GBu "-by-" GBu ")",
                 GB_NROWS (M), GB_NCOLS (M), cnrows, cncols))) ;
         }
     }

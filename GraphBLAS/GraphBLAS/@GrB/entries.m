@@ -9,12 +9,12 @@ function result = entries (A, varargin)
 % of zero (or any specified additive identity value) use GrB.nonz
 % instead.
 %
-% let [m n] = size (A)
+% Let [m n] = size (A)
 %
 % e = GrB.entries (A)         number of entries
 % e = GrB.entries (A, 'all')  number of entries
-% e = GrB.entries (A, 'row')  number of rows with at least one entries
-% e = GrB.entries (A, 'col')  number of columns with at least one entries
+% e = GrB.entries (A, 'row')  number of rows with at least one entry
+% e = GrB.entries (A, 'col')  number of columns with at least one entry
 %
 % X = GrB.entries (A, 'list')         list of values of unique entries
 % X = GrB.entries (A, 'all', 'list')  list of values of unique entries
@@ -33,6 +33,9 @@ function result = entries (A, varargin)
 %   then d(j) is an implicit zero, not present in the pattern of d, so
 %   that I = find (d) is the same I = GrB.entries (A, 'col', 'list').
 %
+% The result is a MATLAB scalar or vector, except for the 'degree'
+% usage, in which case the result is a GrB vector d.
+%
 % Example:
 %
 %   A = magic (5) ;
@@ -49,56 +52,19 @@ function result = entries (A, varargin)
 %
 % See also GrB.nonz, nnz, GrB/nnz, nonzeros, GrB/nonzeros.
 
-% FUTURE: if A is stored by row, then the row degree can be found quickly,
-% in a mexFunction that accesses A->p and A->h.  If stored by col, then
-% the col degree is the same thing.  Write a mexFunction that computes
-% the vector degree (by row or by column).
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights
+% Reserved. http://suitesparse.com.  See GraphBLAS/Doc/License.txt.
 
-% get the string arguments
-dim = 'all' ;           % 'all', 'row', or 'col'
-kind = 'count' ;        % 'count', 'list', or 'degree'
-for k = 1:nargin-1
-    arg = varargin {k} ;
-    switch arg
-        case { 'all', 'row', 'col' }
-            dim = arg ;
-        case { 'count', 'list', 'degree' }
-            kind = arg ;
-        otherwise
-            gb_error ('unknown option') ;
-    end
+if (isobject (A))
+    % A is a GraphBLAS matrix; get its opaque content
+    A = A.opaque ;
 end
 
-if (isequal (dim, 'all'))
-    switch kind
-        case 'count'
-            if (isa (A, 'GrB'))
-                result = gbnvals (A.opaque) ;
-            else
-                result = gbnvals (A) ;
-            end
-        case 'list'
-            if (isa (A, 'GrB'))
-                result = unique (gbextractvalues (A.opaque)) ;
-            else
-                result = unique (gbextractvalues (A)) ;
-            end
-        otherwise
-            gb_error ('''all'' and ''degree'' cannot be combined') ;
-    end
-else
-    desc = struct ;
-    if (isequal (dim, 'col'))
-        desc.in0 = 'transpose' ;
-    end
-    degree = GrB.vreduce ('+', GrB.apply ('1.double', A), desc) ;
-    switch kind
-        case 'count'
-            result = GrB.entries (degree) ;
-        case 'list'
-            result = find (degree) ;
-        case 'degree'
-            result = degree ;
-    end
+% get the count/list of the entries of A
+result = gb_entries (A, varargin {:}) ;
+
+% if gb_entries returned a GraphBLAS struct, return it as a GrB matrix
+if (isstruct (result))
+    result = GrB (result) ;
 end
 

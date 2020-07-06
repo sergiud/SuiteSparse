@@ -7,7 +7,24 @@
 # and GraphBLAS.  The configuration settings for GraphBLAS are determined by
 # GraphBLAS/CMakeLists.txt
 
-SUITESPARSE_VERSION = 5.6.0
+SUITESPARSE_VERSION = 5.8.0
+
+    #---------------------------------------------------------------------------
+    # determine what system we are on
+    #---------------------------------------------------------------------------
+
+    # To disable these auto configurations, use 'make UNAME=custom'
+
+    ifndef UNAME
+        ifeq ($(OS),Windows_NT)
+            # Cygwin Make on Windows has an $(OS) variable, but not uname.
+            # Note that this option is untested.
+            UNAME = Windows
+        else
+            # Linux and Darwin (Mac OSX) have been tested.
+            UNAME := $(shell uname)
+        endif
+    endif
 
 #===============================================================================
 # Options you can change without editing this file:
@@ -159,8 +176,6 @@ SUITESPARSE_VERSION = 5.6.0
     # result in severe performance degradation, in CHOLMOD in particular.
     # This script can also detect if the Intel MKL BLAS is installed.
 
-    LAPACK ?= -llapack
-
     ifndef BLAS
         ifdef MKLROOT
             # use the Intel MKL for BLAS and LAPACK
@@ -171,11 +186,13 @@ SUITESPARSE_VERSION = 5.6.0
             #   $(MKLROOT)/lib/intel64/libmkl_intel_thread.a \
             #   -Wl,--end-group -lpthread -lm
             # using dynamic linking:
-            BLAS = -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -liomp5 -lpthread -lm
-            LAPACK =
+            ifeq ($(UNAME),Linux)
+                BLAS ?= -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -liomp5 -lpthread -lm
+                LAPACK ?=
+            endif
         else
-            # use the OpenBLAS at http://www.openblas.net (CAN BE VERY SLOW)
-            BLAS = -lopenblas
+            BLAS ?= -lblas
+            LAPACK ?= -llapack
         endif
     endif
 
@@ -336,23 +353,6 @@ SUITESPARSE_VERSION = 5.6.0
 #===============================================================================
 
     #---------------------------------------------------------------------------
-    # determine what system we are on
-    #---------------------------------------------------------------------------
-
-    # To disable these auto configurations, use 'make UNAME=custom'
-
-    ifndef UNAME
-        ifeq ($(OS),Windows_NT)
-            # Cygwin Make on Windows has an $(OS) variable, but not uname.
-            # Note that this option is untested.
-            UNAME = Windows
-        else
-            # Linux and Darwin (Mac OSX) have been tested.
-            UNAME := $(shell uname)
-        endif
-    endif
-
-    #---------------------------------------------------------------------------
     # Linux
     #---------------------------------------------------------------------------
 
@@ -370,10 +370,11 @@ SUITESPARSE_VERSION = 5.6.0
         # command line in the Terminal, before doing 'make':
         # xcode-select --install
         CF += -fno-common
-        BLAS = -framework Accelerate
-        LAPACK = -framework Accelerate
+        BLAS ?= -framework Accelerate
+        LAPACK ?= -framework Accelerate
         # OpenMP is not yet supported by default in clang
         CFOPENMP =
+        LDLIBS += -rpath $(INSTALL_LIB)
     endif
 
     #---------------------------------------------------------------------------
@@ -386,8 +387,8 @@ SUITESPARSE_VERSION = 5.6.0
         # I leave it here in case you need it.  It likely needs updating.
         CF += -fast -KPIC -xc99=%none -xlibmieee -xlibmil -m64 -Xc
         F77FLAGS = -O -fast -KPIC -dalign -xlibmil -m64
-        BLAS = -xlic_lib=sunperf
-        LAPACK =
+        BLAS ?= -xlic_lib=sunperf
+        LAPACK ?=
         # Using the GCC compiler and the reference BLAS
         ## CC = gcc
         ## CXX = g++
@@ -404,9 +405,9 @@ SUITESPARSE_VERSION = 5.6.0
         # hasn't been tested for a very long time...
         # I leave it here in case you need it.  It likely needs updating.
         CF += -O4 -qipa -qmaxmem=16384 -q64 -qproto -DBLAS_NO_UNDERSCORE
-        F77FLAGS =  -O4 -qipa -qmaxmem=16384 -q64
-        BLAS = -lessl
-        LAPACK =
+        F77FLAGS ?=  -O4 -qipa -qmaxmem=16384 -q64
+        BLAS ?= -lessl
+        LAPACK ?=
     endif
 
 #===============================================================================
@@ -463,6 +464,7 @@ else
         SO_TARGET = $(LIBRARY).$(VERSION).dylib
         SO_OPTS  += -dynamiclib -compatibility_version $(SO_VERSION) \
                     -current_version $(VERSION) \
+                    -Wl,-install_name -Wl,@rpath/$(SO_MAIN) \
                     -shared -undefined dynamic_lookup
         # When a Mac *.dylib file is moved, this command is required
         # to change its internal name to match its location in the filesystem:

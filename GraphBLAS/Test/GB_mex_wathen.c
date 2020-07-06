@@ -2,7 +2,7 @@
 // GB_mex_wathen: construct a random finite-element matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -52,8 +52,7 @@ void mexFunction
         {
             mexErrMsgTxt ("rho has wrong size") ;
         }
-        if (mxGetClassID (pargin [4]) != mxDOUBLE_CLASS ||
-            mxIsSparse (pargin [4]))
+        if (!mxIsClass (pargin [4], "double") || mxIsSparse (pargin [4]))
         {
             mexErrMsgTxt ("rho must be a dense and double") ;
         }

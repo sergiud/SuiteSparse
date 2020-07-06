@@ -2,14 +2,53 @@
 // GB_select_count: count entries in eacn vector for C=select(A,thunk)
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 #if defined ( GB_ENTRY_SELECTOR )
 
+    //--------------------------------------------------------------------------
+    // declarations for Template/GB_reduce_each_vector.c
+    //--------------------------------------------------------------------------
+
+    // The two if tests below are written carefully so that typecasting from
+    // Bool works properly.  The user might import a Bool array whose values
+    // are not 0 and 1, and this can lead to subtle errors with compiler
+    // optimization.  The compiler may assume that the array contains only 0's
+    // and 1's, which leads to a miscount.
+
+    // declare scalar and initialize it to zero
+    #define GB_SCALAR(s)                                    \
+        int64_t s = 0 ;
+
+    // ztype s = (ztype) Ax [p], with typecast.
+    #define GB_CAST_ARRAY_TO_SCALAR(s,Ax,p)                 \
+        if (GB_TEST_VALUE_OF_ENTRY (p)) { s = 1 ; } else { s = 0 ; }
+
+    // s += (ztype) Ax [p], with typecast
+    #define GB_ADD_CAST_ARRAY_TO_SCALAR(s,Ax,p)             \
+        if (GB_TEST_VALUE_OF_ENTRY (p)) s++ ;
+
+    // The scalar s and array W are always of type int64_t (GB_CTYPE)
     #define GB_CTYPE int64_t
+
+    // W [k] = s
+    #define GB_COPY_SCALAR_TO_ARRAY(W,k,s)                  \
+        W [k] = s
+
+    // W [k] = S [i]
+    #define GB_COPY_ARRAY_TO_ARRAY(W,k,S,i)                 \
+        W [k] = S [i]
+
+    // W [k] += S [i]
+    #define GB_ADD_ARRAY_TO_ARRAY(W,k,S,i)                  \
+        W [k] += S [i]
+
+    // no terminal value
+    #define GB_BREAK_IF_TERMINAL(t) ;
+
     #include "GB_reduce_each_vector.c"
 
 #else
@@ -18,9 +57,9 @@
     // get A
     //--------------------------------------------------------------------------
 
-    const int64_t *restrict Ap = A->p ;
-    const int64_t *restrict Ah = A->h ;
-    const int64_t *restrict Ai = A->i ;
+    const int64_t *GB_RESTRICT Ap = A->p ;
+    const int64_t *GB_RESTRICT Ah = A->h ;
+    const int64_t *GB_RESTRICT Ai = A->i ;
     int64_t anvec = A->nvec ;
     int64_t avlen = A->vlen ;
 
@@ -28,8 +67,9 @@
     // tril, triu, diag, offdiag, resize: binary search in each vector
     //--------------------------------------------------------------------------
 
+    int64_t k ;
     #pragma omp parallel for num_threads(nthreads) schedule(guided)
-    for (int64_t k = 0 ; k < anvec ; k++)
+    for (k = 0 ; k < anvec ; k++)
     {
 
         //----------------------------------------------------------------------
@@ -81,7 +121,7 @@
             { 
                 // binary search for A (i,k)
                 int64_t pright = pA_end - 1 ;
-                GB_BINARY_SPLIT_SEARCH (i, Ai, p, pright, found) ;
+                GB_SPLIT_BINARY_SEARCH (i, Ai, p, pright, found) ;
             }
 
             #if defined ( GB_TRIL_SELECTOR )
@@ -143,8 +183,8 @@
     // Wfirst [0..ntasks-1] and Wlast [0..ntasks-1] are required for
     // constructing C_start_slice [0..ntasks-1] in GB_selector.
 
-    int64_t *restrict Wfirst = (int64_t *) Wfirst_space ;
-    int64_t *restrict Wlast  = (int64_t *) Wlast_space  ;
+    int64_t *GB_RESTRICT Wfirst = (int64_t *) Wfirst_space ;
+    int64_t *GB_RESTRICT Wlast  = (int64_t *) Wlast_space  ;
 
     for (int tid = 0 ; tid < ntasks ; tid++)
     {

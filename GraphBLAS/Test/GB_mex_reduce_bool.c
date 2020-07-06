@@ -2,7 +2,7 @@
 // GB_mex_reduce_bool: c = accum(c,reduce_to_scalar(A)) for boolean
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -16,7 +16,7 @@
 #define FREE_ALL                        \
 {                                       \
     GB_MATRIX_FREE (&A) ;               \
-    GrB_free (&reduce) ;                \
+    GrB_Monoid_free_(&reduce) ;         \
     GB_mx_put_global (true, 0) ;        \
 }
 
@@ -59,17 +59,13 @@ void mexFunction
         mexErrMsgTxt ("A must be boolean") ;
     }
 
-    // GxB_print (A, 3) ;
-
     // get the op (always boolean)
     if (!GB_mx_mxArray_to_BinaryOp (&reduceop, pargin [1], "reduceop",
-        GB_NOP_opcode, mxLOGICAL_CLASS, false, false))
+        GrB_BOOL, false) || reduceop == NULL)
     {
         FREE_ALL ;
         mexErrMsgTxt ("reduceop failed") ;
     }
-
-    // GxB_print (reduceop, 3) ;
 
     // get the boolean identity value
     bool GET_SCALAR (2, bool, identity, true) ;
@@ -85,11 +81,11 @@ void mexFunction
     // create the reduce monoid
     if (has_terminal)
     {
-        info = GxB_Monoid_terminal_new (&reduce, reduceop, identity, terminal) ;
+        info = GxB_Monoid_terminal_new_BOOL_(&reduce, reduceop, identity, terminal) ;
     }
     else
     {
-        info = GrB_Monoid_new (&reduce, reduceop, identity) ;
+        info = GrB_Monoid_new_BOOL_(&reduce, reduceop, identity) ;
     }
 
     if (info != GrB_SUCCESS)
@@ -98,12 +94,9 @@ void mexFunction
         mexErrMsgTxt ("monoid failed") ;
     }
 
-    // GxB_print (reduce, 3) ;
-
-
     // reduce to a scalar
     bool result = false ;
-    info = GrB_reduce (&result, NULL, reduce, A, NULL) ;
+    info = GrB_Matrix_reduce_BOOL_(&result, NULL, reduce, A, NULL) ;
 
     if (info != GrB_SUCCESS)
     {
@@ -112,8 +105,8 @@ void mexFunction
     }
 
     // return result to MATLAB as a boolean scalar
-    pargout [0] = mxCreateNumericMatrix (1, 1, mxLOGICAL_CLASS, mxREAL) ;
-    void *p = mxGetData (pargout [0]) ;
+    pargout [0] = GB_mx_create_full (1, 1, GrB_BOOL) ;
+    GB_void *p = mxGetData (pargout [0]) ;
     memcpy (p, &result, sizeof (bool)) ;
 
     FREE_ALL ;

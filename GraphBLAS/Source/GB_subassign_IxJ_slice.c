@@ -2,7 +2,7 @@
 // GB_subassign_IxJ_slice: slice IxJ for subassign
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -46,9 +46,9 @@
 #include "GB_subassign_methods.h"
 
 #undef  GB_FREE_ALL
-#define GB_FREE_ALL                                                     \
-{                                                                       \
-    GB_FREE_MEMORY (TaskList, max_ntasks+1, sizeof (GB_task_struct)) ;  \
+#define GB_FREE_ALL         \
+{                           \
+    GB_FREE (TaskList) ;    \
 }
 
 //------------------------------------------------------------------------------
@@ -90,22 +90,6 @@ GrB_Info GB_subassign_IxJ_slice
     (*p_nthreads  ) = 1 ;
     int ntasks, max_ntasks = 0, nthreads ;
     GB_task_struct *TaskList = NULL ;
-
-    // printf ("nI "GBd" Ikind "GBd" Icolon "GBd" "GBd" "GBd"\n", nI, Ikind,
-    //     Icolon [0], Icolon [1], Icolon [2]) ;
-    // for (int64_t iA = 0 ; iA < nI ; iA++)
-    // {
-    //     int64_t iC = GB_ijlist (I, iA, Ikind, Icolon) ;
-    //     printf ("   iA "GBd" iC "GBd"\n", iA, iC) ;
-    // }
-
-    // printf ("nJ "GBd" Jkind "GBd" Jcolon "GBd" "GBd" "GBd"\n", nJ, Jkind,
-    //     Jcolon [0], Jcolon [1], Jcolon [2]) ;
-    // for (int64_t jA = 0 ; jA < nJ ; jA++)
-    // {
-    //     int64_t jC = GB_ijlist (J, jA, Jkind, Jcolon) ;
-    //     printf ("   jA "GBd" jC "GBd"\n", jA, jC) ;
-    // }
 
     //--------------------------------------------------------------------------
     // determine # of threads to use

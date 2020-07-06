@@ -1,6 +1,9 @@
 function testperf
 %TESTPERF run all performance tests
 
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
+% http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
 t = tic ;
 fprintf ('\ntestperf:  run all performance tests\n') ;
 
@@ -21,7 +24,7 @@ test48 ;        % performance test of GrB_mxm
 test46b ;       % performance test GB_mex_assign
 test49 ;        % performance test of GrB_mxm (dot product method, A'*B)
 test51 ;        % performance test GB_mex_subassign, multiple ops
-test58(0)       % longer GB_mex_eWiseAdd_Matrix performance test
+test58(0)       % longer GB_mex_Matrix_eWiseAdd performance test
 test61 ;        % performance test of GrB_eMult
 test68 ;        % performance tests for eWiseMult
 f = [936 2662] ;

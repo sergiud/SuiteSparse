@@ -2,7 +2,7 @@
 // gb_export_to_mxstruct: export a GrB_Matrix to a MATLAB struct
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -18,7 +18,8 @@
 
 static const char *MatrixFields [NFIELDS] =
 {
-    "GraphBLAS",        // 0: "logical", "int8", ... "double", "complex"
+    "GraphBLAS",        // 0: "logical", "int8", ... "double",
+                        //    "single complex", or "double complex"
     "s",                // 1: all scalar info goes here
     "p",                // 2: array of int64_t, size plen+1
     "i",                // 3: array of int64_t, size nzmax
@@ -60,21 +61,20 @@ mxArray *gb_export_to_mxstruct  // return exported MATLAB struct G
     // export content into the output struct
     //--------------------------------------------------------------------------
 
-    // export the GraphBLAS type
+    // export the GraphBLAS type as a string
     mxSetFieldByNumber (G, 0, 0, gb_type_to_mxstring (A->type)) ;
 
     // export the scalar content
-    mxArray *opaque = mxCreateNumericMatrix (1, 9, mxDOUBLE_CLASS, mxREAL) ;
-    double *s = mxGetDoubles (opaque) ;
-    s [0] = A->hyper_ratio ;
-    s [1] = (double) (A->plen) ;
-    s [2] = (double) (A->vlen) ;
-    s [3] = (double) (A->vdim) ;
-    s [4] = (double) (A->nvec) ;
-    s [5] = (double) (A->nvec_nonempty) ;
-    s [6] = (double) (A->is_hyper) ;
-    s [7] = (double) (A->is_csc) ;
-    s [8] = (double) (A->nzmax) ;
+    mxArray *opaque = mxCreateNumericMatrix (1, 8, mxINT64_CLASS, mxREAL) ;
+    int64_t *s = mxGetInt64s (opaque) ;
+    s [0] = A->plen ;
+    s [1] = A->vlen ;
+    s [2] = A->vdim ;
+    s [3] = A->nvec ;
+    s [4] = A->nvec_nonempty ;
+    s [5] = (int64_t) (A->is_hyper) ;
+    s [6] = (int64_t) (A->is_csc) ;
+    s [7] = A->nzmax ;
     mxSetFieldByNumber (G, 0, 1, opaque) ;
 
     // These components do not need to be exported: Pending, nzombies,
@@ -138,7 +138,7 @@ mxArray *gb_export_to_mxstruct  // return exported MATLAB struct G
     // free the header of A
     //--------------------------------------------------------------------------
 
-    OK (GrB_free (A_handle)) ;
+    OK (GrB_Matrix_free (A_handle)) ;
 
     //--------------------------------------------------------------------------
     // return the MATLAB struct

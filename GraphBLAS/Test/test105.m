@@ -1,6 +1,9 @@
 function test105
 %TEST105 eWiseAdd with hypersparse matrices
 
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
+% http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
 rng 'default'
 fprintf ('\ntest105: eWiseAdd with hypersparse\n') ;
 
@@ -26,16 +29,16 @@ for m = [0 1 5 100]
                         is_csc, is_hyper, hyper_ratio) ;
 
                     % C = A+B, no mask
-                    C0 = GB_spec_eWiseAdd_Matrix (C, [ ], [ ], ...
+                    C0 = GB_spec_Matrix_eWiseAdd (C, [ ], [ ], ...
                                                  'plus', A, B, [ ], 'test') ;
-                    C1 = GB_mex_eWiseAdd_Matrix  (C, [ ], [ ], ...
+                    C1 = GB_mex_Matrix_eWiseAdd  (C, [ ], [ ], ...
                                                  'plus', A, B, [ ], 'test') ;
                     GB_spec_compare (C0, C1) ;
 
                     % C = A+B, with mask
-                    C0 = GB_spec_eWiseAdd_Matrix (C, M, [ ], ...
+                    C0 = GB_spec_Matrix_eWiseAdd (C, M, [ ], ...
                                                  'plus', A, B, [ ], 'test') ;
-                    C1 = GB_mex_eWiseAdd_Matrix  (C, M, [ ], ...
+                    C1 = GB_mex_Matrix_eWiseAdd  (C, M, [ ], ...
                                                  'plus', A, B, [ ], 'test') ;
                     GB_spec_compare (C0, C1) ;
 

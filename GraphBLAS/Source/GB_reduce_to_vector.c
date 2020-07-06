@@ -2,7 +2,7 @@
 // GB_reduce_to_vector: reduce a matrix to a vector using a binary op
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -13,6 +13,7 @@
 // to a vector.
 
 #include "GB_reduce.h"
+#include "GB_binop.h"
 #include "GB_build.h"
 #include "GB_ek_slice.h"
 #include "GB_accum_mask.h"
@@ -20,11 +21,11 @@
 #include "GB_red__include.h"
 #endif
 
-#define GB_FREE_WORK                                                        \
-{                                                                           \
-    GB_FREE_MEMORY (Wfirst_space, ntasks, zsize) ;                          \
-    GB_FREE_MEMORY (Wlast_space,  ntasks, zsize) ;                          \
-    GB_ek_slice_free (&pstart_slice, &kfirst_slice, &klast_slice, ntasks) ; \
+#define GB_FREE_WORK                                                    \
+{                                                                       \
+    GB_FREE (Wfirst_space) ;                                            \
+    GB_FREE (Wlast_space) ;                                             \
+    GB_ek_slice_free (&pstart_slice, &kfirst_slice, &klast_slice) ;     \
 }
 
 #define GB_FREE_ALL             \
@@ -58,22 +59,23 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
     GB_RETURN_IF_NULL_OR_FAULTY (A) ;
     GB_RETURN_IF_FAULTY (desc) ;
 
-    ASSERT_OK (GB_check (C, "C input for reduce_BinaryOp", GB0)) ;
-    ASSERT_OK_OR_NULL (GB_check (M, "M for reduce_BinaryOp", GB0)) ;
-    ASSERT_OK_OR_NULL (GB_check (accum, "accum for reduce_BinaryOp", GB0)) ;
-    ASSERT_OK (GB_check (reduce, "reduce for reduce_BinaryOp", GB0)) ;
-    ASSERT_OK (GB_check (A, "A input for reduce_BinaryOp", GB0)) ;
-    ASSERT_OK_OR_NULL (GB_check (desc, "desc for reduce_BinaryOp", GB0)) ;
+    ASSERT_MATRIX_OK (C, "C input for reduce_BinaryOp", GB0) ;
+    ASSERT_MATRIX_OK_OR_NULL (M, "M for reduce_BinaryOp", GB0) ;
+    ASSERT_BINARYOP_OK_OR_NULL (accum, "accum for reduce_BinaryOp", GB0) ;
+    ASSERT_BINARYOP_OK (reduce, "reduce for reduce_BinaryOp", GB0) ;
+    ASSERT_MATRIX_OK (A, "A input for reduce_BinaryOp", GB0) ;
+    ASSERT_DESCRIPTOR_OK_OR_NULL (desc, "desc for reduce_BinaryOp", GB0) ;
 
     GrB_Matrix T = NULL ;
     int ntasks = 0 ;
     size_t zsize = 0 ;
     int64_t *pstart_slice = NULL, *kfirst_slice = NULL, *klast_slice = NULL ;
-    GB_void *restrict Wfirst_space = NULL ;
-    GB_void *restrict Wlast_space = NULL ;
+    GB_void *GB_RESTRICT Wfirst_space = NULL ;
+    GB_void *GB_RESTRICT Wlast_space = NULL ;
 
     // get the descriptor
-    GB_GET_DESCRIPTOR (info, desc, C_replace, Mask_comp, A_transpose, xx1, xx2);
+    GB_GET_DESCRIPTOR (info, desc, C_replace, Mask_comp, Mask_struct,
+        A_transpose, xx1, xx2) ;
 
     // C and M are n-by-1 GrB_Vector objects, typecasted to GrB_Matrix
     ASSERT (GB_VECTOR_OK (C)) ;
@@ -98,7 +100,7 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
     if (!GB_Type_compatible (A->type, reduce->ztype))
     { 
         return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
-            "incompatible type for reduction operator z=%s(x,y):\n"
+            "Incompatible type for reduction operator z=%s(x,y):\n"
             "input matrix A of type [%s]\n"
             "cannot be typecast to reduction operator of type [%s]",
             reduce->name, A->type->name, reduce->ztype->name))) ;
@@ -111,8 +113,8 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
         if (n != GB_NCOLS (A))
         { 
             return (GB_ERROR (GrB_DIMENSION_MISMATCH, (GB_LOG,
-                "w=reduce(A'):  length of w is "GBd";\n"
-                "it must match the number of columns of A, which is "GBd".",
+                "w=reduce(A'):  length of w is " GBd ";\n"
+                "it must match the number of columns of A, which is " GBd ".",
                 n, GB_NCOLS (A)))) ;
         }
     }
@@ -121,8 +123,8 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
         if (n != GB_NROWS(A))
         { 
             return (GB_ERROR (GrB_DIMENSION_MISMATCH, (GB_LOG,
-                "w=reduce(A):  length of w is "GBd";\n"
-                "it must match the number of rows of A, which is "GBd".",
+                "w=reduce(A):  length of w is " GBd ";\n"
+                "it must match the number of rows of A, which is " GBd ".",
                 n, GB_NROWS (A)))) ;
         }
     }
@@ -134,11 +136,8 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
     // delete any lingering zombies and assemble any pending tuples
     //--------------------------------------------------------------------------
 
-    // GB_WAIT (C) ;
-    GB_WAIT (M) ;
-    GB_WAIT (A) ;
-
-    ASSERT (!GB_PENDING (A)) ; ASSERT (!GB_ZOMBIES (A)) ;
+    GB_MATRIX_WAIT (M) ;
+    GB_MATRIX_WAIT (A) ;
 
     //--------------------------------------------------------------------------
     // handle the CSR/CSC format of A
@@ -173,7 +172,7 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
     // as a GrB_Matrix so it can be passed to GB_accum_mask without
     // typecasting.
 
-    ASSERT (n == (A_transpose) ? A->vdim : A->vlen) ;
+    ASSERT (n == ((A_transpose) ? A->vdim : A->vlen)) ;
 
     //--------------------------------------------------------------------------
     // scalar workspace
@@ -181,8 +180,8 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
 
     size_t asize = A->type->size ;
     GB_Type_code acode = A->type->code ;
-    const int64_t *restrict Ai = A->i ;
-    const GB_void *restrict Ax = A->x ;
+    const int64_t *GB_RESTRICT Ai = A->i ;
+    const GB_void *GB_RESTRICT Ax = (GB_void *) A->x ;
     int64_t anvec = A->nvec ;
     int64_t anz = GB_NNZ (A) ;
 
@@ -218,15 +217,14 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
         //----------------------------------------------------------------------
 
         // since T is a GrB_Vector, it is CSC and not hypersparse
-        GB_CREATE (&T, ttype, n, 1, GB_Ap_calloc, true,
-            GB_FORCE_NONHYPER, GB_HYPER_DEFAULT, 1, anvec, true, Context) ;
-        GB_OK (info) ;
+        GB_OK (GB_create (&T, ttype, n, 1, GB_Ap_calloc, true,
+            GB_FORCE_NONHYPER, GB_HYPER_DEFAULT, 1, anvec, true, Context)) ;
         ASSERT (GB_VECTOR_OK (T)) ;
 
         T->p [0] = 0 ;
         T->p [1] = anvec ;
-        int64_t *restrict Ti = T->i ;
-        GB_void *restrict Tx = T->x ;
+        int64_t *GB_RESTRICT Ti = T->i ;
+        GB_void *GB_RESTRICT Tx = (GB_void *) T->x ;
         T->nvec_nonempty = (anvec > 0) ? 1 : 0 ;
         T->magic = GB_MAGIC ;
 
@@ -238,13 +236,15 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
         // in T, but it is flagged as a zombie if it is empty.
 
         int64_t nzombies = 0 ;
-        const int64_t *restrict Ah = A->h ;
-        const int64_t *restrict Ap = A->p ;
+        const int64_t *GB_RESTRICT Ah = A->h ;
+        const int64_t *GB_RESTRICT Ap = A->p ;
 
         int nth = GB_nthreads (anvec, chunk, nthreads_max) ;
+
+        int64_t k ;
         #pragma omp parallel for num_threads(nth) schedule(static) \
             reduction(+:nzombies)
-        for (int64_t k = 0 ; k < anvec ; k++)
+        for (k = 0 ; k < anvec ; k++)
         {
             // if A(:,j) is empty, then the entry in T becomes a zombie
             int64_t j = (Ah == NULL) ? k : Ah [k] ;
@@ -281,24 +281,28 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
         ntasks = GB_IMIN (ntasks, anz) ;
         ntasks = GB_IMAX (ntasks, 1) ;
 
-        GB_MALLOC_MEMORY (Wfirst_space, ntasks, zsize) ;
-        GB_MALLOC_MEMORY (Wlast_space,  ntasks, zsize) ;
+        Wfirst_space = GB_MALLOC (ntasks * zsize, GB_void) ;
+        Wlast_space  = GB_MALLOC (ntasks * zsize, GB_void) ;
 
         if (Wfirst_space == NULL || Wlast_space == NULL ||
            !GB_ek_slice (&pstart_slice, &kfirst_slice, &klast_slice, A, ntasks))
-        {
+        { 
             // out of memory
             GB_FREE_ALL ;
             return (GB_OUT_OF_MEMORY) ;
         }
 
         //----------------------------------------------------------------------
-        // numeric phase: launch the switch factory
+        // reduce to vector with built-in operators
         //----------------------------------------------------------------------
 
         bool done = false ;
 
         #ifndef GBCOMPACT
+
+            //------------------------------------------------------------------
+            // define the worker for the switch factory
+            //------------------------------------------------------------------
 
             #define GB_red(opname,aname) GB_red_eachvec_ ## opname ## aname
             #define GB_RED_WORKER(opname,aname,atype)                       \
@@ -328,12 +332,14 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
         if (!done)
         { 
 
+            GB_BURBLE_MATRIX (A, "generic ") ;
+
             #define GB_ATYPE GB_void
             #define GB_CTYPE GB_void
 
             // ztype s ;
             #define GB_SCALAR(s)                                    \
-                GB_void s [GB_PGI(zsize)]
+                GB_void s [GB_VLA(zsize)]
 
             // ztype s = (ztype) Ax [p], with typecast
             #define GB_CAST_ARRAY_TO_SCALAR(s,Ax,p)                 \
@@ -341,7 +347,7 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
 
             // s += (ztype) Ax [p], with typecast
             #define GB_ADD_CAST_ARRAY_TO_SCALAR(s, Ax, p)           \
-                GB_void awork [GB_PGI(zsize)] ;                     \
+                GB_void awork [GB_VLA(zsize)] ;                     \
                 cast_A_to_Z (awork, Ax +((p)*asize), zsize) ;       \
                 freduce (s, s, awork) ;
 
@@ -375,17 +381,17 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
         // wrapup: delete any zombies
         //----------------------------------------------------------------------
 
-        ASSERT_OK (GB_check (T, "T before wait", GB_FLIP (GB0)));
+        ASSERT_MATRIX_OK (T, "T before wait", GB_FLIP (GB0)) ;
 
         if (nzombies > 0)
         { 
             ASSERT (GB_VECTOR_OK (T)) ;
             ASSERT (!GB_PENDING (T)) ;
             ASSERT (GB_ZOMBIES (T)) ;
-            GB_OK (GB_wait (T, Context)) ;
+            GB_OK (GB_Matrix_wait (T, Context)) ;
         }
 
-        ASSERT_OK (GB_check (T, "T output = reduce_each_vector (A)", GB0)) ;
+        ASSERT_MATRIX_OK (T, "T output = reduce_each_vector (A)", GB0) ;
     }
     else
     {
@@ -420,9 +426,8 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
             // on n.
 
             // since T is a GrB_Vector, it is not hypersparse
-            GB_NEW (&T, ttype, n, 1, GB_Ap_null, true, GB_FORCE_NONHYPER,
-                GB_HYPER_DEFAULT, 1, Context) ;
-            GB_OK (info) ;
+            GB_OK (GB_new (&T, ttype, n, 1, GB_Ap_null, true, GB_FORCE_NONHYPER,
+                GB_HYPER_DEFAULT, 1, Context)) ;
 
             // GB_build treats Ai and Ax as read-only; they must not be modified
             GB_OK (GB_build
@@ -467,9 +472,9 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
             // Thread tid does entries pstart_slice [tid] to
             // pstart_slice [tid+1]-1.  No need to compute kfirst or klast.
 
-            GB_MALLOC_MEMORY (pstart_slice, ntasks+1, sizeof (int64_t)) ;
+            pstart_slice = GB_MALLOC (ntasks+1, int64_t) ;
             if (pstart_slice == NULL)
-            {
+            { 
                 // out of memory
                 GB_FREE_ALL ;
                 return (GB_OUT_OF_MEMORY) ;
@@ -478,29 +483,34 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
             GB_eslice (pstart_slice, anz, ntasks) ;
 
             //------------------------------------------------------------------
-            // sum across each index: T(i) = reduce (A (i,:))
+            // T(i) = reduce (A (i,:)), built-in operators
             //------------------------------------------------------------------
-
-            // Early exit cannot be exploited; ignore the terminal value.
-
-            #undef  GB_red
-            #define GB_red(opname,aname) GB_red_eachindex_ ## opname ## aname
-            #undef  GB_RED_WORKER
-            #define GB_RED_WORKER(opname,aname,atype)                       \
-            {                                                               \
-                info = GB_red (opname, aname) (&T, ttype, A, pstart_slice,  \
-                    ntasks, nthreads, Context) ;                            \
-                done = (info != GrB_NO_VALUE) ;                             \
-            }                                                               \
-            break ;
 
             bool done = false ;
 
-            //------------------------------------------------------------------
-            // launch the switch factory
-            //------------------------------------------------------------------
-
             #ifndef GBCOMPACT
+
+                //--------------------------------------------------------------
+                // define the worker for the switch factory
+                //--------------------------------------------------------------
+
+                // Early exit cannot be exploited; ignore the terminal value.
+
+                #undef  GB_red
+                #define GB_red(opname,aname) \
+                    GB_red_eachindex_ ## opname ## aname
+                #undef  GB_RED_WORKER
+                #define GB_RED_WORKER(opname,aname,atype)                      \
+                {                                                              \
+                    info = GB_red (opname, aname) (&T, ttype, A, pstart_slice, \
+                        ntasks, nthreads, Context) ;                           \
+                    done = (info != GrB_NO_VALUE) ;                            \
+                }                                                              \
+                break ;
+
+                //--------------------------------------------------------------
+                // launch the switch factory
+                //--------------------------------------------------------------
 
                 if (nocasting)
                 { 
@@ -520,15 +530,18 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
             #endif
 
             //------------------------------------------------------------------
-            // generic worker
+            // T(i) = reduce (A (i,:)), generic worker
             //------------------------------------------------------------------
 
             if (!done)
             { 
+                // if this fails, the template frees all workspace with the
+                // GB_FREE_ALL macro, defined above.
+                GB_BURBLE_MATRIX (A, "generic ") ;
                 #include "GB_reduce_each_index.c"
             }
         }
-        ASSERT_OK (GB_check (T, "T output for T = reduce_each_index (A)", GB0));
+        ASSERT_MATRIX_OK (T, "T output for T = reduce_each_index (A)", GB0) ;
     }
 
     //--------------------------------------------------------------------------
@@ -537,6 +550,6 @@ GrB_Info GB_reduce_to_vector        // C<M> = accum (C,reduce(A))
 
     GB_FREE_WORK ;
     return (GB_accum_mask (C, M, NULL, accum, &T, C_replace, Mask_comp,
-        Context)) ;
+        Mask_struct, Context)) ;
 }
 

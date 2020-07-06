@@ -2,7 +2,7 @@
 // GB_thread_local.h: definitions for thread local storage
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -17,23 +17,10 @@
 #include "GB.h"
 
 #if defined ( USER_POSIX_THREADS )
-// thread-local storage for POSIX THREADS
+// use POSIX for thread-local storage
 extern pthread_key_t GB_thread_local_key ;
-
-#elif defined ( USER_WINDOWS_THREADS )
-// for user applications that use Windows threads:
-#error "Windows threads not yet supported"
-
-#elif defined ( USER_ANSI_THREADS )
-// for user applications that use ANSI C11 threads:
-// (this should work per the ANSI C11 specification but is not yet supported)
-_Thread_local
-extern char GB_thread_local_report [GB_RLEN+1] ;
-
 #else
-// _OPENMP, USER_OPENMP_THREADS, or USER_NO_THREADS
-// This is the default.
-
+// use OpenMP for thread-local storage
 extern char GB_thread_local_report [GB_RLEN+1] ;
 #endif
 

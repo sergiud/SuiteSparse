@@ -2,7 +2,7 @@
 // GB_ix_realloc: reallocate a matrix to hold a given number of entries
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -13,6 +13,7 @@
 
 #include "GB.h"
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_ix_realloc      // reallocate space in a matrix
 (
     GrB_Matrix A,           // matrix to allocate space for
@@ -26,9 +27,10 @@ GrB_Info GB_ix_realloc      // reallocate space in a matrix
     // check inputs
     //--------------------------------------------------------------------------
 
-    // GB_new does not always initialize A->p; GB_check fails in this case.  So
-    // the following assertion is not possible here.  This is by design.
-    // Thus, ASSERT_OK (GB_check (A, "A", ...)) ;  cannot be used here.
+    // GB_new does not always initialize A->p; GB_Matrix_check fails in this
+    // case.  So the following assertion is not possible here.  This is by
+    // design.  Thus, ASSERT_MATRIX_OK (A, "A", ...) ;  cannot be
+    // used here.
     ASSERT (A != NULL && A->p != NULL) ;
     ASSERT (GB_IMPLIES (A->is_hyper, A->h != NULL)) ;
     ASSERT (!A->i_shallow && !A->x_shallow) ;
@@ -36,7 +38,7 @@ GrB_Info GB_ix_realloc      // reallocate space in a matrix
     // This function tolerates pending tuples and zombies
     ASSERT (GB_PENDING_OK (A)) ; ASSERT (GB_ZOMBIES_OK (A)) ;
 
-    if (nzmax > GB_INDEX_MAX)
+    if (nzmax > GxB_INDEX_MAX)
     { 
         // problem too large
         return (GB_OUT_OF_MEMORY) ;
@@ -48,14 +50,15 @@ GrB_Info GB_ix_realloc      // reallocate space in a matrix
 
     size_t nzmax1 = GB_IMAX (nzmax, 1) ;
     bool ok1 = true, ok2 = true ;
-    GB_REALLOC_MEMORY (A->i, nzmax1, A->nzmax, sizeof (int64_t), &ok1) ;
+    A->i = GB_REALLOC (A->i, nzmax1, A->nzmax, int64_t, &ok1) ;
     if (numeric)
     { 
-        GB_REALLOC_MEMORY (A->x, nzmax1, A->nzmax, A->type->size, &ok2) ;
+        size_t asize = A->type->size ;
+        A->x = GB_REALLOC (A->x, nzmax1*asize, (A->nzmax)*asize, GB_void, &ok2) ;
     }
     else
     { 
-        GB_FREE_MEMORY (A->x, A->nzmax, A->type->size) ;
+        GB_FREE (A->x) ;
     }
     bool ok = ok1 && ok2 ;
 

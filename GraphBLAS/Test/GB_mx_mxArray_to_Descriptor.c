@@ -2,7 +2,7 @@
 // GB_mx_mxArray_to_Descriptor: get the contents of a GraphBLAS Descriptor
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -60,31 +60,47 @@ static bool get_descriptor
         GrB_Info info ;
         if (MATCH (s, "default"))
         {
-            info = GxB_set (D, field, GxB_DEFAULT) ;
+            info = GxB_Desc_set (D, field, GxB_DEFAULT) ;
         }
         else if (MATCH (s, "tran") || MATCH (s, "transpose"))
         {
-            info = GxB_set (D, field, GrB_TRAN) ;
+            info = GxB_Desc_set (D, field, GrB_TRAN) ;
         }
-        else if (MATCH (s, "scmp") || MATCH (s, "complement"))
+        else if (MATCH (s, "complement"))
         {
-            info = GxB_set (D, field, GrB_SCMP) ;
+            info = GxB_Desc_set (D, field, GrB_COMP) ;
+        }
+        else if (MATCH (s, "structure") || MATCH (s, "structural"))
+        {
+            info = GxB_Desc_set (D, field, GrB_STRUCTURE) ;
+        }
+        else if (MATCH (s, "structural complement"))
+        {
+            info = GxB_Desc_set (D, field, GrB_COMP + GrB_STRUCTURE) ;
         }
         else if (MATCH (s, "replace"))
         {
-            info = GxB_set (D, field, GrB_REPLACE) ;
+            info = GxB_Desc_set (D, field, GrB_REPLACE) ;
+        }
+        else if (MATCH (s, "saxpy"))
+        {
+            info = GxB_Desc_set (D, field, GxB_AxB_SAXPY) ;
         }
         else if (MATCH (s, "gustavson"))
         {
-            info = GxB_set (D, field, GxB_AxB_GUSTAVSON) ;
+            info = GxB_Desc_set (D, field, GxB_AxB_GUSTAVSON) ;
         }
         else if (MATCH (s, "dot"))
         {
-            info = GxB_set (D, field, GxB_AxB_DOT) ;
+            info = GxB_Desc_set (D, field, GxB_AxB_DOT) ;
         }
         else if (MATCH (s, "heap"))
         {
-            info = GxB_set (D, field, GxB_AxB_HEAP) ;
+            info = GxB_Desc_set (D, field, GxB_AxB_HEAP) ;
+        }
+        else if (MATCH (s, "hash"))
+        {
+            info = GxB_Desc_set (D, field, GxB_AxB_HASH) ;
         }
         else
         {
@@ -126,7 +142,7 @@ bool GB_mx_mxArray_to_Descriptor   // true if successful, false otherwise
     GrB_Info info = GrB_Descriptor_new (&D) ;
     if (info != GrB_SUCCESS)
     {
-        GrB_free (&D) ;
+        GrB_Matrix_free_(&D) ;
         mexWarnMsgIdAndTxt ("GB:warn", "new D failed") ;
         return (false) ;
     }
@@ -138,13 +154,13 @@ bool GB_mx_mxArray_to_Descriptor   // true if successful, false otherwise
         !get_descriptor (D, D_matlab, "mask", GrB_MASK) ||
         !get_descriptor (D, D_matlab, "axb",  GxB_AxB_METHOD))
     {
-        GrB_free (&D) ;
+        GrB_Matrix_free_(&D) ;
         mexWarnMsgIdAndTxt ("GB:warn", "descriptor failed") ;
         return (false) ;
     }
 
     // return the non-null Descriptor to the caller
-    ASSERT_OK (GB_check (D, name, GB0)) ;
+    ASSERT_DESCRIPTOR_OK (D, name, GB0) ;
     (*handle) = D ;
     return (true) ;
 }

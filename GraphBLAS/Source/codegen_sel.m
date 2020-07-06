@@ -11,7 +11,7 @@ fprintf (f, '//-----------------------------------------------------------------
 fprintf (f, '// GB_sel__include.h: definitions for GB_sel__*.c\n') ;
 fprintf (f, '//------------------------------------------------------------------------------\n') ;
 fprintf (f, '\n') ;
-fprintf (f, '// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.\n') ;
+fprintf (f, '// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.\n') ;
 fprintf (f, '// http://suitesparse.com   See GraphBLAS/Doc/License.txargt for license.\n') ;
 fprintf (f, '\n') ;
 fprintf (f, '// This file has been automatically generated from Generator/GB_sel.h') ;
@@ -43,20 +43,22 @@ codegen_sel_method ('resize'    , [ ], 'GB_void' , 'GB_RESIZE_SELECTOR'  ) ;
 
 % NONZOMBIE:         name         selector                     type
 % phase1: depends on Ai only, so only nonzombie_any is used
-% phase2: use all 12 workers
+% phase2: use all 14 workers
 fprintf ('\nnonzombie  ') ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'bool'    ) ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'int8_t'  ) ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'int16_t' ) ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'int32_t' ) ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'int64_t' ) ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'uint8_t' ) ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'uint16_t') ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'uint32_t') ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'uint64_t') ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'float'   ) ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'double'  ) ;
-codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'GB_void' ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'bool'      ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'int8_t'    ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'int16_t'   ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'int32_t'   ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'int64_t'   ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'uint8_t'   ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'uint16_t'  ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'uint32_t'  ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'uint64_t'  ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'float'     ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'double'    ) ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'GxB_FC32_t') ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'GxB_FC64_t') ;
+codegen_sel_method ('nonzombie', 'GB_IS_NOT_ZOMBIE (Ai [p])', 'GB_void'   ) ;
 
 % NONZERO            name         selector       type
 fprintf ('\nnonzero    ') ;
@@ -71,6 +73,8 @@ codegen_sel_method ('nonzero'  , 'Ax [p] != 0', 'uint32_t') ;
 codegen_sel_method ('nonzero'  , 'Ax [p] != 0', 'uint64_t') ;
 codegen_sel_method ('nonzero'  , 'Ax [p] != 0', 'float'   ) ;
 codegen_sel_method ('nonzero'  , 'Ax [p] != 0', 'double'  ) ;
+codegen_sel_method ('nonzero'  , 'GB_FC32_ne0 (Ax [p])', 'GxB_FC32_t') ;
+codegen_sel_method ('nonzero'  , 'GB_FC64_ne0 (Ax [p])', 'GxB_FC64_t') ;
 codegen_sel_method ('nonzero'  , ...
                     'GB_is_nonzero (Ax +((p)*asize), asize)', 'GB_void') ;
 
@@ -87,6 +91,8 @@ codegen_sel_method ('eq_zero'  , 'Ax [p] == 0', 'uint32_t') ;
 codegen_sel_method ('eq_zero'  , 'Ax [p] == 0', 'uint64_t') ;
 codegen_sel_method ('eq_zero'  , 'Ax [p] == 0', 'float'   ) ;
 codegen_sel_method ('eq_zero'  , 'Ax [p] == 0', 'double'  ) ;
+codegen_sel_method ('eq_zero'  , 'GB_FC32_eq0 (Ax [p])', 'GxB_FC32_t') ;
+codegen_sel_method ('eq_zero'  , 'GB_FC64_eq0 (Ax [p])', 'GxB_FC64_t') ;
 codegen_sel_method ('eq_zero'  , ...
                     '!GB_is_nonzero (Ax +((p)*asize), asize)', 'GB_void') ;
 
@@ -138,6 +144,8 @@ codegen_sel_method ('ne_thunk'  , 'Ax [p] != thunk', 'uint32_t') ;
 codegen_sel_method ('ne_thunk'  , 'Ax [p] != thunk', 'uint64_t') ;
 codegen_sel_method ('ne_thunk'  , 'Ax [p] != thunk', 'float'   ) ;
 codegen_sel_method ('ne_thunk'  , 'Ax [p] != thunk', 'double'  ) ;
+codegen_sel_method ('ne_thunk'  , 'GB_FC32_ne (Ax [p], thunk)', 'GxB_FC32_t') ;
+codegen_sel_method ('ne_thunk'  , 'GB_FC64_ne (Ax [p], thunk)', 'GxB_FC64_t') ;
 codegen_sel_method ('ne_thunk'  , ...
                     'memcmp (Ax +((p)*asize), xthunk, asize) != 0', 'GB_void') ;
 
@@ -153,6 +161,8 @@ codegen_sel_method ('eq_thunk'  , 'Ax [p] == thunk', 'uint32_t') ;
 codegen_sel_method ('eq_thunk'  , 'Ax [p] == thunk', 'uint64_t') ;
 codegen_sel_method ('eq_thunk'  , 'Ax [p] == thunk', 'float'   ) ;
 codegen_sel_method ('eq_thunk'  , 'Ax [p] == thunk', 'double'  ) ;
+codegen_sel_method ('eq_thunk'  , 'GB_FC32_eq (Ax [p], thunk)', 'GxB_FC32_t') ;
+codegen_sel_method ('eq_thunk'  , 'GB_FC64_eq (Ax [p], thunk)', 'GxB_FC64_t') ;
 codegen_sel_method ('eq_thunk'  , ...
                     'memcmp (Ax +((p)*asize), xthunk, asize) == 0', 'GB_void') ;
 

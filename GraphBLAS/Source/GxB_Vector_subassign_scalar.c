@@ -2,7 +2,7 @@
 // GxB_Vector_subassign_[SCALAR]: assign scalar to vector, via scalar expansion
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -29,25 +29,30 @@ GrB_Info GxB_Vector_subassign_ ## T /* w(Rows)<M> = accum (w(Rows),x)       */ \
 {                                                                              \
     GB_WHERE ("GxB_Vector_subassign_" GB_STR(T)                                \
         " (w, M, accum, x, Rows, nRows, desc)") ;                              \
+    GB_BURBLE_START ("GxB_subassign") ;                                        \
     GB_RETURN_IF_NULL_OR_FAULTY (w) ;                                          \
     GB_RETURN_IF_FAULTY (M) ;                                                  \
     ASSERT (GB_VECTOR_OK (w)) ;                                                \
     ASSERT (GB_IMPLIES (M != NULL, GB_VECTOR_OK (M))) ;                        \
-    return (GB_subassign_scalar ((GrB_Matrix) w, (GrB_Matrix) M, accum,        \
-        ampersand x, GB_## T ## _code, Rows, nRows, GrB_ALL, 1, desc,          \
+    GrB_Info info = (GB_subassign_scalar ((GrB_Matrix) w, (GrB_Matrix) M,      \
+        accum, ampersand x, GB_## T ## _code, Rows, nRows, GrB_ALL, 1, desc,   \
         Context)) ;                                                            \
+    GB_BURBLE_END ;                                                            \
+    return (info) ;                                                            \
 }
 
-GB_ASSIGN (bool     , BOOL   , &)
-GB_ASSIGN (int8_t   , INT8   , &)
-GB_ASSIGN (uint8_t  , UINT8  , &)
-GB_ASSIGN (int16_t  , INT16  , &)
-GB_ASSIGN (uint16_t , UINT16 , &)
-GB_ASSIGN (int32_t  , INT32  , &)
-GB_ASSIGN (uint32_t , UINT32 , &)
-GB_ASSIGN (int64_t  , INT64  , &)
-GB_ASSIGN (uint64_t , UINT64 , &)
-GB_ASSIGN (float    , FP32   , &)
-GB_ASSIGN (double   , FP64   , &)
-GB_ASSIGN (void *   , UDT    ,  )
+GB_ASSIGN (bool      , BOOL   , &)
+GB_ASSIGN (int8_t    , INT8   , &)
+GB_ASSIGN (uint8_t   , UINT8  , &)
+GB_ASSIGN (int16_t   , INT16  , &)
+GB_ASSIGN (uint16_t  , UINT16 , &)
+GB_ASSIGN (int32_t   , INT32  , &)
+GB_ASSIGN (uint32_t  , UINT32 , &)
+GB_ASSIGN (int64_t   , INT64  , &)
+GB_ASSIGN (uint64_t  , UINT64 , &)
+GB_ASSIGN (float     , FP32   , &)
+GB_ASSIGN (double    , FP64   , &)
+GB_ASSIGN (GxB_FC32_t, FC32   , &)
+GB_ASSIGN (GxB_FC64_t, FC64   , &)
+GB_ASSIGN (void *    , UDT    ,  )
 

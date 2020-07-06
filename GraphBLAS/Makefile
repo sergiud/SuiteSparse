@@ -2,7 +2,7 @@
 # GraphBLAS/Makefile
 #-------------------------------------------------------------------------------
 
-# SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+# SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 # http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 #-------------------------------------------------------------------------------
@@ -14,7 +14,7 @@ JOBS ?= 1
 
 default: library
 
-# just build the static and dynamic libraries; do not run the demo
+# just build the dynamic library; do not run the demo
 library:
 	( cd build ; cmake $(CMAKE_OPTIONS) .. ; $(MAKE) --jobs=$(JOBS) )
 
@@ -30,18 +30,22 @@ remake:
 cmake:
 	( cd build ; cmake $(CMAKE_OPTIONS) .. ; )
 
-# the same as "make library"
+# build both the static and dynamic libraries do not run the demo
 static:
 	( cd build ; cmake $(CMAKE_OPTIONS) -DBUILD_GRB_STATIC_LIBRARY=1 .. ; $(MAKE) --jobs=$(JOBS) )
 
 # installs GraphBLAS to the install location defined by cmake, usually
 # /usr/local/lib and /usr/local/include
 install:
-	( cd build ; $(MAKE) install )
+	( cd build ; cmake $(CMAKE_OPTIONS) .. ; $(MAKE) --jobs=$(JOBS) ; $(MAKE) install )
 
 # create the Doc/GraphBLAS_UserGuide.pdf
 docs:
 	( cd Doc ; $(MAKE) )
+
+# compile the CUDA kernels
+gpu:
+	( cd CUDA ; $(MAKE) )
 
 # remove any installed libraries and #include files
 uninstall:
@@ -53,7 +57,7 @@ purge: distclean
 
 # remove all files not in the distribution
 distclean:
-	rm -rf build/* Demo/*.out Demo/complex_demo_out.m Tcov/log.txt
+	rm -rf build/* Demo/*.out Demo/complex_demo_out*.m Tcov/log.txt
 	rm -rf Config/*.tmp Source/control.m4
 	rm -rf Doc/html/* Doc/*.tmp
 	( cd GraphBLAS/test/tcov ; $(MAKE) distclean )
@@ -61,4 +65,5 @@ distclean:
 	( cd Test ; $(MAKE) distclean )
 	( cd Tcov ; $(MAKE) distclean )
 	( cd Doc  ; $(MAKE) distclean )
+	( cd alternative  ; $(MAKE) distclean )
 

@@ -2,7 +2,7 @@
 // gb_string_to_unop: get a GraphBLAS unary operator from a string
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -12,12 +12,6 @@
 // The string has the form op_name.op_type.  For example 'abs.double' is the
 // GxB_ABS_FP64 operator.  The type is optional.  If not present, it defaults
 // to the default_type parameter.
-
-// type: a MATLAB string defining one of 11 operator types:
-//  'logical', 'int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'int64',
-//  'uint64', 'single', and 'double'
-
-// FUTURE: The 'complex' type will be added.
 
 GrB_UnaryOp gb_string_to_unop           // return unary operator from a string
 (

@@ -2,22 +2,19 @@
 // GB_UnaryOp_check: check and print a unary operator
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
-// for additional diagnostics, use:
-// #define GB_DEVELOPER 1
+#include "GB.h"
 
-#include "GB_printf.h"
-
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_UnaryOp_check   // check a GraphBLAS unary operator
 (
     const GrB_UnaryOp op,   // GraphBLAS operator to print and check
     const char *name,       // name of the operator
-    int pr,                 // 0: print nothing, 1: print header and errors,
-                            // 2: print brief, 3: print all
+    int pr,                 // print level
     FILE *f,                // file for output
     GB_Context Context
 )
@@ -42,20 +39,13 @@ GrB_Info GB_UnaryOp_check   // check a GraphBLAS unary operator
 
     GB_CHECK_MAGIC (op, "UnaryOp") ;
 
-    if (pr > 0)
+    if (op->opcode >= GB_USER_opcode)
     { 
-        if (op->opcode == GB_USER_C_opcode)
-        { 
-            GBPR ("(compile-time user-defined) ") ;
-        }
-        else if (op->opcode == GB_USER_R_opcode)
-        { 
-            GBPR ("(run-time user-defined) ") ;
-        }
-        else
-        { 
-            GBPR ("(built-in) ") ;
-        }
+        GBPR0 ("(user-defined) ") ;
+    }
+    else
+    { 
+        GBPR0 ("(built-in) ") ;
     }
 
     GBPR0 ("z=%s(x)\n", op->name) ;
@@ -68,18 +58,15 @@ GrB_Info GB_UnaryOp_check   // check a GraphBLAS unary operator
             GB_NAME, op->name))) ;
     }
 
-    if (!(op->opcode == GB_ONE_opcode ||
-          op->opcode == GB_IDENTITY_opcode ||
-          op->opcode == GB_AINV_opcode ||
-          op->opcode == GB_ABS_opcode ||
-          op->opcode == GB_MINV_opcode ||
-          op->opcode == GB_LNOT_opcode ||
-          op->opcode == GB_USER_C_opcode ||       // unary or binary
-          op->opcode == GB_USER_R_opcode))        // unary or binary
-    { 
-        GBPR0 ("    invalid opcode\n") ;
-        return (GB_ERROR (GrB_INVALID_OBJECT, (GB_LOG,
-            "UnaryOp has an invalid opcode: %s [%s]", GB_NAME, op->name))) ;
+    if (op->opcode != GB_USER_opcode)
+    {
+        if (op->opcode < GB_ONE_opcode || op->opcode >= GB_FIRST_opcode)
+        { 
+            GBPR0 ("    invalid opcode\n") ;
+            return (GB_ERROR (GrB_INVALID_OBJECT, (GB_LOG,
+                "UnaryOp has an invalid opcode: %s [%s]",
+                GB_NAME, op->name))) ;
+        }
     }
 
     GrB_Info info ;

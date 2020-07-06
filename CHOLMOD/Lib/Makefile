@@ -3,7 +3,7 @@
 #===============================================================================
 
 LIBRARY = libcholmod
-VERSION = 3.0.13
+VERSION = 3.0.14
 SO_VERSION = 3
 
 default: library
@@ -541,7 +541,7 @@ $(INSTALL_LIB)/$(SO_TARGET): $(OBJ)
 	@mkdir -p $(INSTALL_LIB)
 	@mkdir -p $(INSTALL_INCLUDE)
 	@mkdir -p $(INSTALL_DOC)
-	$(CC) $(SO_OPTS) $^ -o $@ $(LDLIBS)
+	$(CXX) $(SO_OPTS) $^ -o $@ $(LDLIBS)
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_PLAIN) )
 	( cd $(INSTALL_LIB) ; ln -sf $(SO_TARGET) $(SO_MAIN) )
 	$(CP) ../Include/cholmod*.h $(INSTALL_INCLUDE)

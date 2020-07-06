@@ -2,7 +2,7 @@
 // GB_Type_check: print a built-in type
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -12,17 +12,14 @@
 // matrix A:", for example.  The internal name is the C typedef with which the
 // GraphBLAS GrB_Type was created.
 
-// for additional diagnostics, use:
-// #define GB_DEVELOPER 1
+#include "GB.h"
 
-#include "GB_printf.h"
-
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_Type_check      // check a GraphBLAS Type
 (
     const GrB_Type type,    // GraphBLAS type to print and check
     const char *name,       // name of the type from the caller; optional
-    int pr,                 // 0: print nothing, 1: print header and errors,
-                            // 2: print brief, 3: print all
+    int pr,                 // print level
     FILE *f,                // file for output
     GB_Context Context
 )
@@ -33,7 +30,7 @@ GrB_Info GB_Type_check      // check a GraphBLAS Type
     //--------------------------------------------------------------------------
 
     GBPR0 ("    GraphBLAS type: ") ;
-    if (pr > 0 && name != NULL) GBPR ("%s ", name) ;
+    if (name != NULL) GBPR0 ("%s ", name) ;
 
     if (type == NULL)
     { 
@@ -61,12 +58,9 @@ GrB_Info GB_Type_check      // check a GraphBLAS Type
         case GB_UINT64_code : GBPR0 ("uint64_t" ) ; break ;
         case GB_FP32_code   : GBPR0 ("float"    ) ; break ;
         case GB_FP64_code   : GBPR0 ("double"   ) ; break ;
-        case GB_UCT_code    :
-            GBPR0 ("compile-time user-defined: [%s]", type->name) ;
-            break ;
-        case GB_UDT_code    :
-            GBPR0 ("run-time user-defined: [%s]", type->name) ;
-            break ;
+        case GB_FC32_code   : GBPR0 ("float complex" ) ; break ;
+        case GB_FC64_code   : GBPR0 ("double complex") ; break ;
+        case GB_UDT_code    : GBPR0 ("user-defined: [%s]", type->name) ; break ;
         default             : GBPR0 ("unknown type\n") ;
             return (GB_ERROR (GrB_INVALID_OBJECT, (GB_LOG,
                 "Type code %d is unknown: %s [%s]",

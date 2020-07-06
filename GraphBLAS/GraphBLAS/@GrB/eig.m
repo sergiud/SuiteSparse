@@ -1,10 +1,15 @@
 function [V, varargout] = eig (G, varargin)
 %EIG Eigenvalues and eigenvectors of a GraphBLAS matrix.
 % See 'help eig' for details.
+%
+% See also eigs.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
-% http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights
+% Reserved. http://suitesparse.com.  See GraphBLAS/Doc/License.txt.
 
+% NOTE: this is a high-level algorithm that uses GrB objects.
+
+% convert G to a MATLAB matrix
 if (isreal (G) && issymmetric (G))
     % G can be sparse if G is real and symmetric
     G = double (G) ;
@@ -12,13 +17,16 @@ else
     % otherwise, G must be full.
     G = full (double (G)) ;
 end
+
+% use the built-in eig
 if (nargin == 1)
     [V, varargout{1:nargout-1}] = builtin ('eig', G) ;
 else
     args = varargin ;
     for k = 1:length (args)
-        if (isa (args {k}, 'GrB'))
-            args {k} = full (double (args {k})) ;
+        argk = args {k} ;
+        if (isobject (argk))
+            args {k} = full (double (argk)) ;
         end
     end
     [V, varargout{1:nargout-1}] = builtin ('eig', G, args {:}) ;

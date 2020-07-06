@@ -2,7 +2,7 @@
 // GrB_init: initialize GraphBLAS
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -30,6 +30,11 @@ GrB_Info GrB_init           // start up GraphBLAS
 
     // default:  use the ANSI C11 malloc memory manager, which is thread-safe 
 
-    return (GB_init (mode, malloc, calloc, realloc, free, true, Context)) ;
+    return (GB_init
+        (mode,                          // blocking or non-blocking mode
+        malloc, calloc, realloc, free,  // ANSI C memory management functions
+        true,                           // memory functions are thread-safe
+        false,                          // do not use CUDA
+        Context)) ;
 }
 

@@ -2,7 +2,7 @@
 // GB_reduce_panel: s=reduce(A), reduce a matrix to a scalar
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -16,16 +16,21 @@
     // get A
     //--------------------------------------------------------------------------
 
-    const GB_ATYPE *restrict Ax = A->x ;
+    const GB_ATYPE *GB_RESTRICT Ax = (GB_ATYPE *) A->x ;
     int64_t anz = GB_NNZ (A) ;
     ASSERT (anz > 0) ;
+
+    #if GB_IS_ANY_MONOID
+    // the ANY monoid can take any entry, and terminate immediately
+    s = Ax [anz-1] ;
+    #else
 
     //--------------------------------------------------------------------------
     // typecast workspace
     //--------------------------------------------------------------------------
 
     // ctype W [ntasks] ;
-    GB_CTYPE *restrict W = (GB_CTYPE *) W_space ;
+    GB_CTYPE *GB_RESTRICT W = (GB_CTYPE *) W_space ;
 
     //--------------------------------------------------------------------------
     // reduce A to a scalar
@@ -41,7 +46,7 @@
         GB_ATYPE Panel [GB_PANEL] ;
         int64_t first_panel_size = GB_IMIN (GB_PANEL, anz) ;
         for (int64_t k = 0 ; k < first_panel_size ; k++)
-        {
+        { 
             Panel [k] = Ax [k] ;
         }
 
@@ -121,8 +126,9 @@
         // each thread reduces its own slice in parallel
         //----------------------------------------------------------------------
 
+        int tid ;
         #pragma omp parallel for num_threads(nthreads) schedule(static)
-        for (int tid = 0 ; tid < ntasks ; tid++)
+        for (tid = 0 ; tid < ntasks ; tid++)
         {
 
             //------------------------------------------------------------------
@@ -142,8 +148,10 @@
             #if GB_HAS_TERMINAL
             // check if another task has called for an early exit
             bool my_exit ;
-            #pragma omp atomic read
+
+            GB_ATOMIC_READ
             my_exit = early_exit ;
+
             if (!my_exit)
             #endif
 
@@ -227,7 +235,7 @@
                 if (t == GB_TERMINAL_VALUE)
                 { 
                     // tell all other tasks to exit early
-                    #pragma omp atomic write
+                    GB_ATOMIC_WRITE
                     early_exit = true ;
                 }
                 #endif
@@ -251,5 +259,6 @@
             GB_ADD_ARRAY_TO_SCALAR (s, W, tid) ;
         }
     }
+    #endif
 }
 

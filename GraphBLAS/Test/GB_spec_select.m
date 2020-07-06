@@ -4,7 +4,7 @@ function C = GB_spec_select (C, Mask, accum, opname, A, thunk, descriptor)
 % Usage:
 % C = GB_spec_select (C, Mask, accum, opname, A, thunk, descriptor)
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 %-------------------------------------------------------------------------------
@@ -17,8 +17,9 @@ end
 
 C = GB_spec_matrix (C) ;
 A = GB_spec_matrix (A) ;
-Mask = GB_spec_getmask (Mask) ;
-[C_replace Mask_comp Atrans ~] = GB_spec_descriptor (descriptor) ;
+[C_replace Mask_comp Atrans Btrans Mask_struct] = ...
+    GB_spec_descriptor (descriptor) ;
+Mask = GB_spec_getmask (Mask, Mask_struct) ;
 
 %-------------------------------------------------------------------------------
 % do the work via a clean MATLAB interpretation of the entire GraphBLAS spec
@@ -26,14 +27,25 @@ Mask = GB_spec_getmask (Mask) ;
 
 % select the descriptor to A
 if (Atrans)
-    A.matrix = A.matrix' ;
+    A.matrix = A.matrix.' ;
     A.pattern = A.pattern' ;
 end
 
-[m n] = size (A.matrix) ;
-T.matrix = zeros (m, n, A.class) ;
+atype = A.class ;
+T.matrix = GB_spec_zeros (size (A.matrix), atype) ;
 thunk = full (thunk) ;
-xthunk = GB_mex_cast (thunk, A.class) ;
+xthunk = GB_mex_cast (thunk, atype) ;
+
+is_complex = contains (atype, 'complex') ;
+if (is_complex)
+    switch (opname)
+        case { 'gt_zero', 'ge_zero', 'lt_zero', 'le_zero', ...
+               'gt_thunk', 'ge_thunk', 'lt_thunk', 'le_thunk' }
+            error ('op %s not defined for complex types', opname) ;
+        otherwise
+            % op is OK
+    end
+end
 
 switch (opname)
     case 'tril'

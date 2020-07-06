@@ -2,7 +2,7 @@
 // GB_ix_alloc: allocate a matrix to hold a given number of entries
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -14,12 +14,9 @@
 
 // If this method fails, all content of A is freed (including A->p and A->h).
 
-// GB_ix_alloc is only called by GB_create, so the matrix is not in the queue.
-// The function never accessed the global matrix queue, and thus it
-// cannot return GrB_PANIC.
-
 #include "GB.h"
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_ix_alloc        // allocate A->i and A->x space in a matrix
 (
     GrB_Matrix A,           // matrix to allocate space for
@@ -36,7 +33,7 @@ GrB_Info GB_ix_alloc        // allocate A->i and A->x space in a matrix
     // GB_new does not always initialize or even allocate A->p
     ASSERT (A != NULL) ;
 
-    if (nzmax > GB_INDEX_MAX)
+    if (nzmax > GxB_INDEX_MAX)
     { 
         // problem too large
         return (GB_OUT_OF_MEMORY) ;
@@ -52,10 +49,10 @@ GrB_Info GB_ix_alloc        // allocate A->i and A->x space in a matrix
 
     // allocate the new A->x and A->i content
     A->nzmax = GB_IMAX (nzmax, 1) ;
-    GB_MALLOC_MEMORY (A->i, A->nzmax, sizeof (int64_t)) ;
+    A->i = GB_MALLOC (A->nzmax, int64_t) ;
     if (numeric)
     { 
-        GB_MALLOC_MEMORY (A->x, A->nzmax, A->type->size) ;
+        A->x = GB_MALLOC (A->nzmax * A->type->size, GB_void) ;
     }
 
     if (A->i == NULL || (numeric && A->x == NULL))

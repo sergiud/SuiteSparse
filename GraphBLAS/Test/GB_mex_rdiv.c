@@ -2,7 +2,7 @@
 // GB_mex_rdiv: compute C=A*B with the rdiv operator
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -20,8 +20,8 @@
     GB_MATRIX_FREE (&A) ;               \
     GB_MATRIX_FREE (&B) ;               \
     GB_MATRIX_FREE (&C) ;               \
-    GrB_free (&My_rdiv) ;               \
-    GrB_free (&My_plus_rdiv) ;          \
+    GrB_BinaryOp_free_(&My_rdiv) ;      \
+    GrB_Semiring_free_(&My_plus_rdiv) ; \
     GB_mx_put_global (true, 0) ;        \
 }
 
@@ -29,7 +29,7 @@
 
 GrB_Info info ;
 bool malloc_debug = false ;
-bool ignore = false ;
+bool ignore = false, ignore2 = false ;
 bool cprint = false ;
 GrB_Matrix A = NULL, B = NULL, C = NULL ;
 int64_t anrows = 0 ;
@@ -40,7 +40,6 @@ GrB_Desc_Value AxB_method = GxB_DEFAULT, AxB_method_used ;
 
 GrB_Info axb (GB_Context Context, bool cprint) ;
 
-#ifndef MY_RDIV
 GrB_Semiring My_plus_rdiv = NULL ;
 GrB_BinaryOp My_rdiv = NULL ;
 
@@ -51,51 +50,49 @@ void my_rdiv (double *z, const double *x, const double *y)
     (*z) = (*y) / (*x) ;
 }
 
-#endif
-
 //------------------------------------------------------------------------------
 
 GrB_Info axb (GB_Context Context, bool cprint)
 {
-    #ifndef MY_RDIV
     // create the rdiv operator
     info = GrB_BinaryOp_new (&My_rdiv, my_rdiv, GrB_FP64, GrB_FP64, GrB_FP64) ;
+    if (info != GrB_SUCCESS) return (info) ;
+    GrB_BinaryOp_wait_(&My_rdiv) ;
     if (info != GrB_SUCCESS) return (info) ;
     info = GrB_Semiring_new (&My_plus_rdiv, GxB_PLUS_FP64_MONOID, My_rdiv) ;
     if (info != GrB_SUCCESS)
     {
-        GrB_free (&My_rdiv) ;
+        GrB_BinaryOp_free_(&My_rdiv) ;
         return (info) ;
     }
-    #else
-    // printf ("using precompiled semiring %p\n", My_plus_rdiv) ;
-    #endif
-
-    // GB_check (My_plus_rdiv, "My_plus_rdiv", 3) ;
 
     // C = A*B
     info = GB_AxB_meta (&C,
+        NULL,       // not in place
+        false,      // C_replace
         true,       // CSC
         NULL,       // no MT returned
         NULL,       // no Mask
         false,      // mask not complemented
+        false,      // mask not structural
+        NULL,       // no accum
         A, B,
         My_plus_rdiv,
         false,      // no A transpose
         false,      // no B transpose
         false,      // no flipxy
         &ignore,    // mask_applied
+        &ignore2,   // done_in_place
         AxB_method, &AxB_method_used, Context) ;
 
     if (C != NULL)
     {
         C->AxB_method_used = AxB_method_used ;
-        if (cprint) GxB_print (C, GxB_COMPLETE) ;
+        if (cprint) GxB_Matrix_fprint_(C, GxB_COMPLETE, NULL) ;
     }
 
-    // does nothing if the objects are pre-compiled
-    GrB_free (&My_rdiv) ;
-    GrB_free (&My_plus_rdiv) ;
+    GrB_BinaryOp_free_(&My_rdiv) ;
+    GrB_Semiring_free_(&My_plus_rdiv) ;
 
     return (info) ;
 }
@@ -118,10 +115,8 @@ void mexFunction
     B = NULL ;
     C = NULL ;
 
-    #ifndef MY_RDIV
     My_rdiv = NULL ;
     My_plus_rdiv = NULL ;
-    #endif
 
     GB_WHERE (USAGE) ;
 
@@ -153,6 +148,8 @@ void mexFunction
     // 1001: Gustavson
     // 1002: heap
     // 1003: dot
+    // 1004: hash
+    // 1005: saxpy
     GET_SCALAR (2, GrB_Desc_Value, AxB_method, GxB_DEFAULT) ;
 
     // get the cprint flag
@@ -161,6 +158,8 @@ void mexFunction
     if (! ((AxB_method == GxB_DEFAULT) ||
         (AxB_method == GxB_AxB_GUSTAVSON) ||
         (AxB_method == GxB_AxB_HEAP) ||
+        (AxB_method == GxB_AxB_HASH) ||
+        (AxB_method == GxB_AxB_SAXPY) ||
         (AxB_method == GxB_AxB_DOT)))
     {
         mexErrMsgTxt ("unknown method") ;

@@ -2,8 +2,10 @@
 // isequal: check two matrices for exact equality
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
+//------------------------------------------------------------------------------
 
 // isequal: check if two matrices are identically equal (same size,type,
 // pattern, size, and values).  Checking for the same type requires a function
@@ -17,7 +19,10 @@
 // NaN equality (like isequalwithequalnans in MATLAB), use isequal_type with a
 // user-defined operator f(x,y) that returns true if x and y are both NaN.
 
-#include "demos.h"
+#include "GraphBLAS.h"
+#undef GB_PUBLIC
+#define GB_LIBRARY
+#include "graphblas_demos.h"
 
 // call a GraphBLAS method and return if an error occurs
 #undef  OK
@@ -27,8 +32,7 @@
     if (! (info == GrB_SUCCESS || info == GrB_NO_VALUE))    \
     {                                                       \
         /* error occured: free workspace and return */      \
-        GrB_free (&C) ;                                     \
-        GrB_free (&monoid) ;                                \
+        GrB_Matrix_free (&C) ;                              \
         return (info) ;                                     \
     }                                                       \
 }
@@ -37,6 +41,7 @@
 // isequal_type: check two matrices, works in any GraphBLAS
 //------------------------------------------------------------------------------
 
+GB_PUBLIC
 GrB_Info isequal_type       // return GrB_SUCCESS if successful
 (
     bool *result,           // true if A == B, false if A != B or error
@@ -47,7 +52,6 @@ GrB_Info isequal_type       // return GrB_SUCCESS if successful
 {
 
     GrB_Matrix C = NULL ;
-    GrB_Monoid monoid = NULL ;
     GrB_Index nrows1, ncols1, nrows2, ncols2, nvals, nvals1, nvals2 ;
 
     if (result == NULL)
@@ -85,30 +89,22 @@ GrB_Info isequal_type       // return GrB_SUCCESS if successful
 
     // C = A .* B, where the pattern of C is the intersection of A and B
     OK (GrB_Matrix_new (&C, GrB_BOOL, nrows1, ncols1)) ;
-    OK (GrB_eWiseMult (C, NULL, NULL, op, A, B, NULL)) ;
+    OK (GrB_Matrix_eWiseMult_BinaryOp (C, NULL, NULL, op, A, B, NULL)) ;
 
     // ensure C has the same number of entries as A and B
     OK (GrB_Matrix_nvals (&nvals, C)) ;
     if (nvals != nvals1)
     {
         // pattern of A and B are different
-        GrB_free (&C) ;
+        GrB_Matrix_free (&C) ;
         return (GrB_SUCCESS) ;
     }
 
-    #ifdef GxB_SUITESPARSE_GRAPHBLAS
-    // SuiteSparse has a predefined boolean AND monoid
-    monoid = GxB_LAND_BOOL_MONOID ;
-    #else
-    OK (GrB_Monoid_new_BOOL (&monoid, GrB_LAND, true)) ;
-    #endif
-
     // result = and (C)
-    OK (GrB_reduce (result, NULL, monoid, C, NULL)) ;
+    OK (GrB_Matrix_reduce_BOOL (result, NULL, GrB_LAND_MONOID_BOOL, C, NULL)) ;
 
     // free workspace and return result
-    GrB_free (&C) ;
-    GrB_free (&monoid) ;
+    GrB_Matrix_free (&C) ;
     return (GrB_SUCCESS) ;
 }
 
@@ -129,7 +125,6 @@ GrB_Info isequal            // return GrB_SUCCESS if successful
 )
 {
     GrB_Matrix C = NULL ;
-    GrB_Monoid monoid = NULL ;
     GrB_Type atype, btype ;
     GrB_BinaryOp op ;
 
@@ -161,6 +156,8 @@ GrB_Info isequal            // return GrB_SUCCESS if successful
     else if (atype == GrB_UINT64) op = GrB_EQ_UINT64 ;
     else if (atype == GrB_FP32  ) op = GrB_EQ_FP32   ;
     else if (atype == GrB_FP64  ) op = GrB_EQ_FP64   ;
+    else if (atype == GxB_FC32  ) op = GxB_EQ_FC32   ;
+    else if (atype == GxB_FC64  ) op = GxB_EQ_FC64   ;
     else                          op = userop ; // A and B are user-defined
 
     // check the size, pattern, and values of A and B

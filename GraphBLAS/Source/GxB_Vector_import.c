@@ -2,7 +2,7 @@
 // GxB_Vector_import: import a vector in CSR/CSC format
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -29,21 +29,22 @@ GrB_Info GxB_Vector_import  // import a vector in CSC format
     //--------------------------------------------------------------------------
 
     GB_WHERE ("GxB_Vector_import (&v, type, n, nvals, &vi, &vx, desc)") ;
+    GB_BURBLE_START ("GxB_Vector_import") ;
     GB_RETURN_IF_NULL (v) ;
     (*v) = NULL ;
     GB_RETURN_IF_NULL_OR_FAULTY (type) ;
 
-    if (n > GB_INDEX_MAX)
+    if (n > GxB_INDEX_MAX)
     { 
         return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,
-            "problem too large: n "GBu" exceeds "GBu,
-            n, GB_INDEX_MAX))) ;
+            "problem too large: n " GBu " exceeds " GBu ,
+            n, GxB_INDEX_MAX))) ;
     }
-    if (nvals > GB_INDEX_MAX)
+    if (nvals > GxB_INDEX_MAX)
     { 
         return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,
-            "problem too large: nvals "GBu" exceeds "GBu,
-            nvals, GB_INDEX_MAX))) ;
+            "problem too large: nvals " GBu " exceeds " GBu ,
+            nvals, GxB_INDEX_MAX))) ;
     }
 
     if (nvals > 0)
@@ -59,7 +60,7 @@ GrB_Info GxB_Vector_import  // import a vector in CSC format
     GrB_Info info ;
 
     // allocate the header of the vector; allocate v->p of size 2 and clear it
-    GB_NEW ((GrB_Matrix *) v, type, (int64_t) n, 1, GB_Ap_calloc, true,
+    info = GB_new ((GrB_Matrix *) v, type, (int64_t) n, 1, GB_Ap_calloc, true,
         GB_AUTO_HYPER, GB_HYPER_DEFAULT, 1, Context) ;
     if (info != GrB_SUCCESS)
     { 
@@ -75,8 +76,8 @@ GrB_Info GxB_Vector_import  // import a vector in CSC format
     if (nvals == 0)
     { 
         // free the user input vi and vx arrays, if they exist
-        if (vi != NULL) GB_FREE_MEMORY (*vi, nvals, sizeof (GrB_Index)) ;
-        if (vx != NULL) GB_FREE_MEMORY (*vx, nvals, type->size) ;
+        if (vi != NULL) GB_FREE (*vi) ;
+        if (vx != NULL) GB_FREE (*vx) ;
     }
     else
     { 
@@ -94,7 +95,8 @@ GrB_Info GxB_Vector_import  // import a vector in CSC format
 
     ASSERT (*vi == NULL) ;
     ASSERT (*vx == NULL) ;
-    ASSERT_OK (GB_check (*v, "v imported", GB0)) ;
+    ASSERT_VECTOR_OK (*v, "v imported", GB0) ;
+    GB_BURBLE_END ;
     return (GrB_SUCCESS) ;
 }
 

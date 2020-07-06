@@ -2,7 +2,7 @@
 // gblogassign: logical assignment: C(M) = A
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -64,6 +64,10 @@
 // GrB_Matrix objects.  The m-file above is useful for understanding that this
 // C mexFunction does.
 
+// C is always returned as a GrB matrix.
+
+#define ERR "A must be a vector of length nnz(M) for logical indexing, C(M)=A"
+
 #include "gb_matlab.h"
 
 void mexFunction
@@ -99,9 +103,9 @@ void mexFunction
     GrB_Matrix M_input = gb_get_shallow (pargin [1]) ;
     GrB_Matrix M ;
     OK (GrB_Matrix_new (&M, GrB_BOOL, nrows, ncols)) ;
-    OK (GxB_set (M, GxB_FORMAT, GxB_BY_COL)) ;
-    OK (GxB_select (M, NULL, NULL, GxB_NONZERO, M_input, NULL, NULL)) ;
-    OK (GrB_free (&M_input)) ;
+    OK (GxB_Matrix_Option_set (M, GxB_FORMAT, GxB_BY_COL)) ;
+    OK (GxB_Matrix_select (M, NULL, NULL, GxB_NONZERO, M_input, NULL, NULL)) ;
+    OK (GrB_Matrix_free (&M_input)) ;
 
     GrB_Index mnz ;
     OK (GrB_Matrix_nvals (&mnz, M)) ;
@@ -110,24 +114,68 @@ void mexFunction
     // get A
     //--------------------------------------------------------------------------
 
-    // make sure A is stored by column, and is nnz(M)-by-1
     GrB_Matrix A_input = gb_get_shallow (pargin [2]) ;
-    GrB_Matrix A, A_copy ;
-    A = gb_by_col (&A_copy, A_input) ;
-
-    GrB_Index anrows, ancols ;
-    OK (GrB_Matrix_nrows (&anrows, A)) ;
-    OK (GrB_Matrix_ncols (&ancols, A)) ;
-    if (mnz > 0)
-    { 
-        CHECK_ERROR (anrows != mnz || ancols != 1, "A must be nnz(M)-by-1") ;
-    }
-
-    GrB_Index anz ;
-    OK (GrB_Matrix_nvals (&anz, A)) ;
-
     GrB_Type atype ;
-    OK (GxB_Matrix_type (&atype, A)) ;
+    GrB_Index anrows, ancols, anz ;
+    GxB_Format_Value fmt ;
+    OK (GrB_Matrix_nrows (&anrows, A_input)) ;
+    OK (GrB_Matrix_ncols (&ancols, A_input)) ;
+    OK (GxB_Matrix_type (&atype, A_input)) ;
+    OK (GrB_Matrix_nvals (&anz, A_input)) ;
+    OK (GxB_Matrix_Option_get (A_input, GxB_FORMAT, &fmt)) ;
+
+    // make sure A is a vector of the right size
+    GrB_Matrix A, A_copy = NULL ;
+
+    if (mnz == 0)
+    { 
+        // M is empty, so A must have no entries.  The dimensions and format of
+        // A are not relevant, since the content of A will not be accessed.
+        CHECK_ERROR (anz != 0, ERR) ;
+        A = A_input ;
+    }
+    else if (anrows == 1)
+    {
+        // A is 1-by-ancols; ensure it is has length nnz(M), and held by row,
+        // or transpose to ancols-by-1 and held by column.
+        CHECK_ERROR (ancols != mnz, ERR) ;
+        if (fmt == GxB_BY_COL)
+        { 
+            // A is 1-by-ancols and held by column: transpose it
+            OK (GrB_Matrix_new (&A_copy, atype, mnz, 1)) ;
+            OK (GxB_Matrix_Option_set (A_copy, GxB_FORMAT, GxB_BY_COL)) ;
+            OK (GrB_transpose (A_copy, NULL, NULL, A_input, NULL)) ;
+            OK (GrB_Matrix_wait (&A_copy)) ;
+            A = A_copy ;
+        }
+        else
+        { 
+            A = A_input ;
+        }
+    }
+    else if (ancols == 1)
+    {
+        // A is anrows-by-1; ensure it is has length nnz(M), and held by col
+        // or transpose to 1-by-anrows and held by row.
+        CHECK_ERROR (anrows != mnz, ERR) ;
+        if (fmt == GxB_BY_ROW)
+        { 
+            // A is anrows-by-1 and held by row: transpose it
+            OK (GrB_Matrix_new (&A_copy, atype, 1, mnz)) ;
+            OK (GxB_Matrix_Option_set (A_copy, GxB_FORMAT, GxB_BY_ROW)) ;
+            OK (GrB_transpose (A_copy, NULL, NULL, A_input, NULL)) ;
+            OK (GrB_Matrix_wait (&A_copy)) ;
+            A = A_copy ;
+        }
+        else
+        { 
+            A = A_input ;
+        }
+    }
+    else
+    {
+        ERROR (ERR) ;
+    }
 
     int64_t *Ai = A->i ;
     void *Ax = A->x ;
@@ -149,11 +197,11 @@ void mexFunction
     GrB_Index *Si = mxMalloc (MAX (anz, 1) * sizeof (GrB_Index)) ;
     GrB_Index *Sj = mxMalloc (MAX (anz, 1) * sizeof (GrB_Index)) ;
 
-    GB_matlab_helper5 (Si, Sj, Mi, Mj, Ai, anz) ;
+    GB_matlab_helper5 (Si, Sj, Mi, Mj, (GrB_Index *) Ai, anz) ;
 
     GrB_Matrix S ;
     OK (GrB_Matrix_new (&S, atype, nrows, ncols)) ;
-    OK (GxB_set (S, GxB_FORMAT, GxB_BY_COL)) ;
+    OK (GxB_Matrix_Option_set (S, GxB_FORMAT, GxB_BY_COL)) ;
 
     if (atype == GrB_BOOL)
     { 
@@ -199,22 +247,27 @@ void mexFunction
     { 
         OK (GrB_Matrix_build_FP64 (S, Si, Sj, Ax, anz, GrB_PLUS_FP64)) ;
     }
-    #ifdef GB_COMPLEX_TYPE
-    else if (atype == gb_complex_type)
-    {
-        OK (GrB_Matrix_build_UDT (S, Si, Sj, Ax, anz, ...)) ;
+    else if (atype == GxB_FC32)
+    { 
+        OK (GxB_Matrix_build_FC32 (S, Si, Sj, Ax, anz, GxB_PLUS_FC32)) ;
     }
-    #endif
+    else if (atype == GxB_FC64)
+    { 
+        OK (GxB_Matrix_build_FC64 (S, Si, Sj, Ax, anz, GxB_PLUS_FC64)) ;
+    }
     else
     {
         ERROR ("unsupported type") ;
     }
 
+    OK (GrB_Matrix_free (&A_copy)) ;
+
     //--------------------------------------------------------------------------
     // C<M> = S
     //--------------------------------------------------------------------------
 
-    OK (GxB_subassign (C, M, NULL, S, GrB_ALL, nrows, GrB_ALL, ncols, NULL)) ;
+    OK (GxB_Matrix_subassign (C, M, NULL,
+        S, GrB_ALL, nrows, GrB_ALL, ncols, NULL)) ;
 
     //--------------------------------------------------------------------------
     // free shallow copies and temporary matrices
@@ -223,8 +276,8 @@ void mexFunction
     gb_mxfree (&Si) ;
     gb_mxfree (&Sj) ;
     gb_mxfree (&Mj) ;
-    OK (GrB_free (&M)) ;
-    OK (GrB_free (&M_input)) ;
+    OK (GrB_Matrix_free (&M)) ;
+    OK (GrB_Matrix_free (&M_input)) ;
 
     //--------------------------------------------------------------------------
     // export the output matrix C back to MATLAB

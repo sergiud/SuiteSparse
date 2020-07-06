@@ -2,7 +2,7 @@
 // GxB_Matrix_import_HyperCSR: import a matrix in hypersparse CSR format
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -34,6 +34,7 @@ GrB_Info GxB_Matrix_import_HyperCSR     // import a hypersparse CSR matrix
 
     GB_WHERE ("GxB_Matrix_import_HyperCSR (&A, type, nrows, ncols, nvals,"
         " nonempty, nvec, &Ah, &Ap, &Aj, &Ax, desc)") ;
+    GB_BURBLE_START ("GxB_Matrix_import_HyperCSR") ;
     GB_IMPORT_CHECK ;
 
     GB_RETURN_IF_NULL (Ah) ;
@@ -46,7 +47,7 @@ GrB_Info GxB_Matrix_import_HyperCSR     // import a hypersparse CSR matrix
     if (nvec > nrows)
     { 
         return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,
-            "nvec ["GBu"] must be <= nrows ["GBu"]\n", nvec, nrows))) ;
+            "nvec [" GBu "] must be <= nrows [" GBu "]\n", nvec, nrows))) ;
     }
 
     //--------------------------------------------------------------------------
@@ -54,7 +55,7 @@ GrB_Info GxB_Matrix_import_HyperCSR     // import a hypersparse CSR matrix
     //--------------------------------------------------------------------------
 
     // allocate just the header of the matrix, not the content
-    GB_NEW (A, type, ncols, nrows, GB_Ap_null, false,
+    info = GB_new (A, type, ncols, nrows, GB_Ap_null, false,
         GB_FORCE_HYPER, GB_Global_hyper_ratio_get ( ), nvec, Context) ;
     if (info != GrB_SUCCESS)
     { 
@@ -76,8 +77,8 @@ GrB_Info GxB_Matrix_import_HyperCSR     // import a hypersparse CSR matrix
     if (nvals == 0)
     { 
         // free the user input Aj and Ax arrays, if they exist
-        if (Aj != NULL) GB_FREE_MEMORY (*Aj, nvals, sizeof (GrB_Index)) ;
-        if (Ax != NULL) GB_FREE_MEMORY (*Ax, nvals, type->size) ;
+        if (Aj != NULL) GB_FREE (*Aj) ;
+        if (Ax != NULL) GB_FREE (*Ax) ;
     }
     else
     { 
@@ -100,7 +101,8 @@ GrB_Info GxB_Matrix_import_HyperCSR     // import a hypersparse CSR matrix
     ASSERT (*Ap == NULL) ;
     ASSERT (*Aj == NULL) ;
     ASSERT (*Ax == NULL) ;
-    ASSERT_OK (GB_check (*A, "A hyper CSR imported", GB0)) ;
+    ASSERT_MATRIX_OK (*A, "A hyper CSR imported", GB0) ;
+    GB_BURBLE_END ;
     return (GrB_SUCCESS) ;
 }
 

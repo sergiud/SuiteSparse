@@ -2,7 +2,7 @@
 // GB_resize: change the size of a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -24,7 +24,8 @@ GrB_Info GB_resize              // change the size of a matrix
     // check inputs
     //--------------------------------------------------------------------------
 
-    ASSERT_OK (GB_check (A, "A to resize", GB0)) ;
+    GrB_Info info ;
+    ASSERT_MATRIX_OK (A, "A to resize", GB0) ;
 
     //--------------------------------------------------------------------------
     // handle the CSR/CSC format
@@ -64,8 +65,8 @@ GrB_Info GB_resize              // change the size of a matrix
     if (vdim_new < vdim_old || vlen_new < vlen_old ||
         (GB_PENDING (A) && vdim_old <= 1 && vdim_new > 1))
     { 
-        GB_WAIT (A) ;
-        ASSERT_OK (GB_check (A, "A to resize, wait", GB0)) ;
+        GB_MATRIX_WAIT (A) ;
+        ASSERT_MATRIX_OK (A, "A to resize, wait", GB0) ;
     }
 
     //--------------------------------------------------------------------------
@@ -75,8 +76,6 @@ GrB_Info GB_resize              // change the size of a matrix
     // If the # of vectors grows very large, it is costly to reallocate enough
     // space for the non-hypersparse A->p component.  So convert the matrix to
     // hypersparse if that happens.
-
-    GrB_Info info ;
 
     if (A->nvec_nonempty < 0)
     { 
@@ -94,8 +93,8 @@ GrB_Info GB_resize              // change the size of a matrix
 
     bool ok = true ;
 
-    int64_t *restrict Ah = A->h ;
-    int64_t *restrict Ap = A->p ;
+    int64_t *GB_RESTRICT Ah = A->h ;
+    int64_t *GB_RESTRICT Ap = A->p ;
     A->vdim = vdim_new ;
 
     if (A->is_hyper)
@@ -120,7 +119,7 @@ GrB_Info GB_resize              // change the size of a matrix
             int64_t pleft = 0 ;
             int64_t pright = GB_IMIN (A->nvec, vdim_new) - 1 ;
             bool found ;
-            GB_BINARY_SPLIT_SEARCH (vdim_new, Ah, pleft, pright, found) ;
+            GB_SPLIT_BINARY_SEARCH (vdim_new, Ah, pleft, pright, found) ;
             A->nvec = pleft ;
         }
     }
@@ -134,8 +133,7 @@ GrB_Info GB_resize              // change the size of a matrix
         if (vdim_new != vdim_old)
         {
             // change the size of A->p
-            GB_REALLOC_MEMORY (A->p, vdim_new+1, vdim_old+1, sizeof (int64_t),
-                &ok) ;
+            A->p = GB_REALLOC (A->p, vdim_new+1, vdim_old+1, int64_t, &ok) ;
             if (!ok)
             { 
                 // out of memory
@@ -150,8 +148,10 @@ GrB_Info GB_resize              // change the size of a matrix
         {
             // number of vectors is increasing, extend the vector pointers
             int64_t anz = GB_NNZ (A) ;
+
+            int64_t j ;
             #pragma omp parallel for num_threads(nthreads) schedule(static)
-            for (int64_t j = vdim_old + 1 ; j <= vdim_new ; j++)
+            for (j = vdim_old + 1 ; j <= vdim_new ; j++)
             { 
                 Ap [j] = anz ;
             }
@@ -183,7 +183,7 @@ GrB_Info GB_resize              // change the size of a matrix
     //--------------------------------------------------------------------------
 
     A->vlen = vlen_new ;
-    ASSERT_OK (GB_check (A, "A vlen resized", GB0)) ;
+    ASSERT_MATRIX_OK (A, "A vlen resized", GB0) ;
 
     //--------------------------------------------------------------------------
     // check for conversion to hypersparse or to non-hypersparse

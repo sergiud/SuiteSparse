@@ -2,7 +2,7 @@
 // GB_mask: apply a mask: C<M> = Z
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -127,6 +127,7 @@ GrB_Info GB_mask                // C<M> = Z
                                 // Z is freed when done.
     const bool C_replace,       // true if clear(C) to be done first
     const bool Mask_comp,       // true if M is to be complemented
+    const bool Mask_struct,     // if true, use the only structure of M
     GB_Context Context
 )
 {
@@ -136,8 +137,8 @@ GrB_Info GB_mask                // C<M> = Z
     //--------------------------------------------------------------------------
 
     // C_result may be aliased with M
-    ASSERT_OK (GB_check (C_result, "C_result for GB_mask", GB0)) ;
-    ASSERT_OK_OR_NULL (GB_check (M, "M for GB_mask", GB0)) ;
+    ASSERT_MATRIX_OK (C_result, "C_result for GB_mask", GB0) ;
+    ASSERT_MATRIX_OK_OR_NULL (M, "M for GB_mask", GB0) ;
 
     // C may be cleared anyway, without the need for finishing it
     ASSERT (GB_PENDING_OK (C_result)) ; ASSERT (GB_ZOMBIES_OK (C_result)) ;
@@ -149,7 +150,7 @@ GrB_Info GB_mask                // C<M> = Z
     GrB_Matrix Z = *Zhandle ;
 
     // Z has the same type as C_result, with no zombies or pending tuples
-    ASSERT_OK (GB_check (Z, "Z for GB_mask", GB0)) ;
+    ASSERT_MATRIX_OK (Z, "Z for GB_mask", GB0) ;
     ASSERT (!GB_PENDING (Z)) ;
     ASSERT (!GB_ZOMBIES (Z)) ;
     ASSERT (Z->type == C_result->type) ;
@@ -243,7 +244,7 @@ GrB_Info GB_mask                // C<M> = Z
         //----------------------------------------------------------------------
 
         // delete any lingering zombies and assemble any pending tuples
-        if (GB_PENDING (M) || GB_ZOMBIES (M)) GB_OK (GB_wait (M, Context)) ;
+        GB_MATRIX_WAIT (M) ;
 
         // R has the same CSR/CSC format as C_result.  It is hypersparse if
         // both C and Z are hypersparse.
@@ -264,10 +265,9 @@ GrB_Info GB_mask                // C<M> = Z
                 // The C_cleared matrix has the same hypersparsity and CSC/CSR
                 // format as the orginal C matrix.
                 C_cleared = NULL;   // allocate a new header for C_cleared
-                GB_CREATE (&C_cleared, C_result->type, vlen, vdim,
+                GB_OK (GB_create (&C_cleared, C_result->type, vlen, vdim,
                     GB_Ap_calloc, R_is_csc, GB_AUTO_HYPER,
-                    C_result->hyper_ratio, 0, 0, true, Context) ;
-                GB_OK (info) ;
+                    C_result->hyper_ratio, 0, 0, true, Context)) ;
                 C = C_cleared ;
             }
             else
@@ -283,10 +283,10 @@ GrB_Info GB_mask                // C<M> = Z
             C = C_result ;
 
             // delete any lingering zombies and assemble any pending tuples
-            if (GB_PENDING (C) || GB_ZOMBIES (C)) GB_OK (GB_wait (C, Context)) ;
+            GB_MATRIX_WAIT (C) ;
         }
 
-        // no more zombies or pending tuples
+        // no more zombies or pending tuples in M or C
         ASSERT (!GB_PENDING (M)) ; ASSERT (!GB_ZOMBIES (M)) ;
         ASSERT (!GB_PENDING (C)) ; ASSERT (!GB_ZOMBIES (C)) ;
 
@@ -297,7 +297,8 @@ GrB_Info GB_mask                // C<M> = Z
         // R = masker (M, C, Z):  compute C<M>=Z, placing results in R
         //----------------------------------------------------------------------
 
-        GB_OK (GB_masker (&R, R_is_csc, M, Mask_comp, C, Z, Context)) ;
+        GB_OK (GB_masker (&R, R_is_csc, M, Mask_comp, Mask_struct, C, Z,
+            Context)) ;
 
         //----------------------------------------------------------------------
         // free temporary matrices Z and C_cleared

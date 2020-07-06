@@ -2,22 +2,20 @@
 // gb_string_to_semiring: convert a string to a GraphBLAS semiring
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // Only built-in GraphBLAS types and operators are supported.
 
-// FUTURE: complex semirings
-
 #include "gb_matlab.h"
 
 GrB_Semiring gb_string_to_semiring      // return a semiring from a string
 (
     char *semiring_string,              // string defining the semiring
-    const GrB_Type default_type         // default type if not in the string:
-                                        // type of x,y inputs to mult operator
+    const GrB_Type atype,               // type of A
+    const GrB_Type btype                // type of B
 )
 {
 
@@ -52,7 +50,7 @@ GrB_Semiring gb_string_to_semiring      // return a semiring from a string
     GrB_Type mult_type ;
     if (mult_typename == NULL)
     { 
-        mult_type = default_type ;
+        mult_type = gb_default_type (atype, btype) ;
     }
     else
     { 
@@ -60,7 +58,7 @@ GrB_Semiring gb_string_to_semiring      // return a semiring from a string
     }
 
     GrB_BinaryOp mult = gb_string_and_type_to_binop (mult_name, mult_type) ;
-    CHECK_ERROR (mult == NULL, "invalid semiring") ;
+    CHECK_ERROR (mult == NULL, "invalid semiring (unknown multipy operator)") ;
 
     //--------------------------------------------------------------------------
     // get the add operator
@@ -69,7 +67,7 @@ GrB_Semiring gb_string_to_semiring      // return a semiring from a string
     GrB_Type add_type = mult->ztype ;
 
     GrB_BinaryOp add = gb_string_and_type_to_binop (add_name, add_type) ;
-    CHECK_ERROR (add == NULL, "invalid semiring") ;
+    CHECK_ERROR (add == NULL, "invalid semiring (unknown add operator)") ;
 
     //--------------------------------------------------------------------------
     // convert the add and mult operators to a semiring

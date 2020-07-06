@@ -2,27 +2,32 @@
 // GraphBLAS/Demo/Source/Source/random_matrix.c: create a random matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // Creates a random sparse matrix, using either setElement or build.
 
-#define FREE_ALL                  \
-    GrB_free (&A) ;               \
-    GrB_free (&Areal) ;           \
-    GrB_free (&Aimag) ;           \
-    if (I != NULL) free (I) ;     \
-    if (J != NULL) free (J) ;     \
+#include "GraphBLAS.h"
+
+#define FREE_ALL                    \
+    GrB_Matrix_free (&A) ;          \
+    GrB_Matrix_free (&Areal) ;      \
+    GrB_Matrix_free (&Aimag) ;      \
+    if (I != NULL) free (I) ;       \
+    if (J != NULL) free (J) ;       \
     if (X != NULL) free (X) ;
 
-#include "demos.h"
+#undef GB_PUBLIC
+#define GB_LIBRARY
+#include "graphblas_demos.h"
 
 //------------------------------------------------------------------------------
 // create a random matrix
 //------------------------------------------------------------------------------
 
+GB_PUBLIC
 GrB_Info random_matrix      // create a random double-precision matrix
 (
     GrB_Matrix *A_output,   // handle of matrix to create
@@ -61,10 +66,10 @@ GrB_Info random_matrix      // create a random double-precision matrix
             ncols, nedges, method, false)) ;
         // A = Areal + imag(Aimag)
         OK (GrB_Matrix_new (&A, Complex, nrows, ncols)) ;
-        OK (GrB_apply (A, NULL, NULL,         Complex_complex_real, Areal,
-            NULL)) ;
-        OK (GrB_apply (A, NULL, Complex_plus, Complex_complex_imag, Aimag,
-            NULL)) ;
+        OK (GrB_Matrix_apply (A, NULL, NULL,         Complex_complex_real,
+            Areal, NULL)) ;
+        OK (GrB_Matrix_apply (A, NULL, Complex_plus, Complex_complex_imag,
+            Aimag, NULL)) ;
         *A_output = A ;
         A = NULL ;
         FREE_ALL ;
@@ -111,11 +116,11 @@ GrB_Info random_matrix      // create a random double-precision matrix
             if (no_self_edges && (i == j)) continue ;
             double x = simple_rand_x ( ) ;
             // A (i,j) = x
-            OK (GrB_Matrix_setElement (A, x, i, j)) ;
+            OK (GrB_Matrix_setElement_FP64 (A, x, i, j)) ;
             if (make_symmetric)
             {
                 // A (j,i) = x
-                OK (GrB_Matrix_setElement (A, x, j, i)) ;
+                OK (GrB_Matrix_setElement_FP64 (A, x, j, i)) ;
             }
         }
     }
@@ -131,9 +136,9 @@ GrB_Info random_matrix      // create a random double-precision matrix
         // by the mode (blocking or non-blocking).
 
         int64_t s = ((make_symmetric) ? 2 : 1) * nedges + 1 ;
-        I = malloc (s * sizeof (GrB_Index)) ;
-        J = malloc (s * sizeof (GrB_Index)) ;
-        X = malloc (s * sizeof (double   )) ;
+        I = (GrB_Index *) malloc (s * sizeof (GrB_Index)) ;
+        J = (GrB_Index *) malloc (s * sizeof (GrB_Index)) ;
+        X = (double *) malloc (s * sizeof (double   )) ;
         if (I == NULL || J == NULL || X == NULL)
         {   // out of memory
             FREE_ALL ;
@@ -170,7 +175,7 @@ GrB_Info random_matrix      // create a random double-precision matrix
         // build the matrix
         //----------------------------------------------------------------------
 
-        OK (GrB_Matrix_build (A, I, J, X, ntuples, GrB_SECOND_FP64)) ;
+        OK (GrB_Matrix_build_FP64 (A, I, J, X, ntuples, GrB_SECOND_FP64)) ;
         free (I) ;
         free (J) ;
         free (X) ;

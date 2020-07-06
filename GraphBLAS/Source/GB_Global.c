@@ -2,20 +2,18 @@
 // GB_Global: global values in GraphBLAS
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // All Global storage is declared, initialized, and accessed here.  The
-// contents of the GB_Global are only accessible to functions in this file.
-// Global storage is used to record a list of matrices with pending operations
-// (for GrB_wait), to keep track of the GraphBLAS mode (blocking or
-// non-blocking), to hold persistent Sauna workspace, for pointers to
-// malloc/calloc/realloc/free functions, global matrix options, and other
-// settings.
+// contents of the GB_Global struct are only accessible to functions in this
+// file.  Global storage is used to keep track of the GraphBLAS mode (blocking
+// or non-blocking), for pointers to malloc/calloc/realloc/free functions,
+// global matrix options, and other settings.
 
-#include "GB.h"
+#include "GB_atomics.h"
 
 //------------------------------------------------------------------------------
 // Global storage: for all threads in a user application that uses GraphBLAS
@@ -24,48 +22,22 @@
 typedef struct
 {
 
+    void *queue_head ;          // TODO in 4.0: delete
+
     //--------------------------------------------------------------------------
-    // queue of matrices with work to do
+    // blocking/non-blocking mode, set by GrB_init
     //--------------------------------------------------------------------------
-
-    // In non-blocking mode, GraphBLAS needs to keep track of all matrices that
-    // have pending operations that have not yet been finished.  In the current
-    // implementation, these are matrices with pending tuples from
-    // GrB_setElement, GxB_subassign, and GrB_assign that haven't been added to
-    // the matrix yet.
-
-    // A matrix with no pending tuples is not in the list.  When a matrix gets
-    // its first pending tuple, it is added to the list.  A matrix is removed
-    // from the list when another operation needs to use the matrix; in that
-    // case the pending tuples are assembled for just that one matrix.  The
-    // GrB_wait operation iterates through the entire list and assembles all
-    // the pending tuples for all the matrices in the list, leaving the list
-    // empty.  A simple link list suffices for the list.  The links are in the
-    // matrices themselves so no additional memory needs to be allocated.  The
-    // list never needs to be searched; if a particular matrix is to be removed
-    // from the list, the GraphBLAS operation already been given the matrix
-    // handle, and the prev & next pointers it contains.  All of these
-    // operations can thus be done in O(1) time, except for GrB_wait which
-    // needs to traverse the whole list once and then the list is empty
-    // afterwards.
-
-    // The access of these variables must be protected in a critical section.
-
-    void *queue_head ;          // head pointer to matrix queue
 
     GrB_Mode mode ;             // GrB_NONBLOCKING or GrB_BLOCKING
-
     bool GrB_init_called ;      // true if GrB_init already called
 
+    //--------------------------------------------------------------------------
+    // threading and MKL control
+    //--------------------------------------------------------------------------
+
+    bool use_mkl ;              // control usage of Intel MKL
     int nthreads_max ;          // max number of threads to use
     double chunk ;              // chunk size for determining # threads to use
-
-    //--------------------------------------------------------------------------
-    // Sauna: thread workspace for Gustavson's method
-    //--------------------------------------------------------------------------
-
-    GB_Sauna Saunas   [GxB_NTHREADS_MAX] ;
-    bool Sauna_in_use [GxB_NTHREADS_MAX] ;
 
     //--------------------------------------------------------------------------
     // hypersparsity and CSR/CSC format control
@@ -91,7 +63,6 @@ typedef struct
     void * (* calloc_function  ) (size_t, size_t) ;
     void * (* realloc_function ) (void *, size_t) ;
     void   (* free_function    ) (void *)         ;
-    void   (* persist_function ) (void *)         ;
     bool malloc_is_thread_safe ;   // default is true
 
     //--------------------------------------------------------------------------
@@ -109,10 +80,6 @@ typedef struct
     // increments the count it if is allocating a new block, but it does this
     // by calling GB_malloc_memory.
 
-    // inuse: the # of bytes currently in use by all threads
-
-    // maxused: the max value of inuse since the call to GrB_init
-
     // malloc_debug: this is used for testing only (GraphBLAS/Tcov).  If true,
     // then use malloc_debug_count for testing memory allocation and
     // out-of-memory conditions.  If malloc_debug_count > 0, the value is
@@ -124,36 +91,48 @@ typedef struct
     int64_t nmalloc ;               // number of blocks allocated but not freed
     bool malloc_debug ;             // if true, test memory handling
     int64_t malloc_debug_count ;    // for testing memory handling
-    int64_t inuse ;                 // memory space current in use
-    int64_t maxused ;               // high water memory usage
 
     //--------------------------------------------------------------------------
+    // for testing and development
+    //--------------------------------------------------------------------------
 
-    int64_t hack ;                  // for testing and development
+    int64_t hack ;                  // ad hoc setting (for draft versions only)
+    bool burble ;                   // controls GBBURBLE output
 
     //--------------------------------------------------------------------------
     // for MATLAB interface only
     //--------------------------------------------------------------------------
 
     bool print_one_based ;          // if true, print 1-based indices
-    int print_format ;              // for printing values
+
+    //--------------------------------------------------------------------------
+    // CUDA (DRAFT: in progress)
+    //--------------------------------------------------------------------------
+
+    int gpu_count ;                 // # of GPUs in the system
+    GrB_Desc_Value gpu_control ;    // always, never, or default
+    double gpu_chunk ;              // min problem size for using a GPU
+    // properties of each GPU:
+    GB_cuda_device gpu_properties [GB_CUDA_MAX_GPUS] ;
 
 }
 GB_Global_struct ;
 
-extern GB_Global_struct GB_Global ;
+GB_PUBLIC GB_Global_struct GB_Global ;
 
 GB_Global_struct GB_Global =
 {
 
-    // queued matrices with work to do
-    .queue_head = NULL,         // pointer to first queued matrix
+    .queue_head = NULL,         // TODO in 4.0: delete
 
     // GraphBLAS mode
     .mode = GrB_NONBLOCKING,    // default is nonblocking
 
     // initialization flag
     .GrB_init_called = false,   // GrB_init has not yet been called
+
+    // Intel MKL control (DRAFT: in progress)
+    .use_mkl = false,           // if true, exploit the Intel MKL
 
     // max number of threads and chunk size
     .nthreads_max = 1,
@@ -163,10 +142,6 @@ GB_Global_struct GB_Global =
     .hyper_ratio = GB_HYPER_DEFAULT,
     .is_csc = (GB_FORMAT_DEFAULT != GxB_BY_ROW),    // default is GxB_BY_ROW
 
-    // Sauna workspace for Gustavson's method (one per thread)
-    .Saunas [0] = NULL,
-    .Sauna_in_use [0] = false,
-
     // abort function for debugging only
     .abort_function   = abort,
 
@@ -175,7 +150,6 @@ GB_Global_struct GB_Global =
     .calloc_function  = calloc,
     .realloc_function = realloc,
     .free_function    = free,
-    .persist_function = NULL,
     .malloc_is_thread_safe = true,
 
     // malloc tracking, for testing, statistics, and debugging only
@@ -183,34 +157,32 @@ GB_Global_struct GB_Global =
     .nmalloc = 0,                // memory block counter
     .malloc_debug = false,       // do not test memory handling
     .malloc_debug_count = 0,     // counter for testing memory handling
-    .inuse = 0,                  // memory space current in use
-    .maxused = 0,                // high water memory usage
 
-    // for testing and development
+    // for testing and development only
     .hack = 0,
 
+    // diagnostics
+    .burble = false,
+
     // for MATLAB interface only
-    .print_one_based = false,       // if true, print 1-based indices
-    .print_format = 0               // for printing values
+    .print_one_based = false,   // if true, print 1-based indices
+
+    // CUDA environment (DRAFT: in progress)
+    .gpu_count = 0,                     // # of GPUs in the system
+    .gpu_control = GxB_DEFAULT,         // always, never, or default
+    .gpu_chunk = GB_GPU_CHUNK_DEFAULT   // min problem size for using a GPU
+
 } ;
 
 //==============================================================================
 // GB_Global access functions
 //==============================================================================
 
-//------------------------------------------------------------------------------
-// queue_head
-//------------------------------------------------------------------------------
-
-void GB_Global_queue_head_set (void *p)
-{ 
-    GB_Global.queue_head = p ;
-}
-
-void *GB_Global_queue_head_get (void)
-{ 
-    return (GB_Global.queue_head) ;
-}
+// TODO in 4.0: delete:
+GB_PUBLIC
+void GB_Global_queue_head_set (void *p) { GB_Global.queue_head = p ; }
+GB_PUBLIC
+void *GB_Global_queue_head_get (void) { return (GB_Global.queue_head) ; }
 
 //------------------------------------------------------------------------------
 // mode
@@ -230,11 +202,13 @@ GrB_Mode GB_Global_mode_get (void)
 // GrB_init_called
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 void GB_Global_GrB_init_called_set (bool GrB_init_called)
 { 
     GB_Global.GrB_init_called = GrB_init_called ;
 }
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 bool GB_Global_GrB_init_called_get (void)
 { 
     return (GB_Global.GrB_init_called) ;
@@ -244,13 +218,13 @@ bool GB_Global_GrB_init_called_get (void)
 // nthreads_max
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 void GB_Global_nthreads_max_set (int nthreads_max)
 { 
-    nthreads_max = GB_IMIN (nthreads_max, GxB_NTHREADS_MAX) ;
-    nthreads_max = GB_IMAX (nthreads_max, 1) ;
-    GB_Global.nthreads_max = nthreads_max ;
+    GB_Global.nthreads_max = GB_IMAX (nthreads_max, 1) ;
 }
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 int GB_Global_nthreads_max_get (void)
 { 
     return (GB_Global.nthreads_max) ;
@@ -260,6 +234,7 @@ int GB_Global_nthreads_max_get (void)
 // OpenMP max_threads
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 int GB_Global_omp_get_max_threads (void)
 { 
     return (GB_OPENMP_MAX_THREADS) ;
@@ -269,12 +244,14 @@ int GB_Global_omp_get_max_threads (void)
 // chunk
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 void GB_Global_chunk_set (double chunk)
 { 
     if (chunk <= GxB_DEFAULT) chunk = GB_CHUNK_DEFAULT ;
-    GB_Global.chunk = chunk ;
+    GB_Global.chunk = fmax (chunk, 1) ;
 }
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 double GB_Global_chunk_get (void)
 { 
     return (GB_Global.chunk) ;
@@ -295,6 +272,22 @@ double GB_Global_hyper_ratio_get (void)
 }
 
 //------------------------------------------------------------------------------
+// use_mkl
+//------------------------------------------------------------------------------
+
+GB_PUBLIC   // accessed by the MATLAB interface only
+void GB_Global_use_mkl_set (bool use_mkl)
+{ 
+    GB_Global.use_mkl = use_mkl ;
+}
+
+GB_PUBLIC   // accessed by the MATLAB interface only
+bool GB_Global_use_mkl_get (void)
+{ 
+    return (GB_Global.use_mkl) ;
+}
+
+//------------------------------------------------------------------------------
 // is_csc
 //------------------------------------------------------------------------------
 
@@ -303,48 +296,22 @@ void GB_Global_is_csc_set (bool is_csc)
     GB_Global.is_csc = is_csc ;
 }
 
-double GB_Global_is_csc_get (void)
+bool GB_Global_is_csc_get (void)
 { 
     return (GB_Global.is_csc) ;
-}
-
-//------------------------------------------------------------------------------
-// Saunas [id]
-//------------------------------------------------------------------------------
-
-void GB_Global_Saunas_set (int id, GB_Sauna Sauna)
-{ 
-    GB_Global.Saunas [id] = Sauna ;
-}
-
-GB_Sauna GB_Global_Saunas_get (int id)
-{ 
-    return (GB_Global.Saunas [id]) ;
-}
-
-//------------------------------------------------------------------------------
-// Saunas_in_use [id]
-//------------------------------------------------------------------------------
-
-void GB_Global_Sauna_in_use_set (int id, bool in_use)
-{ 
-    GB_Global.Sauna_in_use [id] = in_use ;
-}
-
-bool GB_Global_Sauna_in_use_get (int id)
-{ 
-    return (GB_Global.Sauna_in_use [id]) ;
 }
 
 //------------------------------------------------------------------------------
 // abort_function
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 void GB_Global_abort_function_set (void (* abort_function) (void))
 { 
     GB_Global.abort_function = abort_function ;
 }
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 void GB_Global_abort_function (void)
 {
     GB_Global.abort_function ( ) ;
@@ -369,11 +336,10 @@ void * GB_Global_malloc_function (size_t size)
     }
     else
     {
-        #define GB_CRITICAL_SECTION                             \
-        {                                                       \
-            p = GB_Global.malloc_function (size) ;              \
+        #pragma omp critical(GB_malloc_protection)
+        {
+            p = GB_Global.malloc_function (size) ;
         }
-        #include "GB_critical_section.c"
     }
     return (ok ? p : NULL) ;
 }
@@ -397,12 +363,10 @@ void * GB_Global_calloc_function (size_t count, size_t size)
     }
     else
     {
-        #undef  GB_CRITICAL_SECTION
-        #define GB_CRITICAL_SECTION                             \
-        {                                                       \
-            p = GB_Global.calloc_function (count, size) ;       \
+        #pragma omp critical(GB_malloc_protection)
+        {
+            p = GB_Global.calloc_function (count, size) ;
         }
-        #include "GB_critical_section.c"
     }
     return (ok ? p : NULL) ;
 }
@@ -419,6 +383,11 @@ void GB_Global_realloc_function_set
     GB_Global.realloc_function = realloc_function ;
 }
 
+bool GB_Global_have_realloc_function (void)
+{ 
+    return (GB_Global.realloc_function != NULL) ;
+}
+
 void * GB_Global_realloc_function (void *p, size_t size)
 { 
     bool ok = true ;
@@ -429,12 +398,10 @@ void * GB_Global_realloc_function (void *p, size_t size)
     }
     else
     {
-        #undef  GB_CRITICAL_SECTION
-        #define GB_CRITICAL_SECTION                             \
-        {                                                       \
-            pnew = GB_Global.realloc_function (p, size) ;       \
+        #pragma omp critical(GB_malloc_protection)
+        {
+            pnew = GB_Global.realloc_function (p, size) ;
         }
-        #include "GB_critical_section.c"
     }
     return (ok ? pnew : NULL) ;
 }
@@ -450,61 +417,16 @@ void GB_Global_free_function_set (void (* free_function) (void *))
 
 void GB_Global_free_function (void *p)
 { 
-    #if defined (USER_POSIX_THREADS) || defined (USER_ANSI_THREADS)
-    bool ok = true ;
-    #endif
     if (GB_Global.malloc_is_thread_safe)
     {
         GB_Global.free_function (p) ;
     }
     else
     {
-        #undef  GB_CRITICAL_SECTION
-        #define GB_CRITICAL_SECTION                             \
-        {                                                       \
-            GB_Global.free_function (p) ;                       \
+        #pragma omp critical(GB_malloc_protection)
+        {
+            GB_Global.free_function (p) ;
         }
-        #include "GB_critical_section.c"
-    }
-}
-
-//------------------------------------------------------------------------------
-// persist_function
-//------------------------------------------------------------------------------
-
-// This is only needed by the MATLAB interface, so that mexMakeMemoryPersistent
-// can be called to keep the Saunas allocated between calls to the
-// mexFunctions.  By default, the global persist_function is NULL, so it is not
-// used except when set to mexMakeMemoryPersistent in the mexFunction
-// interface.  The function pointer should be set immediately after calling
-// GxB_init.
-
-void GB_Global_persist_function_set (void (* persist_function) (void *))
-{
-    GB_Global.persist_function = persist_function ;
-}
-
-void GB_Global_persist_function (void *p)
-{ 
-    if (GB_Global.persist_function == NULL)
-    { 
-        return ;
-    }
-    #if defined (USER_POSIX_THREADS) || defined (USER_ANSI_THREADS)
-    bool ok = true ;
-    #endif
-    if (GB_Global.malloc_is_thread_safe)
-    {
-        GB_Global.persist_function (p) ;
-    }
-    else
-    {
-        #undef  GB_CRITICAL_SECTION
-        #define GB_CRITICAL_SECTION                             \
-        {                                                       \
-            GB_Global.persist_function (p) ;                    \
-        }
-        #include "GB_critical_section.c"
     }
 }
 
@@ -512,11 +434,13 @@ void GB_Global_persist_function (void *p)
 // malloc_is_thread_safe
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 void GB_Global_malloc_is_thread_safe_set (bool malloc_is_thread_safe)
 { 
     GB_Global.malloc_is_thread_safe = malloc_is_thread_safe ;
 }
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 bool GB_Global_malloc_is_thread_safe_get (void)
 { 
     return (GB_Global.malloc_is_thread_safe) ;
@@ -526,6 +450,7 @@ bool GB_Global_malloc_is_thread_safe_get (void)
 // malloc_tracking
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 void GB_Global_malloc_tracking_set (bool malloc_tracking)
 { 
     GB_Global.malloc_tracking = malloc_tracking ;
@@ -542,118 +467,219 @@ bool GB_Global_malloc_tracking_get (void)
 
 void GB_Global_nmalloc_clear (void)
 { 
+    GB_ATOMIC_WRITE
     GB_Global.nmalloc = 0 ;
 }
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 int64_t GB_Global_nmalloc_get (void)
 { 
-    return (GB_Global.nmalloc) ;
+    int64_t nmalloc ;
+    GB_ATOMIC_READ
+    nmalloc = GB_Global.nmalloc ;
+    return (nmalloc) ;
 }
 
-int64_t GB_Global_nmalloc_increment (void)
+void GB_Global_nmalloc_increment (void)
 { 
-    return (++(GB_Global.nmalloc)) ;
+    GB_ATOMIC_UPDATE
+    GB_Global.nmalloc++ ;
 }
 
-int64_t GB_Global_nmalloc_decrement (void)
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
+void GB_Global_nmalloc_decrement (void)
 { 
-    return (--(GB_Global.nmalloc)) ;
+    GB_ATOMIC_UPDATE
+    GB_Global.nmalloc-- ;
 }
 
 //------------------------------------------------------------------------------
 // malloc_debug
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 void GB_Global_malloc_debug_set (bool malloc_debug)
 { 
+    GB_ATOMIC_WRITE
     GB_Global.malloc_debug = malloc_debug ;
 }
 
 bool GB_Global_malloc_debug_get (void)
 { 
-    return (GB_Global.malloc_debug) ;
+    bool malloc_debug ;
+    GB_ATOMIC_READ
+    malloc_debug = GB_Global.malloc_debug ;
+    return (malloc_debug) ;
 }
 
 //------------------------------------------------------------------------------
 // malloc_debug_count
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 void GB_Global_malloc_debug_count_set (int64_t malloc_debug_count)
 { 
+    GB_ATOMIC_WRITE
     GB_Global.malloc_debug_count = malloc_debug_count ;
 }
 
 bool GB_Global_malloc_debug_count_decrement (void)
 { 
-    return (GB_Global.malloc_debug_count-- <= 0) ;
-}
+    GB_ATOMIC_UPDATE
+    GB_Global.malloc_debug_count-- ;
 
-//------------------------------------------------------------------------------
-// inuse and maxused
-//------------------------------------------------------------------------------
-
-void GB_Global_inuse_clear (void)
-{ 
-    GB_Global.inuse = 0 ;
-    GB_Global.maxused = 0 ;
-}
-
-void GB_Global_inuse_increment (int64_t s)
-{ 
-    GB_Global.inuse += s ;
-    GB_Global.maxused = GB_IMAX (GB_Global.maxused, GB_Global.inuse) ;
-}
-
-void GB_Global_inuse_decrement (int64_t s)
-{ 
-    GB_Global.inuse -= s ;
-}
-
-int64_t GB_Global_inuse_get (void)
-{ 
-    return (GB_Global.inuse) ;
-}
-
-int64_t GB_Global_maxused_get (void)
-{ 
-    return (GB_Global.maxused) ;
+    int64_t malloc_debug_count ;
+    GB_ATOMIC_READ
+    malloc_debug_count = GB_Global.malloc_debug_count ;
+    return (malloc_debug_count <= 0) ;
 }
 
 //------------------------------------------------------------------------------
 // hack: for setting an internal value for development only
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 void GB_Global_hack_set (int64_t hack)
 { 
     GB_Global.hack = hack ;
 }
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 int64_t GB_Global_hack_get (void)
 { 
     return (GB_Global.hack) ;
 }
 
 //------------------------------------------------------------------------------
+// burble: for controlling the burble output
+//------------------------------------------------------------------------------
+
+void GB_Global_burble_set (bool burble)
+{ 
+    GB_Global.burble = burble ;
+}
+
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
+bool GB_Global_burble_get (void)
+{ 
+    return (GB_Global.burble) ;
+}
+
+//------------------------------------------------------------------------------
 // for MATLAB interface only
 //------------------------------------------------------------------------------
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 void GB_Global_print_one_based_set (bool onebased)
 { 
     GB_Global.print_one_based = onebased ;
 }
 
+GB_PUBLIC   // accessed by the MATLAB interface only
 bool GB_Global_print_one_based_get (void)
 { 
     return (GB_Global.print_one_based) ;
 }
 
-void GB_Global_print_format_set (int f)
+//------------------------------------------------------------------------------
+// CUDA (DRAFT: in progress)
+//------------------------------------------------------------------------------
+
+void GB_Global_gpu_control_set (GrB_Desc_Value gpu_control)
 { 
-    GB_Global.print_format = f ;
+    // set the GPU control to always, never, or default
+    if (GB_Global.gpu_count > 0)
+    {
+        // one or more GPUs are available: set gpu_control to
+        // always, never, or default.
+        if (gpu_control == GxB_GPU_ALWAYS || gpu_control == GxB_GPU_NEVER)
+        {
+            GB_Global.gpu_control = gpu_control ;
+        }
+        else
+        {
+            GB_Global.gpu_control = GxB_DEFAULT ;
+        }
+    }
+    else
+    {
+        // no GPUs available: never use a GPU
+        GB_Global.gpu_control = GxB_GPU_NEVER ;
+    }
 }
 
-int GB_Global_print_format_get (void)
+GrB_Desc_Value GB_Global_gpu_control_get (void)
 { 
-    return (GB_Global.print_format) ;
+    // get the GPU control parameter
+    return (GB_Global.gpu_control) ;
 }
+
+void GB_Global_gpu_chunk_set (double gpu_chunk)
+{ 
+    // set the GPU chunk factor
+    if (gpu_chunk < 1) gpu_chunk = GB_GPU_CHUNK_DEFAULT ;
+    GB_Global.gpu_chunk = gpu_chunk ;
+}
+
+double GB_Global_gpu_chunk_get (void)
+{ 
+    // get the GPU chunk factor
+    return (GB_Global.gpu_chunk) ;
+}
+
+bool GB_Global_gpu_count_set (bool enable_cuda)
+{
+    // set the # of GPUs in the system;
+    // this function is only called once, by GB_init.
+    #if defined ( GBCUDA )
+    if (enable_cuda)
+    {
+        return (GB_cuda_get_device_count (&GB_Global.gpu_count)) ;
+    }
+    else
+    #endif
+    {
+        // no GPUs available, or available but not requested
+        GB_Global.gpu_count = 0 ;
+        return (true) ;
+    }
+}
+
+int GB_Global_gpu_count_get (void)
+{
+    // get the # of GPUs in the system
+    return (GB_Global.gpu_count) ;
+}
+
+#define GB_GPU_DEVICE_CHECK(error) \
+    if (device < 0 || device >= GB_Global.gpu_count) return (error) ;
+
+size_t GB_Global_gpu_memorysize_get (int device)
+{
+    // get the memory size of a specific GPU
+    GB_GPU_DEVICE_CHECK (0) ;       // memory size zero if invalid GPU
+    return (GB_Global.gpu_properties [device].total_global_memory) ;
+}
+
+int GB_Global_gpu_sm_get (int device)
+{
+    // get the # of SMs in a specific GPU
+    GB_GPU_DEVICE_CHECK (0) ;       // zero if invalid GPU
+    return (GB_Global.gpu_properties [device].number_of_sms)  ;
+}
+
+bool GB_Global_gpu_device_properties_get (int device)
+{
+    // get all properties of a specific GPU;
+    // this function is only called once per GPU, by GB_init.
+    GB_GPU_DEVICE_CHECK (false) ;   // fail if invalid GPU
+    #if defined ( GBCUDA )
+    return (GB_cuda_get_device_properties (device,
+        &(GB_Global.gpu_properties [device]))) ;
+    #else
+    // if no GPUs exist, they cannot be queried
+    return (false) ;
+    #endif
+}
+
 

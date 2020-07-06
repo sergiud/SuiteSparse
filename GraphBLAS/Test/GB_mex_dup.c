@@ -2,7 +2,7 @@
 // GB_mex_dup: copy a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -11,13 +11,13 @@
 
 #include "GB_mex.h"
 
-#define USAGE "C = GB_mex_dup (A, cclass, method)"
+#define USAGE "C = GB_mex_dup (A, type, method)"
 
 #define FREE_ALL                        \
 {                                       \
-    GrB_free (&A) ;                     \
-    GrB_free (&C) ;                     \
-    GrB_free (&desc) ;                  \
+    GrB_Matrix_free_(&A) ;              \
+    GrB_Matrix_free_(&C) ;              \
+    GrB_Descriptor_free_(&desc) ;       \
     GB_mx_put_global (true, 0) ;        \
 }
 
@@ -51,26 +51,9 @@ void mexFunction
         FREE_ALL ;
         mexErrMsgTxt ("A failed") ;
     }
-    mxClassID aclass = GB_mx_Type_to_classID (A->type) ;
 
-    // get cclass and ctype of output matrix
-    mxClassID cclass ;
-    GrB_Type ctype ;
-    if (A->type == Complex)
-    {
-        ctype = Complex ;
-        cclass = mxDOUBLE_CLASS ;
-    }
-    else
-    {
-        cclass = GB_mx_string_to_classID (aclass, PARGIN (1)) ;
-        ctype = GB_mx_classID_to_Type (cclass) ;
-        if (ctype == NULL)
-        {
-            FREE_ALL ;
-            mexErrMsgTxt ("C must be numeric") ;
-        }
-    }
+    // get ctype of output matrix
+    GrB_Type ctype = GB_mx_string_to_Type (PARGIN (1), A->type) ;
 
     // get method
     int GET_SCALAR (2, int, method, 0) ;
@@ -102,12 +85,12 @@ void mexFunction
                 GrB_Matrix_ncols (&ncols, A) ;                  \
                 GrB_Matrix_new (&C, type, nrows, ncols) ;       \
                 GrB_Descriptor_new (&desc) ;                    \
-                GxB_set (desc, GrB_INP0, GrB_TRAN) ;            \
+                GxB_Desc_set (desc, GrB_INP0, GrB_TRAN) ;       \
             }
             #define FREE_DEEP_COPY                              \
             {                                                   \
-                GrB_free (&C) ;                                 \
-                GrB_free (&desc) ;                              \
+                GrB_Matrix_free_(&C) ;                          \
+                GrB_Descriptor_free_(&desc) ;                   \
             }
 
             GET_DEEP_COPY ;
@@ -121,6 +104,10 @@ void mexFunction
     else
     {
         // typecast
+        if (A->type == Complex && Complex != GxB_FC64)
+        {
+            A->type = GxB_FC64 ;
+        }
 
         // C = (ctype) A
         // printf ("cast\n") ;
@@ -131,12 +118,12 @@ void mexFunction
             GrB_Matrix_ncols (&ncols, A) ;                  \
             GrB_Matrix_new (&C, ctype, nrows, ncols) ;      \
             GrB_Descriptor_new (&desc) ;                    \
-            GxB_set (desc, GrB_INP0, GrB_TRAN) ;            \
+            GxB_Desc_set (desc, GrB_INP0, GrB_TRAN) ;       \
         }
         #define FREE_DEEP_COPY                              \
         {                                                   \
-            GrB_free (&C) ;                                 \
-            GrB_free (&desc) ;                              \
+            GrB_Matrix_free_(&C) ;                          \
+            GrB_Descriptor_free_(&desc) ;                   \
         }
 
         GET_DEEP_COPY ;

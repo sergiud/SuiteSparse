@@ -2,7 +2,7 @@
 // gbapply: apply a unary operator to a sparse matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -11,17 +11,18 @@
 
 // Usage:
 
-// Cout = GrB.apply (op, A, desc)
-// Cout = GrB.apply (Cin, accum, op, A, desc)
-// Cout = GrB.apply (Cin, M, op, A, desc)
-// Cout = GrB.apply (Cin, M, accum, op, A, desc)
+// C = gbapply (unop, A)
+// C = gbapply (unop, A, desc)
+// C = gbapply (Cin, accum, unop, A, desc)
+// C = gbapply (Cin, M, unop, A, desc)
+// C = gbapply (Cin, M, accum, unop, A, desc)
 
 // If Cin is not present then it is implicitly a matrix with no entries, of the
 // right size (which depends on A, B, and the descriptor).
 
 #include "gb_matlab.h"
 
-#define USAGE "usage: Cout = GrB.apply (Cin, M, accum, op, A, desc)"
+#define USAGE "usage: C = GrB.apply (Cin, M, accum, op, A, desc)"
 
 void mexFunction
 (
@@ -36,8 +37,7 @@ void mexFunction
     // check inputs
     //--------------------------------------------------------------------------
 
-    gb_usage ((nargin == 3 || nargin == 5 || nargin == 6) && nargout <= 1,
-        USAGE) ;
+    gb_usage (nargin >= 2 && nargin <= 6 && nargout <= 2, USAGE) ;
 
     //--------------------------------------------------------------------------
     // find the arguments
@@ -93,14 +93,14 @@ void mexFunction
 
     if (nstrings == 1)
     { 
-        op     = gb_mxstring_to_unop  (String [0], atype) ;
+        op    = gb_mxstring_to_unop  (String [0], atype) ;
     }
     else 
     { 
         // if accum appears, then Cin must also appear
         CHECK_ERROR (C == NULL, USAGE) ;
-        accum  = gb_mxstring_to_binop (String [0], ctype) ;
-        op     = gb_mxstring_to_unop  (String [1], atype) ;
+        accum = gb_mxstring_to_binop (String [0], ctype, ctype) ;
+        op    = gb_mxstring_to_unop  (String [1], atype) ;
     }
 
     //--------------------------------------------------------------------------
@@ -115,7 +115,7 @@ void mexFunction
 
         // get the descriptor contents to determine if A is transposed
         GrB_Desc_Value in0 ;
-        OK (GxB_get (desc, GrB_INP0, &in0)) ;
+        OK (GxB_Desc_get (desc, GrB_INP0, &in0)) ;
         bool A_transpose = (in0 == GrB_TRAN) ;
 
         // get the size of A
@@ -132,28 +132,29 @@ void mexFunction
 
         OK (GrB_Matrix_new (&C, ctype, cnrows, cncols)) ;
         fmt = gb_get_format (cnrows, cncols, A, NULL, fmt) ;
-        OK (GxB_set (C, GxB_FORMAT, fmt)) ;
+        OK (GxB_Matrix_Option_set (C, GxB_FORMAT, fmt)) ;
     }
 
     //--------------------------------------------------------------------------
     // compute C<M> += f(A)
     //--------------------------------------------------------------------------
 
-    OK (GrB_apply (C, M, accum, op, A, desc)) ;
+    OK (GrB_Matrix_apply (C, M, accum, op, A, desc)) ;
 
     //--------------------------------------------------------------------------
     // free shallow copies
     //--------------------------------------------------------------------------
 
-    OK (GrB_free (&M)) ;
-    OK (GrB_free (&A)) ;
-    OK (GrB_free (&desc)) ;
+    OK (GrB_Matrix_free (&M)) ;
+    OK (GrB_Matrix_free (&A)) ;
+    OK (GrB_Descriptor_free (&desc)) ;
 
     //--------------------------------------------------------------------------
     // export the output matrix C back to MATLAB
     //--------------------------------------------------------------------------
 
     pargout [0] = gb_export (&C, kind) ;
+    pargout [1] = mxCreateDoubleScalar (kind) ;
     GB_WRAPUP ;
 }
 

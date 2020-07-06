@@ -2,7 +2,7 @@
 // gb_get_format: determine the format of a matrix result 
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -11,8 +11,8 @@
 // computed from one or two input matrices A and B.  The following rules are
 // used, in order:
 
-// (1) GraphBLAS operations of the form Cout = GrB.method (Cin, ...) use the
-//      format of Cin for the new matrix Cout.
+// (1) GraphBLAS operations of the form C = GrB.method (Cin, ...) use the
+//      format of Cin for the new matrix C.
 
 // (1) If the format is determined by the descriptor to the method, then that
 //      determines the format of C.
@@ -21,11 +21,11 @@
 
 // (3) If C is a row vector (cnrows == 1) then C is stored by row.
 
-// (4) If A is present, and not a row or column vector, then its format is used
-//      for C.
+// (4) If A is present, and not a row or column vector or scalar, then its
+//      format is used for C.
 
-// (5) If B is present, and not a row or column vector, then its format is used
-//      for C.
+// (5) If B is present, and not a row or column vector or scalar, then its
+//      format is used for C.
 
 // (6) Otherwise, the global default format is used for C.
 
@@ -61,17 +61,17 @@ GxB_Format_Value gb_get_format          // GxB_BY_ROW or GxB_BY_COL
     else if (A != NULL && !gb_is_vector (A))
     { 
         // (4) get the format of A
-        OK (GxB_get (A, GxB_FORMAT, &fmt)) ;
+        OK (GxB_Matrix_Option_get (A, GxB_FORMAT, &fmt)) ;
     }
     else if (B != NULL && !gb_is_vector (B))
     { 
         // (5) get the format of B
-        OK (GxB_get (B, GxB_FORMAT, &fmt)) ;
+        OK (GxB_Matrix_Option_get (B, GxB_FORMAT, &fmt)) ;
     }
     else
     { 
         // (6) get the global default format
-        OK (GxB_get (GxB_FORMAT, &fmt)) ;
+        OK (GxB_Global_Option_get (GxB_FORMAT, &fmt)) ;
     }
     return (fmt) ;
 }

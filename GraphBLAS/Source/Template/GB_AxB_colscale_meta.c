@@ -2,7 +2,7 @@
 // GB_AxB_colscale_meta: C=A*D where D is a square diagonal matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -12,24 +12,25 @@
 
 {
 
-    // Dx, j, and Ah are unused if the operator is FIRST
+    // Dx, j, and Ah are unused if the operator is FIRST or PAIR
     #include "GB_unused.h"
 
     //--------------------------------------------------------------------------
     // get C, A, and D
     //--------------------------------------------------------------------------
 
-    const int64_t  *restrict Ap = A->p ;
-    const int64_t  *restrict Ah = A->h ;
-    const GB_ATYPE *restrict Ax = A_is_pattern ? NULL : A->x ;
-    const GB_BTYPE *restrict Dx = D_is_pattern ? NULL : D->x ;
+    const int64_t  *GB_RESTRICT Ap = A->p ;
+    const int64_t  *GB_RESTRICT Ah = A->h ;
+    const GB_ATYPE *GB_RESTRICT Ax = (GB_ATYPE *) (A_is_pattern ? NULL : A->x) ;
+    const GB_BTYPE *GB_RESTRICT Dx = (GB_BTYPE *) (D_is_pattern ? NULL : D->x) ;
 
     //--------------------------------------------------------------------------
     // C=A*D
     //--------------------------------------------------------------------------
 
+    int tid ;
     #pragma omp parallel for num_threads(nthreads) schedule(dynamic,1)
-    for (int tid = 0 ; tid < ntasks ; tid++)
+    for (tid = 0 ; tid < ntasks ; tid++)
     {
 
         // if kfirst > klast then task tid does no work at all
@@ -57,7 +58,7 @@
             //------------------------------------------------------------------
 
             GB_GETB (djj, Dx, j) ;                  // djj = D (j,j)
-            GB_PRAGMA_VECTORIZE
+            GB_PRAGMA_SIMD_VECTORIZE
             for (int64_t p = pA_start ; p < pA_end ; p++)
             { 
                 GB_GETA (aij, Ax, p) ;              // aij = A(i,j)

@@ -2,7 +2,7 @@
 // GB_mex_errors.h: error handling macros
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -25,6 +25,7 @@
     info = method ;                                                 \
     fprintf (f,"GB_mex_errors, line %d:", __LINE__) ;               \
     fprintf (f,"%s\n", GrB_error ( )) ;                             \
+    if (info != expected) fprintf (f, "got %d expected %d\n", info, expected) ; \
     CHECK2 (info == expected, method) ;                             \
 }
 

@@ -2,6 +2,11 @@
 // SuiteSparse/GraphBLAS/Demo/Source/dpagerank2: pagerank using a real semiring
 //------------------------------------------------------------------------------
 
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
+// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
+//------------------------------------------------------------------------------
+
 // PageRank via EXTREME GraphBLAS-ing!
 
 // A is a square unsymmetric binary matrix of size n-by-n, where A(i,j) is the
@@ -14,38 +19,38 @@
 
 // This version operates on the original matrix A, without changing it.  The
 // entire computation is done via a set of user-defined objects:  a type,
-// several operators, a monoid, and a semiring.  If PAGERANK_PREEFINED is
-// defined at compile time, then the GraphBLAS PageRank_* objects are assumed
-// to be available as global objects.
+// several operators, a monoid, and a semiring.
 
 // Acknowledgements:  this method was written with input from Richard Veras,
 // Franz Franchetti, and Scott McMillan, Carnegie Mellon University.
+
+#include "GraphBLAS.h"
 
 //------------------------------------------------------------------------------
 // helper macros
 //------------------------------------------------------------------------------
 
 // free all workspace
-#define FREEWORK                    \
-{                                   \
-    GrB_free (&rdouble) ;           \
-    GrB_free (&r) ;                 \
-    GrB_free (&rnew) ;              \
-    GrB_free (&dout) ;              \
-    GrB_free (&rdiff) ;             \
-    GrB_free (&desc) ;              \
-    if (I != NULL) free (I) ;       \
-    if (X != NULL) free (X) ;       \
-    GrB_free (&PageRank_accum) ;    \
-    GrB_free (&PageRank_add) ;      \
-    GrB_free (&PageRank_monoid) ;   \
-    GrB_free (&PageRank_multiply) ; \
-    GrB_free (&PageRank_semiring) ; \
-    GrB_free (&PageRank_diff) ;     \
-    GrB_free (&PageRank_type) ;     \
-    GrB_free (&PageRank_div) ;      \
-    GrB_free (&PageRank_get) ;      \
-    GrB_free (&PageRank_init) ;     \
+#define FREEWORK                                \
+{                                               \
+    GrB_Vector_free (&rdouble) ;                \
+    GrB_Vector_free (&r) ;                      \
+    GrB_Vector_free (&rnew) ;                   \
+    GrB_Vector_free (&dout) ;                   \
+    GrB_Vector_free (&rdiff) ;                  \
+    GrB_Descriptor_free (&desc) ;               \
+    if (I != NULL) free (I) ;                   \
+    if (X != NULL) free (X) ;                   \
+    GrB_BinaryOp_free (&PageRank_accum) ;       \
+    GrB_BinaryOp_free (&PageRank_add) ;         \
+    GrB_Monoid_free (&PageRank_monoid) ;        \
+    GrB_BinaryOp_free (&PageRank_multiply) ;    \
+    GrB_Semiring_free (&PageRank_semiring) ;    \
+    GrB_BinaryOp_free (&PageRank_diff) ;        \
+    GrB_Type_free (&PageRank_type) ;            \
+    GrB_UnaryOp_free (&PageRank_div) ;          \
+    GrB_UnaryOp_free (&PageRank_get) ;          \
+    GrB_UnaryOp_free (&PageRank_init) ;         \
 }
 
 // error handler: free output P and all workspace (used by CHECK and OK macros)
@@ -55,13 +60,13 @@
     FREEWORK ;                  \
 }
 
-#include "demos.h"
+#undef GB_PUBLIC
+#define GB_LIBRARY
+#include "graphblas_demos.h"
 
 //------------------------------------------------------------------------------
 // scalar types and operators
 //------------------------------------------------------------------------------
-
-#ifndef PAGERANK_PREDEFINED
 
 // each node has a rank value, and a constant which is 1/outdegree
 typedef struct
@@ -196,8 +201,6 @@ void pagerank_diff
     z->rank = delta * delta ;
 }
 
-#endif
-
 //------------------------------------------------------------------------------
 // comparison function for qsort
 //------------------------------------------------------------------------------
@@ -226,6 +229,7 @@ int pagerank_compar (const void *x, const void *y)
 // dpagerank2: compute the PageRank of all nodes in a graph
 //------------------------------------------------------------------------------
 
+GB_PUBLIC
 GrB_Info dpagerank2         // GrB_SUCCESS or error condition
 (
     PageRank **Phandle,     // output: pointer to array of PageRank structs
@@ -248,11 +252,6 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
     // create the new type, operators, monoid, and semiring
     //--------------------------------------------------------------------------
 
-    #ifndef PAGERANK_PREDEFINED
-
-    // PageRank_* objects are not defined at compile time (my_pagerank.m4 is
-    // not in the User/ directory).  Define them here at run-time:
-
     GrB_Type PageRank_type = NULL ;
     GrB_UnaryOp PageRank_div = NULL, PageRank_get = NULL, PageRank_init = NULL ;
     GrB_BinaryOp PageRank_accum = NULL, PageRank_add = NULL,
@@ -263,20 +262,23 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
     // create the new Page type
     OK (GrB_Type_new (&PageRank_type, sizeof (pagerank_type))) ;
 
+    #define U (GxB_unary_function)
+    #define B (GxB_binary_function)
+
     // create the unary operator to initialize the PageRank_type of each node
-    OK (GrB_UnaryOp_new (&PageRank_init, init_page, PageRank_type, GrB_FP64)) ;
+    OK (GrB_UnaryOp_new (&PageRank_init, U init_page, PageRank_type, GrB_FP64));
 
     // create PageRank_accum
-    OK (GrB_BinaryOp_new (&PageRank_accum, pagerank_accum,
+    OK (GrB_BinaryOp_new (&PageRank_accum, B pagerank_accum,
         PageRank_type, PageRank_type, PageRank_type)) ;
 
     // create PageRank_add operator and monoid
-    OK (GrB_BinaryOp_new (&PageRank_add, pagerank_add,
+    OK (GrB_BinaryOp_new (&PageRank_add, B pagerank_add,
         PageRank_type, PageRank_type, PageRank_type)) ;
     OK (GrB_Monoid_new_UDT (&PageRank_monoid, PageRank_add, &pagerank_zero)) ;
 
     // create PageRank_multiply operator
-    OK (GrB_BinaryOp_new (&PageRank_multiply, pagerank_multiply,
+    OK (GrB_BinaryOp_new (&PageRank_multiply, B pagerank_multiply,
         PageRank_type, PageRank_type, GrB_BOOL)) ;
 
     // create PageRank_semiring
@@ -284,20 +286,15 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
         PageRank_multiply)) ;
 
     // create unary operator that typecasts the PageRank_type to double
-    OK (GrB_UnaryOp_new (&PageRank_get, pagerank_get_rank, GrB_FP64,
+    OK (GrB_UnaryOp_new (&PageRank_get, U pagerank_get_rank, GrB_FP64,
         PageRank_type)) ;
 
     // create unary operator that scales the rank by pagerank_rsum
-    OK (GrB_UnaryOp_new (&PageRank_div, pagerank_div, GrB_FP64, GrB_FP64)) ;
+    OK (GrB_UnaryOp_new (&PageRank_div, U pagerank_div, GrB_FP64, GrB_FP64)) ;
 
     // create PageRank_diff operator
-    OK (GrB_BinaryOp_new (&PageRank_diff, pagerank_diff,
+    OK (GrB_BinaryOp_new (&PageRank_diff, B pagerank_diff,
         PageRank_type, PageRank_type, PageRank_type)) ;
-
-    printf ("dpagerank2: pagerank objects defined at run-time\n") ;
-    #else
-    printf ("dpagerank2: pagerank objects defined at compile-time\n") ;
-    #endif
 
     //--------------------------------------------------------------------------
     // initializations
@@ -310,17 +307,17 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
 
     // dout = sum (A,2) ;       // dout(i) is the out-degree of node i
     OK (GrB_Vector_new (&dout, GrB_FP64, n)) ;
-    OK (GrB_reduce (dout, NULL, NULL, GrB_PLUS_FP64, A, NULL)) ;
+    OK (GrB_Matrix_reduce_BinaryOp (dout, NULL, NULL, GrB_PLUS_FP64, A, NULL)) ;
 
     // all nodes start with rank 1/n
     pagerank_init_rank = 1.0 / ((double) n) ;
 
     // initialize the page rank and inverse degree of each node
     OK (GrB_Vector_new (&r, PageRank_type, n)) ;
-    OK (GrB_apply (r, NULL, NULL, PageRank_init, dout, NULL)) ;
+    OK (GrB_Vector_apply (r, NULL, NULL, PageRank_init, dout, NULL)) ;
 
     // dout vector no longer needed
-    OK (GrB_free (&dout)) ;
+    OK (GrB_Vector_free (&dout)) ;
 
     // to jump to any random node in entire graph:
     pagerank_teleport = (1-PAGERANK_DAMPING) / n ;
@@ -331,8 +328,6 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
     // create rdouble, a double vector of size n
     OK (GrB_Vector_new (&rdouble, GrB_FP64, n)) ;
 
-    // GxB_print (A, GxB_SUMMARY) ;
-
     // Note that dup is needed, since the invdegree is copied by the
     // PageRank_accum.
     OK (GrB_Vector_dup (&rnew, r)) ;
@@ -342,7 +337,7 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
     if (method != GxB_DEFAULT)
     {
         OK (GrB_Descriptor_new (&desc)) ;
-        OK (GxB_set (desc, GxB_AxB_METHOD, method)) ;
+        OK (GxB_Desc_set (desc, GxB_AxB_METHOD, method)) ;
     }
 
     //--------------------------------------------------------------------------
@@ -357,13 +352,14 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
             desc)) ;
 
         // compute pagerank_rdiff = sum ((r - rnew).^2)
-        OK (GrB_eWiseAdd (rdiff, NULL, NULL, PageRank_diff, r, rnew, NULL));
+        OK (GrB_Vector_eWiseAdd_BinaryOp (rdiff, NULL, NULL, PageRank_diff,
+            r, rnew, NULL)) ;
         pagerank_type rsum ;
-        OK (GrB_reduce (&rsum, NULL, PageRank_monoid, rdiff, NULL)) ;
+        OK (GrB_Vector_reduce_UDT (&rsum, NULL, PageRank_monoid, rdiff, NULL)) ;
 
         pagerank_rdiff = rsum.rank ;
 
-        // r = rnew, using a swap, which is faster than GrB_assign or dup
+        // r = rnew, using a swap, which is faster than assign or dup
         GrB_Vector rtemp = r ;
         r = rnew ;
         rnew = rtemp ;
@@ -374,20 +370,21 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
     //--------------------------------------------------------------------------
 
     // rnew (for the safe version) is no longer needed
-    GrB_free (&rnew) ;
+    GrB_Vector_free (&rnew) ;
 
     // rdouble = pagerank_get_rank (r)
-    OK (GrB_apply (rdouble, NULL, NULL, PageRank_get, r, NULL)) ;
+    OK (GrB_Vector_apply (rdouble, NULL, NULL, PageRank_get, r, NULL)) ;
 
     // r no longer needed
-    GrB_free (&r) ;
+    GrB_Vector_free (&r) ;
 
     // pagerank_rsum = sum (rdouble)
-    OK (GrB_reduce (&pagerank_rsum, NULL, GxB_PLUS_FP64_MONOID, rdouble, NULL));
+    OK (GrB_Vector_reduce_FP64 (&pagerank_rsum, NULL, GrB_PLUS_MONOID_FP64,
+        rdouble, NULL)) ;
 
     // could also do this with GrB_vxm, with a 1-by-1 matrix
     // r = r / pagerank_rsum
-    OK (GrB_apply (rdouble, NULL, NULL, PageRank_div, rdouble, NULL)) ;
+    OK (GrB_Vector_apply (rdouble, NULL, NULL, PageRank_div, rdouble, NULL)) ;
 
     //--------------------------------------------------------------------------
     // sort the nodes by pagerank
@@ -400,17 +397,17 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
     // [r,irank] = sort (r, 'descend') ;
 
     // [I,X] = find (r) ;
-    X = malloc (n * sizeof (double)) ;
-    I = malloc (n * sizeof (GrB_Index)) ;
+    X = (double *) malloc (n * sizeof (double)) ;
+    I = (GrB_Index *) malloc (n * sizeof (GrB_Index)) ;
     CHECK (I != NULL && X != NULL, GrB_OUT_OF_MEMORY) ;
     GrB_Index nvals = n ;
-    OK (GrB_Vector_extractTuples (I, X, &nvals, rdouble)) ;
+    OK (GrB_Vector_extractTuples_FP64 (I, X, &nvals, rdouble)) ;
 
     // rdouble no longer needed
-    GrB_free (&rdouble) ;
+    GrB_Vector_free (&rdouble) ;
 
     // P = struct (X,I)
-    P = malloc (n * sizeof (PageRank)) ;
+    P = (PageRank *) malloc (n * sizeof (PageRank)) ;
     CHECK (P != NULL, GrB_OUT_OF_MEMORY) ;
     int64_t k ;
     for (k = 0 ; k < nvals ; k++)

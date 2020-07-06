@@ -8,7 +8,7 @@ function C = GB_spec_Col_assign (C, Mask, accum, A, I, j, descriptor)
 %
 % This function does the same thing as GrB_Col_assign
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 %-------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ if (length (j) ~= 1)
     error ('j must be a scalar') ;
 end
 
-% Convert inputs to dense matrices with explicit patterns and classes,
+% Convert inputs to dense matrices with explicit patterns and types,
 C = GB_spec_matrix (C) ;
 
 % extract the C(:,j) column

@@ -2,7 +2,7 @@
 // GB_subref: C = A(I,J)
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -69,17 +69,18 @@
 //      detected in A.  Since pa = Cx [pc] holds the position of the entry in
 //      A, the entry is a zombie if Ai [pa] has been flipped.
 
-#define GB_FREE_WORK                                                        \
-{                                                                           \
-    GB_FREE_MEMORY (TaskList, max_ntasks+1, sizeof (GB_task_struct)) ;      \
-    GB_FREE_MEMORY (Ap_start, Cnvec, sizeof (int64_t)) ;                    \
-    GB_FREE_MEMORY (Ap_end,   Cnvec, sizeof (int64_t)) ;                    \
-    GB_FREE_MEMORY (Mark,     A->vlen, sizeof (int64_t)) ;                  \
-    GB_FREE_MEMORY (Inext,    nI, sizeof (int64_t)) ;                       \
+#define GB_FREE_WORK        \
+{                           \
+    GB_FREE (TaskList) ;    \
+    GB_FREE (Ap_start) ;    \
+    GB_FREE (Ap_end) ;      \
+    GB_FREE (Mark) ;        \
+    GB_FREE (Inext) ;       \
 }
 
 #include "GB_subref.h"
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
 (
     // output
@@ -102,18 +103,18 @@ GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
     //--------------------------------------------------------------------------
 
     ASSERT (Chandle != NULL) ;
-    ASSERT_OK (GB_check (A, "A for C=A(I,J) subref", GB0)) ;
+    ASSERT_MATRIX_OK (A, "A for C=A(I,J) subref", GB0) ;
 
     //--------------------------------------------------------------------------
     // phase0: find vectors for C=A(I,J), and I,J properties
     //--------------------------------------------------------------------------
 
-    int64_t *restrict Cp = NULL ;
-    int64_t *restrict Ch = NULL ;
-    int64_t *restrict Ap_start = NULL ;
-    int64_t *restrict Ap_end = NULL ;
-    int64_t *restrict Mark = NULL ;
-    int64_t *restrict Inext = NULL ;
+    int64_t *GB_RESTRICT Cp = NULL ;
+    int64_t *GB_RESTRICT Ch = NULL ;
+    int64_t *GB_RESTRICT Ap_start = NULL ;
+    int64_t *GB_RESTRICT Ap_end = NULL ;
+    int64_t *GB_RESTRICT Mark = NULL ;
+    int64_t *GB_RESTRICT Inext = NULL ;
     GB_task_struct *TaskList = NULL ;
     GrB_Matrix C = NULL ;
 
@@ -152,7 +153,7 @@ GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
     if (info != GrB_SUCCESS)
     { 
         // out of memory
-        GB_FREE_MEMORY (Ch, Cnvec, sizeof (int64_t)) ;
+        GB_FREE (Ch) ;
         GB_FREE_WORK ;
         return (info) ;
     }
@@ -174,7 +175,7 @@ GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
     if (info != GrB_SUCCESS)
     { 
         // out of memory
-        GB_FREE_MEMORY (Ch, Cnvec, sizeof (int64_t)) ;
+        GB_FREE (Ch) ;
         GB_FREE_WORK ;
         return (info) ;
     }
@@ -210,14 +211,14 @@ GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
 
     if (must_sort)
     {
-        ASSERT_OK (GB_check (C, "sorted C output for C=A(I,J)", GB0)) ;
+        ASSERT_MATRIX_OK (C, "sorted C output for C=A(I,J)", GB0) ;
     }
     else
     {
         // The matrix may have jumbled indices.  If it will be transposed in
         // GB_accum_mask, but needs sorting, then the sort is skipped since the
         // transpose will handle the sort.
-        ASSERT_OK_OR_JUMBLED (GB_check (C, "C output for C=A(I,J)", GB0)) ;
+        ASSERT_MATRIX_OK_OR_JUMBLED (C, "C output for C=A(I,J)", GB0) ;
     }
     (*Chandle) = C ;
     return (GrB_SUCCESS) ;

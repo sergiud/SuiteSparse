@@ -2,7 +2,7 @@
 // GB_mex_qsort: sort int64's using GB_qsort_1a
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ void mexFunction
     int64_t *I = mxGetData (pargin [0]) ;
     int64_t n = (uint64_t) mxGetNumberOfElements (pargin [0]) ;
 
-    pargout [0] = mxCreateNumericMatrix (1, n, mxINT64_CLASS, mxREAL) ;
+    pargout [0] = GB_mx_create_full (1, n, GrB_INT64) ;
     int64_t *J = mxGetData (pargout [0]) ;
     memcpy (J, I, n * sizeof (int64_t)) ;
 

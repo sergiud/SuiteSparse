@@ -10,10 +10,10 @@ function C = GB_spec_transpose (C, Mask, accum, A, descriptor)
 %
 % The input matrices A, Mask, and C can be plain MATLAB matrices, sparse or
 % dense, where the class of the matrix is the same as the GraphBLAS type.
-% MATLAB sparse matrices can only handle 'logical' or 'double' classes,
-% however.  To model this, the input matrices can also be structs.  A.matrix is
-% the matrix itself, and A.class is a string that the matrix is supposed to
-% represent ('logical', 'int8', ... 'single', 'double').
+% MATLAB sparse matrices can only handle 'logical', 'double', or 'double
+% compex' types, however.  To model this, the input matrices can also be
+% structs.  A.matrix is the matrix itself, and A.class is a string that the
+% matrix is supposed to represent ('logical', 'int8', ... 'single', 'double').
 %
 % accum can be a string with the name a valid binary operator (see
 % GB_spec_operator.m), or it can be a struct where accum.name is the name of
@@ -26,7 +26,11 @@ function C = GB_spec_transpose (C, Mask, accum, A, descriptor)
 % descriptor is a optional struct.  Defaults are used if empty or not present.
 %       descriptor.outp = 'replace' (clear C first) or 'default' (use C as-is)
 %       descriptor.inp0 = 'tran' (do C=A) or 'default' (do C=A')
-%       descriptor.mask = 'scmp' (use ~Mask) or 'default' (use Mask)
+%       descriptor.mask =
+%               'default': use Mask
+%               'complement': use ~Mask
+%               'structural': use spones(Mask)
+%               'structural complement': use ~spones(Mask)
 %
 % GB_spec_transpose implements the entire specification of GrB_transpose, with
 % a few exceptions.
@@ -43,7 +47,7 @@ function C = GB_spec_transpose (C, Mask, accum, A, descriptor)
 % typecasting rules for integers.
 %
 % (4) Finally, this method assumes that the domains of x, y, and z for the
-% operator z=op(x,y) are all the same: opclass.  This is true for all built-in
+% operator z=op(x,y) are all the same: optype.  This is true for all built-in
 % operators, but in GraphBLAS users can define their own operators with x, y
 % and z being all different domains.  That feature is not modeled by this
 % MATLAB function.
@@ -53,7 +57,7 @@ function C = GB_spec_transpose (C, Mask, accum, A, descriptor)
 % Use an empty value ([ ] or '') to obtain the default value for optional
 % parameters.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 %-------------------------------------------------------------------------------
@@ -66,8 +70,9 @@ end
 
 C = GB_spec_matrix (C) ;
 A = GB_spec_matrix (A) ;
-Mask = GB_spec_getmask (Mask) ;
-[C_replace Mask_comp Atrans Btrans] = GB_spec_descriptor (descriptor) ;
+[C_replace Mask_comp Atrans Btrans Mask_struct] = ...
+    GB_spec_descriptor (descriptor) ;
+Mask = GB_spec_getmask (Mask, Mask_struct) ;
 
 %-------------------------------------------------------------------------------
 % do the work via a clean MATLAB interpretation of the entire GraphBLAS spec
@@ -75,7 +80,7 @@ Mask = GB_spec_getmask (Mask) ;
 
 % apply the descriptor to A
 if (Atrans)
-    A.matrix = A.matrix' ;
+    A.matrix = A.matrix.' ;
     A.pattern = A.pattern' ;
 end
 

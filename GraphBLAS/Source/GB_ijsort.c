@@ -2,7 +2,7 @@
 // GB_ijsort:  sort an index array I and remove duplicates
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -19,22 +19,22 @@
 #include "GB_ij.h"
 #include "GB_sort.h"
 
-#define GB_FREE_WORK                                        \
-{                                                           \
-    GB_FREE_MEMORY (Count, ntasks+1, sizeof (int64_t)) ;    \
-    GB_FREE_MEMORY (W0,  ni, sizeof (GrB_Index)) ;          \
-    GB_FREE_MEMORY (W1,  ni, sizeof (GrB_Index)) ;          \
-    GB_FREE_MEMORY (I1,  ni, sizeof (GrB_Index)) ;          \
-    GB_FREE_MEMORY (I1k, ni, sizeof (GrB_Index)) ;          \
+#define GB_FREE_WORK    \
+{                       \
+    GB_FREE (Count) ;   \
+    GB_FREE (W0) ;      \
+    GB_FREE (W1) ;      \
+    GB_FREE (I1) ;      \
+    GB_FREE (I1k) ;     \
 }
 
 GrB_Info GB_ijsort
 (
-    const GrB_Index *restrict I, // size ni, where ni > 1 always holds
-    int64_t *restrict p_ni,      // : size of I, output: # of indices in I2
-    GrB_Index *restrict *p_I2,   // size ni2, where I2 [0..ni2-1]
+    const GrB_Index *GB_RESTRICT I, // size ni, where ni > 1 always holds
+    int64_t *GB_RESTRICT p_ni,      // : size of I, output: # of indices in I2
+    GrB_Index *GB_RESTRICT *p_I2,   // size ni2, where I2 [0..ni2-1]
                         // contains the sorted indices with duplicates removed.
-    GrB_Index *restrict *p_I2k,  // output array of size ni2
+    GrB_Index *GB_RESTRICT *p_I2k,  // output array of size ni2
     GB_Context Context
 )
 {
@@ -52,15 +52,15 @@ GrB_Info GB_ijsort
     // get inputs
     //--------------------------------------------------------------------------
 
-    GrB_Index *restrict I1  = NULL ;
-    GrB_Index *restrict I1k = NULL ;
-    GrB_Index *restrict I2  = NULL ;
-    GrB_Index *restrict I2k = NULL ;
-    int64_t *restrict W0  = NULL ;
-    int64_t *restrict W1 = NULL ;
+    GrB_Index *GB_RESTRICT I1  = NULL ;
+    GrB_Index *GB_RESTRICT I1k = NULL ;
+    GrB_Index *GB_RESTRICT I2  = NULL ;
+    GrB_Index *GB_RESTRICT I2k = NULL ;
+    int64_t *GB_RESTRICT W0 = NULL ;
+    int64_t *GB_RESTRICT W1 = NULL ;
     int64_t ni = *p_ni ;
     ASSERT (ni > 1) ;
-    int64_t *restrict Count = NULL ;        // size ntasks+1
+    int64_t *GB_RESTRICT Count = NULL ;        // size ntasks+1
     int ntasks = 0 ;
 
     //--------------------------------------------------------------------------
@@ -74,8 +74,8 @@ GrB_Info GB_ijsort
     // allocate workspace
     //--------------------------------------------------------------------------
 
-    GB_MALLOC_MEMORY (I1,  ni, sizeof (GrB_Index)) ;
-    GB_MALLOC_MEMORY (I1k, ni, sizeof (GrB_Index)) ;
+    I1  = GB_MALLOC (ni, GrB_Index) ;
+    I1k = GB_MALLOC (ni, GrB_Index) ;
     if (I1 == NULL || I1k == NULL)
     { 
         // out of memory
@@ -89,8 +89,9 @@ GrB_Info GB_ijsort
 
     GB_memcpy (I1, I, ni * sizeof (GrB_Index), nthreads) ;
 
+    int64_t k ;
     #pragma omp parallel for num_threads(nthreads) schedule(static)
-    for (int64_t k = 0 ; k < ni ; k++)
+    for (k = 0 ; k < ni ; k++)
     { 
         // the key is selected so that the last duplicate entry comes first in
         // the sorted result.  It must be adjusted later, so that the kth entry
@@ -102,37 +103,25 @@ GrB_Info GB_ijsort
     // sort [I1 I1k]
     //--------------------------------------------------------------------------
 
-    if (nthreads == 1)
+    // determine # of threads to use in the parallel mergesort
+    int nth = GB_MSORT_NTHREADS (nthreads) ;
+
+    if (nth > 1)
     { 
-
-        //----------------------------------------------------------------------
-        // sequential quicksort
-        //----------------------------------------------------------------------
-
-        GB_qsort_2 ((int64_t *) I1, (int64_t *) I1k, ni) ;
-
-    }
-    else
-    {
-
-        //----------------------------------------------------------------------
-        // parallel mergesort
-        //----------------------------------------------------------------------
-
-        GB_MALLOC_MEMORY (W0, ni, sizeof (int64_t)) ;
-        GB_MALLOC_MEMORY (W1, ni, sizeof (int64_t)) ;
+        W0 = GB_MALLOC (ni, int64_t) ;
+        W1 = GB_MALLOC (ni, int64_t) ;
         if (W0 == NULL || W1 == NULL)
         { 
             // out of memory
             GB_FREE_WORK ;
             return (GB_OUT_OF_MEMORY) ;
         }
-
-        GB_msort_2 ((int64_t *) I1, (int64_t *) I1k, W0, W1, ni, nthreads) ;
-
-        GB_FREE_MEMORY (W0, ni, sizeof (int64_t)) ;
-        GB_FREE_MEMORY (W1, ni, sizeof (int64_t)) ;
     }
+
+    GB_msort_2 ((int64_t *) I1, (int64_t *) I1k, W0, W1, ni, nth) ;
+
+    GB_FREE (W0) ;
+    GB_FREE (W1) ;
 
     //--------------------------------------------------------------------------
     // determine number of tasks to create
@@ -146,9 +135,9 @@ GrB_Info GB_ijsort
     // allocate workspace
     //--------------------------------------------------------------------------
 
-    GB_MALLOC_MEMORY (Count, ntasks+1, sizeof (int64_t)) ;
+    Count = GB_MALLOC (ntasks+1, int64_t) ;
     if (Count == NULL)
-    {
+    { 
         // out of memory
         GB_FREE_WORK ;
         return (GB_OUT_OF_MEMORY) ;
@@ -158,8 +147,9 @@ GrB_Info GB_ijsort
     // count unique entries in I1
     //--------------------------------------------------------------------------
 
+    int tid ;
     #pragma omp parallel for num_threads(nthreads) schedule(dynamic,1)
-    for (int tid = 0 ; tid < ntasks ; tid++)
+    for (tid = 0 ; tid < ntasks ; tid++)
     {
         int64_t kfirst, klast, my_count = (tid == 0) ? 1 : 0 ;
         GB_PARTITION (kfirst, klast, ni, tid, ntasks) ;
@@ -180,14 +170,14 @@ GrB_Info GB_ijsort
     // allocate the result I2
     //--------------------------------------------------------------------------
 
-    GB_MALLOC_MEMORY (I2 , ni2, sizeof (GrB_Index)) ;
-    GB_MALLOC_MEMORY (I2k, ni2, sizeof (GrB_Index)) ;
+    I2  = GB_MALLOC (ni2, GrB_Index) ;
+    I2k = GB_MALLOC (ni2, GrB_Index) ;
     if (I2 == NULL || I2k == NULL)
     { 
         // out of memory
         GB_FREE_WORK ;
-        GB_FREE_MEMORY (I2 , ni2, sizeof (GrB_Index)) ;
-        GB_FREE_MEMORY (I2k, ni2, sizeof (GrB_Index)) ;
+        GB_FREE (I2) ;
+        GB_FREE (I2k) ;
         return (GB_OUT_OF_MEMORY) ;
     }
 
@@ -196,7 +186,7 @@ GrB_Info GB_ijsort
     //--------------------------------------------------------------------------
 
     #pragma omp parallel for num_threads(nthreads) schedule(dynamic,1)
-    for (int tid = 0 ; tid < ntasks ; tid++)
+    for (tid = 0 ; tid < ntasks ; tid++)
     {
         int64_t kfirst, klast, k2 = Count [tid] ;
         GB_PARTITION (kfirst, klast, ni, tid, ntasks) ;

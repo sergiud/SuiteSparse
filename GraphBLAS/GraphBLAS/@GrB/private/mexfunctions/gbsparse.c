@@ -2,13 +2,17 @@
 // gbsparse: convert a GraphBLAS matrix struct into a MATLAB sparse matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // The input may be either a GraphBLAS matrix struct or a standard MATLAB
 // sparse matrix.  The output is a standard MATLAB sparse matrix.
+
+// Usage:
+
+// A = gbsparse (X, type)
 
 #include "gb_matlab.h"
 
@@ -40,9 +44,10 @@ void mexFunction
     //--------------------------------------------------------------------------
 
     GrB_Type type = gb_mxstring_to_type (pargin [1]) ;
+    GrB_Matrix T = NULL ;
     if (type != xtype)
     { 
-        GrB_Matrix T = gb_typecast (type, GxB_BY_COL, X) ;
+        T = gb_typecast (type, GxB_BY_COL, X) ;
         OK (GrB_Matrix_free (&X)) ;
         X = T ;
     }

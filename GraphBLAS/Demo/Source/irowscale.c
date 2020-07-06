@@ -2,6 +2,11 @@
 // irowscale: scale the rows of an adjacency matrix by out-degree
 //------------------------------------------------------------------------------
 
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
+// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
+//------------------------------------------------------------------------------
+
 // on input, A is a square unsymmetric binary matrix of size n-by-n, of any
 // built-in type.  On output, C is a rowscaled version of A, of type
 // GrB_UINT64, with C = D*A + I.  The diagonal matrix D has diagonal entries
@@ -30,6 +35,8 @@
     C = floor ((2^30) * C) ;        % scale the result to integer
 */
 
+#include "GraphBLAS.h"
+
 //------------------------------------------------------------------------------
 // helper macros
 //------------------------------------------------------------------------------
@@ -37,8 +44,8 @@
 // free all workspace
 #define FREEWORK                \
 {                               \
-    GrB_free (&dout) ;          \
-    GrB_free (&D) ;             \
+    GrB_Vector_free (&dout) ;   \
+    GrB_Matrix_free (&D) ;      \
     if (I != NULL) free (I) ;   \
     if (X != NULL) free (X) ;   \
 }
@@ -46,16 +53,19 @@
 // error handler: free workspace and the output matrix C
 #define FREE_ALL                \
 {                               \
-    GrB_free (&C) ;             \
+    GrB_Matrix_free (&C) ;      \
     FREEWORK ;                  \
 }
 
-#include "demos.h"
+#undef GB_PUBLIC
+#define GB_LIBRARY
+#include "graphblas_demos.h"
 
 //------------------------------------------------------------------------------
 // irowscale: C = D*A + I*0 where D(i,i) = ZSCALE/sum(A(i,:)
 //------------------------------------------------------------------------------
 
+GB_PUBLIC
 GrB_Info irowscale          // GrB_SUCCESS or error condition
 (
     GrB_Matrix *Chandle,    // output matrix C = rowscale (A)
@@ -82,7 +92,8 @@ GrB_Info irowscale          // GrB_SUCCESS or error condition
     //--------------------------------------------------------------------------
 
     OK (GrB_Vector_new (&dout, GrB_UINT64, n)) ;
-    OK (GrB_reduce (dout, NULL, NULL, GrB_PLUS_UINT64, A, NULL)) ;
+    OK (GrB_Matrix_reduce_BinaryOp (dout, NULL, NULL, GrB_PLUS_UINT64,
+        A, NULL)) ;
 
     //--------------------------------------------------------------------------
     // construct scaling matrix D
@@ -92,11 +103,11 @@ GrB_Info irowscale          // GrB_SUCCESS or error condition
     // if row i of A has no entries.
 
     // [I,~,X] = find (dout) ;
-    I = malloc ((n+1) * sizeof (GrB_Index)) ;
-    X = malloc ((n+1) * sizeof (uint64_t)) ;
+    I = (GrB_Index *) malloc ((n+1) * sizeof (GrB_Index)) ;
+    X = (uint64_t *) malloc ((n+1) * sizeof (uint64_t)) ;
     CHECK (I != NULL && X != NULL, GrB_OUT_OF_MEMORY) ;
     GrB_Index nvals = n ;
-    OK (GrB_Vector_extractTuples (I, X, &nvals, dout)) ;
+    OK (GrB_Vector_extractTuples_UINT64 (I, X, &nvals, dout)) ;
 
     // I and X exclude empty columns of A.  This condition is always true.
     CHECK (nvals <= n, GrB_PANIC) ;
@@ -111,7 +122,7 @@ GrB_Info irowscale          // GrB_SUCCESS or error condition
         if (y == 0) y = 1 ;
         X [i] = y ;
     }
-    OK (GrB_Matrix_build (D, I, I, X, nvals, GrB_PLUS_UINT64)) ;
+    OK (GrB_Matrix_build_UINT64 (D, I, I, X, nvals, GrB_PLUS_UINT64)) ;
 
     //--------------------------------------------------------------------------
     // C = diagonal matrix with explicit zeros on diagonal
@@ -126,7 +137,7 @@ GrB_Info irowscale          // GrB_SUCCESS or error condition
         X [i] = 0 ;
     }
     OK (GrB_Matrix_new (&C, GrB_UINT64, n, n)) ;
-    OK (GrB_Matrix_build (C, I, I, X, n, GrB_PLUS_UINT64)) ;
+    OK (GrB_Matrix_build_UINT64 (C, I, I, X, n, GrB_PLUS_UINT64)) ;
 
     //--------------------------------------------------------------------------
     // C += D*A

@@ -2,7 +2,7 @@
 // GB_mex_isequal: returns true if A and B are equal
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -52,15 +52,10 @@ void mexFunction
         mexErrMsgTxt ("failed") ;
     }
 
-    GrB_BinaryOp op = NULL ;
-    if (mxIsComplex (pargin [0]))
-    {
-        op = Complex_eq ;
-    }
-
-    // C = all (A == B) using the op
+    // C = all (A == B) ; if type is Complex and Complex != GxB_FC64,
+    // use Complex_eq
     bool result ;
-    METHOD (isequal (&result, A, B, op)) ;
+    METHOD (isequal (&result, A, B, Complex_eq)) ;
 
     // return C to MATLAB as a plain sparse matrix
     pargout [0] = mxCreateDoubleScalar ((double) result) ;

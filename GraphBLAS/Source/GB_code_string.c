@@ -2,7 +2,7 @@
 // GB_code_string: convert a type code into a string
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -11,6 +11,7 @@
 
 #include "GB.h"
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 char *GB_code_string            // return a static string for a type name
 (
     const GB_Type_code code     // code to convert to string
@@ -30,7 +31,8 @@ char *GB_code_string            // return a static string for a type name
         case GB_UINT64_code : return ("uint64_t"    ) ;
         case GB_FP32_code   : return ("float"       ) ;
         case GB_FP64_code   : return ("double"      ) ;
-        case GB_UCT_code    :
+        case GB_FC32_code   : return ("float complex" ) ;
+        case GB_FC64_code   : return ("double complex") ;
         case GB_UDT_code    : return ("user-defined") ;
         default             : return ("unknown!"    ) ;
     }

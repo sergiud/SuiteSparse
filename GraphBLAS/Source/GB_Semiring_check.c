@@ -2,22 +2,19 @@
 // GB_Semiring_check: check and print a semiring
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
-// for additional diagnostics, use:
-// #define GB_DEVELOPER 1
+#include "GB.h"
 
-#include "GB_printf.h"
-
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_Semiring_check          // check a GraphBLAS semiring
 (
     const GrB_Semiring semiring,    // GraphBLAS semiring to print and check
     const char *name,               // name of the semiring, optional
-    int pr,                         // 0: print nothing, 1: print header and
-                                    // errors, 2: print brief, 3: print all
+    int pr,                         // print level
     FILE *f,                        // file for output
     GB_Context Context
 )
@@ -41,25 +38,7 @@ GrB_Info GB_Semiring_check          // check a GraphBLAS semiring
     //--------------------------------------------------------------------------
 
     GB_CHECK_MAGIC (semiring, "Semiring") ;
-
-    switch (semiring->object_kind)
-    {
-        case GB_BUILTIN:
-            GBPR0 ("(built-in)") ;
-            break ;
-
-        case GB_USER_COMPILED:
-            GBPR0 ("(user-defined at compile-time)") ;
-            break ;
-
-        case GB_USER_RUNTIME:
-            GBPR0 ("(user-defined at run-time)") ;
-            break ;
-
-        default:
-            return (GB_ERROR (GrB_INVALID_OBJECT, (GB_LOG,
-                "Semiring->object_kind is invalid: [%s]", GB_NAME))) ;
-    }
+    GBPR0 (semiring->builtin ? "(built-in)" : "(user-defined)") ;
 
     GrB_Info info ;
     info = GB_Monoid_check (semiring->add, "semiring->add", pr, f, Context) ;

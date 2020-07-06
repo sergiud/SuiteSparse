@@ -2,7 +2,7 @@
 // GB_to_hyper: convert a matrix to hyperspasre
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ GrB_Info GB_to_hyper        // convert a matrix to hypersparse
     // check inputs
     //--------------------------------------------------------------------------
 
-    ASSERT_OK_OR_JUMBLED (GB_check (A, "A converting to hypersparse", GB0)) ;
+    ASSERT_MATRIX_OK_OR_JUMBLED (A, "A converting to hypersparse", GB0) ;
     int64_t anz = GB_NNZ (A) ;
     ASSERT (GB_ZOMBIES_OK (A)) ;
 
@@ -62,20 +62,20 @@ GrB_Info GB_to_hyper        // convert a matrix to hypersparse
         ASSERT (A->h == NULL) ;
         ASSERT (A->nvec == A->plen && A->plen == n) ;
 
-        const int64_t *restrict Ap_old = A->p ;
+        const int64_t *GB_RESTRICT Ap_old = A->p ;
         bool Ap_old_shallow = A->p_shallow ;
 
-        int64_t *restrict Count ;
-        GB_MALLOC_MEMORY (Count, ntasks+1, sizeof (int64_t)) ;
+        int64_t *GB_RESTRICT Count = GB_MALLOC (ntasks+1, int64_t) ;
         if (Count == NULL)
-        {
+        { 
             // out of memory
             GB_PHIX_FREE (A) ;
             return (GB_OUT_OF_MEMORY) ;
         }
 
+        int tid ;
         #pragma omp parallel for num_threads(nthreads) schedule(dynamic,1)
-        for (int tid = 0 ; tid < ntasks ; tid++)
+        for (tid = 0 ; tid < ntasks ; tid++)
         {
             int64_t jstart, jend, my_nvec_nonempty = 0 ; ;
             GB_PARTITION (jstart, jend, n, tid, ntasks) ;
@@ -98,16 +98,14 @@ GrB_Info GB_to_hyper        // convert a matrix to hypersparse
         // allocate the new A->p and A->h
         //----------------------------------------------------------------------
 
-        int64_t *restrict Ap_new ;
-        int64_t *restrict Ah_new ;
-        GB_MALLOC_MEMORY (Ap_new, nvec_nonempty+1, sizeof (int64_t)) ;
-        GB_MALLOC_MEMORY (Ah_new, nvec_nonempty,   sizeof (int64_t)) ;
+        int64_t *GB_RESTRICT Ap_new = GB_MALLOC (nvec_nonempty+1, int64_t) ;
+        int64_t *GB_RESTRICT Ah_new = GB_MALLOC (nvec_nonempty  , int64_t) ;
         if (Ap_new == NULL || Ah_new == NULL)
         { 
             // out of memory
-            GB_FREE_MEMORY (Count, ntasks+1, sizeof (int64_t)) ;
-            GB_FREE_MEMORY (Ap_new, nvec_nonempty+1, sizeof (int64_t)) ;
-            GB_FREE_MEMORY (Ah_new, nvec_nonempty,   sizeof (int64_t)) ;
+            GB_FREE (Count) ;
+            GB_FREE (Ap_new) ;
+            GB_FREE (Ah_new) ;
             GB_PHIX_FREE (A) ;
             return (GB_OUT_OF_MEMORY) ;
         }
@@ -128,7 +126,7 @@ GrB_Info GB_to_hyper        // convert a matrix to hypersparse
         //----------------------------------------------------------------------
 
         #pragma omp parallel for num_threads(nthreads) schedule(dynamic,1)
-        for (int tid = 0 ; tid < ntasks ; tid++)
+        for (tid = 0 ; tid < ntasks ; tid++)
         {
             int64_t jstart, jend, k = Count [tid] ;
             GB_PARTITION (jstart, jend, n, tid, ntasks) ;
@@ -153,10 +151,10 @@ GrB_Info GB_to_hyper        // convert a matrix to hypersparse
         // free workspace, and free the old A->p unless it's shallow
         //----------------------------------------------------------------------
 
-        GB_FREE_MEMORY (Count, ntasks+1, sizeof (int64_t)) ;
+        GB_FREE (Count) ;
         if (!Ap_old_shallow)
         { 
-            GB_FREE_MEMORY (Ap_old, n+1, sizeof (int64_t)) ;
+            GB_FREE (Ap_old) ;
         }
     }
 
@@ -165,7 +163,7 @@ GrB_Info GB_to_hyper        // convert a matrix to hypersparse
     //--------------------------------------------------------------------------
 
     ASSERT (anz == GB_NNZ (A)) ;
-    ASSERT_OK_OR_JUMBLED (GB_check (A, "A converted to hypersparse", GB0)) ;
+    ASSERT_MATRIX_OK_OR_JUMBLED (A, "A converted to hypersparse", GB0) ;
     ASSERT (A->is_hyper) ;
     return (GrB_SUCCESS) ;
 }

@@ -2,13 +2,26 @@
 // gbnew: create a GraphBLAS matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
 
 // A may be a MATLAB sparse matrix, or a MATLAB struct containing a GraphBLAS
 // matrix.  C is returned as a MATLAB struct containing a GraphBLAS matrix.
+
+// Usage:
+
+// C = gbnew (A)
+// C = gbnew (A, type)
+// C = gbnew (A, format)
+// C = gbnew (m, n)
+// C = gbnew (m, n, format)
+// C = gbnew (m, n, type)
+// C = gbnew (A, type, format)
+// C = gbnew (A, format, type)
+// C = gbnew (m, n, type, format)
+// C = gbnew (m, n, format, type)
 
 #include "gb_matlab.h"
 
@@ -84,9 +97,9 @@ void mexFunction
                     // get a shallow copy and then typecast it to type.
                     // use the same format as A
                     GrB_Matrix A = gb_get_shallow (pargin [0]) ;
-                    OK (GxB_get (A, GxB_FORMAT, &fmt)) ;
+                    OK (GxB_Matrix_Option_get (A, GxB_FORMAT, &fmt)) ;
                     C = gb_typecast (type, fmt, A) ;
-                    OK (GrB_free (&A)) ;
+                    OK (GrB_Matrix_free (&A)) ;
                 }
 
             }
@@ -99,7 +112,7 @@ void mexFunction
 
                 // get a deep copy of A and convert it to the requested format
                 C = gb_get_deep (pargin [0]) ;
-                OK (GxB_set (C, GxB_FORMAT, fmt)) ;
+                OK (GxB_Matrix_Option_set (C, GxB_FORMAT, fmt)) ;
 
             }
             else
@@ -123,7 +136,8 @@ void mexFunction
 
             // set to BY_COL if column vector, BY_ROW if row vector,
             // use global default format otherwise
-            OK (GxB_set (C, GxB_FORMAT, gb_default_format (nrows, ncols))) ;
+            OK (GxB_Matrix_Option_set (C, GxB_FORMAT,
+                gb_default_format (nrows, ncols))) ;
 
         }
         else
@@ -165,14 +179,15 @@ void mexFunction
 
                 // set to BY_COL if column vector, BY_ROW if row vector,
                 // use global default format otherwise
-                OK (GxB_set (C, GxB_FORMAT, gb_default_format (nrows, ncols))) ;
+                OK (GxB_Matrix_Option_set (C, GxB_FORMAT,
+                    gb_default_format (nrows, ncols))) ;
 
             }
             else if (fmt != GxB_NO_FORMAT)
             { 
                 // create an m-by-n double matrix of the desired format
                 OK (GrB_Matrix_new (&C, GrB_FP64, nrows, ncols)) ;
-                OK (GxB_set (C, GxB_FORMAT, fmt)) ;
+                OK (GxB_Matrix_Option_set (C, GxB_FORMAT, fmt)) ;
             }
             else
             { 
@@ -210,14 +225,14 @@ void mexFunction
             if (gb_mxarray_is_empty (pargin [0]))
             { 
                 OK (GrB_Matrix_new (&C, type, 0, 0)) ;
-                OK (GxB_set (C, GxB_FORMAT, fmt)) ;
+                OK (GxB_Matrix_Option_set (C, GxB_FORMAT, fmt)) ;
             }
             else
             { 
                 // get a shallow copy, typecast it, and set the format
                 GrB_Matrix A = gb_get_shallow (pargin [0]) ;
                 C = gb_typecast (type, fmt, A) ;
-                OK (GrB_free (&A)) ;
+                OK (GrB_Matrix_free (&A)) ;
             }
         }
         else
@@ -264,7 +279,7 @@ void mexFunction
             }
 
             OK (GrB_Matrix_new (&C, type, nrows, ncols)) ;
-            OK (GxB_set (C, GxB_FORMAT, fmt)) ;
+            OK (GxB_Matrix_Option_set (C, GxB_FORMAT, fmt)) ;
 
         }
         else

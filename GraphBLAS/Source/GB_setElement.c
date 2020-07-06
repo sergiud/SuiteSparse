@@ -2,7 +2,7 @@
 // GB_setElement: C(row,col) = scalar
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -14,8 +14,8 @@
 // If C(row,col) is already present in the matrix, its value is overwritten
 // with the scalar.  Otherwise, if the mode determined by GrB_init is
 // non-blocking, the tuple (i,j,scalar) is appended to a list of pending tuples
-// to C.  When calling GrB_wait, these pending tuples are assembled.  They are
-// also assembled if the mode is blocking.
+// to C.  When calling GrB_Matrix_wait, these pending tuples are assembled.
+// They are also assembled if the mode is blocking.
 
 // GrB_setElement is the same as GrB_*assign with an implied SECOND accum
 // operator whose ztype, xtype, and ytype are the same as C, with I=i, J=1, a
@@ -23,14 +23,16 @@
 // C_replace effectively false (its value is ignored), and A transpose
 // effectively false (since transposing a scalar has no effect).
 
-// Compare this function with GB_extractElement.
+// Compare this function with GrB_*_extractElement_*
 
 #include "GB_Pending.h"
+
+#define GB_FREE_ALL ;
 
 GrB_Info GB_setElement              // set a single entry, C(row,col) = scalar
 (
     GrB_Matrix C,                   // matrix to modify
-    const void *scalar,             // scalar to set
+    void *scalar,                   // scalar to set
     const GrB_Index row,            // row index
     const GrB_Index col,            // column index
     const GB_Type_code scalar_code, // type of the scalar
@@ -42,19 +44,20 @@ GrB_Info GB_setElement              // set a single entry, C(row,col) = scalar
     // check inputs
     //--------------------------------------------------------------------------
 
+    GrB_Info info ;
     ASSERT (C != NULL) ;
     GB_RETURN_IF_NULL (scalar) ;
 
     if (row >= GB_NROWS (C))
     { 
         return (GB_ERROR (GrB_INVALID_INDEX, (GB_LOG,
-            "Row index "GBu" out of range; must be < "GBd,
+            "Row index " GBu " out of range; must be < " GBd,
             row, GB_NROWS (C)))) ;
     }
     if (col >= GB_NCOLS (C))
     { 
         return (GB_ERROR (GrB_INVALID_INDEX, (GB_LOG,
-            "Column index "GBu" out of range; must be < "GBd,
+            "Column index " GBu " out of range; must be < " GBd,
             col, GB_NCOLS (C)))) ;
     }
 
@@ -67,13 +70,20 @@ GrB_Info GB_setElement              // set a single entry, C(row,col) = scalar
     if (!GB_code_compatible (scalar_code, ccode))
     { 
         return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
-            "input scalar of type [%s]\n"
+            "Input scalar of type [%s]\n"
             "cannot be typecast to entry of type [%s]",
             GB_code_string (scalar_code), ctype->name))) ;
     }
 
     // pending tuples and zombies are expected
     ASSERT (GB_PENDING_OK (C)) ; ASSERT (GB_ZOMBIES_OK (C)) ;
+
+    #if GB_BURBLE
+    bool burble = GB_Global_burble_get ( ) ;
+    double t_burble = 0 ;
+    // do not burble when waiting on scalars or empty matrices
+    burble = burble && ((C->vlen > 1) || (C->vdim > 1)) ;
+    #endif
 
     //--------------------------------------------------------------------------
     // handle the CSR/CSC format
@@ -114,7 +124,8 @@ GrB_Info GB_setElement              // set a single entry, C(row,col) = scalar
 
         // Time taken for this step is at most O(log(nnz(C(:,j))).
         const int64_t *Ci = C->i ;
-        GB_BINARY_ZOMBIE (i, Ci, pleft, pright, found, C->nzombies, is_zombie) ;
+        GB_BINARY_SEARCH_ZOMBIE (i, Ci, pleft, pright, found, C->nzombies,
+            is_zombie) ;
     }
 
     //--------------------------------------------------------------------------
@@ -133,35 +144,21 @@ GrB_Info GB_setElement              // set a single entry, C(row,col) = scalar
 
         // found C (i,j), assign its value
         size_t csize = ctype->size ;
-        GB_void *Cx = C->x ;
-        if (scalar_code >= GB_UCT_code || scalar_code == ccode)
-        { 
-            // copy the values without typecasting
-            memcpy (Cx +(pleft*csize), scalar, csize) ;
-        }
-        else
-        { 
-            // typecast scalar into C
-            GB_cast_array (Cx +(pleft*csize), ccode, scalar, scalar_code, 1,
-                Context) ;
-        }
+
+        // typecast or copy the scalar into C
+        GB_cast_array (((GB_void *) C->x) +(pleft*csize), ccode,
+            (GB_void *) scalar, scalar_code, csize, 1, 1) ;
 
         if (is_zombie)
         {
             // bring the zombie back to life
-            ASSERT (C->enqueued) ;
             C->i [pleft] = i ;
             C->nzombies-- ;
-            if (C->nzombies == 0 && C->Pending == NULL)
-            { 
-                // remove from queue if no zombies or pending tuples
-                // FUTURE:: may thrash; see GrB_wait.
-                GB_CRITICAL (GB_queue_remove (C)) ;
-            }
+            if (C->nzombies == 0 && C->Pending == NULL) { if (!GB_queue_remove (C)) GB_PANIC ; } // TODO in 4.0: delete
         }
 
         // the check is fine but just costly even when debugging
-        // ASSERT_OK (GB_check (C, "did C for setElement (found)", GB0)) ;
+        // ASSERT_MATRIX_OK (C, "did C for setElement (found)", GB0) ;
         return (GrB_SUCCESS) ;
     }
     else
@@ -214,8 +211,26 @@ GrB_Info GB_setElement              // set a single entry, C(row,col) = scalar
             // new tuple requires both conditions to hold.  All prior tuples
             // must be assembled before this new one can be added.
 
+            #if GB_BURBLE
+            if (burble)
+            {
+                GBBURBLE (" [ *_setElement ") ;
+                #if defined ( _OPENMP )
+                t_burble = GB_OPENMP_GET_WTIME ;
+                #endif
+            }
+            #endif
+
             // delete any lingering zombies and assemble the pending tuples
-            GB_WAIT (C) ;
+            GB_MATRIX_WAIT (C) ;
+
+            #if GB_BURBLE
+            if (burble)
+            {
+                GB_BURBLE_END ;
+            }
+            #endif
+
             ASSERT (C->Pending == NULL) ;
 
             // repeat the search since the C(i,j) entry may have been in
@@ -235,20 +250,16 @@ GrB_Info GB_setElement              // set a single entry, C(row,col) = scalar
         // becomes the type of this scalar, and the pending operator becomes
         // NULL, which is the implicit SECOND_ctype operator.
 
-        if (!GB_Pending_add (&(C->Pending), scalar, stype, NULL, i, j,
-            C->vdim > 1))
+        if (!GB_Pending_add (&(C->Pending), (GB_void *)scalar,
+            stype, NULL, i, j, C->vdim > 1))
         { 
             // out of memory
             GB_PHIX_FREE (C) ;
             return (GB_OUT_OF_MEMORY) ;
         }
 
-        // insert C in the queue if it isn't already queued
         ASSERT (GB_PENDING (C)) ;
-        if (!(C->enqueued))
-        { 
-            GB_CRITICAL (GB_queue_insert (C)) ;
-        }
+        if (!(C->enqueued)) { if (!GB_queue_insert (C)) GB_PANIC ; } // TODO in 4.0: delete
 
         // if this was the first tuple, then the pending operator and
         // pending type have been defined
@@ -257,8 +268,30 @@ GrB_Info GB_setElement              // set a single entry, C(row,col) = scalar
         ASSERT (C->Pending->size == stype->size) ;
 
         // this assert is fine, just costly even when debugging
-        // ASSERT_OK (GB_check (C, "did C for setElement (not found)", GB0)) ;
-        return (GB_block (C, Context)) ;
+        // ASSERT_MATRIX_OK (C, "did C for setElement (not found)", GB0) ;
+
+        #if GB_BURBLE
+        // only burble if GB_Matrix_wait will be called
+        burble = (burble && GB_shall_block (C)) ;
+        if (burble)
+        {
+            GBBURBLE (" [ *_setElement ") ;
+            #if defined ( _OPENMP )
+            t_burble = GB_OPENMP_GET_WTIME ;
+            #endif
+        }
+        #endif
+
+        info = GB_block (C, Context) ;
+
+        #if GB_BURBLE
+        if (burble)
+        {
+            GB_BURBLE_END ;
+        }
+        #endif
+
+        return (info) ;
     }
 }
 

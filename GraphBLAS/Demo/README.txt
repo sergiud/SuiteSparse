@@ -1,4 +1,4 @@
-SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 This is the GraphBLAS/Demo folder.  It contains a set of simple demo programs
@@ -23,7 +23,6 @@ in Demo/Source:
     bfs5m_check.c           as above, but with error checking
     bfs6.c                  breadth-first serach using apply
     bfs6_check.c            as above, but with error checking
-    bfs_level.c             assign level for bfs6
     get_matrix.c            get a matrix (file, Wathen, or random)
     mis.c                   maximal independent set
     mis_check.c             as above, but with error checking
@@ -51,7 +50,7 @@ in Demo/Program:
     bfs_demo.c              demo program to test bfs
     complex_demo.c          demo program to test complex type
     import_demo.c           demo program to test import/export
-    kron_demo.c             demo program to test GxB_kron
+    kron_demo.c             demo program to test GrB_kronecker
     mis_demo.c              demo program to test mis
     tri_demo.c              demo program to test tricount
     simple_demo.c           demo program to test simple_rand and simple_timer
@@ -103,7 +102,7 @@ library and is thus not thread-safe.
 in Demo/Include:
 --------------------------------------------------------------------------------
 
-    demos.h                 include file for all demos
+    graphblas_demos.h       include file for all demos
     simple_rand.h           include file for simple_rand.c
     simple_timer.h          include file for simple_timer
     usercomplex.h           include file for usercomplex.h

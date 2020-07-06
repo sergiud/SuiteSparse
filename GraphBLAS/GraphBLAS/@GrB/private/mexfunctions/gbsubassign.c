@@ -2,7 +2,7 @@
 // gbsubassign: assign entries into a GraphBLAS matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -16,9 +16,9 @@
 
 // Usage:
 
-//      Cout = gbsubassign (Cin, M, accum, A, I, J, desc)
+//      C = gbsubassign (Cin, M, accum, A, I, J, desc)
 
-// Cin, A, and desc are required.  See GrB.m for more details.
+// Cin and A required.  See GrB.m for more details.
 
 #include "gb_matlab.h"
 
@@ -31,6 +31,6 @@ void mexFunction
 )
 {
     gb_assign (nargout, pargout, nargin, pargin, true,
-        "usage: Cout = GrB.subassign (Cin, M, accum, A, I, J, desc)") ;
+        "usage: C = GrB.subassign (Cin, M, accum, A, I, J, desc)") ;
 }
 

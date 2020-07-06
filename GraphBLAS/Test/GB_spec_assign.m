@@ -16,7 +16,7 @@ function C = GB_spec_assign (C, Mask, accum, A, I, J, descriptor, scalar)
 % not affect any part of C outside that row or column.  Those two functions
 % have their own GB_spec_Row_assign.m and GB_spec_Col_assign.m functions.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 %-------------------------------------------------------------------------------
@@ -27,12 +27,13 @@ if (nargout > 1 || nargin ~= 8)
     error ('usage: C = GB_spec_assign (C, Mask, accum, A, I, J, descriptor, scalar)') ;
 end
 
-% Convert inputs to dense matrices with explicit patterns and classes,
+% Convert inputs to dense matrices with explicit patterns and types,
 % and with where X(~X.pattern)==identity for all matrices A, B, and C.
 C = GB_spec_matrix (C) ;
 A = GB_spec_matrix (A) ;
-Mask = GB_spec_getmask (Mask) ;
-[C_replace Mask_comp Atrans ignore] = GB_spec_descriptor (descriptor) ;
+[C_replace Mask_comp Atrans Btrans Mask_struct] = ...
+    GB_spec_descriptor (descriptor) ;
+Mask = GB_spec_getmask (Mask, Mask_struct) ;
 
 %-------------------------------------------------------------------------------
 % do the work via a clean MATLAB interpretation of the entire GraphBLAS spec
@@ -40,7 +41,7 @@ Mask = GB_spec_getmask (Mask) ;
 
 % apply the descriptor to A
 if (Atrans)
-    A.matrix = A.matrix' ;
+    A.matrix = A.matrix.' ;
     A.pattern = A.pattern' ;
 end
 

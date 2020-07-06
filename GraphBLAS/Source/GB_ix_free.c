@@ -2,7 +2,7 @@
 // GB_ix_free: free A->i, A->x, pending tuples, zombies; A->p, A->h unchanged
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -12,6 +12,7 @@
 
 #include "GB_Pending.h"
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_ix_free             // free A->i and A->x of a matrix
 (
     GrB_Matrix A                // matrix with content to free
@@ -37,7 +38,7 @@ GrB_Info GB_ix_free             // free A->i and A->x of a matrix
     // free A->i unless it is shallow
     if (!A->i_shallow)
     { 
-        GB_FREE_MEMORY (A->i, A->nzmax, sizeof (int64_t)) ;
+        GB_FREE (A->i) ;
     }
     A->i = NULL ;
     A->i_shallow = false ;
@@ -45,9 +46,7 @@ GrB_Info GB_ix_free             // free A->i and A->x of a matrix
     // free A->x unless it is shallow
     if (!A->x_shallow)
     { 
-        // A->type_size is used since A->type might already be freed, and thus
-        // A->type->size cannot be accessed.
-        GB_FREE_MEMORY (A->x, A->nzmax, A->type_size) ;
+        GB_FREE (A->x) ;
     }
     A->x = NULL ;
     A->x_shallow = false ;
@@ -60,8 +59,7 @@ GrB_Info GB_ix_free             // free A->i and A->x of a matrix
     // free the list of pending tuples
     GB_Pending_free (&(A->Pending)) ;
 
-    // remove from the queue, if present; panic if critical section fails
-    if (!GB_queue_remove (A)) return (GrB_PANIC) ;
+    if (!GB_queue_remove (A)) return (GrB_PANIC) ;  // TODO in 4.0: delete
 
     return (GrB_SUCCESS) ;
 }

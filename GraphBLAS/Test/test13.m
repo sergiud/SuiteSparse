@@ -1,7 +1,7 @@
 function test13
 %TEST13 test GrB_tranpsose
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 cinclass  = 'int16' ;
@@ -14,7 +14,7 @@ Cin.matrix = 50 * sparse (rand (2))  ;
 Cin.class = 'int16' ;
 
 accum.opname = '' ;
-accum.opclass = 'logical'
+accum.optype = 'logical'
 
 C = GB_mex_transpose  (Cin, [ ], accum, A, [ ]) ;
 assert (spok (C.matrix*1) == 1) ;

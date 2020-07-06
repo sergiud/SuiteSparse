@@ -2,7 +2,7 @@
 // gbextract: extract entries into a GraphBLAS matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -15,15 +15,15 @@
 
 // Usage:
 
-//      Cout = gbextract (Cin, M, accum, A, I, J, desc)
+//      C = gbextract (Cin, M, accum, A, I, J, desc)
 
-// A and desc are required.  See GrB.m for more details.
+// A is required.  See GrB.m for more details.
 // If accum or M is used, then Cin must appear.
 
 #include "gb_matlab.h"
 #include "GB_ij.h"
 
-#define USAGE "usage: Cout = GrB.extract (Cin, M, accum, A, I, J, desc)"
+#define USAGE "usage: C = GrB.extract (Cin, M, accum, A, I, J, desc)"
 
 void mexFunction
 (
@@ -38,7 +38,7 @@ void mexFunction
     // check inputs
     //--------------------------------------------------------------------------
 
-    gb_usage (nargin >= 2 && nargin <= 7 && nargout <= 1, USAGE) ;
+    gb_usage (nargin >= 1 && nargin <= 7 && nargout <= 2, USAGE) ;
 
     //--------------------------------------------------------------------------
     // find the arguments
@@ -94,7 +94,7 @@ void mexFunction
     { 
         // if accum appears, then Cin must also appear
         CHECK_ERROR (C == NULL, USAGE) ;
-        accum  = gb_mxstring_to_binop  (String [0], ctype) ;
+        accum  = gb_mxstring_to_binop  (String [0], ctype, ctype) ;
     }
 
     //--------------------------------------------------------------------------
@@ -102,7 +102,7 @@ void mexFunction
     //--------------------------------------------------------------------------
 
     GrB_Desc_Value in0 ;
-    OK (GxB_get (desc, GrB_INP0, &in0)) ;
+    OK (GxB_Desc_get (desc, GrB_INP0, &in0)) ;
     GrB_Index anrows, ancols ;
     bool A_transpose = (in0 == GrB_TRAN) ;
     if (A_transpose)
@@ -156,28 +156,28 @@ void mexFunction
         int I_kind, J_kind ;
         int64_t I_colon [3], J_colon [3] ;
         GrB_Index cnrows, cncols ;
-        GB_ijlength (I, ni, anrows, &cnrows, &I_kind, I_colon) ;
-        GB_ijlength (J, nj, ancols, &cncols, &J_kind, J_colon) ;
+        GB_ijlength (I, ni, anrows, (int64_t *) &cnrows, &I_kind, I_colon) ;
+        GB_ijlength (J, nj, ancols, (int64_t *) &cncols, &J_kind, J_colon) ;
         ctype = atype ;
 
         OK (GrB_Matrix_new (&C, ctype, cnrows, cncols)) ;
         fmt = gb_get_format (cnrows, cncols, A, NULL, fmt) ;
-        OK (GxB_set (C, GxB_FORMAT, fmt)) ;
+        OK (GxB_Matrix_Option_set (C, GxB_FORMAT, fmt)) ;
     }
 
     //--------------------------------------------------------------------------
     // compute C<M> += A(I,J) or AT(I,J)
     //--------------------------------------------------------------------------
 
-    OK (GrB_extract (C, M, accum, A, I, ni, J, nj, desc)) ;
+    OK (GrB_Matrix_extract (C, M, accum, A, I, ni, J, nj, desc)) ;
 
     //--------------------------------------------------------------------------
     // free shallow copies
     //--------------------------------------------------------------------------
 
-    OK (GrB_free (&M)) ;
-    OK (GrB_free (&A)) ;
-    OK (GrB_free (&desc)) ;
+    OK (GrB_Matrix_free (&M)) ;
+    OK (GrB_Matrix_free (&A)) ;
+    OK (GrB_Descriptor_free (&desc)) ;
     if (I_allocated) gb_mxfree (&I) ;
     if (J_allocated) gb_mxfree (&J) ;
 
@@ -186,6 +186,7 @@ void mexFunction
     //--------------------------------------------------------------------------
 
     pargout [0] = gb_export (&C, kind) ;
+    pargout [1] = mxCreateDoubleScalar (kind) ;
     GB_WRAPUP ;
 }
 

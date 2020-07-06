@@ -2,7 +2,7 @@
 // GB_code_type: convert a type code to a GrB_Type
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -16,6 +16,7 @@
 
 #include "GB.h"
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Type GB_code_type           // return the GrB_Type corresponding to the code
 (
     const GB_Type_code code,    // type code to convert
@@ -37,7 +38,8 @@ GrB_Type GB_code_type           // return the GrB_Type corresponding to the code
         case GB_UINT64_code : return (GrB_UINT64) ;
         case GB_FP32_code   : return (GrB_FP32)   ;
         case GB_FP64_code   : return (GrB_FP64)   ;
-        case GB_UCT_code    : 
+        case GB_FC32_code   : return (GxB_FC32)   ;
+        case GB_FC64_code   : return (GxB_FC64)   ;
         case GB_UDT_code    : 
         default             : return (type) ;
     }

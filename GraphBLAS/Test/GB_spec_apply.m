@@ -4,7 +4,7 @@ function C = GB_spec_apply (C, Mask, accum, op, A, descriptor)
 % Usage:
 % C = GB_spec_apply (C, Mask, accum, op, A, descriptor)
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 %-------------------------------------------------------------------------------
@@ -17,9 +17,10 @@ end
 
 C = GB_spec_matrix (C) ;
 A = GB_spec_matrix (A) ;
-[opname xyclass zclass] = GB_spec_operator (op, C.class) ;
-Mask = GB_spec_getmask (Mask) ;
-[C_replace Mask_comp Atrans ~] = GB_spec_descriptor (descriptor) ;
+[opname optype ztype xtype] = GB_spec_operator (op, C.class) ;
+[C_replace Mask_comp Atrans Btrans Mask_struct] = ...
+    GB_spec_descriptor (descriptor) ;
+Mask = GB_spec_getmask (Mask, Mask_struct) ;
 
 %-------------------------------------------------------------------------------
 % do the work via a clean MATLAB interpretation of the entire GraphBLAS spec
@@ -27,20 +28,21 @@ Mask = GB_spec_getmask (Mask) ;
 
 % apply the descriptor to A
 if (Atrans)
-    A.matrix = A.matrix' ;
+    A.matrix = A.matrix.' ;
     A.pattern = A.pattern' ;
 end
 
 % T = op(A)
-[m n] = size (A.matrix) ;
-T.matrix = zeros (m, n, zclass) ;
+T.matrix = GB_spec_zeros (size (A.matrix), ztype) ;
 T.pattern = A.pattern ;
-T.class = zclass ;
-
-A_matrix = GB_mex_cast (A.matrix, xyclass) ;
+T.class = ztype ;
 
 p = T.pattern ;
-T.matrix (p) = GB_spec_op (op, A.matrix (p)) ;
+x = A.matrix (p) ;
+
+z = GB_spec_op (op, x) ;
+
+T.matrix (p) = z ;
 
 % C<Mask> = accum (C,T): apply the accum, then Mask, and return the result
 C = GB_spec_accum_mask (C, Mask, accum, T, C_replace, Mask_comp, 0) ;

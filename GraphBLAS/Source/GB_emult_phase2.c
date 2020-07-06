@@ -2,7 +2,7 @@
 // GB_emult_phase2: C=A.*B or C<M>=A.*+B
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -22,6 +22,8 @@
 // way, the caller must not free it.
 
 #include "GB_emult.h"
+#include "GB_binop.h"
+#include "GB_unused.h"
 #ifndef GBCOMPACT
 #include "GB_binop__include.h"
 #endif
@@ -33,20 +35,21 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
     const bool C_is_csc,                // format of output matrix C
     const GrB_BinaryOp op,              // op to perform C = op (A,B)
     // from phase1:
-    const int64_t *restrict Cp,         // vector pointers for C
+    const int64_t *GB_RESTRICT Cp,         // vector pointers for C
     const int64_t Cnvec_nonempty,       // # of non-empty vectors in C
     // tasks from phase0b:
-    const GB_task_struct *restrict TaskList,  // array of structs
+    const GB_task_struct *GB_RESTRICT TaskList,  // array of structs
     const int ntasks,                         // # of tasks
     const int nthreads,                       // # of threads to use
     // analysis from phase0:
     const int64_t Cnvec,
-    const int64_t *restrict Ch,         // Ch is NULL, or a shallow pointer
-    const int64_t *restrict C_to_M,
-    const int64_t *restrict C_to_A,
-    const int64_t *restrict C_to_B,
+    const int64_t *GB_RESTRICT Ch,         // Ch is NULL, or a shallow pointer
+    const int64_t *GB_RESTRICT C_to_M,
+    const int64_t *GB_RESTRICT C_to_A,
+    const int64_t *GB_RESTRICT C_to_B,
     // original input:
     const GrB_Matrix M,                 // optional mask, may be NULL
+    const bool Mask_struct,         // if true, use the only structure of M
     const GrB_Matrix A,
     const GrB_Matrix B,
     GB_Context Context
@@ -58,14 +61,18 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
     //--------------------------------------------------------------------------
 
     ASSERT (Cp != NULL) ;
-    ASSERT_OK (GB_check (op, "op for emult phase2", GB0)) ;
-    ASSERT_OK (GB_check (A, "A for emult phase2", GB0)) ;
-    ASSERT_OK (GB_check (B, "B for emult phase2", GB0)) ;
-    ASSERT_OK_OR_NULL (GB_check (M, "M for emult phase2", GB0)) ;
+    ASSERT_BINARYOP_OK (op, "op for emult phase2", GB0) ;
+    ASSERT_MATRIX_OK (A, "A for emult phase2", GB0) ;
+    ASSERT_MATRIX_OK (B, "B for emult phase2", GB0) ;
+    ASSERT_MATRIX_OK_OR_NULL (M, "M for emult phase2", GB0) ;
     ASSERT (A->vdim == B->vdim) ;
     ASSERT (GB_Type_compatible (ctype,   op->ztype)) ;
-    ASSERT (GB_Type_compatible (A->type, op->xtype)) ;
-    ASSERT (GB_Type_compatible (B->type, op->ytype)) ;
+    ASSERT (GB_IMPLIES (
+           !(op->opcode == GB_SECOND_opcode || op->opcode == GB_PAIR_opcode),
+            GB_Type_compatible (A->type, op->xtype))) ;
+    ASSERT (GB_IMPLIES (
+           !(op->opcode == GB_FIRST_opcode  || op->opcode == GB_PAIR_opcode),
+            GB_Type_compatible (B->type, op->ytype))) ;
 
     //--------------------------------------------------------------------------
     // allocate the output matrix C
@@ -77,16 +84,15 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
     bool C_is_hyper = (Ch != NULL) ;
 
     // allocate the result C (but do not allocate C->p or C->h)
-    GrB_Info info ;
     GrB_Matrix C = NULL ;           // allocate a new header for C
-    GB_CREATE (&C, ctype, A->vlen, A->vdim, GB_Ap_null, C_is_csc,
-        GB_SAME_HYPER_AS (C_is_hyper), A->hyper_ratio, Cnvec, cnz, true,
-        Context) ;
+    GrB_Info info = GB_create (&C, ctype, A->vlen, A->vdim, GB_Ap_null,
+        C_is_csc, GB_SAME_HYPER_AS (C_is_hyper), A->hyper_ratio, Cnvec, cnz,
+        true, Context) ;
     if (info != GrB_SUCCESS)
     { 
         // out of memory; caller must free C_to_M, C_to_A, C_to_B
         // Ch must not be freed since Ch is always shallow
-        GB_FREE_MEMORY (Cp, GB_IMAX (2, Cnvec+1), sizeof (int64_t)) ;
+        GB_FREE (Cp) ;
         return (info) ;
     }
 
@@ -108,36 +114,53 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
     GB_Type_code ccode = ctype->code ;
 
     //--------------------------------------------------------------------------
+    // check the types of A and B
+    //--------------------------------------------------------------------------
+
+    // With C = ewisemult (A,B), only the intersection of A and B is used.
+    // If op is SECOND or PAIR, the values of A are never accessed.
+    // If op is FIRST  or PAIR, the values of B are never accessed.
+    // If op is PAIR, the values of A and B are never accessed.
+    // Contrast with ewiseadd.
+
+    bool op_is_first  = op->opcode == GB_FIRST_opcode ;
+    bool op_is_second = op->opcode == GB_SECOND_opcode ;
+    bool op_is_pair   = op->opcode == GB_PAIR_opcode ;
+    // A is passed as x, and B as y, in z = op(x,y)
+    bool A_is_pattern = op_is_second || op_is_pair ;
+    bool B_is_pattern = op_is_first  || op_is_pair ;
+
+    //--------------------------------------------------------------------------
     // using a built-in binary operator
     //--------------------------------------------------------------------------
 
     bool done = false ;
 
-    //--------------------------------------------------------------------------
-    // define the worker for the switch factory
-    //--------------------------------------------------------------------------
-
-    #define GB_AemultB(mult,xyname) GB_AemultB_ ## mult ## xyname
-
-    #define GB_BINOP_WORKER(mult,xyname)                            \
-    {                                                               \
-        info = GB_AemultB(mult,xyname) (C, M, A, B,                 \
-            C_to_M, C_to_A, C_to_B, TaskList, ntasks, nthreads) ;   \
-        done = (info != GrB_NO_VALUE) ;                             \
-    }                                                               \
-    break ;
-
-    //--------------------------------------------------------------------------
-    // launch the switch factory
-    //--------------------------------------------------------------------------
-
     #ifndef GBCOMPACT
 
-        GB_Opcode opcode ;
-        GB_Type_code xycode, zcode ;
+        //----------------------------------------------------------------------
+        // define the worker for the switch factory
+        //----------------------------------------------------------------------
 
-        if (GB_binop_builtin (A, false, B, false, op,
-            false, &opcode, &xycode, &zcode) && ccode == zcode)
+        #define GB_AemultB(mult,xname) GB_AemultB_ ## mult ## xname
+
+        #define GB_BINOP_WORKER(mult,xname)                             \
+        {                                                               \
+            info = GB_AemultB(mult,xname) (C, M, Mask_struct, A, B,     \
+                C_to_M, C_to_A, C_to_B, TaskList, ntasks, nthreads) ;   \
+            done = (info != GrB_NO_VALUE) ;                             \
+        }                                                               \
+        break ;
+
+        //----------------------------------------------------------------------
+        // launch the switch factory
+        //----------------------------------------------------------------------
+
+        GB_Opcode opcode ;
+        GB_Type_code xcode, ycode, zcode ;
+
+        if (GB_binop_builtin (A->type, A_is_pattern, B->type, A_is_pattern,
+            op, false, &opcode, &xcode, &ycode, &zcode) && ccode == zcode)
         { 
             #include "GB_binop_factory.c"
             ASSERT (done) ;
@@ -146,11 +169,13 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
     #endif
 
     //--------------------------------------------------------------------------
-    // generic worker
+    // generic worker: with typecasting and arbitrary operators
     //--------------------------------------------------------------------------
 
     if (!done)
     { 
+        GB_BURBLE_MATRIX (C, "generic ") ;
+
         GxB_binary_function fmult ;
         size_t csize, asize, bsize, xsize, ysize, zsize ;
         GB_cast_function cast_A_to_X, cast_B_to_Y, cast_Z_to_C ;
@@ -169,19 +194,19 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
 
         // aij = (xtype) A(i,j), located in Ax [pA]
         #define GB_GETA(aij,Ax,pA)                                          \
-            GB_void aij [GB_PGI(xsize)] ;                                   \
+            GB_void aij [GB_VLA(xsize)] ;                                   \
             cast_A_to_X (aij, Ax +((pA)*asize), asize) ;
 
         // bij = (ytype) B(i,j), located in Bx [pB]
         #define GB_GETB(bij,Bx,pB)                                          \
-            GB_void bij [GB_PGI(ysize)] ;                                   \
+            GB_void bij [GB_VLA(ysize)] ;                                   \
             cast_B_to_Y (bij, Bx +((pB)*bsize), bsize) ;
 
         // C(i,j) = (ctype) (A(i,j) + B(i,j))
         // not used if op is null
         #define GB_BINOP(cij, aij, bij)                                     \
             ASSERT (op != NULL) ;                                           \
-            GB_void z [GB_PGI(zsize)] ;                                     \
+            GB_void z [GB_VLA(zsize)] ;                                     \
             fmult (z, aij, bij) ;                                           \
             cast_Z_to_C (cij, z, csize) ;
 
@@ -194,6 +219,9 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
 
         #define GB_PHASE_2_OF_2
 
+        // loops cannot be vectorized
+        #define GB_PRAGMA_SIMD_VECTORIZE ;
+
         #include "GB_emult_template.c"
     }
 
@@ -203,28 +231,14 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
 
     if (C_is_hyper)
     {
-        // create new Cp_new and Ch_new arrays, with no empty vectors
-        int64_t *restrict Cp_new = NULL ;
-        int64_t *restrict Ch_new = NULL ;
-        int64_t nvec_new ;
-        info = GB_hyper_prune (&Cp_new, &Ch_new, &nvec_new, C->p, C->h, Cnvec,
-            Context) ;
+        C->nvec_nonempty = -1 ;
+        info = GB_hypermatrix_prune (C, Context) ;
         if (info != GrB_SUCCESS)
         { 
             // out of memory
             GB_MATRIX_FREE (&C) ;
             return (info) ;
         }
-        // transplant the new hyperlist into C
-        GB_FREE_MEMORY (C->p, Cnvec+1, sizeof (int64_t)) ;
-        // do not free C->h since it is a shallow copy
-        ASSERT (C->h_shallow) ;
-        C->p = Cp_new ;
-        C->h = Ch_new ;
-        C->nvec = nvec_new ;
-        C->plen = nvec_new ;
-        C->h_shallow = false ;
-        ASSERT (C->nvec == C->nvec_nonempty) ;
     }
 
     //--------------------------------------------------------------------------
@@ -232,7 +246,7 @@ GrB_Info GB_emult_phase2                // C=A.*B or C<M>=A.*B
     //--------------------------------------------------------------------------
 
     // caller must free C_to_M, C_to_A, and C_to_B, but not Cp or Ch
-    ASSERT_OK (GB_check (C, "C output for emult phase2", GB0)) ;
+    ASSERT_MATRIX_OK (C, "C output for emult phase2", GB0) ;
     (*Chandle) = C ;
     return (GrB_SUCCESS) ;
 }

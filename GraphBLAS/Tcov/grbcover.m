@@ -6,8 +6,12 @@ function grbcover (what)
 %
 % See also: grbcover_edit, grbmake
 
-%  SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
-%  http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
+% http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
+if (ispc)
+    error ('The tests in Tcov are not ported to Windows') ;
+end
 
 % compile the mexFunctions
 
@@ -52,7 +56,7 @@ inc = '-Itmp_include -I../Test -I../Test/Template' ;
 addpath ../Test
 addpath ../Test/spok
 
-flags = '-g -DGBCOVER -largeArrayDims' ;
+flags = '-g -DGBCOVER -R2018a' ;
 
 fprintf ('\nCompiling GraphBLAS tests\nplease wait [') ;
 

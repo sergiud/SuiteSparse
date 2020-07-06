@@ -1,15 +1,16 @@
 function test03
-%TEST03 test GB_check functions
+%TEST03 test GB_*_check functions
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 % http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
-[~, ~, ~, classes, ~, ~] = GB_spec_opsall ;
+[~, ~, ~, types, ~, ~] = GB_spec_opsall ;
+types = types.all ;
 
 rng ('default') ;
 
-for k = 1:length (classes)
-    aclass = classes {k} ;
+for k = 1:length (types)
+    aclass = types {k} ;
     for is_hyper = 0:1
         for is_csc = 0:1
             A = GB_spec_random (10,30,0.2,100,aclass, is_csc, is_hyper) ;
@@ -29,20 +30,24 @@ for is_hyper = 0:1
     end
 end
 
-A = GB_mex_random (10, 30, 15, 1, 1, 0, 0, 0) ;
-GB_mex_dump (A,2) ;
-A = GB_mex_random (10, 30, 15, 1, 1, 0, 0, 1) ;
-GB_mex_dump (A,2) ;
-A = GB_mex_random (10, 30, 15, 1, 1, 1, 0, 1) ;
-GB_mex_dump (A,2) ;
-A = GB_mex_random (10, 30, 15, 1, 1, 1, 0, 0) ;
-GB_mex_dump (A,2) ;
-A = GB_mex_random (10, 30, 15, 1, 1, 1, 1, 1) ;
-GB_mex_dump (A,2) ;
+for k = [false true]
+    fprintf ('builtin_complex: %d\n', k) ;
+    GB_builtin_complex_set (k) ;
 
-
-A = GB_mex_random (3, 3, 5, 0, 1, 1, 1, 3) 
-GB_mex_dump (A) 
+    % complex case:
+    A = GB_mex_random (10, 30, 15, 1, 1, 0, 0, 0) ;
+    GB_mex_dump (A,2) ;
+    A = GB_mex_random (10, 30, 15, 1, 1, 0, 0, 1) ;
+    GB_mex_dump (A,2) ;
+    A = GB_mex_random (10, 30, 15, 1, 1, 1, 0, 1) ;
+    GB_mex_dump (A,2) ;
+    A = GB_mex_random (10, 30, 15, 1, 1, 1, 0, 0) ;
+    GB_mex_dump (A,2) ;
+    A = GB_mex_random (10, 30, 15, 1, 1, 1, 1, 1) ;
+    GB_mex_dump (A,2) ;
+    A = GB_mex_random (3, 3, 5, 0, 1, 1, 1, 3) 
+    GB_mex_dump (A) 
+end
 
 fprintf ('\ntest03: all object check tests passed\n') ;
 

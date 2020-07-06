@@ -2,7 +2,7 @@
 // GB_export.h: definitions for import/export
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -19,41 +19,40 @@
     GB_RETURN_IF_NULL (A) ;                                     \
     (*A) = NULL ;                                               \
     GB_RETURN_IF_NULL_OR_FAULTY (type) ;                        \
-    if (nrows > GB_INDEX_MAX)                                   \
+    if (nrows > GxB_INDEX_MAX)                                  \
     {                                                           \
         return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,           \
-            "problem too large: nrows "GBu" exceeds "GBu,       \
-            nrows, GB_INDEX_MAX))) ;                            \
+            "problem too large: nrows " GBu " exceeds " GBu,    \
+            nrows, GxB_INDEX_MAX))) ;                           \
     }                                                           \
-    if (ncols > GB_INDEX_MAX)                                   \
+    if (ncols > GxB_INDEX_MAX)                                  \
     {                                                           \
         return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,           \
-            "problem too large: ncols "GBu" exceeds "GBu,       \
-            ncols, GB_INDEX_MAX))) ;                            \
+            "problem too large: ncols " GBu " exceeds " GBu,    \
+            ncols, GxB_INDEX_MAX))) ;                           \
     }                                                           \
-    if (nvals > GB_INDEX_MAX)                                   \
+    if (nvals > GxB_INDEX_MAX)                                  \
     {                                                           \
         return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,           \
-            "problem too large: nvals "GBu" exceeds "GBu,       \
-            nvals, GB_INDEX_MAX))) ;                            \
+            "problem too large: nvals " GBu " exceeds " GBu,    \
+            nvals, GxB_INDEX_MAX))) ;                           \
     }                                                           \
     /* get the descriptor */                                    \
-    GB_GET_DESCRIPTOR (info, desc, xx1, xx2, xx3, xx4, xx5) ;
+    GB_GET_DESCRIPTOR (info, desc, xx1, xx2, xx3, xx4, xx5, xx6) ;
 
 #define GB_EXPORT_CHECK                                         \
     GB_RETURN_IF_NULL (A) ;                                     \
     GB_RETURN_IF_NULL_OR_FAULTY (*A) ;                          \
-    ASSERT_OK (GB_check (*A, "A to export", GB0)) ;             \
-    /* finish any pending work */                               \
-    GB_WAIT (*A) ;                                              \
-    /* check these after forcing completion */                  \
+    ASSERT_MATRIX_OK (*A, "A to export", GB0) ;                 \
     GB_RETURN_IF_NULL (type) ;                                  \
     GB_RETURN_IF_NULL (nrows) ;                                 \
     GB_RETURN_IF_NULL (ncols) ;                                 \
     GB_RETURN_IF_NULL (nvals) ;                                 \
     GB_RETURN_IF_NULL (nonempty) ;                              \
     /* get the descriptor */                                    \
-    GB_GET_DESCRIPTOR (info, desc, xx1, xx2, xx3, xx4, xx5) ;   \
+    GB_GET_DESCRIPTOR (info, desc, xx1, xx2, xx3, xx4, xx5, xx6) ; \
+    /* finish any pending work */                               \
+    GB_MATRIX_WAIT (*A) ;                                       \
     /* export basic attributes */                               \
     (*type) = (*A)->type ;                                      \
     (*nrows) = GB_NROWS (*A) ;                                  \

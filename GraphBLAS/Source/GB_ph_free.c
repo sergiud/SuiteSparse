@@ -2,7 +2,7 @@
 // GB_ph_free: free the A->p and A->h content of a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -14,6 +14,7 @@
 
 #include "GB.h"
 
+GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 void GB_ph_free                 // free A->p and A->h of a matrix
 (
     GrB_Matrix A                // matrix with content to free
@@ -34,12 +35,12 @@ void GB_ph_free                 // free A->p and A->h of a matrix
     //--------------------------------------------------------------------------
 
     // free A->p unless it is shallow
-    if (!A->p_shallow) GB_FREE_MEMORY (A->p, A->plen+1, sizeof (int64_t)) ;
+    if (!A->p_shallow) GB_FREE (A->p) ;
     A->p = NULL ;
     A->p_shallow = false ;
 
     // free A->h unless it is shallow
-    if (!A->h_shallow) GB_FREE_MEMORY (A->h, A->plen,   sizeof (int64_t)) ;
+    if (!A->h_shallow) GB_FREE (A->h) ;
     A->h = NULL ;
     A->h_shallow = false ;
 

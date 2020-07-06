@@ -2,7 +2,7 @@
 // GB_mex_nonzero: compute C=nonzero(A)
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2019, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
 // http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
 
 //------------------------------------------------------------------------------
@@ -61,10 +61,10 @@ void mexFunction
     #undef FREE_DEEP_COPY
 
     #define GET_DEEP_COPY  GrB_Matrix_new (&C, GrB_FP64, A->vlen, A->vdim) ;
-    #define FREE_DEEP_COPY GrB_free (&C) ;
+    #define FREE_DEEP_COPY GrB_Matrix_free_(&C) ;
 
     // C = nonzero (A)
-    METHOD (GxB_Matrix_select (C, NULL, NULL, GxB_NONZERO, A, NULL, NULL)) ;
+    METHOD (GxB_Matrix_select_(C, NULL, NULL, GxB_NONZERO, A, NULL, NULL)) ;
 
     // return C to MATLAB as a regular MATLAB sparse matrix
     pargout [0] = GB_mx_Matrix_to_mxArray (&C, "C nonzero", false) ;

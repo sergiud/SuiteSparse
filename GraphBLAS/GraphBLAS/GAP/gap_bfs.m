@@ -1,6 +1,9 @@
 function gap_bfs
 %GAP_BFS run bfs for the GAP benchmark
 
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
+% http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+
 rng ('default') ;
 
 % warmup, to make sure GrB library is loaded
@@ -15,22 +18,28 @@ matrices = { 'LAW/indochina-2004' } ;
 % the GAP test matrices:
 matrices = {
     'GAP/GAP-kron'
-    'GAP/GAP-urand'
     'GAP/GAP-twitter'
     'GAP/GAP-web'
     'GAP/GAP-road'
+    'GAP/GAP-urand'
     } ;
 
 [status, result] = system ('hostname') ;
+
 clear status
 if (isequal (result (1:5), 'hyper'))
     fprintf ('hypersparse: %d threads\n', GrB.threads (40)) ;
 elseif (isequal (result (1:5), 'slash'))
     fprintf ('slash: %d threads\n', GrB.threads (8)) ;
+elseif (isequal (result (1:9), 'backslash'))
+    fprintf ('slash: %d threads\n', GrB.threads (24)) ;
 else
     fprintf ('default: %d threads\n', GrB.threads) ;
 end
 clear result
+
+threads = GrB.threads ;
+threads = [threads threads/2]
 
 for k = 1:length(matrices)
 
@@ -60,26 +69,30 @@ for k = 1:length(matrices)
     % BFS with GrB.bfs
     %---------------------------------------------------------------------------
 
-    fprintf ('\nGrB.bfs  tests:\n') ;
+    for nthreads = threads
+        GrB.threads (nthreads) ;
 
-    tot = 0 ;
-    for trial = 1:ntrials
-        s = sources (trial) ;
-        tstart = tic ;
-        [v, parent] = GrB.bfs (A, s) ;
-        % v = GrB.bfs (A, s) ;
-        t = toc (tstart) ;
-        tot = tot + t ;
-        fprintf ('trial: %2d source: %8d GrB.bfs  time: %8.3f ', trial, s, t) ;
-        fprintf ('visited: %8d depth: %8d\n', nnz (v), max (v)) ;
-        % pause
+        fprintf ('\nGrB.bfs  tests: %d threads\n', nthreads) ;
+        tot = 0 ;
+        for trial = 1:ntrials
+            s = sources (trial) ;
+            tstart = tic ;
+            [v, parent] = GrB.bfs (A, s) ;
+            % v = GrB.bfs (A, s) ;
+            t = toc (tstart) ;
+            tot = tot + t ;
+            fprintf ('trial: %2d source: %8d GrB.bfs  time: %8.3f ', trial, s, t) ;
+            fprintf ('visited: %8d depth: %8d\n', nnz (v), max (v)) ;
+            % pause
+        end
+        fprintf ('avg GrB.bfs  time:  %g (%d trials)\n', tot/ntrials, ntrials) ;
     end
-    fprintf ('avg GrB.bfs  time:  %g (%d trials)\n', tot/ntrials, ntrials) ;
 
     %---------------------------------------------------------------------------
     % BFS with MATLAB
     %---------------------------------------------------------------------------
 
+%{
     % if (n < 24*1e6)
     try
         fprintf ('\nCompare with built-in MATLAB bfs:\n') ;
@@ -109,6 +122,10 @@ for k = 1:length(matrices)
         printf ('MATLAB failed\n') ;
     end
 
-    % clear G table parent v nodes edgetonew
+    clear G table parent v nodes edgetonew
+%}
+
+    clear A
+
 end
 

@@ -37,11 +37,15 @@ static:
 # installs GraphBLAS to the install location defined by cmake, usually
 # /usr/local/lib and /usr/local/include
 install:
-	( cd build ; $(MAKE) install )
+	( cd build ; cmake $(CMAKE_OPTIONS) .. ; $(MAKE) --jobs=$(JOBS) ; $(MAKE) install )
 
 # create the Doc/GraphBLAS_UserGuide.pdf
 docs:
 	( cd Doc ; $(MAKE) )
+
+# compile the CUDA kernels
+gpu:
+	( cd CUDA ; $(MAKE) )
 
 # remove any installed libraries and #include files
 uninstall:
@@ -53,7 +57,7 @@ purge: distclean
 
 # remove all files not in the distribution
 distclean:
-	rm -rf build/* Demo/*.out Demo/complex_demo_out.m Tcov/log.txt
+	rm -rf build/* Demo/*.out Demo/complex_demo_out*.m Tcov/log.txt
 	rm -rf Config/*.tmp Source/control.m4
 	rm -rf Doc/html/* Doc/*.tmp
 	( cd GraphBLAS/test/tcov ; $(MAKE) distclean )

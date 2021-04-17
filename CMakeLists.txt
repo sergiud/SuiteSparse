@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2020 Sergiu Deitsch
+# Copyright (c) 2016-2021 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,6 @@ endif (POLICY CMP0063)
 include (CheckLanguage)
 
 option (BUILD_CXSPARSE "Build CXSparse" ON)
-
 option (WITH_FORTRAN "Enables Fortran support" ON)
 
 if (WITH_FORTRAN)
@@ -77,6 +76,7 @@ include (GNUInstallDirs)
 
 set (CMAKE_C_VISIBILITY_PRESET hidden)
 set (CMAKE_CXX_VISIBILITY_PRESET hidden)
+set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 check_c_compiler_flag (-fPIC HAVE_FPIC)
@@ -161,7 +161,6 @@ include (CheckLibraryExists)
 include (CheckSymbolExists)
 include (CheckTypeSize)
 include (ComponentVersion)
-include (CreateObjects)
 
 if (DEFINED ENV{BLA_VENDOR} OR DEFINED BLA_VENDOR)
   # In case the user set the BLA_VENDOR environment or CMake variable, use the
@@ -261,10 +260,6 @@ set (BTF_SRCS
   BTF/Source/btf_maxtrans.c
   BTF/Source/btf_order.c
   BTF/Source/btf_strongcomp.c
-)
-
-set (BTF_HDRS
-  BTF/Include/btf.h
 )
 
 set (CAMD_SRCS
@@ -593,16 +588,6 @@ set (LDL_SRCS
   LDL/Source/ldl.c
 )
 
-generate_source_files (GEN_KLU_SRCS_DINT FILES "${KLU_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_KLU_SRCS_DLONG FILES "${KLU_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS DLONG)
-
-generate_source_files (GEN_LDL_SRCS_DINT FILES "${LDL_SRCS}" SUFFIX _di
-  COMPILE_DEFINITIONS DINT)
-generate_source_files (GEN_LDL_SRCS_DLONG FILES "${LDL_SRCS}" SUFFIX _dl
-  COMPILE_DEFINITIONS LDL_LONG)
-
 if (MSVC)
   add_definitions (-D_CRT_SECURE_NO_WARNINGS)
 endif (MSVC)
@@ -630,18 +615,32 @@ add_library (amd
 )
 
 add_library (btf_int OBJECT ${BTF_SRCS})
-target_include_directories (btf_int PRIVATE $<TARGET_PROPERTY:btf,INTERFACE_INCLUDE_DIRECTORIES>)
+
+target_include_directories (btf_int PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include
+  ${CMAKE_CURRENT_BINARY_DIR}/include/SuiteSparse/BTF
+)
+
 target_compile_definitions (btf_int PRIVATE DINT)
 
 add_library (btf_long OBJECT ${BTF_SRCS})
-target_include_directories (btf_long PRIVATE $<TARGET_PROPERTY:btf,INTERFACE_INCLUDE_DIRECTORIES>)
+
+target_include_directories (btf_long PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include
+  ${CMAKE_CURRENT_BINARY_DIR}/include/SuiteSparse/BTF
+)
+
 target_compile_definitions (btf_long PRIVATE DLONG)
 
 add_library (btf
   BTF/Include/btf_internal.h
-  ${BTF_HDRS}
+  BTF/Include/btf.h
   $<TARGET_OBJECTS:btf_int>
   $<TARGET_OBJECTS:btf_long>
+)
+
+target_include_directories (btf PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>
 )
 
 add_library (camd_int OBJECT ${CAMD_SRCS})
@@ -1028,28 +1027,37 @@ add_library (umfpack
 # NOTE cholmod already depends on LAPACK
 target_link_libraries (umfpack PUBLIC cholmod)
 
-set (KLU_HDRS
-  KLU/Include/klu.h
-  KLU/Include/klu_version.h
-)
+add_library (klu_int OBJECT ${BTF_SRCS})
+target_include_directories (klu_int PRIVATE $<TARGET_PROPERTY:klu,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (klu_int PRIVATE DINT)
+
+add_library (klu_long OBJECT ${BTF_SRCS})
+target_include_directories (klu_long PRIVATE $<TARGET_PROPERTY:klu,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (klu_long PRIVATE DLONG)
 
 add_library (klu
+  KLU/Include/klu.h
+  KLU/Include/klu_version.h
   KLU/Include/klu_internal.h
-  ${GEN_KLU_SRCS_DINT}
-  ${GEN_KLU_SRCS_DLONG}
+  $<TARGET_OBJECTS:klu_int>
+  $<TARGET_OBJECTS:klu_long>
   ${KLU_HDRS}
 )
 
 target_link_libraries (klu PUBLIC amd btf colamd)
 
-set (LDL_HDRS
-  LDL/Include/ldl.h
-)
+add_library (ldl_int OBJECT ${BTF_SRCS})
+target_include_directories (ldl_int PRIVATE $<TARGET_PROPERTY:ldl,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (ldl_int PRIVATE DINT)
+
+add_library (ldl_long OBJECT ${BTF_SRCS})
+target_include_directories (ldl_long PRIVATE $<TARGET_PROPERTY:ldl,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions (ldl_long PRIVATE DLONG)
 
 add_library (ldl
-  ${GEN_LDL_SRCS_DINT}
-  ${GEN_LDL_SRCS_DLONG}
-  ${LDL_HDRS}
+  LDL/Include/ldl.h
+  $<TARGET_OBJECTS:ldl_int>
+  $<TARGET_OBJECTS:ldl_long>
 )
 
 set (SuiteSparse_AMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/AMD)
@@ -1274,8 +1282,9 @@ if (WITH_CUDA AND CUDA_FOUND)
 
   set (CHOLMOD_GPU_SRCS CHOLMOD/GPU/cholmod_gpu.c)
 
-  generate_source_files (GEN_CHOLMOD_GPU_SRCS_DLONG FILES "${CHOLMOD_GPU_SRCS}" SUFFIX _dl
-    COMPILE_DEFINITIONS DLONG)
+  # TODO
+  # generate_source_files (GEN_CHOLMOD_GPU_SRCS_DLONG FILES "${CHOLMOD_GPU_SRCS}" SUFFIX _dl
+  #   COMPILE_DEFINITIONS DLONG)
 
   cuda_wrap_srcs (cholmod OBJ GEN_CHOLMOD_GPU_KERNELS
     CHOLMOD/GPU/cholmod_gpu_kernels.cu)
@@ -1431,9 +1440,6 @@ set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
 set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
 set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
 
-set_target_properties (${_SuiteSparse_TARGETS} PROPERTIES
-  POSITION_INDEPENDENT_CODE ON)
-
 if (WITH_DEMOS)
   add_executable (cholmod_demo
     CHOLMOD/Demo/cholmod_demo.h
@@ -1487,7 +1493,7 @@ if (WITH_DEMOS)
 endif (WITH_DEMOS)
 
 if (BUILD_CXSPARSE)
-  add_subdirectory (CXSparse)
+  # TODO add_subdirectory (CXSparse)
 endif (BUILD_CXSPARSE)
 
 add_feature_info (CUDA WITH_CUDA "GPU accelerated CHOLMOD using CUDA")

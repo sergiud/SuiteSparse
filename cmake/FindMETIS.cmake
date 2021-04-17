@@ -10,7 +10,7 @@
 #   METIS_LIBRARIES
 #     Specifies METIS libraries that should be passed to target_link_libararies.
 #
-# Copyright (c) 2016 Sergiu Deitsch
+# Copyright (c) 2016, 2021 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,9 +29,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-cmake_policy (VERSION 2.8)
-cmake_policy (PUSH)
 
 include (FindPackageHandleStandardArgs)
 
@@ -81,5 +78,3 @@ set (METIS_LIBRARIES ${METIS_LIBRARY})
 
 find_package_handle_standard_args (METIS REQUIRED_VARS
   METIS_INCLUDE_DIR METIS_LIBRARY VERSION_VAR METIS_VERSION)
-
-cmake_policy (POP)

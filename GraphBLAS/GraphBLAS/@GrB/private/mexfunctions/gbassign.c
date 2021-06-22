@@ -2,8 +2,8 @@
 // gbassign: assign entries into a GraphBLAS matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 //------------------------------------------------------------------------------
 
@@ -22,6 +22,8 @@
 
 #include "gb_matlab.h"
 
+#define USAGE "usage: C = GrB.assign (Cin, M, accum, A, I, J, desc"
+
 void mexFunction
 (
     int nargout,
@@ -30,7 +32,6 @@ void mexFunction
     const mxArray *pargin [ ]
 )
 {
-    gb_assign (nargout, pargout, nargin, pargin, false,
-        "usage: C = GrB.assign (Cin, M, accum, A, I, J, desc)") ;
+    gb_assign (nargout, pargout, nargin, pargin, false, USAGE) ;
 }
 

@@ -1,9 +1,9 @@
 function [fname, unsigned, bits] = codegen_type (type)
-%CODEGEN_TYPE determine function _suffix, signed or not
+%CODEGEN_TYPE determine function suffix, signed or not
 % and # bits a C type
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights
-% Reserved. http://suitesparse.com.  See GraphBLAS/Doc/License.txt.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 unsigned = (type (1) == 'u') ;
 switch (type)

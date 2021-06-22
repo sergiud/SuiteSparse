@@ -2,14 +2,15 @@
 // GB_compatible: check input and operators for type compatibility
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
 // Check if the types for C<M> = accum (C,T) are all compatible,
 // and (if present) make sure the size of C and M match.
 
+#define GB_FREE_ALL ;
 #include "GB.h"
 
 GrB_Info GB_compatible          // SUCCESS if all is OK, *_MISMATCH otherwise
@@ -17,6 +18,7 @@ GrB_Info GB_compatible          // SUCCESS if all is OK, *_MISMATCH otherwise
     const GrB_Type ctype,       // the type of C (matrix or scalar)
     const GrB_Matrix C,         // the output matrix C; NULL if C is a scalar
     const GrB_Matrix M,         // optional mask, NULL if no mask
+    const bool Mask_struct,     // true if M is structural
     const GrB_BinaryOp accum,   // C<M> = accum(C,T) is computed
     const GrB_Type ttype,       // type of T
     GB_Context Context
@@ -47,12 +49,8 @@ GrB_Info GB_compatible          // SUCCESS if all is OK, *_MISMATCH otherwise
         // be compatible.  This is the same as the condition below
         // when accum is NULL.
 
-        info = GB_BinaryOp_compatible (accum, ctype, ctype, ttype,
-            GB_ignore_code, Context) ;
-        if (info != GrB_SUCCESS)
-        { 
-            return (info) ;
-        }
+        GB_OK (GB_BinaryOp_compatible (accum, ctype, ctype, ttype,
+            GB_ignore_code, Context)) ;
     }
 
     //--------------------------------------------------------------------------
@@ -63,16 +61,16 @@ GrB_Info GB_compatible          // SUCCESS if all is OK, *_MISMATCH otherwise
     // also C<M> = accum(C,T) for entries in T but not C
     if (!GB_Type_compatible (ctype, ttype))
     { 
-        return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
+        GB_ERROR (GrB_DOMAIN_MISMATCH,
             "Result of computation of type [%s]\n"
             "cannot be typecast to final output of type [%s]",
-            ttype->name, ctype->name))) ;
+            ttype->name, ctype->name) ;
     }
 
     //--------------------------------------------------------------------------
     // check the mask
     //--------------------------------------------------------------------------
 
-    return (GB_Mask_compatible (M, C, 1, 1, Context)) ;
+    return (GB_Mask_compatible (M, Mask_struct, C, 1, 1, Context)) ;
 }
 

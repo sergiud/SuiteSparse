@@ -2,8 +2,8 @@
 // GB_UnaryOp_new: create a new unary operator
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ GrB_Info GB_UnaryOp_new             // create a new user-defined unary operator
     // check inputs
     //--------------------------------------------------------------------------
 
-    GB_WHERE ("GrB_UnaryOp_new (unaryop, function, ztype, xtype)") ;
+    GB_WHERE1 ("GrB_UnaryOp_new (unaryop, function, ztype, xtype)") ;
     GB_RETURN_IF_NULL (unaryop) ;
     (*unaryop) = NULL ;
     GB_RETURN_IF_NULL (function) ;
@@ -42,31 +42,29 @@ GrB_Info GB_UnaryOp_new             // create a new user-defined unary operator
     //--------------------------------------------------------------------------
 
     // allocate the unary operator
-    (*unaryop) = GB_CALLOC (1, struct GB_UnaryOp_opaque) ;
+    size_t header_size ;
+    (*unaryop) = GB_MALLOC (1, struct GB_UnaryOp_opaque, &header_size) ;
     if (*unaryop == NULL)
     { 
         // out of memory
-        return (GB_OUT_OF_MEMORY) ;
+        return (GrB_OUT_OF_MEMORY) ;
     }
 
     // initialize the unary operator
     GrB_UnaryOp op = *unaryop ;
     op->magic = GB_MAGIC ;
+    op->header_size = header_size ;
     op->xtype = xtype ;
     op->ztype = ztype ;
     op->function = function ;
     op->opcode = GB_USER_opcode ;     // user-defined operator
+    op->name [0] = '\0' ;
 
     //--------------------------------------------------------------------------
     // find the name of the operator
     //--------------------------------------------------------------------------
 
-    if (name == NULL)
-    { 
-        // if no name , a generic name is used instead
-        strncpy (op->name, "user_unary_operator", GB_LEN-1) ;
-    }
-    else
+    if (name != NULL)
     {
         // see if the typecast "(GxB_unary_function)" appears in the name
         char *p = NULL ;

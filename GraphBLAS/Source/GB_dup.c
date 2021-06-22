@@ -2,8 +2,8 @@
 // GB_dup: make a deep copy of a sparse matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -35,8 +35,6 @@ GrB_Info GB_dup             // make an exact copy of a matrix
 (
     GrB_Matrix *Chandle,    // handle of output matrix to create
     const GrB_Matrix A,     // input matrix to copy
-    const bool numeric,     // if true, duplicate the numeric values
-    const GrB_Type ctype,   // type of C, if numeric is false
     GB_Context Context
 )
 { 
@@ -45,21 +43,20 @@ GrB_Info GB_dup             // make an exact copy of a matrix
     // check inputs
     //--------------------------------------------------------------------------
 
-    GrB_Info info ;
     ASSERT (Chandle != NULL) ;
     ASSERT_MATRIX_OK (A, "A to duplicate", GB0) ;
+    (*Chandle) = NULL ;
 
     //--------------------------------------------------------------------------
     // delete any lingering zombies and assemble any pending tuples
     //--------------------------------------------------------------------------
 
-    GB_MATRIX_WAIT (A) ;
+    GB_MATRIX_WAIT (A) ;        // TODO: keep zombies and jumbled
 
     //--------------------------------------------------------------------------
     // C = A
     //--------------------------------------------------------------------------
 
-    (*Chandle) = NULL ; // create a new header for C
-    return (GB_dup2 (Chandle, A, numeric, ctype, Context)) ;
+    return (GB_dup2 (Chandle, A, true, NULL, Context)) ;    // new user header
 }
 

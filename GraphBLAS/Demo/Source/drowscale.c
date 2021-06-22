@@ -2,8 +2,8 @@
 // drowscale: scale the rows of an adjacency matrix by out-degree
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -90,7 +90,8 @@ GrB_Info drowscale          // GrB_SUCCESS or error condition
     //--------------------------------------------------------------------------
 
     OK (GrB_Vector_new (&dout, GrB_FP64, n)) ;
-    OK (GrB_Matrix_reduce_BinaryOp (dout, NULL, NULL, GrB_PLUS_FP64, A, NULL)) ;
+    OK (GrB_Matrix_reduce_Monoid (dout, NULL, NULL, GrB_PLUS_MONOID_FP64,
+        A, NULL)) ;
 
     //--------------------------------------------------------------------------
     // construct scaling matrix D
@@ -107,7 +108,7 @@ GrB_Info drowscale          // GrB_SUCCESS or error condition
     OK (GrB_Vector_extractTuples_FP64 (I, X, &nvals, dout)) ;
 
     // I and X exclude empty columns of A.  This condition is always true.
-    CHECK (nvals <= n, GrB_PANIC) ;
+    CHECK (nvals <= n, GrB_INVALID_VALUE) ;
 
     // D = diag (1./dout) ;
     OK (GrB_Matrix_new (&D, GrB_FP64, n, n)) ;

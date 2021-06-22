@@ -2,8 +2,8 @@
 // GrB_BinaryOp_new: create a new user-defined binary operator
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -15,8 +15,9 @@
 
 // the macro version of this function must first be #undefined
 #undef GrB_BinaryOp_new
+#undef GrM_BinaryOp_new
 
-GrB_Info GrB_BinaryOp_new
+GrB_Info GRB (BinaryOp_new)
 (
     GrB_BinaryOp *binaryop,         // handle for the new binary operator
     GxB_binary_function function,   // pointer to the binary function

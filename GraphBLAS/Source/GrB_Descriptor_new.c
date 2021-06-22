@@ -2,8 +2,8 @@
 // GrB_Descriptor_new: create a new descriptor
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -21,7 +21,7 @@ GrB_Info GrB_Descriptor_new     // create a new descriptor
     // check inputs
     //--------------------------------------------------------------------------
 
-    GB_WHERE ("GrB_Descriptor_new (&descriptor)") ;
+    GB_WHERE1 ("GrB_Descriptor_new (&descriptor)") ;
     GB_RETURN_IF_NULL (descriptor) ;
     (*descriptor) = NULL ;
 
@@ -30,16 +30,20 @@ GrB_Info GrB_Descriptor_new     // create a new descriptor
     //--------------------------------------------------------------------------
 
     // allocate the descriptor
-    (*descriptor) = GB_CALLOC (1, struct GB_Descriptor_opaque) ;
+    size_t header_size ;
+    (*descriptor) = GB_MALLOC (1, struct GB_Descriptor_opaque, &header_size) ;
     if (*descriptor == NULL)
     { 
         // out of memory
-        return (GB_OUT_OF_MEMORY) ;
+        return (GrB_OUT_OF_MEMORY) ;
     }
 
     // initialize the descriptor
     GrB_Descriptor desc = *descriptor ;
     desc->magic = GB_MAGIC ;
+    desc->header_size = header_size ;
+    desc->logger = NULL ;          // error string
+    desc->logger_size = 0 ;
     desc->out  = GxB_DEFAULT ;     // descriptor for output
     desc->mask = GxB_DEFAULT ;     // descriptor for the mask input
     desc->in0  = GxB_DEFAULT ;     // descriptor for the first input
@@ -47,8 +51,7 @@ GrB_Info GrB_Descriptor_new     // create a new descriptor
     desc->axb  = GxB_DEFAULT ;     // descriptor for selecting the C=A*B method
     desc->nthreads_max = GxB_DEFAULT ;  // max # of threads to use
     desc->chunk = GxB_DEFAULT ;         // chunk for auto-tuning of # threads
-    desc->use_mkl = false ;        // control usage of Intel MKL
-    desc->predefined = false ;     // user-defined
+    desc->do_sort = false ;        // do not sort in GrB_mxm and others
     return (GrB_SUCCESS) ;
 }
 

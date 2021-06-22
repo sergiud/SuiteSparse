@@ -2,8 +2,8 @@
 // GB_binop.h: definitions for binary operators
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -26,15 +26,43 @@ bool GB_binop_builtin               // true if binary operator is builtin
     GB_Type_code *zcode             // type code for z output
 ) ;
 
-GB_Opcode GB_binop_flip     // flipped opcode
+GB_Opcode GB_binop_flip     // flipped opcode, or -1 on error
 (
-    GB_Opcode opcode        // opcode to flip
+    GB_Opcode opcode,       // opcode to flip
+    bool *handled           // true if opcode is handled by flipping the opcode
+) ;
+
+GrB_BinaryOp GB_flip_op     // flip a binary operator, or NULL on error
+(
+    GrB_BinaryOp op,        // binary operator to flip
+    bool *handled           // true if operator is handled
 ) ;
 
 GB_PUBLIC   // accessed by the MATLAB interface only
 GB_Opcode GB_boolean_rename     // renamed opcode
 (
     const GB_Opcode opcode      // opcode to rename
+) ;
+
+GrB_BinaryOp GB_boolean_rename_op   // return renamed op
+(
+    const GrB_BinaryOp op           // op to rename
+) ;
+
+void GB_binop_new
+(
+    GrB_BinaryOp op,                // new binary operator
+    GxB_binary_function function,   // binary function (may be NULL)
+    GrB_Type ztype,                 // type of output z
+    GrB_Type xtype,                 // type of input x
+    GrB_Type ytype,                 // type of input y
+    const char *name,               // name of the function (may be NULL)
+    const GB_Opcode opcode          // opcode for the function
+) ;
+
+GrB_Monoid *GB_binop_to_monoid      // return the corresponding monoid, or NULL
+(
+    const GrB_BinaryOp op_in        // binary op to convert
 ) ;
 
 #endif

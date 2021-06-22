@@ -2,8 +2,8 @@
 // GB_mex.h: definitions for the MATLAB interface to GraphBLAS
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -13,9 +13,6 @@
 #ifndef GB_MEXH
 #define GB_MEXH
 
-#define GB_PANIC mexErrMsgTxt ("panic") ;
-
-// #include "GB.h"
 #include "GB_mxm.h"
 #include "GB_Pending.h"
 #include "GB_add.h"
@@ -50,10 +47,7 @@
 
 // timer functions, and result statistics
 extern double grbtime, tic [2] ;
-void GB_mx_put_time
-(
-    GrB_Desc_Value AxB_method_used
-) ;
+void GB_mx_put_time (void) ;
 void GB_mx_clear_time (void) ;          // clear the time and start the tic
 #define GB_MEX_TIC { GB_mx_clear_time ( ) ; }
 #define GB_MEX_TOC { grbtime = simple_toc (tic) ; }
@@ -214,8 +208,7 @@ bool GB_mx_get_global       // true if doing malloc_debug
 
 void GB_mx_put_global
 (   
-    bool cover,
-    GrB_Desc_Value AxB_method_used
+    bool cover
 ) ;
 
 bool GB_mx_same     // true if arrays X and Y are the same
@@ -229,6 +222,7 @@ bool GB_mx_xsame    // true if arrays X and Y are the same (ignoring zombies)
 (
     char *X,
     char *Y,
+    int8_t *Xb,     // bitmap of X and Y (NULL if no bitmap)
     int64_t len,    // length of X and Y
     size_t s,       // size of each entry of X and Y
     int64_t *I      // row indices (for zombies), same length as X and Y
@@ -238,6 +232,7 @@ bool GB_mx_xsame32  // true if arrays X and Y are the same (ignoring zombies)
 (
     float *X,
     float *Y,
+    int8_t *Xb,     // bitmap of X and Y (NULL if no bitmap)
     int64_t len,    // length of X and Y
     int64_t *I,     // row indices (for zombies), same length as X and Y
     float eps       // error tolerance allowed (eps > 0)
@@ -247,6 +242,7 @@ bool GB_mx_xsame64  // true if arrays X and Y are the same (ignoring zombies)
 (
     double *X,
     double *Y,
+    int8_t *Xb,     // bitmap of X and Y (NULL if no bitmap)
     int64_t len,    // length of X and Y
     int64_t *I,     // row indices (for zombies), same length as X and Y
     double eps      // error tolerance allowed (eps > 0)
@@ -291,9 +287,24 @@ GrB_Type GB_mx_string_to_Type       // GrB_Type from the string
 
 //------------------------------------------------------------------------------
 
-#define AS_IF_FREE(p)                   \
+// remove a block that had been allocated from within GraphBLAS and then
+// exported.
+#define REMOVE(p)                                       \
+{                                                       \
+    if ((p) != NULL)                                    \
+    {                                                   \
+        GB_Global_nmalloc_decrement ( ) ;               \
+        if (GB_Global_memtable_find (p))                \
+        {                                               \
+            GB_Global_memtable_remove (p) ;             \
+        }                                               \
+    }                                                   \
+}
+
+#define GB_AS_IF_FREE(p)                \
 {                                       \
     GB_Global_nmalloc_decrement ( ) ;   \
+    GB_Global_memtable_remove (p) ;     \
     (p) = NULL ;                        \
 }
 
@@ -301,7 +312,8 @@ GrB_Type GB_mx_string_to_Type       // GrB_Type from the string
 
 #define METHOD_START(OP) \
     printf ("\n================================================================================\n") ; \
-    printf ("method: [%s] start: "GBd"\n", #OP, GB_Global_nmalloc_get ( )) ; \
+    printf ("method: [%s] start: "GBd" "GBd"\n", #OP, \
+        GB_Global_nmalloc_get ( ), GB_Global_free_pool_nblocks_total ( )) ; \
     printf ("================================================================================\n") ;
 
 #define METHOD_TRY \
@@ -333,13 +345,15 @@ GrB_Type GB_mx_string_to_Type       // GrB_Type from the string
         if (! (info == GrB_SUCCESS || info == GrB_NO_VALUE))                \
         {                                                                   \
             FREE_ALL ;                                                      \
-            mexErrMsgTxt (GrB_error ( )) ;                                  \
+            printf ("info: %d\n", info) ;                                   \
+            mexErrMsgTxt ("method failed") ;                                \
         }                                                                   \
     }                                                                       \
     else                                                                    \
     {                                                                       \
         /* brutal malloc debug */                                           \
         int nmalloc_start = (int) GB_Global_nmalloc_get ( ) ;               \
+        int nfree_pool_start = (int) GB_Global_free_pool_nblocks_total ( ) ;\
         for (int tries = 0 ; ; tries++)                                     \
         {                                                                   \
             /* give GraphBLAS the ability to do a # of mallocs, */          \
@@ -368,17 +382,23 @@ GrB_Type GB_mx_string_to_Type       // GrB_Type from the string
                 FREE_DEEP_COPY ;                                            \
                 GET_DEEP_COPY ;                                             \
                 int nmalloc_end = (int) GB_Global_nmalloc_get ( ) ;         \
+                int nfree_pool_end =                                        \
+                    (int) GB_Global_free_pool_nblocks_total ( ) ;           \
                 int nleak = nmalloc_end - nmalloc_start ;                   \
-                if (nleak > 0)                                              \
+                int nfree_delta = nfree_pool_end - nfree_pool_start ;       \
+                if (nleak > nfree_delta)                                    \
                 {                                                           \
                     /* memory leak */                                       \
                     printf ("Leak! tries %d : nleak %d\n"                   \
                         "nmalloc_end:        %d\n"                          \
                         "nmalloc_start:      %d\n"                          \
+                        "nfree_pool start:   %d\n"                          \
+                        "nfree_pool end:     %d\n"                          \
                         "method [%s]\n",                                    \
                         tries, nleak, nmalloc_end, nmalloc_start,           \
+                        nfree_pool_start, nfree_pool_end,                   \
                         GB_STR (GRAPHBLAS_OPERATION)) ;                     \
-                    mexWarnMsgIdAndTxt ("GB:leak", GrB_error ( )) ;         \
+                    mexWarnMsgIdAndTxt ("GB:leak", "memory leak") ;         \
                     FREE_ALL ;                                              \
                     mexErrMsgTxt ("Leak!") ;                                \
                 }                                                           \
@@ -386,11 +406,9 @@ GrB_Type GB_mx_string_to_Type       // GrB_Type from the string
             else                                                            \
             {                                                               \
                 /* another error has occurred */                            \
-                printf ("an error: %s line %d\n%s\n", __FILE__, __LINE__,   \
-                    GrB_error ()) ;                                         \
                 FREE_ALL ;                                                  \
-                if (info == GrB_PANIC) mexErrMsgTxt ("panic!") ;            \
-                mexErrMsgTxt (GrB_error ( )) ;                              \
+                printf ("info: %d\n", info) ; \
+                mexErrMsgTxt ("unexpected error in mex brutal malloc debug") ; \
             }                                                               \
         }                                                                   \
     }

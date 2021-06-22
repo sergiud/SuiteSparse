@@ -2,8 +2,8 @@
 // GB_hyper_prune: remove empty vectors from a hypersparse Ap, Ah list
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -17,8 +17,8 @@
 GrB_Info GB_hyper_prune
 (
     // output, not allocated on input:
-    int64_t *GB_RESTRICT *p_Ap,        // size nvec+1
-    int64_t *GB_RESTRICT *p_Ah,        // size nvec
+    int64_t *restrict *p_Ap, size_t *p_Ap_size,      // size nvec+1
+    int64_t *restrict *p_Ah, size_t *p_Ah_size,      // size nvec
     int64_t *p_nvec,                // # of vectors, all nonempty
     // input, not modified
     const int64_t *Ap_old,          // size nvec_old+1
@@ -38,9 +38,13 @@ GrB_Info GB_hyper_prune
     ASSERT (Ap_old != NULL) ;
     ASSERT (Ah_old != NULL) ;
     ASSERT (nvec_old >= 0) ;
-    (*p_Ap) = NULL ;
-    (*p_Ah) = NULL ;
+    (*p_Ap) = NULL ;    (*p_Ap_size) = 0 ;
+    (*p_Ah) = NULL ;    (*p_Ah_size) = 0 ;
     (*p_nvec) = -1 ;
+
+    int64_t *restrict W  = NULL ; size_t W_size  = 0 ;
+    int64_t *restrict Ap = NULL ; size_t Ap_size = 0 ;
+    int64_t *restrict Ah = NULL ; size_t Ah_size = 0 ;
 
     //--------------------------------------------------------------------------
     // determine the # of threads to use
@@ -53,11 +57,11 @@ GrB_Info GB_hyper_prune
     // allocate workspace
     //--------------------------------------------------------------------------
 
-    int64_t *GB_RESTRICT W = GB_MALLOC (nvec_old+1, int64_t) ;
+    W = GB_MALLOC_WERK (nvec_old+1, int64_t, &W_size) ;
     if (W == NULL)
     { 
         // out of memory
-        return (GB_OUT_OF_MEMORY) ;
+        return (GrB_OUT_OF_MEMORY) ;
     }
 
     //--------------------------------------------------------------------------
@@ -73,21 +77,21 @@ GrB_Info GB_hyper_prune
     }
 
     int64_t nvec ;
-    GB_cumsum (W, nvec_old, &nvec, nthreads) ;
+    GB_cumsum (W, nvec_old, &nvec, nthreads, Context) ;
 
     //--------------------------------------------------------------------------
     // allocate the result
     //--------------------------------------------------------------------------
 
-    int64_t *GB_RESTRICT Ap = GB_MALLOC (nvec+1, int64_t) ;
-    int64_t *GB_RESTRICT Ah = GB_MALLOC (nvec  , int64_t) ;
+    Ap = GB_MALLOC (nvec+1, int64_t, &Ap_size) ;
+    Ah = GB_MALLOC (nvec  , int64_t, &Ah_size) ;
     if (Ap == NULL || Ah == NULL)
     { 
         // out of memory
-        GB_FREE (W) ;
-        GB_FREE (Ap) ;
-        GB_FREE (Ah) ;
-        return (GB_OUT_OF_MEMORY) ;
+        GB_FREE_WERK (&W, W_size) ;
+        GB_FREE (&Ap, Ap_size) ;
+        GB_FREE (&Ah, Ah_size) ;
+        return (GrB_OUT_OF_MEMORY) ;
     }
 
     //--------------------------------------------------------------------------
@@ -111,9 +115,9 @@ GrB_Info GB_hyper_prune
     // free workspace and return result
     //--------------------------------------------------------------------------
 
-    GB_FREE (W) ;
-    (*p_Ap) = Ap ;
-    (*p_Ah) = Ah ;
+    GB_FREE_WERK (&W, W_size) ;
+    (*p_Ap) = Ap ; (*p_Ap_size) = Ap_size ;
+    (*p_Ah) = Ah ; (*p_Ah_size) = Ah_size ;
     (*p_nvec) = nvec ;
     return (GrB_SUCCESS) ;
 }

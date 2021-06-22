@@ -2,8 +2,10 @@
 // GB_casting.c: unary typecasting functions
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
+//------------------------------------------------------------------------------
 
 #include "GB.h"
 
@@ -25,7 +27,7 @@ extern uint64_t GB_cast_to_uint64_t (double x) ;
 //------------------------------------------------------------------------------
 
 #define GB_CAST_FUNCTION(ztype,xtype)                                   \
-extern void GB_cast_ ## ztype ## _ ## xtype                             \
+extern void GB (_cast_ ## ztype ## _ ## xtype)                          \
 (                                                                       \
     void *z,            /* typecasted output, of type ztype */          \
     const void *x,      /* input value to typecast, of type xtype */    \

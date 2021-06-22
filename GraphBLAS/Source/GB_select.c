@@ -2,16 +2,16 @@
 // GB_select: apply a select operator
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
 // C<M> = accum (C, select(A,Thunk)) or select(A,Thunk)').
 
-#define GB_FREE_ALL                         \
-{                                           \
-    GB_MATRIX_FREE (&T) ;                   \
+#define GB_FREE_ALL     \
+{                       \
+    GB_phbix_free (T) ; \
 }
 
 #include "GB_select.h"
@@ -39,7 +39,7 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
 
     // C may be aliased with M and/or A
 
-    GB_RETURN_IF_FAULTY (accum) ;
+    GB_RETURN_IF_FAULTY_OR_POSITIONAL (accum) ;
     GB_RETURN_IF_FAULTY (Thunk_in) ;
     GB_RETURN_IF_NULL_OR_FAULTY (op) ;
 
@@ -50,16 +50,17 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
     ASSERT_MATRIX_OK (A, "A input for GB_select", GB0) ;
     ASSERT_SCALAR_OK_OR_NULL (Thunk_in, "Thunk_in for GB_select", GB0) ;
 
-    GrB_Matrix T = NULL ;
+    struct GB_Matrix_opaque T_header ;
+    GrB_Matrix T = GB_clear_static_header (&T_header) ;
 
     // check domains and dimensions for C<M> = accum (C,T)
     GrB_Info info ;
-    GB_OK (GB_compatible (C->type, C, M, accum, A->type, Context)) ;
+    GB_OK (GB_compatible (C->type, C, M, Mask_struct, accum, A->type, Context));
 
     GB_Type_code typecode = A->type->code ;
     GB_Select_Opcode opcode = op->opcode ;
 
-    // this opcodes are not availabe to the user
+    // these opcodes are not availabe to the user
     ASSERT (opcode != GB_RESIZE_opcode) ;
     ASSERT (opcode != GB_NONZOMBIE_opcode) ;
 
@@ -70,24 +71,32 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
         opcode == GB_LT_ZERO_opcode || opcode == GB_LT_THUNK_opcode ||
         opcode == GB_LE_ZERO_opcode || opcode == GB_LE_THUNK_opcode ;
 
-    if (op_is_ordered_comparator && typecode == GB_UDT_code)
-    { 
+    if (op_is_ordered_comparator)
+    {
         // built-in GT, GE, LT, and LE operators cannot be used with
-        // user-defined types.  There are no built-in ordered comparators
-        // for built-in complex types.
-        return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
-            "Operator %s not defined for user-defined types", op->name))) ;
+        // user-defined or complex types.
+        if (typecode == GB_UDT_code)
+        { 
+            GB_ERROR (GrB_DOMAIN_MISMATCH,
+                "Operator %s not defined for user-defined types", op->name) ;
+        }
+        else if (typecode == GB_FC32_code || typecode == GB_FC64_code)
+        { 
+            GB_ERROR (GrB_DOMAIN_MISMATCH,
+                "Operator %s not defined for complex types", op->name) ;
+        }
     }
 
     // C = op (A) must be compatible, already checked in GB_compatible
-    // A must also be compatible with op->xtype, unless op->xtype is NULL
-    if (op->xtype != NULL && !GB_Type_compatible (A->type, op->xtype))
+
+    // A must also be compatible with op->xtype
+    if (!GB_Type_compatible (A->type, op->xtype))
     { 
-        return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
+        GB_ERROR (GrB_DOMAIN_MISMATCH,
             "Incompatible type for C=%s(A,Thunk):\n"
             "input A type [%s]\n"
             "cannot be typecast to operator input of type [%s]",
-            op->name, A->type->name, op->xtype->name))) ;
+            op->name, A->type->name, op->xtype->name) ;
     }
 
     // check the dimensions
@@ -95,12 +104,12 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
     int64_t tncols = (A_transpose) ? GB_NROWS (A) : GB_NCOLS (A) ;
     if (GB_NROWS (C) != tnrows || GB_NCOLS (C) != tncols)
     { 
-        return (GB_ERROR (GrB_DIMENSION_MISMATCH, (GB_LOG,
+        GB_ERROR (GrB_DIMENSION_MISMATCH,
             "Dimensions not compatible:\n"
             "output is " GBd "-by-" GBd "\n"
             "input is " GBd "-by-" GBd "%s",
             GB_NROWS (C), GB_NCOLS (C),
-            tnrows, tncols, A_transpose ? " (transposed)" : ""))) ;
+            tnrows, tncols, A_transpose ? " (transposed)" : "") ;
     }
 
     // check if op is (NE, EQ, GT, GE, LT, LE)_THUNK
@@ -108,40 +117,32 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
         (opcode >= GB_NE_THUNK_opcode && opcode <= GB_LE_THUNK_opcode) ;
 
     // check if op is TRIL, TRIU, DIAG, or OFFDIAG
-    bool op_is_positional =
-        (opcode >= GB_TRIL_opcode && opcode <= GB_OFFDIAG_opcode) ;
+    bool op_is_positional = GB_SELECTOP_IS_POSITIONAL (opcode) ;
 
     // check if op is user-defined
     bool op_is_user_defined = (opcode >= GB_USER_SELECT_opcode) ;
 
     int64_t nz_thunk = 0 ;
-    GB_void *GB_RESTRICT xthunk_in = NULL ;
+    GB_void *restrict xthunk_in = NULL ;
 
     if (Thunk_in != NULL)
     {
 
         // finish any pending work on the Thunk
-        GB_SCALAR_WAIT (Thunk_in) ;
+        GB_MATRIX_WAIT (Thunk_in) ;
         nz_thunk = GB_NNZ (Thunk_in) ;
-
-        // if present, Thunk_in must be 1-by-1
-        if (GB_NROWS (Thunk_in) != 1 || GB_NCOLS (Thunk_in) != 1)
-        { 
-            // Thunk present, but empty, or wrong dimensions
-            return (GB_ERROR (GrB_DIMENSION_MISMATCH, (GB_LOG,
-                "Thunk must be a GxB_Scalar"))) ;
-        }
 
         // if op is TRIL, TRIU, DIAG, or OFFDIAG, Thunk_in must be
         // compatible with GrB_INT64
-        if (op_is_positional && !GB_Type_compatible (GrB_INT64, Thunk_in->type))
+        if (op_is_positional &&
+            !GB_Type_compatible (GrB_INT64, Thunk_in->type))
         { 
             // Thunk not a built-in type, for a built-in select operator
-            return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
+            GB_ERROR (GrB_DOMAIN_MISMATCH,
                 "Incompatible type for C=%s(A,Thunk):\n"
                 "input Thunk type [%s]\n"
                 "not compatible with GrB_INT64 input to built-in operator %s",
-                op->name, Thunk_in->type->name, op->name))) ;
+                op->name, Thunk_in->type->name, op->name) ;
         }
 
         // if op is (NE, EQ, GT, GE, LT, LE)_THUNK, then Thunk must be
@@ -149,10 +150,10 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
         if (op_is_thunk_comparator &&
            !GB_Type_compatible (A->type, Thunk_in->type))
         { 
-            return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
+            GB_ERROR (GrB_DOMAIN_MISMATCH,
                 "Incompatible type for C=%s(A,Thunk):\n"
                 "input A type [%s] and Thunk type [%s] not compatible",
-                op->name, A->type->name, Thunk_in->type->name))) ;
+                op->name, A->type->name, Thunk_in->type->name) ;
         }
 
         // get the pointer to the value of Thunk_in
@@ -165,15 +166,15 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
         if (op->ttype == NULL && Thunk_in != NULL)
         { 
             // select operator does not take a Thunk, but one is present
-            return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
+            GB_ERROR (GrB_DOMAIN_MISMATCH,
                 "User-defined operator %s(A,Thunk) does not take a Thunk\n"
-                "input, but Thunk parameter is non-NULL", op->name))) ;
+                "input, but Thunk parameter is non-NULL", op->name) ;
         }
         else if (op->ttype != NULL && Thunk_in == NULL)
         { 
             // select operator takes a Thunk, but Thunk parameter is missing
-            return (GB_ERROR (GrB_NULL_POINTER, (GB_LOG,
-                "Required argument is null: [Thunk]"))) ;
+            GB_ERROR (GrB_NULL_POINTER,
+                "Required argument is null: [%s]", "Thunk") ;
         }
         else if (op->ttype != NULL && Thunk_in != NULL)
         {
@@ -181,30 +182,34 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
             // The types must match exactly.
             if (op->ttype != Thunk_in->type)
             { 
-                return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
+                GB_ERROR (GrB_DOMAIN_MISMATCH,
                     "User-defined operator %s(A,Thunk) has a Thunk input\n"
                     "type of [%s], which must exactly match the type of the\n"
                     "Thunk parameter; parameter to GxB_select has type [%s]",
-                    op->name, op->ttype->name, Thunk_in->type->name))) ;
+                    op->name, op->ttype->name, Thunk_in->type->name) ;
             }
             if (nz_thunk != 1)
             { 
-                return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,
+                GB_ERROR (GrB_INVALID_VALUE,
                     "User-defined operator %s(A,Thunk) has a Thunk input,\n"
-                    "which must not be empty", op->name))) ;
+                    "which must not be empty", op->name) ;
             }
         }
     }
 
     // quick return if an empty mask is complemented
-    GB_RETURN_IF_QUICK_MASK (C, C_replace, M, Mask_comp) ;
+    GB_RETURN_IF_QUICK_MASK (C, C_replace, M, Mask_comp, Mask_struct) ;
 
     //--------------------------------------------------------------------------
     // delete any lingering zombies and assemble any pending tuples
     //--------------------------------------------------------------------------
 
-    GB_MATRIX_WAIT (M) ;
-    GB_MATRIX_WAIT (A) ;
+    GB_MATRIX_WAIT (M) ;        // TODO: delay until accum/mask phase
+    GB_MATRIX_WAIT (A) ;        // TODO: could tolerate jumbled in some cases
+
+    GB_BURBLE_DENSE (C, "(C %s) ") ;
+    GB_BURBLE_DENSE (M, "(M %s) ") ;
+    GB_BURBLE_DENSE (A, "(A %s) ") ;
 
     //--------------------------------------------------------------------------
     // handle the CSR/CSC format and the transposed case
@@ -242,8 +247,8 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
     if (typecode == GB_BOOL_code && op_is_thunk_comparator && nz_thunk > 0)
     { 
         // bthunk = (bool) Thunk_in
-        GB_cast_array ((GB_void *) (&bthunk), GB_BOOL_code,
-            xthunk_in, Thunk_in->type->code, Thunk_in->type->size, 1, 1) ;
+        GB_cast_array ((GB_void *) (&bthunk), GB_BOOL_code, xthunk_in,
+            Thunk_in->type->code, NULL, Thunk_in->type->size, 1, 1) ;
     }
 
     int64_t ithunk = 0 ;        // ithunk = (int64_t) Thunk (0)
@@ -271,8 +276,8 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
         if (nz_thunk > 0)
         { 
             // ithunk = (int64_t) (Thunk_in (0)) ;
-            GB_cast_array ((GB_void *) &ithunk, GB_INT64_code,
-                xthunk_in, Thunk_in->type->code, Thunk_in->type->size, 1, 1) ;
+            GB_cast_array ((GB_void *) &ithunk, GB_INT64_code, xthunk_in,
+                Thunk_in->type->code, NULL, Thunk_in->type->size, 1, 1) ;
         }
 
         if (flipij)
@@ -317,7 +322,7 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
 
             case GB_GE_ZERO_opcode   :  // A(i,j) >= 0
 
-                // bool and uint: always true; use GB_dup
+                // bool and uint: always true; use GB_dup2
                 // user type: return error above
                 switch (typecode)
                 {
@@ -402,7 +407,7 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
             case GB_GE_THUNK_opcode   : // A(i,j) >= thunk
 
                 // bool: if thunk is true,  rename GxB_GE_THUNK to GxB_NONZERO
-                //       if thunk is false, use GB_dup
+                //       if thunk is false, use GB_dup2
                 // user type: return error above
                 if (typecode == GB_BOOL_code)
                 {
@@ -439,7 +444,7 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
 
             case GB_LE_THUNK_opcode   : // A(i,j) <= thunk
 
-                // bool: if thunk is true,  use GB_dup
+                // bool: if thunk is true,  use GB_dup2
                 //       if thunk is false, rename GxB_LE_ZERO to GxB_EQ_ZERO
                 // user type: return error
                 if (typecode == GB_BOOL_code)
@@ -466,20 +471,21 @@ GrB_Info GB_select          // C<M> = accum (C, select(A,k)) or select(A',k)
 
     if (use_dup)
     { 
-        // selectop is always true, so use GB_dup to do T = A
-        GB_OK (GB_dup (&T, A, true, A->type, Context)) ;
+        // selectop is always true, so use GB_dup2 to do T = A
+        GB_OK (GB_dup2 (&T, A, true, A->type, Context)) ;   // static header
     }
     else if (is_empty)
     { 
         // selectop is always false, so T is an empty matrix
-        info = GB_new (&T, A->type, A->vlen, A->vdim, GB_Ap_calloc, A_csc,
-            GB_AUTO_HYPER, GB_HYPER_DEFAULT, 1, Context) ;
-        GB_OK (info) ;
+        GB_OK (GB_new (&T, true, // auto (sparse or hyper), static header
+            A->type, A->vlen, A->vdim, GB_Ap_calloc, A_csc,
+            GxB_SPARSE + GxB_HYPERSPARSE, GB_Global_hyper_switch_get ( ),
+            1, Context)) ;
     }
     else
     { 
         // T = select (A, Thunk)
-        GB_OK (GB_selector (&T, opcode, op, flipij, A, ithunk,
+        GB_OK (GB_selector (T, opcode, op, flipij, A, ithunk,
             (op_is_thunk_comparator || op_is_user_defined) ? Thunk_in : NULL,
             Context)) ;
     }

@@ -2,8 +2,8 @@
 // GraphBLAS/Demo/Source/mis_check.c: maximal independent set, w/error checking
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -137,7 +137,7 @@ GrB_Info mis_check              // compute a maximal independent set
 
     // compute the degree of each node
     OK (GrB_Vector_new (&degrees, GrB_FP64, n)) ;
-    OK (GrB_Matrix_reduce_BinaryOp (degrees, NULL, NULL, GrB_PLUS_FP64,
+    OK (GrB_Matrix_reduce_Monoid (degrees, NULL, NULL, GrB_PLUS_MONOID_FP64,
         A, NULL)) ;
 
     // singletons are not candidates; they are added to iset first instead

@@ -2,10 +2,16 @@
 // GB_lookup_template: find k so that j == Ah [k]
 //------------------------------------------------------------------------------
 
-// Given a sparse, hypersparse, or hyperslice matrix, find k so that j == Ah
-// [k], if it appears in the list.  k is not needed by the caller, just the
-// variables pstart, pend, pleft, and found.  GB_lookup cannot be used if
-// A is a slice (it could be extended to handle this case).
+// For a sparse, bitmap, or full matrix j == k.
+// For a hypersparse matrix, find k so that j == Ah [k], if it
+// appears in the list.
+
+// k is not needed by the caller, just the variables
+// pstart, pend, pleft, and found.
+
+// Once k is found, find pstart and pend, the start and end of the vector.
+// pstart and pend are defined for all sparsity structures: hypersparse,
+// sparse, bitmap, or full.
 
 // This fine is #included' by GB.h, so the #include'ing file does either:
 //      #include "GB.h"
@@ -21,14 +27,15 @@ static inline bool GB_lookup        // find j = Ah [k] in a hyperlist
 #endif
 (
     const bool A_is_hyper,          // true if A is hypersparse
-    const int64_t *GB_RESTRICT Ah,  // A->h [0..A->nvec-1]: list of vectors
-    const int64_t *GB_RESTRICT Ap,  // A->p [0..A->nvec  ]: pointers to vectors
-    int64_t *GB_RESTRICT pleft,     // look only in A->h [pleft..pright]
+    const int64_t *restrict Ah,  // A->h [0..A->nvec-1]: list of vectors
+    const int64_t *restrict Ap,  // A->p [0..A->nvec  ]: pointers to vectors
+    const int64_t avlen,            // A->vlen
+    int64_t *restrict pleft,     // look only in A->h [pleft..pright]
     int64_t pright,                 // normally A->nvec-1, but can be trimmed
 //  const int64_t nvec,             // A->nvec: number of vectors
     const int64_t j,                // vector to find, as j = Ah [k]
-    int64_t *GB_RESTRICT pstart,    // start of vector: Ap [k]
-    int64_t *GB_RESTRICT pend       // end of vector: Ap [k+1]
+    int64_t *restrict pstart,    // start of vector: Ap [k]
+    int64_t *restrict pend       // end of vector: Ap [k+1]
 )
 {
     if (A_is_hyper)
@@ -55,12 +62,11 @@ static inline bool GB_lookup        // find j = Ah [k] in a hyperlist
     }
     else
     { 
-        // A is not hypersparse; j always appears
+        // A is sparse, bitmap, or full; j always appears
         // k = j
-        (*pstart) = Ap [j] ;
-        (*pend)   = Ap [j+1] ;
+        (*pstart) = GBP (Ap, j, avlen) ;
+        (*pend)   = GBP (Ap, j+1, avlen) ;
         return (true) ;
     }
 }
-
 

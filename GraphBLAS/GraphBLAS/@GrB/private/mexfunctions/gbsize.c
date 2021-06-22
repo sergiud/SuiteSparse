@@ -2,8 +2,8 @@
 // gbsize: dimension and type of a GraphBLAS or MATLAB matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 //------------------------------------------------------------------------------
 
@@ -16,6 +16,8 @@
 // [m, n, type] = gbsize (X)
 
 #include "gb_matlab.h"
+
+#define USAGE "usage: [m n type] = gbsize (X)"
 
 void mexFunction
 (
@@ -30,7 +32,7 @@ void mexFunction
     // check inputs
     //--------------------------------------------------------------------------
 
-    gb_usage (nargin == 1 && nargout <= 4, "usage: [m n type] = gbsize (X)") ;
+    gb_usage (nargin == 1 && nargout <= 4, USAGE) ;
 
     //--------------------------------------------------------------------------
     // get the # of rows and columns of a GraphBLAS or MATLAB matrix
@@ -46,6 +48,20 @@ void mexFunction
         // get the size of a GraphBLAS matrix
         //----------------------------------------------------------------------
 
+        // get the type
+        mxArray *mx_type = mxGetField (pargin [0], 0, "GraphBLASv5") ;
+        if (mx_type == NULL)
+        {
+            // check if it is a GraphBLASv4 struct
+            mx_type = mxGetField (pargin [0], 0, "GraphBLASv4") ;
+        }
+        if (mx_type == NULL)
+        {
+            // check if it is a GraphBLASv3 struct
+            mx_type = mxGetField (pargin [0], 0, "GraphBLAS") ;
+        }
+        CHECK_ERROR (mx_type == NULL, "invalid GraphBLAS struct") ;
+
         // get the scalar info
         mxArray *opaque = mxGetField (pargin [0], 0, "s") ;
         CHECK_ERROR (opaque == NULL, "invalid GraphBLAS struct") ;
@@ -58,14 +74,12 @@ void mexFunction
         ncols = (is_csc) ? vdim : vlen ;
 
         //----------------------------------------------------------------------
-        // get the type of a GraphBLAS matrix, if requested
+        // return type of a GraphBLAS matrix, if requested
         //----------------------------------------------------------------------
 
         if (nargout > 2)
         { 
-            // get the type
-            mxArray *mx_type = mxGetField (pargin [0], 0, "GraphBLAS") ;
-            CHECK_ERROR (mx_type == NULL, "invalid GraphBLAS struct") ;
+            // return the type
             pargout [2] = mxDuplicateArray (mx_type) ;
         }
 

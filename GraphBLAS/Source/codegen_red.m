@@ -4,6 +4,9 @@ function codegen_red
 % This function creates all files of the form GB_red__*.c,
 % and the include file GB_red__include.h.
 
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
+
 fprintf ('\nreduction operators:\n') ;
 
 f = fopen ('Generated/GB_red__include.h', 'w') ;
@@ -11,9 +14,8 @@ fprintf (f, '//-----------------------------------------------------------------
 fprintf (f, '// GB_red__include.h: definitions for GB_red__*.c\n') ;
 fprintf (f, '//------------------------------------------------------------------------------\n') ;
 fprintf (f, '\n') ;
-fprintf (f, '// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.\n') ;
-fprintf (f, '// http://suitesparse.com   See GraphBLAS/Doc/License.txargt for license.\n') ;
-fprintf (f, '\n') ;
+fprintf (f, '// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.\n') ;
+fprintf (f, '// SPDX-License-Identifier: Apache-2.0\n\n') ;
 fprintf (f, '// This file has been automatically generated from Generator/GB_red.h') ;
 fprintf (f, '\n\n') ;
 fclose (f) ;
@@ -22,7 +24,7 @@ fclose (f) ;
 % the monoid: MIN, MAX, PLUS, TIMES, ANY, OR, AND, XOR, EQ
 %-------------------------------------------------------------------------------
 
-% Note that the min and max monoids are carefully written to obtain the correct
+% Note that the min and max monoids are written to obtain the correct
 % NaN behavior for float and double.  Comparisons with NaN are always false.
 % zarg is the accumulator.  If zarg is not NaN and the comparison is false,
 % zarg is not modified and the value of yarg is properly ignored.  Thus if zarg
@@ -42,7 +44,7 @@ fclose (f) ;
 % MIN: 10 monoids:  name      op   type        identity      terminal   panel
 % (all but bool and complex)
 fprintf ('\nmin    ') ;
-op = 'if (yarg < zarg) zarg = yarg' ;
+op = 'if (yarg < zarg) { zarg = yarg ; }' ;
 codegen_red_method ('min',    op, 'int8_t'  , 'INT8_MAX'  , 'INT8_MIN'  , 16) ;
 codegen_red_method ('min',    op, 'int16_t' , 'INT16_MAX' , 'INT16_MIN' , 16) ;
 codegen_red_method ('min',    op, 'int32_t' , 'INT32_MAX' , 'INT32_MIN' , 16) ;
@@ -51,14 +53,14 @@ codegen_red_method ('min',    op, 'uint8_t' , 'UINT8_MAX' , '0'         , 16) ;
 codegen_red_method ('min',    op, 'uint16_t', 'UINT16_MAX', '0'         , 16) ;
 codegen_red_method ('min',    op, 'uint32_t', 'UINT32_MAX', '0'         , 16) ;
 codegen_red_method ('min',    op, 'uint64_t', 'UINT64_MAX', '0'         , 16) ;
-op = 'if ((yarg < zarg) || (zarg != zarg)) zarg = yarg' ;
+op = 'if ((yarg < zarg) || (zarg != zarg)) { zarg = yarg ; }' ;
 codegen_red_method ('min',    op, 'float'   , 'INFINITY' , '(-INFINITY)', 16) ;
 codegen_red_method ('min',    op, 'double'  , ...
     '((double) INFINITY)'  , '((double) -INFINITY)' , 16) ;
 
 % MAX: 10 monoids (all but bool and complex)
 fprintf ('\nmax    ') ;
-op = 'if (yarg > zarg) zarg = yarg' ;
+op = 'if (yarg > zarg) { zarg = yarg ; }' ;
 codegen_red_method ('max',    op, 'int8_t'  , 'INT8_MIN'  , 'INT8_MAX'  , 16) ;
 codegen_red_method ('max',    op, 'int16_t' , 'INT16_MIN' , 'INT16_MAX' , 16) ;
 codegen_red_method ('max',    op, 'int32_t' , 'INT32_MIN' , 'INT32_MAX' , 16) ;
@@ -67,10 +69,10 @@ codegen_red_method ('max',    op, 'uint8_t' , '0'         , 'UINT8_MAX' , 16) ;
 codegen_red_method ('max',    op, 'uint16_t', '0'         , 'UINT16_MAX', 16) ;
 codegen_red_method ('max',    op, 'uint32_t', '0'         , 'UINT32_MAX', 16) ;
 codegen_red_method ('max',    op, 'uint64_t', '0'         , 'UINT64_MAX', 16) ;
-op = 'if ((yarg > zarg) || (zarg != zarg)) zarg = yarg' ;
+op = 'if ((yarg > zarg) || (zarg != zarg)) { zarg = yarg ; }' ;
 codegen_red_method ('max',    op, 'float'   , '(-INFINITY)', 'INFINITY' , 16) ;
 codegen_red_method ('max',    op, 'double'  , ...
-    '((double) INFINITY)'  , '((double) -INFINITY)' , 16) ;
+    '((double) -INFINITY)'  , '((double) INFINITY)' , 16) ;
 
 % ANY: 13 monoids (including bool and complex)
 fprintf ('\nany    ') ;
@@ -138,7 +140,7 @@ fprintf ('\nany    ') ;
 codegen_red_method ('any' , 'zarg = (yarg)'        , 'bool','false') ;
 
 %-------------------------------------------------------------------------------
-% FIRST and SECOND (not monoids; used for GB_red_build__[first,second]_[type])
+% FIRST and SECOND (not monoids; used for GB_red_build__first,second_type)
 %-------------------------------------------------------------------------------
 
 % FIRST: 13 ops:    name      op           type        identity terminal panel

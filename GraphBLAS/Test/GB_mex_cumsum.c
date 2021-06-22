@@ -2,8 +2,8 @@
 // GB_mex_cumsum: cumulative using GB_cumsum
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ void mexFunction
     if (!malloc_debug)
     {
         // normal usage
-        GB_cumsum (p, n, kresult, nthreads) ;
+        GB_cumsum (p, n, kresult, nthreads, NULL) ;
     }
     else
     {
@@ -64,11 +64,11 @@ void mexFunction
         // printf ("test cumsum with nmalloc: %d\n", nmalloc) ;
         GB_Global_malloc_debug_set (true) ;
         GB_Global_malloc_debug_count_set (nmalloc) ;
-        GB_cumsum (p, n, kresult, nthreads) ;
+        GB_cumsum (p, n, kresult, nthreads, NULL) ;
         GB_Global_malloc_debug_set (false) ;
     }
 
     // log the test coverage
-    GB_mx_put_global (true, 0) ;
+    GB_mx_put_global (true) ;   
 }
 

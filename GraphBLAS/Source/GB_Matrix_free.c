@@ -2,42 +2,39 @@
 // GB_Matrix_free: free a GrB_Matrix or GrB_Vector
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
-// Free all the content of a matrix.  After GB_Matrix_free (&A), A is set to
-// NULL.
+// Free all the content of a matrix.  After GB_Matrix_free (&A), the header A
+// is freed and set to NULL if the header of A was originally dynamically
+// allocated.  Otherwise, A is not freed.
 
 #include "GB.h"
-#include "GB_mkl.h"
 
-GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
-GrB_Info GB_Matrix_free         // free a matrix
+void GB_Matrix_free             // free a matrix
 (
-    GrB_Matrix *matrix          // handle of matrix to free
+    GrB_Matrix *Ahandle         // handle of matrix to free
 )
 {
 
-    if (matrix != NULL)
+    if (Ahandle != NULL)
     {
-        GrB_Matrix A = *matrix ;
+        GrB_Matrix A = *Ahandle ;
         if (A != NULL && (A->magic == GB_MAGIC || A->magic == GB_MAGIC2))
         { 
             // free all content of A
-            GB_PHIX_FREE (A) ;
-            // free the MKL optimization, if it exists
-            #if GB_HAS_MKL
-            GB_MKL_GRAPH_MATRIX_DESTROY (A->mkl) ;
-            #endif
-            // free the header of A itself
-            A->magic = GB_FREED ;      // to help detect dangling pointers
-            GB_FREE (*matrix) ;
+            size_t header_size = A->header_size ;
+            GB_phbix_free (A) ;
+            if (!(A->static_header))
+            { 
+                // free the header of A itself, unless it is static
+                A->magic = GB_FREED ;       // to help detect dangling pointers
+                GB_FREE (Ahandle, header_size) ;
+                (*Ahandle) = NULL ;
+            }
         }
-        (*matrix) = NULL ;
     }
-
-    return (GrB_SUCCESS) ;
 }
 

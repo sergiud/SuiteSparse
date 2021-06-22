@@ -2,8 +2,8 @@
 // GrB_Vector_apply: apply a unary or binary operator to a vector
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -29,7 +29,7 @@ GrB_Info GrB_Vector_apply           // w<M> = accum (w, op(u))
     // check inputs
     //--------------------------------------------------------------------------
 
-    GB_WHERE ("GrB_Vector_apply (w, M, accum, op, u, desc)") ;
+    GB_WHERE (w, "GrB_Vector_apply (w, M, accum, op, u, desc)") ;
     GB_BURBLE_START ("GrB_apply") ;
     GB_RETURN_IF_NULL_OR_FAULTY (w) ;
     GB_RETURN_IF_FAULTY (M) ;
@@ -41,7 +41,7 @@ GrB_Info GrB_Vector_apply           // w<M> = accum (w, op(u))
 
     // get the descriptor
     GB_GET_DESCRIPTOR (info, desc, C_replace, Mask_comp, Mask_struct,
-        xx1, xx2, xx3) ;
+        xx1, xx2, xx3, xx7) ;
 
     //--------------------------------------------------------------------------
     // apply the operator; do not transpose
@@ -93,7 +93,7 @@ static inline GrB_Info GB_1st       // w<mask> = accum (w, op(x,u))
 
     // get the descriptor
     GB_GET_DESCRIPTOR (info, desc, C_replace, Mask_comp, Mask_struct,
-        xx1, xx2, xx3) ;
+        xx1, xx2, xx3, xx7) ;
 
     //--------------------------------------------------------------------------
     // apply the operator; do not transpose
@@ -145,7 +145,7 @@ static inline GrB_Info GB_2nd       // w<mask> = accum (w, op(u,y))
 
     // get the descriptor
     GB_GET_DESCRIPTOR (info, desc, C_replace, Mask_comp, Mask_struct,
-        xx1, xx2, xx3) ;
+        xx1, xx2, xx3, xx7) ;
 
     //--------------------------------------------------------------------------
     // apply the operator; do not transpose
@@ -179,7 +179,7 @@ GrB_Info GxB_Vector_apply_BinaryOp1st           // w<mask> = accum (w, op(x,u))
     const GrB_Descriptor desc       // descriptor for w and M
 )
 { 
-    GB_WHERE ("GxB_Vector_apply_BinaryOp1st (w, M, accum, op, x, u, desc)") ;
+    GB_WHERE (w, "GxB_Vector_apply_BinaryOp1st (w, M, accum, op, x, u, desc)") ;
     return (GB_1st (w, M, accum, op, x, u, desc, Context)) ;
 }
 
@@ -198,7 +198,7 @@ GrB_Info GxB_Vector_apply_BinaryOp2nd           // w<mask> = accum (w, op(u,y))
     const GrB_Descriptor desc       // descriptor for w and M
 )
 { 
-    GB_WHERE ("GxB_Vector_apply_BinaryOp2nd (w, M, accum, op, u, y, desc)") ;
+    GB_WHERE (w, "GxB_Vector_apply_BinaryOp2nd (w, M, accum, op, u, y, desc)") ;
     return (GB_2nd (w, M, accum, op, u, y, desc, Context)) ;
 }
 
@@ -207,7 +207,7 @@ GrB_Info GxB_Vector_apply_BinaryOp2nd           // w<mask> = accum (w, op(u,y))
 //------------------------------------------------------------------------------
 
 #define GB_BIND1ST(prefix,type,T,ampersand,stype)                           \
-GrB_Info prefix ## Vector_apply_BinaryOp1st_ ## T                           \
+GrB_Info GB_EVAL3 (prefix, _Vector_apply_BinaryOp1st_, T)                   \
 (                                                                           \
     GrB_Vector w,                   /* input/output vector for results */   \
     const GrB_Vector M,             /* optional mask for w */               \
@@ -218,34 +218,34 @@ GrB_Info prefix ## Vector_apply_BinaryOp1st_ ## T                           \
     const GrB_Descriptor desc       /* descriptor for w and M */            \
 )                                                                           \
 {                                                                           \
-    GB_WHERE (GB_STR(prefix) "Vector_apply_BinaryOp1st_" GB_STR(T)          \
+    GB_WHERE (w, "GrB_Vector_apply_BinaryOp1st_" GB_STR(T)                  \
         "(w, M, accum, op, x, u, desc)") ;                                  \
-    GB_SCALAR_WRAP (scalar, prefix, T, ampersand, x, stype) ;               \
+    GB_SCALAR_WRAP (scalar, T, ampersand, x, stype) ;                       \
     ASSERT_SCALAR_OK (scalar, "scalar for vector_apply_bind1st", GB0) ;     \
     return (GB_1st (w, M, accum, op, scalar, u, desc, Context)) ;           \
 }
 
-GB_BIND1ST (GrB_, bool      , BOOL   , &, GrB_BOOL  )
-GB_BIND1ST (GrB_, int8_t    , INT8   , &, GrB_INT8  )
-GB_BIND1ST (GrB_, int16_t   , INT16  , &, GrB_INT16 )
-GB_BIND1ST (GrB_, int32_t   , INT32  , &, GrB_INT32 )
-GB_BIND1ST (GrB_, int64_t   , INT64  , &, GrB_INT64 )
-GB_BIND1ST (GrB_, uint8_t   , UINT8  , &, GrB_UINT8 )
-GB_BIND1ST (GrB_, uint16_t  , UINT16 , &, GrB_UINT16)
-GB_BIND1ST (GrB_, uint32_t  , UINT32 , &, GrB_UINT32)
-GB_BIND1ST (GrB_, uint64_t  , UINT64 , &, GrB_UINT64)
-GB_BIND1ST (GrB_, float     , FP32   , &, GrB_FP32  )
-GB_BIND1ST (GrB_, double    , FP64   , &, GrB_FP64  )
-GB_BIND1ST (GxB_, GxB_FC32_t, FC32   , &, GxB_FC32  )
-GB_BIND1ST (GxB_, GxB_FC64_t, FC64   , &, GxB_FC64  )
-GB_BIND1ST (GrB_, void *    , UDT    ,  , op->xtype )
+GB_BIND1ST (GrB, bool      , BOOL   , &, GrB_BOOL  )
+GB_BIND1ST (GrB, int8_t    , INT8   , &, GrB_INT8  )
+GB_BIND1ST (GrB, int16_t   , INT16  , &, GrB_INT16 )
+GB_BIND1ST (GrB, int32_t   , INT32  , &, GrB_INT32 )
+GB_BIND1ST (GrB, int64_t   , INT64  , &, GrB_INT64 )
+GB_BIND1ST (GrB, uint8_t   , UINT8  , &, GrB_UINT8 )
+GB_BIND1ST (GrB, uint16_t  , UINT16 , &, GrB_UINT16)
+GB_BIND1ST (GrB, uint32_t  , UINT32 , &, GrB_UINT32)
+GB_BIND1ST (GrB, uint64_t  , UINT64 , &, GrB_UINT64)
+GB_BIND1ST (GrB, float     , FP32   , &, GrB_FP32  )
+GB_BIND1ST (GrB, double    , FP64   , &, GrB_FP64  )
+GB_BIND1ST (GxB, GxB_FC32_t, FC32   , &, GxB_FC32  )
+GB_BIND1ST (GxB, GxB_FC64_t, FC64   , &, GxB_FC64  )
+GB_BIND1ST (GrB, void *    , UDT    ,  , op->xtype )
 
 //------------------------------------------------------------------------------
 // GrB_Vector_apply_BinaryOp2nd_TYPE: apply a binary operator: op(u,y)
 //------------------------------------------------------------------------------
 
 #define GB_BIND2ND(prefix,type,T,ampersand,stype)                           \
-GrB_Info prefix ## Vector_apply_BinaryOp2nd_ ## T                           \
+GrB_Info GB_EVAL3 (prefix, _Vector_apply_BinaryOp2nd_, T)                   \
 (                                                                           \
     GrB_Vector w,                   /* input/output vector for results */   \
     const GrB_Vector M,             /* optional mask for w*/                \
@@ -256,25 +256,25 @@ GrB_Info prefix ## Vector_apply_BinaryOp2nd_ ## T                           \
     const GrB_Descriptor desc       /* descriptor for w and M */            \
 )                                                                           \
 {                                                                           \
-    GB_WHERE (GB_STR(prefix) "Vector_apply_BinaryOp2nd_" GB_STR(T)          \
+    GB_WHERE (w, "GrB_Vector_apply_BinaryOp2nd_" GB_STR(T)                  \
         "(w, M, accum, op, u, y, desc)") ;                                  \
-    GB_SCALAR_WRAP (scalar, prefix, T, ampersand, y, stype) ;               \
+    GB_SCALAR_WRAP (scalar, T, ampersand, y, stype) ;                       \
     ASSERT_SCALAR_OK (scalar, "scalar for vector_apply_bind2nd", GB0) ;     \
     return (GB_2nd (w, M, accum, op, u, scalar, desc, Context)) ;           \
 }
 
-GB_BIND2ND (GrB_, bool      , BOOL   , &, GrB_BOOL  )
-GB_BIND2ND (GrB_, int8_t    , INT8   , &, GrB_INT8  )
-GB_BIND2ND (GrB_, int16_t   , INT16  , &, GrB_INT16 )
-GB_BIND2ND (GrB_, int32_t   , INT32  , &, GrB_INT32 )
-GB_BIND2ND (GrB_, int64_t   , INT64  , &, GrB_INT64 )
-GB_BIND2ND (GrB_, uint8_t   , UINT8  , &, GrB_UINT8 )
-GB_BIND2ND (GrB_, uint16_t  , UINT16 , &, GrB_UINT16)
-GB_BIND2ND (GrB_, uint32_t  , UINT32 , &, GrB_UINT32)
-GB_BIND2ND (GrB_, uint64_t  , UINT64 , &, GrB_UINT64)
-GB_BIND2ND (GrB_, float     , FP32   , &, GrB_FP32  )
-GB_BIND2ND (GrB_, double    , FP64   , &, GrB_FP64  )
-GB_BIND2ND (GxB_, GxB_FC32_t, FC32   , &, GxB_FC32  )
-GB_BIND2ND (GxB_, GxB_FC64_t, FC64   , &, GxB_FC64  )
-GB_BIND2ND (GrB_, void *    , UDT    ,  , op->ytype )
+GB_BIND2ND (GrB, bool      , BOOL   , &, GrB_BOOL  )
+GB_BIND2ND (GrB, int8_t    , INT8   , &, GrB_INT8  )
+GB_BIND2ND (GrB, int16_t   , INT16  , &, GrB_INT16 )
+GB_BIND2ND (GrB, int32_t   , INT32  , &, GrB_INT32 )
+GB_BIND2ND (GrB, int64_t   , INT64  , &, GrB_INT64 )
+GB_BIND2ND (GrB, uint8_t   , UINT8  , &, GrB_UINT8 )
+GB_BIND2ND (GrB, uint16_t  , UINT16 , &, GrB_UINT16)
+GB_BIND2ND (GrB, uint32_t  , UINT32 , &, GrB_UINT32)
+GB_BIND2ND (GrB, uint64_t  , UINT64 , &, GrB_UINT64)
+GB_BIND2ND (GrB, float     , FP32   , &, GrB_FP32  )
+GB_BIND2ND (GrB, double    , FP64   , &, GrB_FP64  )
+GB_BIND2ND (GxB, GxB_FC32_t, FC32   , &, GxB_FC32  )
+GB_BIND2ND (GxB, GxB_FC64_t, FC64   , &, GxB_FC64  )
+GB_BIND2ND (GrB, void *    , UDT    ,  , op->ytype )
 

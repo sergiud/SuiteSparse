@@ -2,8 +2,8 @@
 // gb_string_to_semiring: convert a string to a GraphBLAS semiring
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 //------------------------------------------------------------------------------
 
@@ -47,6 +47,7 @@ GrB_Semiring gb_string_to_semiring      // return a semiring from a string
     // get the mult operator
     //--------------------------------------------------------------------------
 
+    bool type_not_given = (mult_typename == NULL) ;
     GrB_Type mult_type ;
     if (mult_typename == NULL)
     { 
@@ -57,16 +58,17 @@ GrB_Semiring gb_string_to_semiring      // return a semiring from a string
         mult_type = gb_string_to_type (mult_typename) ;
     }
 
-    GrB_BinaryOp mult = gb_string_and_type_to_binop (mult_name, mult_type) ;
+    GrB_BinaryOp mult = gb_string_and_type_to_binop (mult_name, mult_type,
+        type_not_given) ;
     CHECK_ERROR (mult == NULL, "invalid semiring (unknown multipy operator)") ;
 
     //--------------------------------------------------------------------------
     // get the add operator
     //--------------------------------------------------------------------------
 
-    GrB_Type add_type = mult->ztype ;
-
-    GrB_BinaryOp add = gb_string_and_type_to_binop (add_name, add_type) ;
+    GrB_Type add_type ;
+    OK (GxB_BinaryOp_ztype (&add_type, mult)) ;
+    GrB_BinaryOp add = gb_string_and_type_to_binop (add_name, add_type, false) ;
     CHECK_ERROR (add == NULL, "invalid semiring (unknown add operator)") ;
 
     //--------------------------------------------------------------------------

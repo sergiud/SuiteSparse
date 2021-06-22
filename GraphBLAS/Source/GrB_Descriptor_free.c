@@ -2,8 +2,8 @@
 // GrB_Descriptor_free: free a descriptor
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -20,13 +20,20 @@ GrB_Info GrB_Descriptor_free            // free a descriptor
 
     if (descriptor != NULL)
     {
+        // only free a dynamically-allocated operator
         GrB_Descriptor desc = *descriptor ;
-        if (desc != NULL && desc->magic == GB_MAGIC && !(desc->predefined))
-        { 
-            desc->magic = GB_FREED ;     // to help detect dangling pointers
-            GB_FREE (*descriptor) ;
+        if (desc != NULL)
+        {
+            size_t header_size = desc->header_size ;
+            if (header_size > 0)
+            { 
+                GB_FREE (&(desc->logger), desc->logger_size) ;
+                desc->logger_size = 0 ;
+                desc->magic = GB_FREED ;  // to help detect dangling pointers
+                desc->header_size = 0 ;
+                GB_FREE (descriptor, header_size) ;
+            }
         }
-        (*descriptor) = NULL ;
     }
 
     return (GrB_SUCCESS) ;

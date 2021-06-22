@@ -2,8 +2,8 @@
 // GB_dense_subassign_05d: C(:,:)<M> = scalar where C is dense
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -16,6 +16,9 @@
 // A:           scalar
 // S:           none
 
+// C can have any sparsity structure, but it must be entirely dense with
+// all entries present.
+
 #include "GB_subassign_methods.h"
 #include "GB_dense.h"
 #include "GB_unused.h"
@@ -24,8 +27,10 @@
 #endif
 
 #undef  GB_FREE_WORK
-#define GB_FREE_WORK \
-    GB_ek_slice_free (&pstart_slice, &kfirst_slice, &klast_slice) ;
+#define GB_FREE_WORK                        \
+{                                           \
+    GB_WERK_POP (M_ek_slicing, int64_t) ;   \
+}
 
 #undef  GB_FREE_ALL
 #define GB_FREE_ALL GB_FREE_WORK
@@ -43,17 +48,34 @@ GrB_Info GB_dense_subassign_05d
 {
 
     //--------------------------------------------------------------------------
+    // check inputs
+    //--------------------------------------------------------------------------
+
+    ASSERT (!GB_aliased (C, M)) ;   // NO ALIAS of C==M
+
+    //--------------------------------------------------------------------------
     // get inputs
     //--------------------------------------------------------------------------
 
     GrB_Info info ;
-    ASSERT (GB_is_dense (C)) ;
-    ASSERT (!GB_PENDING (C)) ;
-    ASSERT (!GB_ZOMBIES (C)) ;
+    GB_WERK_DECLARE (M_ek_slicing, int64_t) ;
+
     ASSERT_MATRIX_OK (C, "C for subassign method_05d", GB0) ;
+    ASSERT (!GB_ZOMBIES (C)) ;
+    ASSERT (!GB_JUMBLED (C)) ;
+    ASSERT (!GB_PENDING (C)) ;
+    ASSERT (GB_is_dense (C)) ;
+
+    ASSERT_MATRIX_OK (M, "M for subassign method_05d", GB0) ;
+    ASSERT (!GB_ZOMBIES (M)) ;
+    ASSERT (GB_JUMBLED_OK (M)) ;
+    ASSERT (!GB_PENDING (M)) ;
+
     const GB_Type_code ccode = C->type->code ;
     const size_t csize = C->type->size ;
     GB_GET_SCALAR ;
+
+    GB_ENSURE_FULL (C) ;        // convert C to full
 
     //--------------------------------------------------------------------------
     // Method 05d: C(:,:)<M> = scalar ; no S; C is dense
@@ -66,28 +88,14 @@ GrB_Info GB_dense_subassign_05d
     // Parallel: slice M into equal-sized chunks
     //--------------------------------------------------------------------------
 
-    int64_t mnz   = GB_NNZ (M) ;
-    int64_t mnvec = M->nvec ;
     GB_GET_NTHREADS_MAX (nthreads_max, chunk, Context) ;
-    int nthreads = GB_nthreads (mnz + mnvec, chunk, nthreads_max) ;
-    int ntasks = (nthreads == 1) ? 1 : (8 * nthreads) ;
-    ntasks = GB_IMIN (ntasks, mnz) ;
-    ntasks = GB_IMAX (ntasks, 1) ;
 
     //--------------------------------------------------------------------------
     // slice the entries for each task
     //--------------------------------------------------------------------------
 
-    // Task tid does entries pstart_slice [tid] to pstart_slice [tid+1]-1 and
-    // vectors kfirst_slice [tid] to klast_slice [tid].  The first and last
-    // vectors may be shared with prior slices and subsequent slices.
-
-    int64_t *pstart_slice = NULL, *kfirst_slice = NULL, *klast_slice = NULL ;
-    if (!GB_ek_slice (&pstart_slice, &kfirst_slice, &klast_slice, M, ntasks))
-    { 
-        // out of memory
-        return (GB_OUT_OF_MEMORY) ;
-    }
+    int M_ntasks, M_nthreads ;
+    GB_SLICE_MATRIX (M, 8, chunk) ;
 
     //--------------------------------------------------------------------------
     // C<M> = x for built-in types
@@ -101,12 +109,12 @@ GrB_Info GB_dense_subassign_05d
         // define the worker for the switch factory
         //----------------------------------------------------------------------
 
-        #define GB_Cdense_05d(cname) GB_Cdense_05d_ ## cname
+        #define GB_Cdense_05d(cname) GB (_Cdense_05d_ ## cname)
 
         #define GB_WORKER(cname)                                              \
         {                                                                     \
             info = GB_Cdense_05d(cname) (C, M, Mask_struct, cwork,            \
-                kfirst_slice, klast_slice, pstart_slice, ntasks, nthreads) ;  \
+                M_ek_slicing, M_ntasks, M_nthreads) ;                         \
             done = (info != GrB_NO_VALUE) ;                                   \
         }                                                                     \
         break ;
@@ -147,7 +155,7 @@ GrB_Info GB_dense_subassign_05d
         // get operators, functions, workspace, contents of A and C
         //----------------------------------------------------------------------
 
-        GB_BURBLE_MATRIX (M, "generic ") ;
+        GB_BURBLE_MATRIX (M, "(generic C(:,:)<M>=x assign) ") ;
 
         const size_t csize = C->type->size ;
 

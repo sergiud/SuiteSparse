@@ -2,8 +2,8 @@
 // GB_Mask_compatible: check input and operators for type compatibility
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -14,6 +14,7 @@
 GrB_Info GB_Mask_compatible     // check type and dimensions of mask
 (
     const GrB_Matrix M,         // mask to check
+    const bool Mask_struct,     // true if M is structural
     const GrB_Matrix C,         // C<M>= ...
     const GrB_Index nrows,      // size of output if C is NULL (see GB*assign)
     const GrB_Index ncols,
@@ -22,24 +23,21 @@ GrB_Info GB_Mask_compatible     // check type and dimensions of mask
 {
 
     //--------------------------------------------------------------------------
-    // check inputs
-    //--------------------------------------------------------------------------
-
-    // C and M may be aliased
-
-    //--------------------------------------------------------------------------
     // check the mask M
     //--------------------------------------------------------------------------
 
     if (M != NULL)
     { 
 
-        // M  is typecast to boolean
-        if (!GB_Type_compatible (M->type, GrB_BOOL))
-        { 
-            return (GB_ERROR (GrB_DOMAIN_MISMATCH, (GB_LOG,
-                "M of type [%s] cannot be typecast to boolean",
-                M->type->name))) ;
+        if (!Mask_struct)
+        {
+            // M is typecast to boolean
+            if (!GB_Type_compatible (M->type, GrB_BOOL))
+            { 
+                GB_ERROR (GrB_DOMAIN_MISMATCH,
+                    "M of type [%s] cannot be typecast to boolean",
+                    M->type->name) ;
+            }
         }
 
         // check the mask dimensions
@@ -47,10 +45,10 @@ GrB_Info GB_Mask_compatible     // check type and dimensions of mask
         GrB_Index cncols = (C == NULL) ? ncols : GB_NCOLS (C) ;
         if (GB_NROWS (M) != cnrows || GB_NCOLS (M) != cncols)
         { 
-            return (GB_ERROR (GrB_DIMENSION_MISMATCH, (GB_LOG,
+            GB_ERROR (GrB_DIMENSION_MISMATCH,
                 "M is " GBd "-by-" GBd "; "
                 "does not match output dimensions (" GBu "-by-" GBu ")",
-                GB_NROWS (M), GB_NCOLS (M), cnrows, cncols))) ;
+                GB_NROWS (M), GB_NCOLS (M), cnrows, cncols) ;
         }
     }
 

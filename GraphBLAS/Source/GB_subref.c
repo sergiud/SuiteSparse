@@ -2,8 +2,8 @@
 // GB_subref: C = A(I,J)
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -24,8 +24,8 @@
 
 //      Sparse submatrix reference, C = A(I,J), extracting the pattern, not the
 //      values.  For the symbolic case, this function is called only by
-//      GB_subassigner.  Symbolic extraction creates a matrix C with the same
-//      pattern (C->p and C->i) as numeric extraction, but with different
+//      GB_subassign_symbolic.  Symbolic extraction creates a matrix C with the
+//      same pattern (C->p and C->i) as numeric extraction, but with different
 //      values, C->x.  For numeric extracion if C(inew,jnew) = A(i,j), the
 //      value of A(i,j) is copied into C(i,j).  For symbolic extraction, its
 //      *pointer* is copied into C(i,j).  Suppose an entry A(i,j) is held in Ai
@@ -46,11 +46,12 @@
 
 //          Cx [pc] = pa ;          // for symbolic extraction
 
-//      This function is called with symbolic==true by only by GB_subassigner,
-//      which uses it to extract the pattern of C(I,J), for the submatrix
-//      assignment C(I,J)=A.  In this case, this function needs to deal with
-//      zombie entries.  GB_subassigner uses this function on its C matrix,
-//      which is called A here because it is not modified here.
+//      This function is called with symbolic==true by only by
+//      GB_subassign_symbolic, which uses it to extract the pattern of C(I,J),
+//      for the submatrix assignment C(I,J)=A.  In this case, this function
+//      needs to deal with zombie entries.  GB_subassign_symbolic uses this
+//      function on its C matrix, which is called A here because it is not
+//      modified here.
 
 //      Reading a zombie entry:  A zombie entry A(i,j) has been marked by
 //      flipping its index.  The value of a zombie is not important, just its
@@ -69,13 +70,20 @@
 //      detected in A.  Since pa = Cx [pc] holds the position of the entry in
 //      A, the entry is a zombie if Ai [pa] has been flipped.
 
-#define GB_FREE_WORK        \
-{                           \
-    GB_FREE (TaskList) ;    \
-    GB_FREE (Ap_start) ;    \
-    GB_FREE (Ap_end) ;      \
-    GB_FREE (Mark) ;        \
-    GB_FREE (Inext) ;       \
+#define GB_FREE_WORK                            \
+{                                               \
+    GB_FREE_WERK (&TaskList, TaskList_size) ;   \
+    GB_FREE_WERK (&Ap_start, Ap_start_size) ;   \
+    GB_FREE_WERK (&Ap_end, Ap_end_size) ;       \
+    GB_FREE_WERK (&Mark, Mark_size) ;           \
+    GB_FREE_WERK (&Inext, Inext_size) ;         \
+}
+
+#define GB_FREE_ALL             \
+{                               \
+    GB_FREE (&Cp, Cp_size) ;    \
+    GB_FREE (&Ch, Ch_size) ;    \
+    GB_FREE_WORK ;              \
 }
 
 #include "GB_subref.h"
@@ -84,7 +92,7 @@ GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
 (
     // output
-    GrB_Matrix *Chandle,
+    GrB_Matrix C,               // output matrix, static header
     // input, not modified
     const bool C_is_csc,        // requested format of C
     const GrB_Matrix A,
@@ -92,8 +100,7 @@ GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
     const int64_t ni,           // length of I, or special
     const GrB_Index *J,         // index list for C = A(I,J), or GrB_ALL, etc.
     const int64_t nj,           // length of J, or special
-    const bool symbolic,        // if true, construct Cx as symbolic
-    const bool must_sort,       // if true, must return C sorted
+    const bool symbolic,        // if true, construct C as symbolic
     GB_Context Context
 )
 {
@@ -102,38 +109,57 @@ GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
     // check inputs
     //--------------------------------------------------------------------------
 
-    ASSERT (Chandle != NULL) ;
+    GrB_Info info ;
+    ASSERT (C != NULL && C->static_header) ;
     ASSERT_MATRIX_OK (A, "A for C=A(I,J) subref", GB0) ;
+    ASSERT (GB_ZOMBIES_OK (A)) ;
+    ASSERT (GB_JUMBLED_OK (A)) ;    // A is sorted, below, if jumbled on input
+    ASSERT (GB_PENDING_OK (A)) ;
+
+    //--------------------------------------------------------------------------
+    // handle bitmap and full cases
+    //--------------------------------------------------------------------------
+
+    if (GB_IS_BITMAP (A) || GB_IS_FULL (A))
+    { 
+        // C is constructed with same sparsity as A (bitmap or full)
+        return (GB_bitmap_subref (C, C_is_csc, A, I, ni, J, nj, symbolic,
+            Context)) ;
+    }
+
+    //--------------------------------------------------------------------------
+    // initializations
+    //--------------------------------------------------------------------------
+
+    int64_t *Cp       = NULL ; size_t Cp_size = 0 ;
+    int64_t *Ch       = NULL ; size_t Ch_size = 0 ;
+    int64_t *Ap_start = NULL ; size_t Ap_start_size = 0 ;
+    int64_t *Ap_end   = NULL ; size_t Ap_end_size = 0 ;
+    int64_t *Mark     = NULL ; size_t Mark_size = 0 ;
+    int64_t *Inext    = NULL ; size_t Inext_size = 0 ;
+    GB_task_struct *TaskList      = NULL ; size_t TaskList_size = 0 ;
+
+    int64_t Cnvec = 0, nI = 0, nJ, Icolon [3], Cnvec_nonempty, ndupl ;
+    bool post_sort, need_qsort ;
+    int Ikind, ntasks, nthreads ;
+
+    //--------------------------------------------------------------------------
+    // ensure A is unjumbled
+    //--------------------------------------------------------------------------
+
+    // ensure input matrix is not jumbled.  Zombies are OK.
+    GB_MATRIX_WAIT_IF_JUMBLED (A) ;
 
     //--------------------------------------------------------------------------
     // phase0: find vectors for C=A(I,J), and I,J properties
     //--------------------------------------------------------------------------
 
-    int64_t *GB_RESTRICT Cp = NULL ;
-    int64_t *GB_RESTRICT Ch = NULL ;
-    int64_t *GB_RESTRICT Ap_start = NULL ;
-    int64_t *GB_RESTRICT Ap_end = NULL ;
-    int64_t *GB_RESTRICT Mark = NULL ;
-    int64_t *GB_RESTRICT Inext = NULL ;
-    GB_task_struct *TaskList = NULL ;
-    GrB_Matrix C = NULL ;
-
-    int64_t Cnvec = 0, nI = 0, nJ, Icolon [3], Cnvec_nonempty, ndupl ;
-    bool post_sort, need_qsort ;
-    int Ikind, ntasks, max_ntasks = 0, nthreads ;
-
-    GrB_Info info = GB_subref_phase0 (
+    GB_OK (GB_subref_phase0 (
         // computed by phase0:
-        &Ch, &Ap_start, &Ap_end, &Cnvec, &need_qsort, &Ikind, &nI, Icolon, &nJ,
+        &Ch, &Ch_size, &Ap_start, &Ap_start_size, &Ap_end, &Ap_end_size,
+        &Cnvec, &need_qsort, &Ikind, &nI, Icolon, &nJ,
         // original input:
-        A, I, ni, J, nj, must_sort, Context) ;
-
-    if (info != GrB_SUCCESS)
-    { 
-        // I,J invalid, or out of memory
-        GB_FREE_WORK ;
-        return (info) ;
-    }
+        A, I, ni, J, nj, Context)) ;
 
     //--------------------------------------------------------------------------
     // phase0b: split C=A(I,J) into tasks for phase1 and phase2
@@ -141,86 +167,62 @@ GrB_Info GB_subref              // C = A(I,J): either symbolic or numeric
 
     // This phase also inverts I if needed.
 
-    info = GB_subref_slice (
+    GB_OK (GB_subref_slice (
         // computed by phase0b:
-        &TaskList, &max_ntasks, &ntasks, &nthreads, &post_sort,
-        &Mark, &Inext, &ndupl,
+        &TaskList, &TaskList_size, &ntasks, &nthreads, &post_sort,
+        &Mark, &Mark_size, &Inext, &Inext_size, &ndupl,
         // computed by phase0:
         Ap_start, Ap_end, Cnvec, need_qsort, Ikind, nI, Icolon,
         // original input:
-        A->vlen, GB_NNZ (A), I, Context) ;
-
-    if (info != GrB_SUCCESS)
-    { 
-        // out of memory
-        GB_FREE (Ch) ;
-        GB_FREE_WORK ;
-        return (info) ;
-    }
+        A->vlen, GB_NNZ (A), I, Context)) ;
 
     //--------------------------------------------------------------------------
     // phase1: count the number of entries in each vector of C
     //--------------------------------------------------------------------------
 
-    info = GB_subref_phase1 (
+    GB_OK (GB_subref_phase1 (
         // computed by phase1:
-        &Cp, &Cnvec_nonempty,
+        &Cp, &Cp_size, &Cnvec_nonempty,
         // computed by phase0b:
         TaskList, ntasks, nthreads, Mark, Inext, ndupl,
         // computed by phase0:
         Ap_start, Ap_end, Cnvec, need_qsort, Ikind, nI, Icolon,
         // original input:
-        A, I, symbolic, Context) ;
-
-    if (info != GrB_SUCCESS)
-    { 
-        // out of memory
-        GB_FREE (Ch) ;
-        GB_FREE_WORK ;
-        return (info) ;
-    }
+        A, I, symbolic, Context)) ;
 
     //--------------------------------------------------------------------------
     // phase2: compute the entries (indices and values) in each vector of C
     //--------------------------------------------------------------------------
 
-    info = GB_subref_phase2 (
+    GB_OK (GB_subref_phase2 (
         // computed by phase2:
-        &C,
+        C,
         // from phase1:
-        Cp, Cnvec_nonempty,
+        &Cp, Cp_size, Cnvec_nonempty,
         // from phase0b:
         TaskList, ntasks, nthreads, post_sort, Mark, Inext, ndupl,
         // from phase0:
-        Ch, Ap_start, Ap_end, Cnvec, need_qsort, Ikind, nI, Icolon, nJ,
+        &Ch, Ch_size, Ap_start, Ap_end, Cnvec, need_qsort,
+        Ikind, nI, Icolon, nJ,
         // original input:
-        C_is_csc, A, I, symbolic, Context) ;
+        C_is_csc, A, I, symbolic, Context)) ;
+
+    // Cp and Ch have been imported into C->p and C->h, or freed if phase2
+    // fails.  Either way, Cp and Ch are set to NULL so that they cannot be
+    // freed here (except by freeing C itself).
 
     // free workspace
     GB_FREE_WORK ;
-
-    if (info != GrB_SUCCESS)
-    { 
-        // out of memory
-        return (info) ;
-    }
 
     //--------------------------------------------------------------------------
     // return result
     //--------------------------------------------------------------------------
 
-    if (must_sort)
-    {
-        ASSERT_MATRIX_OK (C, "sorted C output for C=A(I,J)", GB0) ;
-    }
-    else
-    {
-        // The matrix may have jumbled indices.  If it will be transposed in
-        // GB_accum_mask, but needs sorting, then the sort is skipped since the
-        // transpose will handle the sort.
-        ASSERT_MATRIX_OK_OR_JUMBLED (C, "C output for C=A(I,J)", GB0) ;
-    }
-    (*Chandle) = C ;
+    // C can be returned jumbled, even if A is not jumbled
+    ASSERT_MATRIX_OK (C, "C output for C=A(I,J)", GB0) ;
+    ASSERT (GB_ZOMBIES_OK (C)) ;
+    ASSERT (GB_JUMBLED_OK (C)) ;
+    ASSERT (GB_IS_SPARSE (A) || GB_IS_HYPERSPARSE (A)) ;
     return (GrB_SUCCESS) ;
 }
 

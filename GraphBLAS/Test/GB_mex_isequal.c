@@ -2,8 +2,8 @@
 // GB_mex_isequal: returns true if A and B are equal
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -13,11 +13,10 @@
 
 #define FREE_ALL                        \
 {                                       \
-    GB_MATRIX_FREE (&A) ;               \
-    GB_MATRIX_FREE (&B) ;               \
-    GB_mx_put_global (true, 0) ;        \
+    GrB_Matrix_free_(&A) ;              \
+    GrB_Matrix_free_(&B) ;              \
+    GB_mx_put_global (true) ;           \
 }
-
 
 void mexFunction
 (
@@ -31,8 +30,6 @@ void mexFunction
     bool malloc_debug = GB_mx_get_global (true) ;
     GrB_Matrix A = NULL ;
     GrB_Matrix B = NULL ;
-
-    GB_WHERE (USAGE) ;
 
     // check inputs
     if (nargout > 1 || nargin != 2)

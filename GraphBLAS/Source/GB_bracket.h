@@ -2,8 +2,8 @@
 // GB_bracket.h: definitions for GB_bracket
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -20,17 +20,17 @@
 
 #if 0
 
-// no longer used
+// This method is no longer used but is kept here in case it is needed in
+// the future.
 
 static inline void GB_bracket_left
 (
     const int64_t imin,
-    const int64_t *GB_RESTRICT X,  // input list is in X [kleft:kright]
+    const int64_t *restrict X,  // input list is in X [kleft:kright]
     int64_t *kleft,
     const int64_t kright
 )
-{
-    ASSERT (DEAD_CODE) ;
+{ 
     // tighten kleft
     int64_t len = kright - (*kleft) + 1 ;
     if (len > 0 && X [(*kleft)] < imin)
@@ -55,7 +55,7 @@ static inline void GB_bracket_left
 static inline void GB_bracket_right
 (
     const int64_t imax,
-    const int64_t *GB_RESTRICT X,  // input list is in X [kleft:kright]
+    const int64_t *restrict X,  // input list is in X [kleft:kright]
     const int64_t kleft,
     int64_t *kright
 )
@@ -82,21 +82,22 @@ static inline void GB_bracket_right
 
 // Zombies are not tolerated.
 
+// This method is no longer used but is kept here in case it is needed in
+// the future.
+
 #if 0
 
 static inline void GB_bracket
 (
     const int64_t imin,         // search for entries in the range imin:imax
     const int64_t imax,
-    const int64_t *GB_RESTRICT X,  // input list is in X [kleft:kright]
+    const int64_t *restrict X,  // input list is in X [kleft:kright]
     const int64_t kleft_in,
     const int64_t kright_in,
     int64_t *kleft_new,         // output list is in X [kleft_new:kright_new]
     int64_t *kright_new
 )
 { 
-    ASSERT (DEAD_CODE) ;
-
     int64_t kleft  = kleft_in ;
     int64_t kright = kright_in ;
 

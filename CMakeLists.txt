@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2020 Sergiu Deitsch
+# Copyright (c) 2016-2021 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,7 @@ if (WITH_FORTRAN)
   endif (CMAKE_Fortran_COMPILER)
 endif (WITH_FORTRAN)
 
-project (SuiteSparse LANGUAGES C CXX VERSION 5.6.0
+project (SuiteSparse LANGUAGES C CXX VERSION 5.10.1
   DESCRIPTION "A suite of sparse matrix packages"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
 )

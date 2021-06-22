@@ -2,8 +2,8 @@
 // GB_mex_AplusB: compute C=A+B
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -14,12 +14,12 @@
 
 #define USAGE "C = GB_mex_AplusB (A, B, op)"
 
-#define FREE_ALL                        \
-{                                       \
-    GB_MATRIX_FREE (&A) ;               \
-    GB_MATRIX_FREE (&B) ;               \
-    GB_MATRIX_FREE (&C) ;               \
-    GB_mx_put_global (true, 0) ;        \
+#define FREE_ALL                \
+{                               \
+    GrB_Matrix_free_(&A) ;      \
+    GrB_Matrix_free_(&B) ;      \
+    GrB_Matrix_free_(&C) ;      \
+    GB_mx_put_global (true) ;   \
 }
 
 
@@ -31,16 +31,15 @@ void mexFunction
     const mxArray *pargin [ ]
 )
 {
-    // double tic2 [2] ;
-    // simple_tic (tic2) ;
+    struct GB_Matrix_opaque C_header ;
+    GrB_Matrix C = GB_clear_static_header (&C_header) ;
 
     bool malloc_debug = GB_mx_get_global (true) ;
     GrB_Matrix A = NULL ;
     GrB_Matrix B = NULL ;
-    GrB_Matrix C = NULL ;
     GrB_BinaryOp op = NULL ;
 
-    GB_WHERE (USAGE) ;
+    GB_CONTEXT (USAGE) ;
 
     // check inputs
     if (nargout > 1 || nargin != 3)
@@ -70,16 +69,14 @@ void mexFunction
         mexErrMsgTxt ("op failed") ;
     }
 
-    // printf ("time so far: %g\n", simple_toc (tic2)) ;
-    // simple_tic (tic2) ;
-
     // C = A+B using the op.  No mask
-    METHOD (GB_add (&C, A->type, true, NULL, false, A, B, op, Context)) ;
+    bool ignore ;
+    METHOD (GB_add (C, A->type, true, NULL, false, false, &ignore, A, B, op,
+        Context)) ;
 
     // return C to MATLAB as a plain sparse matrix
     pargout [0] = GB_mx_Matrix_to_mxArray (&C, "C AplusB result", false) ;
 
     FREE_ALL ;
-    // printf ("time wrapup: %g\n", simple_toc (tic2)) ;
 }
 

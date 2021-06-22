@@ -2,8 +2,8 @@
 // GB_matlab_helper.c: helper functions for MATLAB interface
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -25,16 +25,17 @@
 // GB_ALLOCATE_WORK: allocate per-thread workspace
 //------------------------------------------------------------------------------
 
-#define GB_ALLOCATE_WORK(work_type)                             \
-    work_type *Work = GB_MALLOC (nthreads, work_type) ;         \
+#define GB_ALLOCATE_WORK(work_type)                                         \
+    size_t Work_size ;                                                      \
+    work_type *Work = GB_MALLOC (nthreads, work_type, &Work_size) ;         \
     if (Work == NULL) return (false) ;
 
 //------------------------------------------------------------------------------
 // GB_FREE_WORK: free per-thread workspace
 //------------------------------------------------------------------------------
 
-#define GB_FREE_WORK(work_type)                                 \
-    GB_FREE (Work) ;
+#define GB_FREE_WORK(work_type)                                             \
+    GB_FREE (&Work, Work_size) ;
 
 //------------------------------------------------------------------------------
 // GB_matlab_helper1: convert 0-based indices to 1-based for gbextracttuples
@@ -42,8 +43,8 @@
 
 void GB_matlab_helper1              // convert zero-based indices to one-based
 (
-    double *GB_RESTRICT I_double,   // output array
-    const GrB_Index *GB_RESTRICT I, // input array
+    double *restrict I_double,   // output array
+    const GrB_Index *restrict I, // input array
     int64_t nvals                   // size of input and output arrays
 )
 {
@@ -64,7 +65,7 @@ void GB_matlab_helper1              // convert zero-based indices to one-based
 
 void GB_matlab_helper1i             // convert zero-based indices to one-based
 (
-    int64_t *GB_RESTRICT I,         // input/output array
+    int64_t *restrict I,         // input/output array
     int64_t nvals                   // size of input/output array
 )
 {
@@ -80,54 +81,23 @@ void GB_matlab_helper1i             // convert zero-based indices to one-based
 }
 
 //------------------------------------------------------------------------------
-// GB_matlab_helper2: create structure for dense matrix for gb_get_shallow
-//------------------------------------------------------------------------------
-
-void GB_matlab_helper2              // fill Xp and Xi for a dense matrix
-(
-    GrB_Index *GB_RESTRICT Xp,      // size ncols+1
-    GrB_Index *GB_RESTRICT Xi,      // size nrows*ncols
-    int64_t ncols,
-    int64_t nrows
-)
-{
-
-    GB_NTHREADS (ncols) ;
-
-    int64_t j ;
-    #pragma omp parallel for num_threads(nthreads) schedule(static)
-    for (j = 0 ; j <= ncols ; j++)
-    {
-        Xp [j] = j * nrows ;
-    }
-
-    double work = ((double) ncols) * ((double) nrows) ;
-    nthreads = GB_nthreads (work, chunk, nthreads_max) ;
-
-    int64_t nel = nrows * ncols ;
-    int64_t k ;
-    #pragma omp parallel for num_threads(nthreads) schedule(static)
-    for (k = 0 ; k < nel ; k++)
-    {
-        int64_t i = k % nrows ;
-        Xi [k] = i ;
-    }
-}
-
-//------------------------------------------------------------------------------
 // GB_matlab_helper3: convert 1-based indices to 0-based for gb_mxarray_to_list
 //------------------------------------------------------------------------------
 
 bool GB_matlab_helper3              // return true if OK, false on error
 (
-    int64_t *GB_RESTRICT List,      // size len, output array
-    const double *GB_RESTRICT List_double, // size len, input array
+    int64_t *restrict List,      // size len, output array
+    const double *restrict List_double, // size len, input array
     int64_t len,
     int64_t *List_max               // also compute the max entry in the list
 )
 {
 
     GB_NTHREADS (len) ;
+
+    ASSERT (List != NULL) ;
+    ASSERT (List_double != NULL) ;
+    ASSERT (List_max != NULL) ;
 
     bool ok = true ;
     int64_t listmax = -1 ;
@@ -174,8 +144,8 @@ bool GB_matlab_helper3              // return true if OK, false on error
 
 bool GB_matlab_helper3i             // return true if OK, false on error
 (
-    int64_t *GB_RESTRICT List,      // size len, output array
-    const int64_t *GB_RESTRICT List_int64, // size len, input array
+    int64_t *restrict List,      // size len, output array
+    const int64_t *restrict List_int64, // size len, input array
     int64_t len,
     int64_t *List_max               // also compute the max entry in the list
 )
@@ -220,7 +190,7 @@ bool GB_matlab_helper3i             // return true if OK, false on error
 
 bool GB_matlab_helper4              // return true if OK, false on error
 (
-    const GrB_Index *GB_RESTRICT I, // array of size len
+    const GrB_Index *restrict I, // array of size len
     const int64_t len,
     GrB_Index *List_max             // find max (I) + 1
 )
@@ -265,23 +235,29 @@ bool GB_matlab_helper4              // return true if OK, false on error
 
 void GB_matlab_helper5              // construct pattern of S
 (
-    GrB_Index *GB_RESTRICT Si,         // array of size anz
-    GrB_Index *GB_RESTRICT Sj,         // array of size anz
-    const GrB_Index *GB_RESTRICT Mi,   // array of size mnz
-    const GrB_Index *GB_RESTRICT Mj,   // array of size mnz
-    GrB_Index *GB_RESTRICT Ai,         // array of size anz
+    GrB_Index *restrict Si,         // array of size anz
+    GrB_Index *restrict Sj,         // array of size anz
+    const GrB_Index *restrict Mi,   // array of size mnz, M->i, may be NULL
+    const GrB_Index *restrict Mj,   // array of size mnz,
+    const int64_t mvlen,               // M->vlen
+    GrB_Index *restrict Ai,         // array of size anz, A->i, may be NULL
+    const int64_t avlen,               // M->vlen
     const GrB_Index anz
 )
 {
 
     GB_NTHREADS (anz) ;
+    ASSERT (Mj != NULL) ;
+    ASSERT (Si != NULL) ;
+    ASSERT (Sj != NULL) ;
 
     int64_t k ;
     #pragma omp parallel for num_threads(nthreads) schedule(static)
     for (k = 0 ; k < anz ; k++)
     {
-        Si [k] = Mi [Ai [k]] ;
-        Sj [k] = Mj [Ai [k]] ;
+        int64_t i = GBI (Ai, k, avlen) ;
+        Si [k] = GBI (Mi, i, mvlen) ;
+        Sj [k] = Mj [i] ;
     }
 }
 
@@ -291,7 +267,7 @@ void GB_matlab_helper5              // construct pattern of S
 
 void GB_matlab_helper6              // set Gbool to all true
 (
-    bool *GB_RESTRICT Gbool,        // array of size gnvals
+    bool *restrict Gbool,        // array of size gnvals
     const GrB_Index gnvals
 )
 {
@@ -312,7 +288,7 @@ void GB_matlab_helper6              // set Gbool to all true
 
 void GB_matlab_helper7              // Kx = uint64 (0:mnz-1)
 (
-    uint64_t *GB_RESTRICT Kx,       // array of size mnz
+    uint64_t *restrict Kx,       // array of size mnz
     const GrB_Index mnz
 )
 {
@@ -355,41 +331,61 @@ void GB_matlab_helper8
 // GB_matlab_helper9: compute the degree of each vector
 //------------------------------------------------------------------------------
 
+// TODO: use GrB_mxv or GrB_vxm when possible.
+
 bool GB_matlab_helper9  // true if successful, false if out of memory
 (
-    GrB_Matrix A,       // input matrix
-    int64_t **degree,   // degree of each vector, size nvec
-    GrB_Index **list,   // list of non-empty vectors
-    GrB_Index *nvec     // # of non-empty vectors
+    GrB_Matrix A,           // input matrix
+    int64_t **degree,       // degree of each vector, size nvec
+    size_t *degree_size,    // size of degree, in bytes
+    GrB_Index **list,       // list of non-empty vectors
+    size_t *list_size,      // size of degree, in bytes
+    GrB_Index *nvec         // # of non-empty vectors
 )
 {
+
+    ASSERT_MATRIX_OK (A, "A for matlab helper9", GB0) ;
+    ASSERT (!GB_IS_BITMAP (A)) ;
+    ASSERT (GB_IS_SPARSE (A) || GB_IS_HYPERSPARSE (A) || GB_IS_FULL (A)) ;
+
     int64_t anvec = A->nvec ;
     GB_NTHREADS (anvec) ;
 
-    uint64_t *List   = GB_MALLOC (anvec, uint64_t) ;
-    int64_t  *Degree = GB_MALLOC (anvec, int64_t) ;
+    uint64_t *List   = NULL ; size_t List_size = 0 ;
+    int64_t  *Degree = NULL ; size_t Degree_size = 0 ;
+
+    List   = GB_MALLOC (anvec, uint64_t, &List_size) ;
+    Degree = GB_MALLOC (anvec, int64_t , &Degree_size) ;
 
     if (List == NULL || Degree == NULL)
     {
-        GB_FREE (List) ;
-        GB_FREE (Degree) ;
+        GB_FREE (&List, List_size) ;
+        GB_FREE (&Degree, Degree_size) ;
         return (false) ;
     }
 
+    #ifdef GB_DEBUG
+    // remove List and Degree from the debug memtable, since they will be
+    // imported as the degree GrB_Vector d
+    GB_Global_memtable_remove (List) ;
+    GB_Global_memtable_remove (Degree) ;
+    #endif
+
     int64_t *Ah = A->h ;
     int64_t *Ap = A->p ;
+    int64_t avlen = A->vlen ;
 
     int64_t k ;
     #pragma omp parallel for num_threads(nthreads) schedule(static)
     for (k = 0 ; k < anvec ; k++)
     {
-        List [k] = (Ah == NULL) ? k : Ah [k] ;
-        Degree [k] = Ap [k+1] - Ap [k] ;
+        List [k] = GBH (Ah, k) ;
+        Degree [k] = (Ap == NULL) ? avlen : (Ap [k+1] - Ap [k]) ;
     }
 
     // return result
-    (*degree) = Degree ;
-    (*list) = List ;
+    (*degree) = Degree ;    (*degree_size) = Degree_size ;
+    (*list) = List ;        (*list_size) = List_size ;
     (*nvec) = anvec ;
     return (true) ;
 }

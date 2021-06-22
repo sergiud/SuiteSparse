@@ -2,8 +2,8 @@
 // SuiteSparse/GraphBLAS/Demo/Source/dpagerank2: pagerank using a real semiring
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -307,7 +307,8 @@ GrB_Info dpagerank2         // GrB_SUCCESS or error condition
 
     // dout = sum (A,2) ;       // dout(i) is the out-degree of node i
     OK (GrB_Vector_new (&dout, GrB_FP64, n)) ;
-    OK (GrB_Matrix_reduce_BinaryOp (dout, NULL, NULL, GrB_PLUS_FP64, A, NULL)) ;
+    OK (GrB_Matrix_reduce_Monoid (dout, NULL, NULL, GrB_PLUS_MONOID_FP64,
+        A, NULL)) ;
 
     // all nodes start with rank 1/n
     pagerank_init_rank = 1.0 / ((double) n) ;

@@ -1,74 +1,129 @@
 //------------------------------------------------------------------------------
-// GB_select_count: count entries in eacn vector for C=select(A,thunk)
+// GB_select_phase1: count entries in each vector for C=select(A,thunk)
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
+
+    const int64_t *restrict kfirst_Aslice = A_ek_slicing ;
+    const int64_t *restrict klast_Aslice  = A_ek_slicing + A_ntasks ;
+    const int64_t *restrict pstart_Aslice = A_ek_slicing + A_ntasks * 2 ;
 
 #if defined ( GB_ENTRY_SELECTOR )
 
     //--------------------------------------------------------------------------
-    // declarations for Template/GB_reduce_each_vector.c
+    // entry selector
     //--------------------------------------------------------------------------
 
-    // The two if tests below are written carefully so that typecasting from
-    // Bool works properly.  The user might import a Bool array whose values
-    // are not 0 and 1, and this can lead to subtle errors with compiler
-    // optimization.  The compiler may assume that the array contains only 0's
-    // and 1's, which leads to a miscount.
+    ASSERT (GB_JUMBLED_OK (A)) ;
 
-    // declare scalar and initialize it to zero
-    #define GB_SCALAR(s)                                    \
-        int64_t s = 0 ;
-
-    // ztype s = (ztype) Ax [p], with typecast.
-    #define GB_CAST_ARRAY_TO_SCALAR(s,Ax,p)                 \
-        if (GB_TEST_VALUE_OF_ENTRY (p)) { s = 1 ; } else { s = 0 ; }
-
-    // s += (ztype) Ax [p], with typecast
-    #define GB_ADD_CAST_ARRAY_TO_SCALAR(s,Ax,p)             \
-        if (GB_TEST_VALUE_OF_ENTRY (p)) s++ ;
-
-    // The scalar s and array W are always of type int64_t (GB_CTYPE)
-    #define GB_CTYPE int64_t
-
-    // W [k] = s
-    #define GB_COPY_SCALAR_TO_ARRAY(W,k,s)                  \
-        W [k] = s
-
-    // W [k] = S [i]
-    #define GB_COPY_ARRAY_TO_ARRAY(W,k,S,i)                 \
-        W [k] = S [i]
-
-    // W [k] += S [i]
-    #define GB_ADD_ARRAY_TO_ARRAY(W,k,S,i)                  \
-        W [k] += S [i]
-
-    // no terminal value
-    #define GB_BREAK_IF_TERMINAL(t) ;
-
-    #include "GB_reduce_each_vector.c"
-
-#else
+    // The count of live entries kth vector A(:,k) is reduced to the kth scalar
+    // Cp(k).  Each thread computes the reductions on roughly the same number
+    // of entries, which means that a vector A(:,k) may be reduced by more than
+    // one thread.  The first vector A(:,kfirst) reduced by thread tid may be
+    // partial, where the prior thread tid-1 (and other prior threads) may also
+    // do some of the reductions for this same vector A(:,kfirst).  The thread
+    // tid reduces all vectors A(:,k) for k in the range kfirst+1 to klast-1.
+    // The last vector A(:,klast) reduced by thread tid may also be partial.
+    // Thread tid+1, and following threads, may also do some of the reduces for
+    // A(:,klast).
 
     //--------------------------------------------------------------------------
     // get A
     //--------------------------------------------------------------------------
 
-    const int64_t *GB_RESTRICT Ap = A->p ;
-    const int64_t *GB_RESTRICT Ah = A->h ;
-    const int64_t *GB_RESTRICT Ai = A->i ;
+    const int64_t  *restrict Ap = A->p ;
+    const int64_t  *restrict Ah = A->h ;
+    const int64_t  *restrict Ai = A->i ;
+    const GB_ATYPE *restrict Ax = (GB_ATYPE *) A->x ;
+    size_t  asize = A->type->size ;
+    int64_t avlen = A->vlen ;
+    int64_t avdim = A->vdim ;
+    ASSERT (GB_JUMBLED_OK (A)) ;
+
+    //--------------------------------------------------------------------------
+    // reduce each slice
+    //--------------------------------------------------------------------------
+
+    // each thread reduces its own part in parallel
+    int tid ;
+    #pragma omp parallel for num_threads(A_nthreads) schedule(dynamic,1)
+    for (tid = 0 ; tid < A_ntasks ; tid++)
+    {
+
+        // if kfirst > klast then thread tid does no work at all
+        int64_t kfirst = kfirst_Aslice [tid] ;
+        int64_t klast  = klast_Aslice  [tid] ;
+        Wfirst [tid] = 0 ;
+        Wlast  [tid] = 0 ;
+
+        //----------------------------------------------------------------------
+        // reduce vectors kfirst to klast
+        //----------------------------------------------------------------------
+
+        for (int64_t k = kfirst ; k <= klast ; k++)
+        {
+
+            //------------------------------------------------------------------
+            // find the part of A(:,k) to be reduced by this thread
+            //------------------------------------------------------------------
+
+            GB_GET_J ; // int64_t j = GBH (Ah, k) ; but for user selectop only
+            int64_t pA, pA_end ;
+            GB_get_pA (&pA, &pA_end, tid, k,
+                kfirst, klast, pstart_Aslice, Ap, avlen) ;
+
+            //------------------------------------------------------------------
+            // count entries in Ax [pA ... pA_end-1]
+            //------------------------------------------------------------------
+
+            int64_t cjnz = 0 ;
+            for ( ; pA < pA_end ; pA++)
+            { 
+                if (GB_TEST_VALUE_OF_ENTRY (pA)) cjnz++ ;
+            }
+            if (k == kfirst)
+            { 
+                Wfirst [tid] = cjnz ;
+            }
+            else if (k == klast)
+            { 
+                Wlast [tid] = cjnz ;
+            }
+            else
+            { 
+                Cp [k] = cjnz ; 
+            }
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // reduce the first and last vector of each slice using a single thread
+    //--------------------------------------------------------------------------
+
+    GB_ek_slice_merge1 (Cp, Wfirst, Wlast, A_ek_slicing, A_ntasks) ;
+
+#else
+
+    //--------------------------------------------------------------------------
+    // positional selector (tril, triu, diag, offdiag, resize)
+    //--------------------------------------------------------------------------
+
+    const int64_t *restrict Ap = A->p ;
+    const int64_t *restrict Ah = A->h ;
+    const int64_t *restrict Ai = A->i ;
     int64_t anvec = A->nvec ;
     int64_t avlen = A->vlen ;
+    ASSERT (!GB_JUMBLED (A)) ;
 
     //--------------------------------------------------------------------------
     // tril, triu, diag, offdiag, resize: binary search in each vector
     //--------------------------------------------------------------------------
 
     int64_t k ;
-    #pragma omp parallel for num_threads(nthreads) schedule(guided)
+    #pragma omp parallel for num_threads(A_nthreads) schedule(guided)
     for (k = 0 ; k < anvec ; k++)
     {
 
@@ -76,8 +131,8 @@
         // get A(:,k)
         //----------------------------------------------------------------------
 
-        int64_t pA_start = Ap [k] ;
-        int64_t pA_end   = Ap [k+1] ;
+        int64_t pA_start = GBP (Ap, k, avlen) ;
+        int64_t pA_end   = GBP (Ap, k+1, avlen) ;
         int64_t p = pA_start ;
         int64_t cjnz = 0 ;
         int64_t ajnz = pA_end - pA_start ;
@@ -90,13 +145,13 @@
             // search for the entry A(i,k)
             //------------------------------------------------------------------
 
-            int64_t ifirst = Ai [pA_start] ;
-            int64_t ilast  = Ai [pA_end-1] ;
+            int64_t ifirst = GBI (Ai, pA_start, avlen) ;
+            int64_t ilast  = GBI (Ai, pA_end-1, avlen) ;
 
             #if defined ( GB_RESIZE_SELECTOR )
             int64_t i = ithunk ;
             #else
-            int64_t j = (Ah == NULL) ? k : Ah [k] ;
+            int64_t j = GBH (Ah, k) ;
             int64_t i = j-ithunk ;
             #endif
 
@@ -115,7 +170,7 @@
                 // A(:,k) is dense
                 found = true ;
                 p += i ;
-                ASSERT (Ai [p] == i) ;
+                ASSERT (GBI (Ai, p, avlen) == i) ;
             }
             else
             { 
@@ -180,23 +235,23 @@
     // compute Wfirst and Wlast for each task
     //--------------------------------------------------------------------------
 
-    // Wfirst [0..ntasks-1] and Wlast [0..ntasks-1] are required for
-    // constructing C_start_slice [0..ntasks-1] in GB_selector.
+    // Wfirst [0..A_ntasks-1] and Wlast [0..A_ntasks-1] are required for
+    // constructing C_start_slice [0..A_ntasks-1] in GB_selector.
 
-    int64_t *GB_RESTRICT Wfirst = (int64_t *) Wfirst_space ;
-    int64_t *GB_RESTRICT Wlast  = (int64_t *) Wlast_space  ;
-
-    for (int tid = 0 ; tid < ntasks ; tid++)
+    for (int tid = 0 ; tid < A_ntasks ; tid++)
     {
 
         // if kfirst > klast then task tid does no work at all
-        int64_t kfirst = kfirst_slice [tid] ;
-        int64_t klast  = klast_slice  [tid] ;
+        int64_t kfirst = kfirst_Aslice [tid] ;
+        int64_t klast  = klast_Aslice  [tid] ;
+        Wfirst [tid] = 0 ;
+        Wlast  [tid] = 0 ;
 
         if (kfirst <= klast)
         {
-            int64_t pA_start = pstart_slice [tid] ;
-            int64_t pA_end = GB_IMIN (Ap [kfirst+1], pstart_slice [tid+1]) ;
+            int64_t pA_start = pstart_Aslice [tid] ;
+            int64_t pA_end   = GBP (Ap, kfirst+1, avlen) ;
+            pA_end = GB_IMIN (pA_end, pstart_Aslice [tid+1]) ;
             if (pA_start < pA_end)
             { 
                 #if defined ( GB_TRIL_SELECTOR )
@@ -230,13 +285,12 @@
 
                 #endif
             }
-
         }
 
         if (kfirst < klast)
         {
-            int64_t pA_start = Ap [klast] ;
-            int64_t pA_end   = pstart_slice [tid+1] ;
+            int64_t pA_start = GBP (Ap, klast, avlen) ;
+            int64_t pA_end   = pstart_Aslice [tid+1] ;
             if (pA_start < pA_end)
             { 
                 #if defined ( GB_TRIL_SELECTOR )

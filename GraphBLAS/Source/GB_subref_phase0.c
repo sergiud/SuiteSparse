@@ -2,14 +2,14 @@
 // GB_subref_phase0: find vectors of C = A(I,J) and determine I,J properties
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
 #include "GB_subref.h"
 
-#define GB_Ai(p) GB_UNFLIP (Ai [p])
+#define GB_Ai(p) GBI_UNFLIP (Ai, p, avlen)
 
 //------------------------------------------------------------------------------
 // GB_find_Ap_start_end
@@ -25,16 +25,16 @@ static inline void GB_find_Ap_start_end
 (
     // input, not modified
     const int64_t kA,
-    const int64_t *GB_RESTRICT Ap,
-    const int64_t *GB_RESTRICT Ai,
+    const int64_t *restrict Ap,
+    const int64_t *restrict Ai,
     const int64_t avlen,
     const int64_t imin,
     const int64_t imax,
     const int64_t kC,
     const int64_t nzombies,
     // output: Ap_start [kC] and Ap_end [kC]:
-    int64_t *GB_RESTRICT Ap_start,
-    int64_t *GB_RESTRICT Ap_end
+    int64_t *restrict Ap_start,
+    int64_t *restrict Ap_end
 )
 {
 
@@ -42,8 +42,8 @@ static inline void GB_find_Ap_start_end
     // get A(:,kA)
     //--------------------------------------------------------------------------
 
-    int64_t pA = Ap [kA] ;
-    int64_t pA_end = Ap [kA+1] ;
+    int64_t pA     = GBP (Ap, kA, avlen) ;
+    int64_t pA_end = GBP (Ap, kA+1, avlen) ;
     int64_t ajnz = pA_end - pA ;
 
     //--------------------------------------------------------------------------
@@ -114,7 +114,7 @@ static inline void GB_find_Ap_start_end
 
         #ifdef GB_DEBUG
         ajnz = pA_end - pA ;
-        if (ajnz > 0)
+        if (ajnz > 0 && Ap != NULL)
         {
             // A(imin:imax,kA) is now in Ai [pA:pA_end-1]
             ASSERT (GB_IMPLIES (Ap [kA] < pA,  GB_Ai (pA-1) < imin)) ;
@@ -140,15 +140,20 @@ static inline void GB_find_Ap_start_end
 // GB_subref_phase0
 //------------------------------------------------------------------------------
 
-#define GB_FREE_WORK \
-    GB_FREE (Count) ;
+#define GB_FREE_WORK                \
+{                                   \
+    GB_WERK_POP (Count, int64_t) ;  \
+}
 
 GrB_Info GB_subref_phase0
 (
     // output
-    int64_t *GB_RESTRICT *p_Ch,         // Ch = C->h hyperlist, or NULL standard
-    int64_t *GB_RESTRICT *p_Ap_start,   // A(:,kA) starts at Ap_start [kC]
-    int64_t *GB_RESTRICT *p_Ap_end,     // ... and ends at Ap_end [kC] - 1
+    int64_t *restrict *p_Ch,         // Ch = C->h hyperlist, or NULL standard
+    size_t *p_Ch_size,
+    int64_t *restrict *p_Ap_start,   // A(:,kA) starts at Ap_start [kC]
+    size_t *p_Ap_start_size,
+    int64_t *restrict *p_Ap_end,     // ... and ends at Ap_end [kC] - 1
+    size_t *p_Ap_end_size,
     int64_t *p_Cnvec,       // # of vectors in C
     bool *p_need_qsort,     // true if C must be sorted
     int *p_Ikind,           // kind of I
@@ -161,7 +166,7 @@ GrB_Info GB_subref_phase0
     const int64_t ni,       // length of I, or special
     const GrB_Index *J,     // index list for C = A(I,J), or GrB_ALL, etc.
     const int64_t nj,       // length of J, or special
-    const bool must_sort,   // true if C must be returned sorted
+//  const bool must_sort,   // true if C must be returned sorted
     GB_Context Context
 )
 {
@@ -170,18 +175,17 @@ GrB_Info GB_subref_phase0
     // check inputs
     //--------------------------------------------------------------------------
 
+    ASSERT_MATRIX_OK (A, "A for subref phase 0", GB0) ;
+    ASSERT (!GB_IS_BITMAP (A)) ;    // GB_bitmap_subref is used instead
+
     ASSERT (p_Ch != NULL) ;
     ASSERT (p_Ap_start != NULL) ;
     ASSERT (p_Ap_end != NULL) ;
     ASSERT (p_Cnvec != NULL) ;
-
     ASSERT (p_nJ != NULL) ;
-
     ASSERT (p_Ikind != NULL) ;
     ASSERT (p_nI != NULL) ;
     ASSERT (Icolon != NULL) ;
-
-    ASSERT_MATRIX_OK (A, "A for subref phase 0", GB0) ;
     ASSERT (I != NULL) ;
     ASSERT (J != NULL) ;
 
@@ -200,9 +204,9 @@ GrB_Info GB_subref_phase0
     // get A
     //--------------------------------------------------------------------------
 
-    int64_t *GB_RESTRICT Ap = A->p ;   // Ap (but not A->p) may be trimmed
-    int64_t *GB_RESTRICT Ah = A->h ;   // Ah (but not A->h) may be trimmed
-    int64_t *GB_RESTRICT Ai = A->i ;
+    int64_t *restrict Ap = A->p ;   // Ap (but not A->p) may be trimmed
+    int64_t *restrict Ah = A->h ;   // Ah (but not A->h) may be trimmed
+    int64_t *restrict Ai = A->i ;
     int64_t anvec = A->nvec ;       // may be trimmed
     int64_t avlen = A->vlen ;
     int64_t avdim = A->vdim ;
@@ -225,7 +229,7 @@ GrB_Info GB_subref_phase0
         &I_unsorted, &I_has_dupl, &I_contig, &imin, &imax, Context) ;
     if (info != GrB_SUCCESS)
     { 
-        // I invalid
+        // I invalid or out of memory
         return (info) ;
     }
 
@@ -233,20 +237,11 @@ GrB_Info GB_subref_phase0
         &J_unsorted, &J_has_dupl, &J_contig, &jmin, &jmax, Context) ;
     if (info != GrB_SUCCESS)
     { 
-        // J invalid
+        // J invalid or out of memory
         return (info) ;
     }
 
     bool need_qsort = I_unsorted ;
-
-    // For the symbolic case, GB_subref must always return C sorted.  For the
-    // numeric case, GB_subref may return C with jumbled indices in each
-    // vector, if C will be transposed later by GB_accum_mask.
-    if (must_sort == false)
-    { 
-        // The caller does not need C to be returned with sorted vectors.
-        need_qsort = false ;
-    }
 
     //--------------------------------------------------------------------------
     // determine if C is empty
@@ -264,7 +259,7 @@ GrB_Info GB_subref_phase0
     // jmax is avdim-1, so there is nothing to trim from Ah.  If C is empty,
     // then Ah and Ap will not be accessed at all, so this can be skipped.
 
-    bool A_is_hyper = A->is_hyper ;
+    bool A_is_hyper = (Ah != NULL) ;
 
     if (A_is_hyper && !C_empty)
     {
@@ -308,28 +303,29 @@ GrB_Info GB_subref_phase0
     // determine # of threads to use
     //--------------------------------------------------------------------------
 
+    #define NTASKS_PER_THREAD 8
     GB_GET_NTHREADS_MAX (nthreads_max, chunk, Context) ;
     int nthreads = 1, ntasks = 1 ;
-    int max_ntasks = nthreads_max * 8 ;
-    int64_t *GB_RESTRICT Count = NULL ;        // size max_ntasks+1
+    int ntasks_max = nthreads_max * NTASKS_PER_THREAD ;
 
-    #define GB_GET_NTHREADS_AND_NTASKS(work)                    \
-    {                                                           \
-        nthreads = GB_nthreads (work, chunk, nthreads_max) ;    \
-        ntasks = (nthreads == 1) ? 1 : (8 * nthreads) ;         \
-        ntasks = GB_IMIN (ntasks, work) ;                       \
-        ntasks = GB_IMAX (ntasks, 1) ;                          \
+    #define GB_GET_NTHREADS_AND_NTASKS(work)                            \
+    {                                                                   \
+        nthreads = GB_nthreads (work, chunk, nthreads_max) ;            \
+        ntasks = (nthreads == 1) ? 1 : (NTASKS_PER_THREAD * nthreads) ; \
+        ntasks = GB_IMIN (ntasks, work) ;                               \
+        ntasks = GB_IMAX (ntasks, 1) ;                                  \
     }
 
     //--------------------------------------------------------------------------
     // allocate workspace
     //--------------------------------------------------------------------------
 
-    Count = GB_CALLOC (max_ntasks+1, int64_t) ;
+    GB_WERK_DECLARE (Count, int64_t) ;
+    GB_WERK_PUSH (Count, ntasks_max+1, int64_t) ;
     if (Count == NULL)
-    {
+    { 
         // out of memory
-        return (GB_OUT_OF_MEMORY) ;
+        return (GrB_OUT_OF_MEMORY) ;
     }
 
     //--------------------------------------------------------------------------
@@ -340,9 +336,9 @@ GrB_Info GB_subref_phase0
     // if C(:,jC) is the (kC)th vector of C.  If NULL, then C is standard, and
     // jC == kC.  jC is in the range 0 to nJ-1.
 
-    int64_t *GB_RESTRICT Ch = NULL ;
-    int64_t *GB_RESTRICT Ap_start = NULL ;
-    int64_t *GB_RESTRICT Ap_end   = NULL ;
+    int64_t *restrict Ch       = NULL ; size_t Ch_size = 0 ;
+    int64_t *restrict Ap_start = NULL ; size_t Ap_start_size = 0 ;
+    int64_t *restrict Ap_end   = NULL ; size_t Ap_end_size = 0 ;
     int64_t Cnvec = 0 ;
 
     int64_t jbegin = Jcolon [GxB_BEGIN] ;
@@ -422,7 +418,7 @@ GrB_Info GB_subref_phase0
             Count [tid] = my_Cnvec ;
         }
 
-        GB_cumsum (Count, ntasks, NULL, 1) ;
+        GB_cumsum (Count, ntasks, NULL, 1, NULL) ;
         Cnvec = Count [ntasks] ;
 
     }
@@ -459,7 +455,7 @@ GrB_Info GB_subref_phase0
             Count [tid] = my_Cnvec ;
         }
 
-        GB_cumsum (Count, ntasks, NULL, 1) ;
+        GB_cumsum (Count, ntasks, NULL, 1, NULL) ;
         Cnvec = Count [ntasks] ;
     }
 
@@ -474,26 +470,26 @@ GrB_Info GB_subref_phase0
 
     if (C_is_hyper)
     {
-        Ch = GB_MALLOC (Cnvec, int64_t) ;
+        Ch = GB_MALLOC (Cnvec, int64_t, &Ch_size) ;
         if (Ch == NULL)
         { 
             GB_FREE_WORK ;
-            return (GB_OUT_OF_MEMORY) ;
+            return (GrB_OUT_OF_MEMORY) ;
         }
     }
 
     if (Cnvec > 0)
     {
-        Ap_start = GB_MALLOC (Cnvec, int64_t) ;
-        Ap_end   = GB_MALLOC (Cnvec, int64_t) ;
+        Ap_start = GB_MALLOC_WERK (Cnvec, int64_t, &Ap_start_size) ;
+        Ap_end   = GB_MALLOC_WERK (Cnvec, int64_t, &Ap_end_size) ;
         if (Ap_start == NULL || Ap_end == NULL)
         { 
             // out of memory
             GB_FREE_WORK ;
-            GB_FREE (Ch) ;
-            GB_FREE (Ap_start) ;
-            GB_FREE (Ap_end) ;
-            return (GB_OUT_OF_MEMORY) ;
+            GB_FREE (&Ch, Ch_size) ;
+            GB_FREE_WERK (&Ap_start, Ap_start_size) ;
+            GB_FREE_WERK (&Ap_end, Ap_end_size) ;
+            return (GrB_OUT_OF_MEMORY) ;
         }
     }
 
@@ -659,15 +655,15 @@ GrB_Info GB_subref_phase0
     for (int64_t kC = 0 ; kC < Cnvec ; kC++)
     {
         // jC is the (kC)th vector of C = A(I,J)
-        int64_t jC = (Ch == NULL) ? kC : Ch [kC] ;
+        int64_t jC = GBH (Ch, kC) ;
         int64_t jA = GB_ijlist (J, jC, Jkind, Jcolon) ;
         // jA is the corresponding (kA)th vector of A.
         int64_t kA = 0 ;
         int64_t pright = A->nvec - 1 ;
         int64_t pA_start_all, pA_end_all ;
-        bool found = GB_lookup (A->is_hyper, A->h, A->p, &kA, pright, jA,
-            &pA_start_all, &pA_end_all) ;
-        if (found && A->is_hyper)
+        bool found = GB_lookup (A->h != NULL, A->h, A->p, A->vlen, &kA,
+            pright, jA, &pA_start_all, &pA_end_all) ;
+        if (found && A->h != NULL)
         {
             ASSERT (jA == A->h [kA]) ;
         }
@@ -702,9 +698,9 @@ GrB_Info GB_subref_phase0
     //--------------------------------------------------------------------------
 
     GB_FREE_WORK ;
-    (*p_Ch        ) = Ch ;
-    (*p_Ap_start  ) = Ap_start ;
-    (*p_Ap_end    ) = Ap_end ;
+    (*p_Ch        ) = Ch ;          (*p_Ch_size) = Ch_size ;
+    (*p_Ap_start  ) = Ap_start ;    (*p_Ap_start_size) = Ap_start_size ;
+    (*p_Ap_end    ) = Ap_end ;      (*p_Ap_end_size) = Ap_end_size ;
     (*p_Cnvec     ) = Cnvec ;
     (*p_need_qsort) = need_qsort ;
     (*p_Ikind     ) = Ikind ;

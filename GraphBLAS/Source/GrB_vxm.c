@@ -2,8 +2,8 @@
 // GrB_vxm: vector-matrix multiply
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -15,7 +15,7 @@
 
 #include "GB_mxm.h"
 
-GrB_Info GrB_vxm                    // w'<M> = accum (w, u'*A)
+GrB_Info GrB_vxm                    // w'<M> = accum (w', u'*A)
 (
     GrB_Vector w,                   // input/output vector for results
     const GrB_Vector M,             // optional mask for w, unused if NULL
@@ -31,7 +31,7 @@ GrB_Info GrB_vxm                    // w'<M> = accum (w, u'*A)
     // check inputs
     //--------------------------------------------------------------------------
 
-    GB_WHERE ("GrB_vxm (w, M, accum, semiring, u, A, desc)") ;
+    GB_WHERE (w, "GrB_vxm (w, M, accum, semiring, u, A, desc)") ;
     GB_BURBLE_START ("GrB_vxm") ;
     GB_RETURN_IF_NULL_OR_FAULTY (w) ;
     GB_RETURN_IF_FAULTY (M) ;
@@ -43,18 +43,18 @@ GrB_Info GrB_vxm                    // w'<M> = accum (w, u'*A)
 
     // get the descriptor
     GB_GET_DESCRIPTOR (info, desc, C_replace, Mask_comp, Mask_struct,
-        xx, A_transpose, AxB_method) ;
+        xx, A_transpose, AxB_method, do_sort) ;
 
     //--------------------------------------------------------------------------
     // w'<M'> = accum (w',u'*A) and variations, using the mxm kernel
     //--------------------------------------------------------------------------
 
-    // w, M, and u are passed as matrices to GB_mxm
-    // A and u are swapped, and A_transpose is negated:
+    // w, M, and u are treated as column vectors and passed as n-by-1 matrices
+    // to GB_mxm A and u are swapped, and A_transpose is negated:
     //      u'*A  == A'*u
     //      u'*A' == A*u
-    // Since A and u are swapped, in all the matrix multiply kernels
-    // fmult(y,x) must be used instead of fmult(x,y).
+    // Since A and u are swapped, in all the matrix multiply kernels,
+    // the multiplier must be flipped, so flipxy is passed in as true.
 
     info = GB_mxm (
         (GrB_Matrix) w,     C_replace,      // w and its descriptor
@@ -63,8 +63,8 @@ GrB_Info GrB_vxm                    // w'<M> = accum (w, u'*A)
         semiring,                           // definition of matrix multiply
         A,                  !A_transpose,   // allow A to be transposed
         (GrB_Matrix) u,     false,          // u is never transposed
-        true,                               // flipxy: fmult(y,x)
-        AxB_method,                         // algorithm selector
+        true,                               // fmult(y,x), flipxy = true
+        AxB_method, do_sort,                // algorithm selector
         Context) ;
 
     GB_BURBLE_END ;

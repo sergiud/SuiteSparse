@@ -1,8 +1,8 @@
-% function test14
+function test14
 %TEST14 test GrB_reduce
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-% http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 fprintf ('\ntest14: reduce to column and scalar\n') ;
 
@@ -43,8 +43,8 @@ for k1 = 1:length(types)
     for A_is_hyper = 0:1
     for A_is_csc   = 0:1
 
-    A.is_csc    = A_is_csc ; A.is_hyper    = A_is_hyper ;
-    B.is_csc    = A_is_csc ; B.is_hyper    = A_is_hyper ;
+    A.is_csc = A_is_csc ; A.is_hyper = A_is_hyper ;
+    B.is_csc = A_is_csc ; B.is_hyper = A_is_hyper ;
 
     for k2 = 1:length(add_ops)
         op = add_ops {k2} ;

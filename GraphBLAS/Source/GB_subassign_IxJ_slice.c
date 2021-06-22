@@ -2,8 +2,8 @@
 // GB_subassign_IxJ_slice: slice IxJ for subassign
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -46,9 +46,9 @@
 #include "GB_subassign_methods.h"
 
 #undef  GB_FREE_ALL
-#define GB_FREE_ALL         \
-{                           \
-    GB_FREE (TaskList) ;    \
+#define GB_FREE_ALL                             \
+{                                               \
+    GB_FREE_WERK (&TaskList, TaskList_size) ;   \
 }
 
 //------------------------------------------------------------------------------
@@ -58,19 +58,19 @@
 GrB_Info GB_subassign_IxJ_slice
 (
     // output:
-    GB_task_struct **p_TaskList,    // array of structs, of size max_ntasks
-    int *p_max_ntasks,              // size of TaskList
+    GB_task_struct **p_TaskList,    // array of structs
+    size_t *p_TaskList_size,        // size of TaskList
     int *p_ntasks,                  // # of tasks constructed
     int *p_nthreads,                // # of threads to use
     // input:
-    const GrB_Index *I,
+//  const GrB_Index *I,
     const int64_t nI,
-    const int Ikind,
-    const int64_t Icolon [3],
-    const GrB_Index *J,
+//  const int Ikind,
+//  const int64_t Icolon [3],
+//  const GrB_Index *J,
     const int64_t nJ,
-    const int Jkind,
-    const int64_t Jcolon [3],
+//  const int Jkind,
+//  const int64_t Jcolon [3],
     GB_Context Context
 )
 {
@@ -80,16 +80,16 @@ GrB_Info GB_subassign_IxJ_slice
     //--------------------------------------------------------------------------
 
     ASSERT (p_TaskList != NULL) ;
-    ASSERT (p_max_ntasks != NULL) ;
+    ASSERT (p_TaskList_size != NULL) ;
     ASSERT (p_ntasks != NULL) ;
     ASSERT (p_nthreads != NULL) ;
 
     (*p_TaskList  ) = NULL ;
-    (*p_max_ntasks) = 0 ;
+    (*p_TaskList_size) = 0 ;
     (*p_ntasks    ) = 0 ;
     (*p_nthreads  ) = 1 ;
     int ntasks, max_ntasks = 0, nthreads ;
-    GB_task_struct *TaskList = NULL ;
+    GB_task_struct *TaskList = NULL ; size_t TaskList_size = 0 ;
 
     //--------------------------------------------------------------------------
     // determine # of threads to use
@@ -104,7 +104,7 @@ GrB_Info GB_subassign_IxJ_slice
     double work = ((double) nI) * ((double) nJ) ;
     nthreads = GB_nthreads (work, chunk, nthreads_max) ;
     int ntasks0 = (nthreads == 1) ? 1 : (32 * nthreads) ;
-    GB_REALLOC_TASK_LIST (TaskList, ntasks0, max_ntasks) ;
+    GB_REALLOC_TASK_WERK (TaskList, ntasks0, max_ntasks) ;
 
     //--------------------------------------------------------------------------
     // check for quick return for a single task
@@ -116,7 +116,7 @@ GrB_Info GB_subassign_IxJ_slice
         TaskList [0].kfirst = 0 ;
         TaskList [0].klast  = nJ-1 ;
         (*p_TaskList  ) = TaskList ;
-        (*p_max_ntasks) = max_ntasks ;
+        (*p_TaskList_size) = TaskList_size ;
         (*p_ntasks    ) = (nJ == 0) ? 0 : 1 ;
         (*p_nthreads  ) = 1 ;
         return (GrB_SUCCESS) ;
@@ -163,13 +163,11 @@ GrB_Info GB_subassign_IxJ_slice
         nI_fine_tasks = GB_IMAX (nI_fine_tasks, 2) ;
         ntasks = 0 ;
 
-        GB_REALLOC_TASK_LIST (TaskList, nJ * nI_fine_tasks, max_ntasks) ;
+        GB_REALLOC_TASK_WERK (TaskList, nJ * nI_fine_tasks, max_ntasks) ;
 
-        //------------------------------------------------------------------
+        //----------------------------------------------------------------------
         // construct fine tasks for index j
-        //------------------------------------------------------------------
-
-        // Method 7, 8, 11a, 11b, 12a, 12b: no need for binary search of C
+        //----------------------------------------------------------------------
 
         for (int64_t j = 0 ; j < nJ ; j++)
         {
@@ -195,7 +193,7 @@ GrB_Info GB_subassign_IxJ_slice
     //--------------------------------------------------------------------------
 
     (*p_TaskList  ) = TaskList ;
-    (*p_max_ntasks) = max_ntasks ;
+    (*p_TaskList_size) = TaskList_size ;
     (*p_ntasks    ) = ntasks ;
     (*p_nthreads  ) = nthreads ;
     return (GrB_SUCCESS) ;

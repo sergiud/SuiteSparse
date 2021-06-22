@@ -2,8 +2,8 @@
 // gbisequal: isequal (A,B)
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 //------------------------------------------------------------------------------
 
@@ -14,6 +14,8 @@
 //  result = gbisequal (A,B)
 
 #include "gb_matlab.h"
+
+#define USAGE "usage: s = GrB.isequal (A, B)"
 
 void mexFunction
 (
@@ -28,7 +30,7 @@ void mexFunction
     // check inputs
     //--------------------------------------------------------------------------
 
-    gb_usage (nargin == 2 && nargout <= 1, "usage: s = GrB.isequal (A, B)") ;
+    gb_usage (nargin == 2 && nargout <= 1, USAGE) ;
 
     //--------------------------------------------------------------------------
     // get the arguments
@@ -42,6 +44,13 @@ void mexFunction
     //--------------------------------------------------------------------------
 
     pargout [0] = mxCreateLogicalScalar (gb_is_equal (A, B)) ;
+
+    //--------------------------------------------------------------------------
+    // free shallow copies
+    //--------------------------------------------------------------------------
+
+    OK (GrB_Matrix_free (&A)) ;
+    OK (GrB_Matrix_free (&B)) ;
     GB_WRAPUP ;
 }
 

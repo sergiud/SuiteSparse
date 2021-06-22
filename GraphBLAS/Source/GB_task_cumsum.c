@@ -2,10 +2,12 @@
 // GB_task_cumsum: cumulative sum of Cp and fine tasks in TaskList
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
+
+// Cp is never NULL.  C is created as sparse or hypersparse.
 
 #include "GB.h"
 
@@ -14,9 +16,10 @@ void GB_task_cumsum
     int64_t *Cp,                        // size Cnvec+1
     const int64_t Cnvec,
     int64_t *Cnvec_nonempty,            // # of non-empty vectors in C
-    GB_task_struct *GB_RESTRICT TaskList,  // array of structs
+    GB_task_struct *restrict TaskList,  // array of structs
     const int ntasks,                   // # of tasks
-    const int nthreads                  // # of threads
+    const int nthreads,                 // # of threads
+    GB_Context Context
 )
 {
 
@@ -59,7 +62,7 @@ void GB_task_cumsum
     // replace Cp with its cumulative sum
     //--------------------------------------------------------------------------
 
-    GB_cumsum (Cp, Cnvec, Cnvec_nonempty, nthreads) ;
+    GB_cumsum (Cp, Cnvec, Cnvec_nonempty, nthreads, Context) ;
 
     //--------------------------------------------------------------------------
     // shift the cumulative sum of the fine tasks

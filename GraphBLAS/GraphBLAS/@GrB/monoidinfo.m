@@ -18,12 +18,12 @@ function monoidinfo (monoid, type)
 % of z, x, and y must all be identical.  For example, the plus.double
 % operator is f(x,y)=x+y, with zero as the identity value (x+0 = 0+x = x).
 % The times monoid has an identity value of 1 (since x*1 = 1*x = x).  The
-% identity of min.double is -inf.
+% identity of min.double is +inf.
 %
 % The valid monoids for real non-logical types are:
 %       '+', '*', 'max', 'min', 'any'
 % For the 'logical' type:
-%       '|', '&', 'xor', 'eq', 'any'
+%       '|', '&', 'xor', 'eq' (the same as 'xnor'), 'any'
 % For complex types:
 %       '+', '*', 'any'
 % For integer types (signed and unsigned):
@@ -46,8 +46,8 @@ function monoidinfo (monoid, type)
 % See also GrB.binopinfo, GrB.descriptorinfo, GrB.selectopinfo,
 % GrB.semiringinfo, GrB.unopinfo.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights
-% Reserved. http://suitesparse.com.  See GraphBLAS/Doc/License.txt.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+% SPDX-License-Identifier: GPL-3.0-or-later
 
 if (nargin == 0)
     help GrB.monoidinfo

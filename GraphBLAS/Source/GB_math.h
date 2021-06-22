@@ -2,8 +2,8 @@
 // GB_math.h: definitions for complex types, and mathematical operators
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -83,11 +83,11 @@
 #define GB_FC32_ne(x,y) ((crealf(x) != crealf(y)) || (cimagf(x) != cimagf(y)))
 #define GB_FC64_ne(x,y) ((creal (x) != creal (y)) || (cimag (x) != cimag (y)))
 
-#define GB_FC32_iseq(x,y) GxB_CMPLXF ((float) GB_FC32_eq (x,y), 0)
-#define GB_FC64_iseq(x,y) GxB_CMPLX  ((float) GB_FC64_eq (x,y), 0)
+#define GB_FC32_iseq(x,y) GxB_CMPLXF ((float)  GB_FC32_eq (x,y), 0)
+#define GB_FC64_iseq(x,y) GxB_CMPLX  ((double) GB_FC64_eq (x,y), 0)
 
-#define GB_FC32_isne(x,y) GxB_CMPLXF ((float) GB_FC32_ne (x,y), 0)
-#define GB_FC64_isne(x,y) GxB_CMPLX  ((float) GB_FC64_ne (x,y), 0)
+#define GB_FC32_isne(x,y) GxB_CMPLXF ((float)  GB_FC32_ne (x,y), 0)
+#define GB_FC64_isne(x,y) GxB_CMPLX  ((double) GB_FC64_ne (x,y), 0)
 
 #define GB_FC32_eq0(x) ((crealf(x) == 0) && (cimagf(x) == 0))
 #define GB_FC64_eq0(x) ((creal (x) == 0) && (cimag (x) == 0))
@@ -138,8 +138,7 @@
 #define GB_IABS(x) (((x) >= 0) ? (x) : (-(x)))
 
 // suitable for integers, and non-NaN floating point:
-#define GB_IMAX(x,y) (((x) > (y)) ? (x) : (y))
-#define GB_IMIN(x,y) (((x) < (y)) ? (x) : (y))
+#include "GB_imin.h"
 
 // ceiling of a/b for two integers a and b
 #define GB_ICEIL(a,b) (((a) + (b) - 1) / (b))

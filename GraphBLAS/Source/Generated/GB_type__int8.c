@@ -2,8 +2,8 @@
 // GB_type:  hard-coded functions for each built-in type
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -17,9 +17,11 @@
 
 // The operation is defined by the following types and operators:
 
-// C<M>=x (C is dense): GB_Cdense_05d__int8
-// C<A>=A (C is dense): GB_Cdense_06d__int8
-// C<M>=A (C is empty, A dense): GB_Cdense_25__int8
+// functions:
+// C<M>=x (C is dense):          GB (_Cdense_05d__int8)
+// C<A>=A (C is dense):          GB (_Cdense_06d__int8)
+// C<M>=A (C is empty, A dense): GB (_Cdense_25__int8)
+// convert sparse to bitmap:     GB (_convert_s2b__int8)
 
 // C type:   int8_t
 
@@ -52,17 +54,13 @@
 // C<M>=x, when C is dense
 //------------------------------------------------------------------------------
 
-GrB_Info GB_Cdense_05d__int8
+GrB_Info GB (_Cdense_05d__int8)
 (
     GrB_Matrix C,
     const GrB_Matrix M,
     const bool Mask_struct,
     const GB_void *p_cwork,     // scalar of type C->type
-    const int64_t *GB_RESTRICT kfirst_slice,
-    const int64_t *GB_RESTRICT klast_slice,
-    const int64_t *GB_RESTRICT pstart_slice,
-    const int ntasks,
-    const int nthreads
+    const int64_t *M_ek_slicing, const int M_ntasks, const int M_nthreads
 )
 { 
     #if GB_DISABLE
@@ -78,16 +76,12 @@ GrB_Info GB_Cdense_05d__int8
 // C<A>=A, when C is dense
 //------------------------------------------------------------------------------
 
-GrB_Info GB_Cdense_06d__int8
+GrB_Info GB (_Cdense_06d__int8)
 (
     GrB_Matrix C,
     const GrB_Matrix A,
     const bool Mask_struct,
-    const int64_t *GB_RESTRICT kfirst_slice,
-    const int64_t *GB_RESTRICT klast_slice,
-    const int64_t *GB_RESTRICT pstart_slice,
-    const int ntasks,
-    const int nthreads
+    const int64_t *A_ek_slicing, const int A_ntasks, const int A_nthreads
 )
 { 
     #if GB_DISABLE
@@ -103,16 +97,12 @@ GrB_Info GB_Cdense_06d__int8
 // C<M>=A, when C is empty and A is dense
 //------------------------------------------------------------------------------
 
-GrB_Info GB_Cdense_25__int8
+GrB_Info GB (_Cdense_25__int8)
 (
     GrB_Matrix C,
     const GrB_Matrix M,
     const GrB_Matrix A,
-    const int64_t *GB_RESTRICT kfirst_slice,
-    const int64_t *GB_RESTRICT klast_slice,
-    const int64_t *GB_RESTRICT pstart_slice,
-    const int ntasks,
-    const int nthreads
+    const int64_t *M_ek_slicing, const int M_ntasks, const int M_nthreads
 )
 { 
     #if GB_DISABLE
@@ -120,6 +110,27 @@ GrB_Info GB_Cdense_25__int8
     #else
     ASSERT (C->type == A->type) ;
     #include "GB_dense_subassign_25_template.c"
+    return (GrB_SUCCESS) ;
+    #endif
+}
+
+//------------------------------------------------------------------------------
+// convert sparse to bitmap
+//------------------------------------------------------------------------------
+
+GrB_Info GB (_convert_s2b__int8)
+(
+    GrB_Matrix A,
+    GB_void *restrict Ax_new_void,
+    int8_t  *restrict Ab,
+    const int64_t *A_ek_slicing, const int A_ntasks, const int A_nthreads
+)
+{ 
+    #if GB_DISABLE
+    return (GrB_NO_VALUE) ;
+    #else
+    int8_t *restrict Ax_new = (int8_t *) Ax_new_void ;
+    #include "GB_convert_sparse_to_bitmap_template.c"
     return (GrB_SUCCESS) ;
     #endif
 }

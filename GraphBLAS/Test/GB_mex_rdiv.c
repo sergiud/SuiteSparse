@@ -2,8 +2,8 @@
 // GB_mex_rdiv: compute C=A*B with the rdiv operator
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -17,26 +17,27 @@
 
 #define FREE_ALL                        \
 {                                       \
-    GB_MATRIX_FREE (&A) ;               \
-    GB_MATRIX_FREE (&B) ;               \
-    GB_MATRIX_FREE (&C) ;               \
+    GrB_Matrix_free_(&A) ;              \
+    GrB_Matrix_free_(&B) ;              \
+    GrB_Matrix_free_(&C) ;              \
     GrB_BinaryOp_free_(&My_rdiv) ;      \
     GrB_Semiring_free_(&My_plus_rdiv) ; \
-    GB_mx_put_global (true, 0) ;        \
+    GB_mx_put_global (true) ;           \
 }
 
 //------------------------------------------------------------------------------
 
 GrB_Info info ;
 bool malloc_debug = false ;
-bool ignore = false, ignore2 = false ;
+bool ignore = false, ignore1 = false, ignore2 = false ;
 bool cprint = false ;
-GrB_Matrix A = NULL, B = NULL, C = NULL ;
+GrB_Matrix A = NULL, B = NULL, C = NULL, MT = NULL ;
 int64_t anrows = 0 ;
 int64_t ancols = 0 ;
 int64_t bnrows = 0 ;
 int64_t bncols = 0 ;
-GrB_Desc_Value AxB_method = GxB_DEFAULT, AxB_method_used ;
+GrB_Desc_Value AxB_method = GxB_DEFAULT ;
+struct GB_Matrix_opaque MT_header, C_header ;
 
 GrB_Info axb (GB_Context Context, bool cprint) ;
 
@@ -66,12 +67,15 @@ GrB_Info axb (GB_Context Context, bool cprint)
         return (info) ;
     }
 
+    MT = GB_clear_static_header (&MT_header) ;
+    C  = GB_clear_static_header (&C_header) ;
+
     // C = A*B
-    info = GB_AxB_meta (&C,
-        NULL,       // not in place
+    info = GB_AxB_meta (C, NULL,       // C cannot be computed in place
         false,      // C_replace
         true,       // CSC
-        NULL,       // no MT returned
+        MT,         // no MT returned
+        &ignore1,   // M_transposed will be false
         NULL,       // no Mask
         false,      // mask not complemented
         false,      // mask not structural
@@ -83,11 +87,12 @@ GrB_Info axb (GB_Context Context, bool cprint)
         false,      // no flipxy
         &ignore,    // mask_applied
         &ignore2,   // done_in_place
-        AxB_method, &AxB_method_used, Context) ;
+        AxB_method,
+        true,       // do the sort
+        Context) ;
 
     if (C != NULL)
     {
-        C->AxB_method_used = AxB_method_used ;
         if (cprint) GxB_Matrix_fprint_(C, GxB_COMPLETE, NULL) ;
     }
 
@@ -111,6 +116,8 @@ void mexFunction
     info = GrB_SUCCESS ;
     malloc_debug = GB_mx_get_global (true) ;
     ignore = false ;
+    ignore1 = false ;
+    ignore2 = false ;
     A = NULL ;
     B = NULL ;
     C = NULL ;
@@ -118,7 +125,7 @@ void mexFunction
     My_rdiv = NULL ;
     My_plus_rdiv = NULL ;
 
-    GB_WHERE (USAGE) ;
+    GB_CONTEXT (USAGE) ;
 
     // check inputs
     if (nargout > 1 || nargin < 2 || nargin > 4)
@@ -146,7 +153,6 @@ void mexFunction
     // get the axb_method
     // 0 or not present: default
     // 1001: Gustavson
-    // 1002: heap
     // 1003: dot
     // 1004: hash
     // 1005: saxpy
@@ -157,7 +163,6 @@ void mexFunction
 
     if (! ((AxB_method == GxB_DEFAULT) ||
         (AxB_method == GxB_AxB_GUSTAVSON) ||
-        (AxB_method == GxB_AxB_HEAP) ||
         (AxB_method == GxB_AxB_HASH) ||
         (AxB_method == GxB_AxB_SAXPY) ||
         (AxB_method == GxB_AxB_DOT)))

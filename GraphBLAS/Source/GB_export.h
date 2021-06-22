@@ -2,8 +2,8 @@
 // GB_export.h: definitions for import/export
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -11,53 +11,82 @@
 #define GB_EXPORT_H
 #include "GB_transpose.h"
 
-//------------------------------------------------------------------------------
-// macros for import/export
-//------------------------------------------------------------------------------
+GrB_Info GB_import      // import a matrix in any format
+(
+    GrB_Matrix *A,      // handle of matrix to create
+    GrB_Type type,      // type of matrix to create
+    GrB_Index vlen,     // vector length
+    GrB_Index vdim,     // vector dimension
+    bool is_sparse_vector,      // true if A is a sparse GrB_Vector
 
-#define GB_IMPORT_CHECK                                         \
-    GB_RETURN_IF_NULL (A) ;                                     \
-    (*A) = NULL ;                                               \
-    GB_RETURN_IF_NULL_OR_FAULTY (type) ;                        \
-    if (nrows > GxB_INDEX_MAX)                                  \
-    {                                                           \
-        return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,           \
-            "problem too large: nrows " GBu " exceeds " GBu,    \
-            nrows, GxB_INDEX_MAX))) ;                           \
-    }                                                           \
-    if (ncols > GxB_INDEX_MAX)                                  \
-    {                                                           \
-        return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,           \
-            "problem too large: ncols " GBu " exceeds " GBu,    \
-            ncols, GxB_INDEX_MAX))) ;                           \
-    }                                                           \
-    if (nvals > GxB_INDEX_MAX)                                  \
-    {                                                           \
-        return (GB_ERROR (GrB_INVALID_VALUE, (GB_LOG,           \
-            "problem too large: nvals " GBu " exceeds " GBu,    \
-            nvals, GxB_INDEX_MAX))) ;                           \
-    }                                                           \
-    /* get the descriptor */                                    \
-    GB_GET_DESCRIPTOR (info, desc, xx1, xx2, xx3, xx4, xx5, xx6) ;
+    // the 5 arrays:
+    GrB_Index **Ap,     // pointers, for sparse and hypersparse formats.
+    GrB_Index Ap_size,  // size of Ap in bytes
 
-#define GB_EXPORT_CHECK                                         \
-    GB_RETURN_IF_NULL (A) ;                                     \
-    GB_RETURN_IF_NULL_OR_FAULTY (*A) ;                          \
-    ASSERT_MATRIX_OK (*A, "A to export", GB0) ;                 \
-    GB_RETURN_IF_NULL (type) ;                                  \
-    GB_RETURN_IF_NULL (nrows) ;                                 \
-    GB_RETURN_IF_NULL (ncols) ;                                 \
-    GB_RETURN_IF_NULL (nvals) ;                                 \
-    GB_RETURN_IF_NULL (nonempty) ;                              \
-    /* get the descriptor */                                    \
-    GB_GET_DESCRIPTOR (info, desc, xx1, xx2, xx3, xx4, xx5, xx6) ; \
-    /* finish any pending work */                               \
-    GB_MATRIX_WAIT (*A) ;                                       \
-    /* export basic attributes */                               \
-    (*type) = (*A)->type ;                                      \
-    (*nrows) = GB_NROWS (*A) ;                                  \
-    (*ncols) = GB_NCOLS (*A) ;                                  \
-    (*nvals) = GB_NNZ (*A) ;
+    GrB_Index **Ah,     // vector indices for hypersparse matrices
+    GrB_Index Ah_size,  // size of Ah in bytes
+
+    int8_t **Ab,        // bitmap, for bitmap format only.
+    GrB_Index Ab_size,  // size of Ab in bytes
+
+    GrB_Index **Ai,     // indices for hyper and sparse formats
+    GrB_Index Ai_size,  // size of Ai in bytes
+
+    void **Ax,          // values
+    GrB_Index Ax_size,  // size of Ax in bytes
+
+    // additional information for specific formats:
+    GrB_Index nvals,    // # of entries for bitmap format, or for a vector
+                        // in CSC format.
+    bool jumbled,       // if true, sparse/hypersparse may be jumbled.
+    GrB_Index nvec,     // size of Ah for hypersparse format.
+
+    // information for all formats:
+    int sparsity,       // hypersparse, sparse, bitmap, or full
+    bool is_csc,        // if true then matrix is by-column, else by-row
+    bool is_uniform,    // if true then A has uniform values and only one
+                        // entry is provided in Ax, regardless of nvals(A).
+                        // TODO::: uniform valued matrices not yet supported
+    GB_Context Context
+) ;
+
+GrB_Info GB_export      // export a matrix in any format
+(
+    GrB_Matrix *A,      // handle of matrix to export and free
+    GrB_Type *type,     // type of matrix to export
+    GrB_Index *vlen,    // vector length
+    GrB_Index *vdim,    // vector dimension
+    bool is_sparse_vector,      // true if A is a sparse GrB_Vector
+
+    // the 5 arrays:
+    GrB_Index **Ap,     // pointers
+    GrB_Index *Ap_size, // size of Ap in bytes
+
+    GrB_Index **Ah,     // vector indices
+    GrB_Index *Ah_size, // size of Ah in bytes
+
+    int8_t **Ab,        // bitmap
+    GrB_Index *Ab_size, // size of Ab in bytes
+
+    GrB_Index **Ai,     // indices
+    GrB_Index *Ai_size, // size of Ai in bytes
+
+    void **Ax,          // values
+    GrB_Index *Ax_size, // size of Ax in bytes
+
+    // additional information for specific formats:
+    GrB_Index *nvals,   // # of entries for bitmap format.
+    bool *jumbled,      // if true, sparse/hypersparse may be jumbled.
+    GrB_Index *nvec,    // size of Ah for hypersparse format.
+
+    // information for all formats:
+    int *sparsity,      // hypersparse, sparse, bitmap, or full
+    bool *is_csc,       // if true then matrix is by-column, else by-row
+    bool *is_uniform,   // if true then A has uniform values and only one
+                        // entry is returned in Ax, regardless of nvals(A).
+                        // TODO::: uniform valued matrices not yet supported
+    GB_Context Context
+) ;
 
 #endif
 

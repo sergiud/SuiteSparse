@@ -4,8 +4,8 @@ function C = isnan (G)
 %
 % See also GrB/isinf, GrB/isfinite.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights
-% Reserved. http://suitesparse.com.  See GraphBLAS/Doc/License.txt.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+% SPDX-License-Identifier: GPL-3.0-or-later
 
 G = G.opaque ;
 [m, n, type] = gbsize (G) ;

@@ -2,8 +2,8 @@
 // GB_qsort_1a: sort an 1-by-n list of integers
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -23,15 +23,15 @@
 
 // argument list for defining a function
 #define GB_args(A)                      \
-    int64_t *GB_RESTRICT A ## _0
+    int64_t *restrict A ## _0
 
 // each entry has a single key
 #define GB_K 1
 
 // swap A [a] and A [b]
-#define GB_swap(A,a,b)                                                      \
-{                                                                           \
-    int64_t t = A ## _0 [a] ; A ## _0 [a] = A ## _0 [b] ; A ## _0 [b] = t ; \
+#define GB_swap(A,a,b)                                                        \
+{                                                                             \
+    int64_t t0 = A ## _0 [a] ; A ## _0 [a] = A ## _0 [b] ; A ## _0 [b] = t0 ; \
 }
 
 #define GB_partition GB_partition_1a
@@ -42,7 +42,7 @@
 GB_PUBLIC   // accessed by the MATLAB tests in GraphBLAS/Test only
 void GB_qsort_1a    // sort array A of size 1-by-n
 (
-    int64_t *GB_RESTRICT A_0,      // size n array
+    int64_t *restrict A_0,      // size n array
     const int64_t n
 )
 { 

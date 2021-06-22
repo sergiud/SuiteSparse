@@ -2,8 +2,8 @@
 // gboptype : determine the type of a binary operator from the input types
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 //------------------------------------------------------------------------------
 
@@ -12,6 +12,8 @@
 // optype = gboptype (atype, btype)
 
 #include "gb_matlab.h"
+
+#define USAGE "usage: c = GrB.optype (atype, btype)"
 
 void mexFunction
 (
@@ -26,7 +28,7 @@ void mexFunction
     // check inputs
     //--------------------------------------------------------------------------
 
-    gb_usage (nargin == 2 && nargout <= 1, "usage: c = GrB.optype (a, b)");
+    gb_usage (nargin == 2 && nargout <= 1, USAGE) ;
 
     //--------------------------------------------------------------------------
     // get atype and btype

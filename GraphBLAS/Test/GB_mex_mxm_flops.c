@@ -2,8 +2,8 @@
 // GB_mex_mxm_flops: compute flops to do C=A*B, C<M>=A*B or C<!M>=A*B
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -13,10 +13,10 @@
 
 #define FREE_ALL                            \
 {                                           \
-    GB_MATRIX_FREE (&A) ;                   \
-    GB_MATRIX_FREE (&B) ;                   \
-    GB_MATRIX_FREE (&M) ;                   \
-    GB_mx_put_global (true, 0) ;            \
+    GrB_Matrix_free_(&A) ;                  \
+    GrB_Matrix_free_(&B) ;                  \
+    GrB_Matrix_free_(&M) ;                  \
+    GB_mx_put_global (true) ;               \
 }
 
 void mexFunction
@@ -34,7 +34,7 @@ void mexFunction
     GrB_Matrix M = NULL ;
 
     // check inputs
-    GB_WHERE (USAGE) ;
+    GB_CONTEXT (USAGE) ;
     if (nargout > 2 || nargin != 4)
     {
         mexErrMsgTxt ("Usage: " USAGE) ;
@@ -50,7 +50,6 @@ void mexFunction
 
     // get Mask_comp
     bool GET_SCALAR (1, bool, Mask_comp, 0) ;
-    // printf ("complement: %d\n", Mask_comp) ;
 
     // get A (shallow copy)
     A = GB_mx_mxArray_to_Matrix (pargin [2], "A", false, true) ;
@@ -70,12 +69,14 @@ void mexFunction
 
     // allocate Bflops (note the calloc)
     int64_t bnvec = B->nvec ;
-    int64_t *Bflops = mxCalloc ((bnvec+1), sizeof (int64_t)) ;
+    size_t bfsize = (bnvec+1) * sizeof (int64_t) ;
+    int64_t *Bflops = mxMalloc (bfsize) ;
+    memset (Bflops, 0, bfsize) ;
 
     // compute the flop count
     int64_t Mwork = 0 ;
 
-    GB_AxB_flopcount (&Mwork, Bflops, M, Mask_comp, A, B, Context) ;
+    GB_AxB_saxpy3_flopcount (&Mwork, Bflops, M, Mask_comp, A, B, Context) ;
 
     // return result to MATLAB
     pargout [0] = mxCreateDoubleMatrix (1, bnvec+1, mxREAL) ;

@@ -2,15 +2,13 @@
 // GB_mx_get_global: get the GraphBLAS thread-local storage from MATLAB
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
 // Get the variable 'GraphBLAS_debug' from the MATLAB global workspace.
 // If it doesn't exist, create it and set it to false.
-
-// GxB_MKL is not controllable via MATLAB.
 
 #include "GB_mex.h"
 
@@ -66,13 +64,14 @@ bool GB_mx_get_global       // true if doing malloc_debug
 
     bool burble = GB_Global_burble_get ( ) ;            // save current burble
     GB_Global_GrB_init_called_set (false) ;
+//  GxB_init (GrB_NONBLOCKING, mxMalloc, NULL, NULL, mxFree, false) ;
     GxB_init (GrB_NONBLOCKING, mxMalloc, mxCalloc, mxRealloc, mxFree, false) ;
     ASSERT (GB_Global_nmalloc_get ( ) == 0) ;
     GB_Global_abort_function_set (GB_mx_abort) ;
     GB_Global_malloc_tracking_set (true) ;
     GxB_Global_Option_set_(GxB_FORMAT, GxB_BY_COL) ;
     GxB_Global_Option_set_(GxB_BURBLE, burble) ;        // restore the burble
-    GB_printf_function = mexPrintf ;
+    GxB_Global_Option_set_(GxB_PRINTF, mexPrintf) ;
 
     //--------------------------------------------------------------------------
     // get nthreads
@@ -155,7 +154,6 @@ bool GB_mx_get_global       // true if doing malloc_debug
         }
     }
 
-    // printf ("complex init [%d]\n", builtin_complex [0]) ;
     Complex_init (builtin_complex [0]) ;
 
     //--------------------------------------------------------------------------

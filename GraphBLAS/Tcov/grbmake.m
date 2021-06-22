@@ -7,8 +7,8 @@ function grbmake
 %
 % See also: grbcover, grbcover_edit
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-% http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 if (ispc)
     error ('The tests in Tcov are not ported to Windows') ;
@@ -16,6 +16,7 @@ end
 
 % copy the GraphBLAS.h file
 copyfile ('../Include/GraphBLAS.h', 'tmp_include/GraphBLAS.h') ;
+copyfile ('../GraphBLAS/rename/GB_rename.h', 'tmp_include/GB_rename.h') ;
 
 % create the include files and place in tmp_include
 hfiles = [ dir('../Demo/Include') ; ...
@@ -42,5 +43,12 @@ fclose (f) ;
 
 % compile the libgraphblas_tcov.so library
 
-system (sprintf ('make -j%d', feature ('numcores'))) ;
+need_rename = ~verLessThan ('matlab', '9.10') ;
+
+if (need_rename)
+    fprintf ('Rename with -DGBRENAME=1\n') ;
+    system (sprintf ('make -j%d RENAME="-DGBRENAME=1"', feature ('numcores'))) ;
+else
+    system (sprintf ('make -j%d', feature ('numcores'))) ;
+end
 

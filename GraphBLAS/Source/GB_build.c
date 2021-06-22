@@ -2,22 +2,19 @@
 // GB_build: build a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
-// CALLED BY: GB_matvec_build and GB_reduce_to_vector
+// CALLED BY: GB_matvec_build
 // CALLS:     GB_builder
 
 // GB_matvec_build constructs a GrB_Matrix or GrB_Vector from the tuples
 // provided by the user.  In that case, the tuples must be checked for
 // duplicates.  They might be sorted on input, so this condition is checked and
-// exploited if found.  GB_reduce_to_vector constructs a GrB_Vector froma
-// GrB_Matrix, by discarding the vector index.  As a result, duplicates are
-// likely to appear, and the input is likely to be unsorted.  But for
-// GB_reduce_to_vector, the validity of the tuples need not be checked.  All of
-// these conditions are checked in GB_builder.
+// exploited if that condition is found.  All of these conditions are checked
+// in GB_builder.
 
 // GB_build constructs a matrix C from a list of indices and values.  Any
 // duplicate entries with identical indices are assembled using the binary dup
@@ -93,14 +90,13 @@ GrB_Info GB_build               // build matrix
 (
     GrB_Matrix C,               // matrix to build
     const GrB_Index *I_input,   // "row" indices of tuples (as if CSC)
-    const GrB_Index *J_input,   // "col" indices of tuples (as if CSC) NULL for
-                                // GrB_Vector_build or GB_reduce_to_vector
+    const GrB_Index *J_input,   // "col" indices of tuples (as if CSC)
+                                // J_input is NULL for GrB_Vector_build
     const void *S_input,        // values
     const GrB_Index nvals,      // number of tuples
     const GrB_BinaryOp dup,     // binary function to assemble duplicates
     const GB_Type_code scode,   // GB_Type_code of S_input array
     const bool is_matrix,       // true if C is a matrix, false if GrB_Vector
-    const bool ijcheck,         // true if I and J are to be checked
     GB_Context Context
 )
 {
@@ -110,14 +106,17 @@ GrB_Info GB_build               // build matrix
     //--------------------------------------------------------------------------
 
     ASSERT (C != NULL) ;
+    ASSERT (dup != NULL) ;
+    ASSERT (!GB_OP_IS_POSITIONAL (dup)) ;
 
     //--------------------------------------------------------------------------
     // free all content of C
     //--------------------------------------------------------------------------
 
-    // the type, dimensions, and hyper ratio are still preserved in C.
-    GB_PHIX_FREE (C) ;
-    ASSERT (GB_EMPTY (C)) ;
+    // the type, dimensions, hyper_switch, bitmap_switch and sparsity control
+    // are still preserved in C.
+    GB_phbix_free (C) ;
+    ASSERT (GB_IS_EMPTY (C)) ;
     ASSERT (!GB_ZOMBIES (C)) ;
     ASSERT (C->magic == GB_MAGIC2) ;
 
@@ -125,32 +124,35 @@ GrB_Info GB_build               // build matrix
     // build the matrix T
     //--------------------------------------------------------------------------
 
-    // T is always hypersparse.  Its type is the same as the z output of the
-    // z=dup(x,y) operator.
+    // T is always built as hypersparse.  Its type is the same as the z output
+    // of the z=dup(x,y) operator.
 
     // S_input must be treated as read-only, so GB_builder is not allowed to
     // transplant it into T->x.
 
-    int64_t *no_I_work = NULL ;
-    int64_t *no_J_work = NULL ;
-    GB_void *no_S_work = NULL ;
-    GrB_Matrix T = NULL ;
+    int64_t *no_I_work = NULL ; size_t I_work_size = 0 ;
+    int64_t *no_J_work = NULL ; size_t J_work_size = 0 ;
+    GB_void *no_S_work = NULL ; size_t S_work_size = 0 ;
+    struct GB_Matrix_opaque T_header ;
+    GrB_Matrix T = GB_clear_static_header (&T_header) ;
 
     GrB_Info info = GB_builder
     (
-        &T,             // create T
+        T,              // create T using a static header
         dup->ztype,     // T has the type determined by the dup operator
         C->vlen,        // T->vlen = C->vlen
         C->vdim,        // T->vdim = C->vdim
         C->is_csc,      // T has the same CSR/CSC format as C
         &no_I_work,     // I_work_handle, not used here
+        &I_work_size,
         &no_J_work,     // J_work_handle, not used here
+        &J_work_size,
         &no_S_work,     // S_work_handle, not used here
+        &S_work_size,
         false,          // known_sorted: not yet known
-        false,          // known_no_duplicatces: not yet known
+        false,          // known_no_duplicates: not yet known
         0,              // I_work, J_work, and S_work not used here
         is_matrix,      // true if T is a GrB_Matrix
-        ijcheck,        // true if I and J are to be checked
         (int64_t *) ((C->is_csc) ? I_input : J_input),
         (int64_t *) ((C->is_csc) ? J_input : I_input),
         (const GB_void *) S_input,   // original values, each of size nvals
@@ -170,6 +172,10 @@ GrB_Info GB_build               // build matrix
     // transplant and typecast T into C, conform C, and free T
     //--------------------------------------------------------------------------
 
+    ASSERT (GB_IS_HYPERSPARSE (T)) ;
+    ASSERT (!GB_ZOMBIES (T)) ;
+    ASSERT (!GB_JUMBLED (T)) ;
+    ASSERT (!GB_PENDING (T)) ;
     return (GB_transplant_conform (C, C->type, &T, Context)) ;
 }
 

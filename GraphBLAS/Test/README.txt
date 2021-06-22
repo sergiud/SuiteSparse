@@ -1,17 +1,19 @@
-SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+SPDX-License-Identifier: Apache-2.0
 
 GraphBLAS/Test:
 
 This folder includes a MATLAB interface that tests each GraphBLAS function.  It
 is meant for testing and development only, not for general usage.  The
-functions are efficient and robust.  They are not well-suited for general use
-because the interface is not designed to be simple, clean, elegant, and
-well-documented.  Such an interface would interfere with the purpose of these
-functions, which is to compute a result in GraphBLAS (via a GB_mex_*
-mexFunction) and then to compare its results with the GB_spec_*.m MATLAB mimic
-function.  None of the GB_mex_*.c mexFunctions have corresponding GB_mex_*.m
-files to provide 'help GB_mex...' documentation.
+interface is not designed to be simple, clean, elegant, and well-documented.
+Such an interface would interfere with the purpose of these functions, which is
+to compute a result in GraphBLAS (via a GB_mex_* mexFunction) and then to
+compare its results with the GB_spec_*.m MATLAB mimic function.  None of the
+GB_mex_*.c mexFunctions have corresponding GB_mex_*.m files to provide 'help
+GB_mex...' documentation.
+
+For a usable MATLAB interface to GraphBLAS, see the GraphBLAS/GraphBLAS folder,
+and the @GrB object it supports.
 
 Requirements:  the mex command must use a C compiler supporting ANSI C11.
 Microft Visual Studio does not support ANSI C11 so this test is not available

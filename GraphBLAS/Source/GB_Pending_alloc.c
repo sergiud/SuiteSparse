@@ -2,8 +2,8 @@
 // GB_Pending_alloc: allocate a list of pending tuples
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -30,7 +30,8 @@ bool GB_Pending_alloc       // create a list of pending tuples
     // allocate the Pending header
     //--------------------------------------------------------------------------
 
-    GB_Pending Pending = GB_CALLOC (1, struct GB_Pending_struct) ;
+    size_t header_size ;
+    GB_Pending Pending = GB_MALLOC (1, struct GB_Pending_struct, &header_size) ;
     if (Pending == NULL)
     { 
         // out of memory
@@ -42,25 +43,24 @@ bool GB_Pending_alloc       // create a list of pending tuples
     //--------------------------------------------------------------------------
 
     nmax = GB_IMAX (nmax, GB_PENDING_INIT) ;
+    Pending->header_size = header_size ;
     Pending->n = 0 ;                    // no pending tuples yet
     Pending->nmax = nmax ;              // initial size of list
     Pending->sorted = true ;            // keep track if tuples are sorted
     Pending->type = type ;              // type of pending tuples
     Pending->size = type->size ;        // size of pending tuple type
     Pending->op = op ;                  // pending operator (NULL is OK)
+    Pending->i_size = 0 ;
+    Pending->j_size = 0 ;
+    Pending->x_size = 0 ;
 
-    Pending->i = GB_MALLOC (nmax, int64_t) ;
-
+    Pending->i = GB_MALLOC (nmax, int64_t, &(Pending->i_size)) ;
+    Pending->j = NULL ;
     if (is_matrix)
-    { 
-        Pending->j = GB_MALLOC (nmax, int64_t) ;
+    {
+        Pending->j = GB_MALLOC (nmax, int64_t, &(Pending->j_size)) ;
     }
-    else
-    { 
-        Pending->j = NULL ;
-    }
-
-    Pending->x = GB_MALLOC (nmax * Pending->size, GB_void) ;
+    Pending->x = GB_MALLOC (nmax * Pending->size, GB_void, &(Pending->x_size)) ;
 
     if (Pending->i == NULL || Pending->x == NULL
         || (is_matrix && Pending->j == NULL))

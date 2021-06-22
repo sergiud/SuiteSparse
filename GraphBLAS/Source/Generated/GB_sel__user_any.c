@@ -2,8 +2,8 @@
 // GB_sel:  hard-coded functions for selection operators
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2020, All Rights Reserved.
-// http://suitesparse.com   See GraphBLAS/Doc/License.txt for license.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -15,8 +15,11 @@
 
 // The selection is defined by the following types and operators:
 
-// phase1: GB_sel_phase1__user_any
-// phase2: GB_sel_phase2__user_any
+// functions:
+// phase1: GB (_sel_phase1__user_any)
+// phase2: GB (_sel_phase2__user_any)
+// bitmap: GB (_sel_bitmap__user_any)
+
 // A type: GB_void
 
 // kind
@@ -27,41 +30,36 @@
 
 // test value of Ax [p]
 #define GB_TEST_VALUE_OF_ENTRY(p)                       \
-    user_select ( flipij ? j : Ai[p],  flipij ? Ai[p] : j,  flipij ? avdim : avlen,  flipij ? avlen : avdim, Ax +((p)*asize), xthunk)
+    user_select (flipij ? j : GBI (Ai, p, avlen), flipij ? GBI (Ai, p, avlen) : j, Ax +((p)*asize), xthunk)
 
 // get the vector index (user select operators only)
 #define GB_GET_J                                        \
-    int64_t j = (Ah == NULL) ? k : Ah [k]
+    int64_t j = GBH (Ah, k)
 
 // Cx [pC] = Ax [pA], no typecast
 #define GB_SELECT_ENTRY(Cx,pC,Ax,pA)                    \
     memcpy (Cx +((pC)*asize), Ax +((pA)*asize), asize)
 
 //------------------------------------------------------------------------------
-// GB_sel_phase1__user_any
+// GB_sel_phase1
 //------------------------------------------------------------------------------
 
 
 
-void GB_sel_phase1__user_any
+void GB (_sel_phase1__user_any)
 (
-    int64_t *GB_RESTRICT Zp,
-    int64_t *GB_RESTRICT Cp,
-    GB_void *GB_RESTRICT Wfirst_space,
-    GB_void *GB_RESTRICT Wlast_space,
+    int64_t *restrict Zp,
+    int64_t *restrict Cp,
+    int64_t *restrict Wfirst,
+    int64_t *restrict Wlast,
     const GrB_Matrix A,
-    const int64_t *GB_RESTRICT kfirst_slice,
-    const int64_t *GB_RESTRICT klast_slice,
-    const int64_t *GB_RESTRICT pstart_slice,
     const bool flipij,
     const int64_t ithunk,
-    const GB_void *GB_RESTRICT xthunk,
+    const GB_void *restrict xthunk,
     const GxB_select_function user_select,
-    const int ntasks,
-    const int nthreads
+    const int64_t *A_ek_slicing, const int A_ntasks, const int A_nthreads
 )
 { 
-    int64_t *GB_RESTRICT Tx = Cp ;
     ;
     #include "GB_select_phase1.c"
 }
@@ -69,29 +67,49 @@ void GB_sel_phase1__user_any
 
 
 //------------------------------------------------------------------------------
-// GB_sel_phase2__user_any
+// GB_sel_phase2
 //------------------------------------------------------------------------------
 
-void GB_sel_phase2__user_any
+void GB (_sel_phase2__user_any)
 (
-    int64_t *GB_RESTRICT Ci,
-    GB_void *GB_RESTRICT Cx,
-    const int64_t *GB_RESTRICT Zp,
-    const int64_t *GB_RESTRICT Cp,
-    const int64_t *GB_RESTRICT C_pstart_slice,
+    int64_t *restrict Ci,
+    GB_void *restrict Cx,
+    const int64_t *restrict Zp,
+    const int64_t *restrict Cp,
+    const int64_t *restrict Cp_kfirst,
     const GrB_Matrix A,
-    const int64_t *GB_RESTRICT kfirst_slice,
-    const int64_t *GB_RESTRICT klast_slice,
-    const int64_t *GB_RESTRICT pstart_slice,
     const bool flipij,
     const int64_t ithunk,
-    const GB_void *GB_RESTRICT xthunk,
+    const GB_void *restrict xthunk,
     const GxB_select_function user_select,
-    const int ntasks,
-    const int nthreads
+    const int64_t *A_ek_slicing, const int A_ntasks, const int A_nthreads
 )
 { 
     ;
     #include "GB_select_phase2.c"
 }
+
+//------------------------------------------------------------------------------
+// GB_sel_bitmap
+//------------------------------------------------------------------------------
+
+
+
+void GB (_sel_bitmap__user_any)
+(
+    int8_t *Cb,
+    GB_void *restrict Cx,
+    int64_t *cnvals_handle,
+    GrB_Matrix A,
+    const bool flipij,
+    const int64_t ithunk,
+    const GB_void *restrict xthunk,
+    const GxB_select_function user_select,
+    const int nthreads
+)
+{ 
+    ;
+    #include "GB_bitmap_select_template.c"
+}
+
 

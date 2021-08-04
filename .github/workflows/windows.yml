@@ -1,0 +1,48 @@
+name: Windows
+
+on: [push, pull_request]
+
+defaults:
+  run:
+    shell: msys2 {0}
+
+jobs:
+  build:
+    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        build_type: [Release, Debug]
+        sys: [mingw32, mingw64]
+        include:
+          - sys: mingw32
+            env: i686
+          - sys: mingw64
+            env: x86_64
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.sys}}
+        install: >-
+          mingw-w64-${{matrix.env}}-cmake
+          mingw-w64-${{matrix.env}}-gcc
+          mingw-w64-${{matrix.env}}-gcc-fortran
+          mingw-w64-${{matrix.env}}-intel-tbb
+          mingw-w64-${{matrix.env}}-lapack
+          mingw-w64-${{matrix.env}}-metis
+          mingw-w64-${{matrix.env}}-ninja
+          mingw-w64-${{matrix.env}}-openblas
+          mingw-w64-${{matrix.env}}-openmp
+
+    - name: Configure
+      env:
+        CC: ${{matrix.env}}-w64-mingw32-gcc
+        CXX: ${{matrix.env}}-w64-mingw32-g++
+      run: |
+        cmake -S . -B build_${{matrix.build_type}}/ -G Ninja -DBUILD_SHARED_LIBS=ON
+    - name: Build
+      run: |
+        cmake --build build_${{matrix.build_type}}/ --config ${{matrix.build_type}}

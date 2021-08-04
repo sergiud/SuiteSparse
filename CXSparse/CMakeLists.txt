@@ -239,6 +239,8 @@ set_property (TARGET cxsparseconfig PROPERTY HEADERS_VARIABLE
   SUITESPARSECONFIG_HDRS)
 set_property (TARGET cxsparseconfig PROPERTY INSTALL_DESTINATION
   ${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR})
+set_property (TARGET cxsparseconfig PROPERTY DEFINE_SYMBOL
+  suitesparseconfig_EXPORTS)
 
 set_component_version (cxsparseconfig "${VERSION}")
 set_target_properties (cxsparseconfig PROPERTIES EXPORT_NAME Config)

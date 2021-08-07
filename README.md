@@ -16,8 +16,8 @@ This repository provides two things:
 
 The CMake support layer is provided under the [Apache License
 2.0](http://www.apache.org/licenses/LICENSE-2.0). Modifications to the
-SuiteSparse code base are made available under the same conditions as the
-original code.
+SuiteSparse code base are made available under the [same
+conditions](./LICENSE.txt) as the original code.
 
 The original SuiteSparse `README` can be found [here](./README.md.suitesparse).
 

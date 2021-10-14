@@ -287,7 +287,6 @@ install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/cxsparse-config-version.cmake
   DESTINATION ${_CXSparse_CMake_INSTALLDIR})
 
-set_target_properties (cxsparse PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_component_version (cxsparse ${VERSION})
 
 add_executable (cs_ci_demo1

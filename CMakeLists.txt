@@ -75,6 +75,7 @@ include (GNUInstallDirs)
 
 set (CMAKE_C_VISIBILITY_PRESET hidden)
 set (CMAKE_CXX_VISIBILITY_PRESET hidden)
+set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 check_c_compiler_flag (-fPIC HAVE_FPIC)
@@ -1352,9 +1353,6 @@ set_target_properties (ldl PROPERTIES EXPORT_NAME LDL)
 set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
 set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
 set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
-
-set_target_properties (${_SuiteSparse_TARGETS} PROPERTIES
-  POSITION_INDEPENDENT_CODE ON)
 
 if (WITH_DEMOS)
   add_executable (cholmod_demo

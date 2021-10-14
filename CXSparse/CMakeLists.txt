@@ -229,7 +229,7 @@ target_include_directories (cxsparseconfig PUBLIC
 )
 
 if (HAVE_M)
-  target_link_libraries (cxsparseconfig PUBLIC m)
+  target_link_libraries (cxsparseconfig INTERFACE m)
 endif (HAVE_M)
 
 set_property (TARGET cxsparseconfig PROPERTY NAME_ALIAS CXSparse)
@@ -244,10 +244,6 @@ set_component_version (cxsparseconfig "${VERSION}")
 set_target_properties (cxsparseconfig PROPERTIES EXPORT_NAME Config)
 
 target_link_libraries (cxsparse PUBLIC cxsparseconfig)
-
-if (HAVE_M)
-  target_link_libraries (cxsparse PUBLIC m)
-endif (HAVE_M)
 
 if (NOT HAVE_C99_COMPLEX STREQUAL "")
   target_compile_definitions (cxsparse PUBLIC CXSPARSE_C99_COMPLEX)

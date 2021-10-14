@@ -778,16 +778,16 @@ if (HAVE_FEENABLEEXCEPT)
 endif (HAVE_FEENABLEEXCEPT)
 
 if (TARGET blas AND TARGET lapack)
-  target_link_libraries (cholmod PUBLIC blas lapack)
+  target_link_libraries (cholmod PRIVATE blas lapack)
 else (TARGET blas AND TARGET lapack)
-  target_link_libraries (cholmod PUBLIC ${LAPACK_LIBRARIES} colamd)
+  target_link_libraries (cholmod PRIVATE ${LAPACK_LIBRARIES} colamd)
 endif (TARGET blas AND TARGET lapack)
 
 if (WITH_PARTITION AND METIS_FOUND)
   target_include_directories (cholmod SYSTEM PRIVATE ${METIS_INCLUDE_DIRS})
-  target_include_directories (cholmod SYSTEM PUBLIC
+  target_include_directories (cholmod SYSTEM PRIVATE
     $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
-  target_link_libraries (cholmod PUBLIC ${METIS_LIBRARIES})
+  target_link_libraries (cholmod PRIVATE ${METIS_LIBRARIES})
 endif (WITH_PARTITION AND METIS_FOUND)
 
 add_library (ccolamd
@@ -864,8 +864,8 @@ if (WITH_CUDA AND CUDA_FOUND)
   )
 
   target_include_directories (spqr PRIVATE ${CUDA_INCLUDE_DIRS})
-  target_link_libraries (spqr PUBLIC ${CUDA_LIBRARIES})
-  target_link_libraries (spqr PUBLIC suitesparsecuda)
+  target_link_libraries (spqr PRIVATE ${CUDA_LIBRARIES})
+  target_link_libraries (spqr PRIVATE suitesparsecuda)
 endif (WITH_CUDA AND CUDA_FOUND)
 
 if (WITH_TBB AND FOUND)
@@ -932,7 +932,7 @@ add_library (umfpack
 )
 
 # NOTE cholmod already dependens on LAPACK
-target_link_libraries (umfpack PUBLIC cholmod)
+target_link_libraries (umfpack PRIVATE cholmod)
 
 set (KLU_HDRS
   KLU/Include/klu.h
@@ -946,7 +946,7 @@ add_library (klu
   ${KLU_HDRS}
 )
 
-target_link_libraries (klu PUBLIC amd btf colamd)
+target_link_libraries (klu PRIVATE amd btf colamd)
 
 set (LDL_HDRS
   LDL/Include/ldl.h
@@ -989,7 +989,7 @@ elseif (HAVE_BLAS_NO_UNDERSCORE)
 endif (HAVE_BLAS_UNDERSCORE)
 
 if (HAVE_M)
-  target_link_libraries (suitesparseconfig PUBLIC m)
+  target_link_libraries (suitesparseconfig INTERFACE m)
 endif (HAVE_M)
 
 target_include_directories (amd PUBLIC
@@ -1103,7 +1103,7 @@ if (WITH_CUDA AND CUDA_FOUND)
     $<INSTALL_INTERFACE:${SuiteSparse_GPURuntime_INCLUDE_DIR}>
   )
 
-  target_link_libraries (suitesparsecuda PUBLIC suitesparseconfig)
+  target_link_libraries (suitesparsecuda PRIVATE suitesparseconfig)
 
   # GPUQREngine
 
@@ -1192,7 +1192,7 @@ if (WITH_CUDA AND CUDA_FOUND)
     ${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include
   )
 
-  target_link_libraries (gpuqrengine PUBLIC suitesparsecuda)
+  target_link_libraries (gpuqrengine PRIVATE suitesparsecuda)
 
   set (CHOLMOD_GPU_SRCS CHOLMOD/GPU/cholmod_gpu.c)
 
@@ -1211,7 +1211,7 @@ if (WITH_CUDA AND CUDA_FOUND)
 
   target_compile_definitions (cholmod PUBLIC GPU_BLAS)
   target_include_directories (cholmod PUBLIC ${CUDA_INCLUDE_DIRS})
-  target_link_libraries (cholmod PUBLIC ${CUDA_LIBRARIES}
+  target_link_libraries (cholmod PRIVATE ${CUDA_LIBRARIES}
     ${CUDA_CUBLAS_LIBRARIES} suitesparsecuda)
 
   # SPQR GPU
@@ -1221,7 +1221,7 @@ if (WITH_CUDA AND CUDA_FOUND)
     SPQR/SPQRGPU/spqrgpu_kernel.cpp
   )
 
-  target_link_libraries (spqr PUBLIC gpuqrengine)
+  target_link_libraries (spqr PRIVATE gpuqrengine)
 endif (WITH_CUDA AND CUDA_FOUND)
 
 set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack

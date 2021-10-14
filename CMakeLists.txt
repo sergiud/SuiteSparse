@@ -778,12 +778,6 @@ if (HAVE_FEENABLEEXCEPT)
   target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
 endif (HAVE_FEENABLEEXCEPT)
 
-if (TARGET blas AND TARGET lapack)
-  target_link_libraries (cholmod PRIVATE blas lapack)
-else (TARGET blas AND TARGET lapack)
-  target_link_libraries (cholmod PRIVATE ${LAPACK_LIBRARIES} colamd)
-endif (TARGET blas AND TARGET lapack)
-
 if (WITH_PARTITION AND METIS_FOUND)
   target_include_directories (cholmod SYSTEM PRIVATE ${METIS_INCLUDE_DIRS})
   target_include_directories (cholmod SYSTEM PRIVATE
@@ -875,6 +869,14 @@ if (WITH_TBB AND FOUND)
 
   set (DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
 endif (WITH_TBB AND FOUND)
+
+if (TARGET blas AND TARGET lapack)
+  target_link_libraries (cholmod PRIVATE blas lapack)
+  target_link_libraries (spqr PRIVATE blas lapack)
+else (TARGET blas AND TARGET lapack)
+  target_link_libraries (cholmod PRIVATE ${LAPACK_LIBRARIES} colamd)
+  target_link_libraries (spqr PRIVATE ${LAPACK_LIBRARIES} colamd)
+endif (TARGET blas AND TARGET lapack)
 
 set (SUITESPARSECONFIG_HDRS
   SuiteSparse_config/SuiteSparse_config.h

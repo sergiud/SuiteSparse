@@ -84,7 +84,7 @@ check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
 option (WITH_CUDA "Enable CUDA support" ON)
 option (WITH_OPENMP "Enable OpenMP support" ON)
 
-set (CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
+set (CUDA_LINK_LIBRARIES_KEYWORD PRIVATE)
 
 if (WITH_CUDA)
   find_package (CUDA 7.0)
@@ -1051,8 +1051,8 @@ target_link_libraries (btf PUBLIC suitesparseconfig)
 target_link_libraries (camd PUBLIC suitesparseconfig)
 target_link_libraries (ccolamd PUBLIC suitesparseconfig)
 target_link_libraries (colamd PUBLIC suitesparseconfig)
-target_link_libraries (cholmod PUBLIC amd camd ccolamd colamd
-  suitesparseconfig)
+target_link_libraries (cholmod PRIVATE amd camd ccolamd colamd
+  PUBLIC suitesparseconfig)
 target_link_libraries (spqr PUBLIC cholmod suitesparseconfig)
 target_link_libraries (klu PUBLIC suitesparseconfig)
 target_link_libraries (ldl PUBLIC suitesparseconfig)
@@ -1118,7 +1118,6 @@ if (WITH_CUDA AND CUDA_FOUND)
   )
 
   cuda_add_library (gpuqrengine
-    #GPUQREngine/Demo/gpuqrengine_demo.cpp
     GPUQREngine/Include/GPUQREngine.hpp
     GPUQREngine/Include/GPUQREngine_BucketList.hpp
     GPUQREngine/Include/GPUQREngine_Common.hpp
@@ -1215,7 +1214,7 @@ if (WITH_CUDA AND CUDA_FOUND)
   )
 
   target_compile_definitions (cholmod PUBLIC GPU_BLAS)
-  target_include_directories (cholmod PUBLIC ${CUDA_INCLUDE_DIRS})
+  target_include_directories (cholmod PRIVATE ${CUDA_INCLUDE_DIRS})
   target_link_libraries (cholmod PRIVATE ${CUDA_LIBRARIES}
     ${CUDA_CUBLAS_LIBRARIES} suitesparsecuda)
 

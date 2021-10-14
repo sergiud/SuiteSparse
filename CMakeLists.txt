@@ -1108,7 +1108,7 @@ if (WITH_CUDA AND CUDA_FOUND)
     $<INSTALL_INTERFACE:${SuiteSparse_GPURuntime_INCLUDE_DIR}>
   )
 
-  target_link_libraries (suitesparsecuda PRIVATE suitesparseconfig)
+  target_link_libraries (suitesparsecuda PUBLIC suitesparseconfig)
 
   # GPUQREngine
 
@@ -1406,7 +1406,7 @@ if (WITH_DEMOS)
 
   if (TARGET gpuqrengine)
     add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
-    target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod)
+    target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod suitesparsecuda)
   endif (TARGET gpuqrengine)
 endif (WITH_DEMOS)
 

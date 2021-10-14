@@ -870,14 +870,6 @@ if (WITH_TBB AND FOUND)
   set (DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
 endif (WITH_TBB AND FOUND)
 
-if (TARGET blas AND TARGET lapack)
-  target_link_libraries (cholmod PRIVATE blas lapack)
-  target_link_libraries (spqr PRIVATE blas lapack)
-else (TARGET blas AND TARGET lapack)
-  target_link_libraries (cholmod PRIVATE ${LAPACK_LIBRARIES} colamd)
-  target_link_libraries (spqr PRIVATE ${LAPACK_LIBRARIES} colamd)
-endif (TARGET blas AND TARGET lapack)
-
 set (SUITESPARSECONFIG_HDRS
   SuiteSparse_config/SuiteSparse_config.h
 )
@@ -933,6 +925,16 @@ add_library (umfpack
   UMFPACK/Source/umfpack_timer.c
   ${UMFPACK_HDRS}
 )
+
+if (TARGET blas AND TARGET lapack)
+  target_link_libraries (cholmod PRIVATE blas lapack)
+  target_link_libraries (spqr PRIVATE blas lapack)
+  target_link_libraries (umfpack PRIVATE blas lapack)
+else (TARGET blas AND TARGET lapack)
+  target_link_libraries (cholmod PRIVATE ${LAPACK_LIBRARIES} colamd)
+  target_link_libraries (spqr PRIVATE ${LAPACK_LIBRARIES})
+  target_link_libraries (umfpack PRIVATE ${LAPACK_LIBRARIES})
+endif (TARGET blas AND TARGET lapack)
 
 # NOTE cholmod already dependens on LAPACK
 target_link_libraries (umfpack PRIVATE cholmod)

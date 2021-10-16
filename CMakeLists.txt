@@ -195,6 +195,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     _CRT_SECURE_NO_WARNINGS)
 endif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
+set (AMD_HDRS
+  AMD/Include/amd.h
+  AMD/Include/amd_internal.h
+)
+
 set (AMD_SRCS
   AMD/Source/amd_1.c
   AMD/Source/amd_2.c
@@ -211,10 +216,20 @@ set (AMD_SRCS
   AMD/Source/amd_valid.c
 )
 
+set (BTF_HDRS
+  BTF/Include/btf.h
+  BTF/Include/btf_internal.h
+)
+
 set (BTF_SRCS
   BTF/Source/btf_maxtrans.c
   BTF/Source/btf_order.c
   BTF/Source/btf_strongcomp.c
+)
+
+set (CAMD_HDRS
+  CAMD/Include/camd.h
+  CAMD/Include/camd_internal.h
 )
 
 set (CAMD_SRCS
@@ -230,6 +245,27 @@ set (CAMD_SRCS
   CAMD/Source/camd_postorder.c
   CAMD/Source/camd_preprocess.c
   CAMD/Source/camd_valid.c
+)
+
+set (CHOLMOD_HDRS
+  ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h
+  CHOLMOD/Include/cholmod.h
+  CHOLMOD/Include/cholmod_blas.h
+  CHOLMOD/Include/cholmod_camd.h
+  CHOLMOD/Include/cholmod_check.h
+  CHOLMOD/Include/cholmod_cholesky.h
+  CHOLMOD/Include/cholmod_complexity.h
+  CHOLMOD/Include/cholmod_core.h
+  CHOLMOD/Include/cholmod_function.h
+  CHOLMOD/Include/cholmod_gpu.h
+  CHOLMOD/Include/cholmod_gpu_kernels.h
+  CHOLMOD/Include/cholmod_internal.h
+  CHOLMOD/Include/cholmod_io64.h
+  CHOLMOD/Include/cholmod_matrixops.h
+  CHOLMOD/Include/cholmod_modify.h
+  CHOLMOD/Include/cholmod_partition.h
+  CHOLMOD/Include/cholmod_supernodal.h
+  CHOLMOD/Include/cholmod_template.h
 )
 
 set (CHOLMOD_SRCS
@@ -321,12 +357,56 @@ endif (NOT WITH_PARTITION OR NOT METIS_FOUND)
 configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
 
+set (CCOLAMD_HDRS
+  CCOLAMD/Include/ccolamd.h
+)
+
 set (CCOLAMD_SRCS
   CCOLAMD/Source/ccolamd.c
 )
 
+set (COLAMD_HDRS
+  COLAMD/Include/colamd.h
+)
+
 set (COLAMD_SRCS
   COLAMD/Source/colamd.c
+)
+
+set (UMFPACK_HDRS
+  UMFPACK/Include/umfpack.h
+  UMFPACK/Include/umfpack_col_to_triplet.h
+  UMFPACK/Include/umfpack_defaults.h
+  UMFPACK/Include/umfpack_free_numeric.h
+  UMFPACK/Include/umfpack_free_symbolic.h
+  UMFPACK/Include/umfpack_get_determinant.h
+  UMFPACK/Include/umfpack_get_lunz.h
+  UMFPACK/Include/umfpack_get_numeric.h
+  UMFPACK/Include/umfpack_get_symbolic.h
+  UMFPACK/Include/umfpack_global.h
+  UMFPACK/Include/umfpack_load_numeric.h
+  UMFPACK/Include/umfpack_load_symbolic.h
+  UMFPACK/Include/umfpack_numeric.h
+  UMFPACK/Include/umfpack_qsymbolic.h
+  UMFPACK/Include/umfpack_report_control.h
+  UMFPACK/Include/umfpack_report_info.h
+  UMFPACK/Include/umfpack_report_matrix.h
+  UMFPACK/Include/umfpack_report_numeric.h
+  UMFPACK/Include/umfpack_report_perm.h
+  UMFPACK/Include/umfpack_report_status.h
+  UMFPACK/Include/umfpack_report_symbolic.h
+  UMFPACK/Include/umfpack_report_triplet.h
+  UMFPACK/Include/umfpack_report_vector.h
+  UMFPACK/Include/umfpack_save_numeric.h
+  UMFPACK/Include/umfpack_save_symbolic.h
+  UMFPACK/Include/umfpack_scale.h
+  UMFPACK/Include/umfpack_solve.h
+  UMFPACK/Include/umfpack_symbolic.h
+  UMFPACK/Include/umfpack_tictoc.h
+  UMFPACK/Include/umfpack_timer.h
+  UMFPACK/Include/umfpack_transpose.h
+  UMFPACK/Include/umfpack_triplet_to_col.h
+  UMFPACK/Include/umfpack_wsolve.h
 )
 
 set (UMFPACK_INT_SRCS
@@ -486,6 +566,12 @@ set (UMFPACK_ZINT_SRCS
   UMFPACK/Source/umfpack_triplet_to_col.c
 )
 
+set (KLU_HDRS
+  KLU/Include/klu.h
+  KLU/Include/klu_internal.h
+  KLU/Include/klu_version.h
+)
+
 set (KLU_SRCS
   KLU/Source/klu.c
   KLU/Source/klu_analyze.c
@@ -509,6 +595,39 @@ set (KLU_SRCS
 set (KLU
   KLU/Include/klu.h
   KLU/Include/klu_version.h
+)
+
+set (LDL_HDRS
+  LDL/Include/ldl.h
+)
+
+set (LDL_SRCS
+  LDL/Source/ldl.c
+)
+
+set (SUITESPARSECUDA_HDRS
+  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Runtime.hpp
+  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Workspace.hpp
+  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_debug.hpp
+  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_macros.hpp
+  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_workspace_macros.hpp
+)
+
+set (GPUQRENGINE_HDRS
+  GPUQREngine/Include/GPUQREngine.hpp
+  GPUQREngine/Include/GPUQREngine_BucketList.hpp
+  GPUQREngine/Include/GPUQREngine_Common.hpp
+  GPUQREngine/Include/GPUQREngine_Front.hpp
+  GPUQREngine/Include/GPUQREngine_FrontState.hpp
+  GPUQREngine/Include/GPUQREngine_GraphVizHelper.hpp
+  GPUQREngine/Include/GPUQREngine_Internal.hpp
+  GPUQREngine/Include/GPUQREngine_LLBundle.hpp
+  GPUQREngine/Include/GPUQREngine_Scheduler.hpp
+  GPUQREngine/Include/GPUQREngine_SEntry.hpp
+  GPUQREngine/Include/GPUQREngine_SparseMeta.hpp
+  GPUQREngine/Include/GPUQREngine_Stats.hpp
+  GPUQREngine/Include/GPUQREngine_TaskDescriptor.hpp
+  GPUQREngine/Include/GPUQREngine_Timing.hpp
 )
 
 if (MSVC)
@@ -535,8 +654,7 @@ target_compile_definitions (amd_long PRIVATE amd_EXPORTS)
 add_library (amd
   $<TARGET_OBJECTS:amd_int>
   $<TARGET_OBJECTS:amd_long>
-  AMD/Include/amd.h
-  AMD/Include/amd_internal.h
+  ${AMD_HDRS}
 )
 
 add_library (btf_int OBJECT ${BTF_SRCS})
@@ -552,8 +670,7 @@ target_compile_definitions (btf_long PRIVATE btf_EXPORTS)
 add_library (btf
   $<TARGET_OBJECTS:btf_int>
   $<TARGET_OBJECTS:btf_long>
-  BTF/Include/btf.h
-  BTF/Include/btf_internal.h
+  ${BTF_HDRS}
 )
 
 target_include_directories (btf PUBLIC
@@ -573,8 +690,7 @@ target_compile_definitions (camd_long PRIVATE camd_EXPORTS)
 add_library (camd
   $<TARGET_OBJECTS:camd_int>
   $<TARGET_OBJECTS:camd_long>
-  CAMD/Include/camd.h
-  CAMD/Include/camd_internal.h
+  ${CAMD_HDRS}
 )
 
 add_library (cholmod_int OBJECT ${CHOLMOD_SRCS})
@@ -590,24 +706,7 @@ target_compile_definitions (cholmod_long PRIVATE cholmod_EXPORTS)
 add_library (cholmod
   $<TARGET_OBJECTS:cholmod_int>
   $<TARGET_OBJECTS:cholmod_long>
-  ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h
-  CHOLMOD/Include/cholmod.h
-  CHOLMOD/Include/cholmod_blas.h
-  CHOLMOD/Include/cholmod_camd.h
-  CHOLMOD/Include/cholmod_check.h
-  CHOLMOD/Include/cholmod_cholesky.h
-  CHOLMOD/Include/cholmod_complexity.h
-  CHOLMOD/Include/cholmod_core.h
-  CHOLMOD/Include/cholmod_function.h
-  CHOLMOD/Include/cholmod_gpu.h
-  CHOLMOD/Include/cholmod_gpu_kernels.h
-  CHOLMOD/Include/cholmod_internal.h
-  CHOLMOD/Include/cholmod_io64.h
-  CHOLMOD/Include/cholmod_matrixops.h
-  CHOLMOD/Include/cholmod_modify.h
-  CHOLMOD/Include/cholmod_partition.h
-  CHOLMOD/Include/cholmod_supernodal.h
-  CHOLMOD/Include/cholmod_template.h
+  ${CHOLMOD_HDRS}
 )
 
 target_include_directories (cholmod PUBLIC
@@ -645,7 +744,7 @@ target_compile_definitions (ccolamd_long PRIVATE ccolamd_EXPORTS)
 add_library (ccolamd
   $<TARGET_OBJECTS:ccolamd_int>
   $<TARGET_OBJECTS:ccolamd_long>
-  CCOLAMD/Include/ccolamd.h
+  ${CCOLAMD_HDRS}
 )
 
 add_library (colamd_int OBJECT ${COLAMD_SRCS})
@@ -661,13 +760,17 @@ target_compile_definitions (colamd_long PRIVATE colamd_EXPORTS)
 add_library (colamd
   $<TARGET_OBJECTS:colamd_int>
   $<TARGET_OBJECTS:colamd_long>
-  COLAMD/Include/colamd.h
+  ${COLAMD_HDRS}
 )
 
-add_library (spqr
+set (SPQR_HDRS
   SPQR/Include/SuiteSparseQR.hpp
   SPQR/Include/SuiteSparseQR_C.h
   SPQR/Include/SuiteSparseQR_definitions.h
+)
+
+add_library (spqr
+  ${SPQR_HDRS}
   SPQR/Source/spqr_1colamd.cpp
   SPQR/Source/spqr_1factor.cpp
   SPQR/Source/spqr_1fixed.cpp
@@ -936,39 +1039,7 @@ add_library (umfpack
   $<TARGET_OBJECTS:umfpack_zlong_nomap_x>
   $<TARGET_OBJECTS:umfpack_zlong_solve>
   $<TARGET_OBJECTS:umfpack_zlong_wsolve>
-  UMFPACK/Include/umfpack.h
-  UMFPACK/Include/umfpack_col_to_triplet.h
-  UMFPACK/Include/umfpack_defaults.h
-  UMFPACK/Include/umfpack_free_numeric.h
-  UMFPACK/Include/umfpack_free_symbolic.h
-  UMFPACK/Include/umfpack_get_determinant.h
-  UMFPACK/Include/umfpack_get_lunz.h
-  UMFPACK/Include/umfpack_get_numeric.h
-  UMFPACK/Include/umfpack_get_symbolic.h
-  UMFPACK/Include/umfpack_global.h
-  UMFPACK/Include/umfpack_load_numeric.h
-  UMFPACK/Include/umfpack_load_symbolic.h
-  UMFPACK/Include/umfpack_numeric.h
-  UMFPACK/Include/umfpack_qsymbolic.h
-  UMFPACK/Include/umfpack_report_control.h
-  UMFPACK/Include/umfpack_report_info.h
-  UMFPACK/Include/umfpack_report_matrix.h
-  UMFPACK/Include/umfpack_report_numeric.h
-  UMFPACK/Include/umfpack_report_perm.h
-  UMFPACK/Include/umfpack_report_status.h
-  UMFPACK/Include/umfpack_report_symbolic.h
-  UMFPACK/Include/umfpack_report_triplet.h
-  UMFPACK/Include/umfpack_report_vector.h
-  UMFPACK/Include/umfpack_save_numeric.h
-  UMFPACK/Include/umfpack_save_symbolic.h
-  UMFPACK/Include/umfpack_scale.h
-  UMFPACK/Include/umfpack_solve.h
-  UMFPACK/Include/umfpack_symbolic.h
-  UMFPACK/Include/umfpack_tictoc.h
-  UMFPACK/Include/umfpack_timer.h
-  UMFPACK/Include/umfpack_transpose.h
-  UMFPACK/Include/umfpack_triplet_to_col.h
-  UMFPACK/Include/umfpack_wsolve.h
+  ${UMFPACK_HDRS}
   UMFPACK/Source/umfpack_global.c
   UMFPACK/Source/umfpack_tictoc.c
   UMFPACK/Source/umfpack_timer.c
@@ -994,16 +1065,10 @@ target_compile_definitions (klu_long PRIVATE klu_EXPORTS)
 add_library (klu
   $<TARGET_OBJECTS:klu_int>
   $<TARGET_OBJECTS:klu_long>
-  KLU/Include/klu.h
-  KLU/Include/klu_internal.h
-  KLU/Include/klu_version.h
+  ${KLU_HDRS}
 )
 
 target_link_libraries (klu PRIVATE amd btf colamd)
-
-set (LDL_SRCS
-  LDL/Source/ldl.c
-)
 
 add_library (ldl_int OBJECT ${LDL_SRCS})
 target_include_directories (ldl_int PRIVATE $<TARGET_PROPERTY:ldl,INCLUDE_DIRECTORIES>)
@@ -1018,7 +1083,7 @@ target_compile_definitions (ldl_long PRIVATE ldl_EXPORTS)
 add_library (ldl
   $<TARGET_OBJECTS:ldl_int>
   $<TARGET_OBJECTS:ldl_long>
-  LDL/Include/ldl.h
+  ${LDL_HDRS}
 )
 
 set (SuiteSparse_AMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/AMD)
@@ -1120,11 +1185,6 @@ target_link_libraries (umfpack PUBLIC amd suitesparseconfig)
 # CUDA support
 if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
   add_library (suitesparsecuda
-    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Runtime.hpp
-    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Workspace.hpp
-    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_debug.hpp
-    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_macros.hpp
-    SuiteSparse_GPURuntime/Include/SuiteSparseGPU_workspace_macros.hpp
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace.cpp
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_cpuAllocators.cpp
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_gpuAllocators.cpp
@@ -1145,20 +1205,6 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
   # GPUQREngine
 
   add_library (gpuqrengine
-    GPUQREngine/Include/GPUQREngine.hpp
-    GPUQREngine/Include/GPUQREngine_BucketList.hpp
-    GPUQREngine/Include/GPUQREngine_Common.hpp
-    GPUQREngine/Include/GPUQREngine_Front.hpp
-    GPUQREngine/Include/GPUQREngine_FrontState.hpp
-    GPUQREngine/Include/GPUQREngine_GraphVizHelper.hpp
-    GPUQREngine/Include/GPUQREngine_Internal.hpp
-    GPUQREngine/Include/GPUQREngine_LLBundle.hpp
-    GPUQREngine/Include/GPUQREngine_Scheduler.hpp
-    GPUQREngine/Include/GPUQREngine_SEntry.hpp
-    GPUQREngine/Include/GPUQREngine_SparseMeta.hpp
-    GPUQREngine/Include/GPUQREngine_Stats.hpp
-    GPUQREngine/Include/GPUQREngine_TaskDescriptor.hpp
-    GPUQREngine/Include/GPUQREngine_Timing.hpp
     #GPUQREngine/Include/Kernel/Apply/block_apply.cu
     #GPUQREngine/Include/Kernel/Apply/block_apply_1.cu
     #GPUQREngine/Include/Kernel/Apply/block_apply_1_by_1.cu
@@ -1317,6 +1363,10 @@ foreach (_target ${_SuiteSparse_TARGETS})
   if ("${_HDRS_VAR}" STREQUAL "")
     set (_HDRS_VAR ${_upper_target}_HDRS)
   endif ("${_HDRS_VAR}" STREQUAL "")
+
+  if (NOT DEFINED ${_HDRS_VAR})
+    message (FATAL_ERROR "CMake variable ${_HDRS_VAR} is not defined")
+  endif (NOT DEFINED ${_HDRS_VAR})
 
   # Install headers
   install (FILES ${${_HDRS_VAR}} ${_export_header} DESTINATION

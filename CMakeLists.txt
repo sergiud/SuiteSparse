@@ -81,7 +81,6 @@ cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON "WITH_LGPL
 cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON "WITH_GPL" OFF)
 cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON "WITH_GPL" OFF)
-cmake_dependent_option (WITH_PARTITION "Enable the Partition module" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON "WITH_GPL" OFF)
 
 if (WITH_CUDA)
@@ -132,15 +131,22 @@ find_package (TBB 4.2 NO_MODULE)
 
 function (check_options)
   foreach (_OPT ${ARGV})
-    if (NOT DEFINED WITH_${_OPT})
-      message (FATAL_ERROR "Option WITH_${_OPT} is not defined")
-    endif (NOT DEFINED WITH_${_OPT})
+    # Map PARTITION to WITH_METIS
+    if (_OPT STREQUAL PARTITION)
+      set (_OPT_NAME METIS)
+    else (_OPT STREQUAL PARTITION)
+      set (_OPT_NAME ${_OPT})
+    endif (_OPT STREQUAL PARTITION)
 
-    if (NOT WITH_${_OPT})
+    if (NOT DEFINED WITH_${_OPT_NAME})
+      message (FATAL_ERROR "Option WITH_${_OPT_NAME} is not defined")
+    endif (NOT DEFINED WITH_${_OPT_NAME})
+
+    if (NOT WITH_${_OPT_NAME})
       set (N${_OPT} 1 PARENT_SCOPE)
-    else (NOT WITH_${_OPT})
+    else (NOT WITH_${_OPT_NAME})
       set (N${_OPT} 0 PARENT_SCOPE)
-    endif (NOT WITH_${_OPT})
+    endif (NOT WITH_${_OPT_NAME})
   endforeach (_OPT)
 endfunction (check_options)
 
@@ -337,7 +343,7 @@ set (CHOLMOD_SRCS
   #CHOLMOD/Supernodal/t_cholmod_super_solve.c
 )
 
-if (NOT WITH_PARTITION OR NOT METIS_FOUND)
+if (NOT METIS_FOUND)
   set_property (SOURCE
     CHOLMOD/Check/cholmod_check.c
     CHOLMOD/Cholesky/cholmod_analyze.c
@@ -350,7 +356,7 @@ if (NOT WITH_PARTITION OR NOT METIS_FOUND)
     SPQR/Source/spqr_1colamd.cpp
     SPQR/Source/spqr_analyze.cpp
     APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
-endif (NOT WITH_PARTITION OR NOT METIS_FOUND)
+endif (NOT METIS_FOUND)
 
 configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
@@ -722,12 +728,12 @@ if (HAVE_FEENABLEEXCEPT)
   target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
 endif (HAVE_FEENABLEEXCEPT)
 
-if (WITH_PARTITION AND METIS_FOUND)
+if (METIS_FOUND)
   target_include_directories (cholmod SYSTEM PRIVATE ${METIS_INCLUDE_DIRS})
   target_include_directories (cholmod SYSTEM PRIVATE
     $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
   target_link_libraries (cholmod PRIVATE ${METIS_LIBRARIES})
-endif (WITH_PARTITION AND METIS_FOUND)
+endif (METIS_FOUND)
 
 add_library (ccolamd_int OBJECT ${CCOLAMD_SRCS})
 target_include_directories (ccolamd_int PRIVATE $<TARGET_PROPERTY:ccolamd,INCLUDE_DIRECTORIES>)
@@ -1503,7 +1509,7 @@ add_feature_info (Check WITH_CHECK "Check module")
 add_feature_info (Cholesky WITH_CHOLESKY "Cholesky module")
 add_feature_info (Fortran WITH_FORTRAN "Fortran compilation")
 add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
-add_feature_info (Partition WITH_PARTITION "Partition module")
+add_feature_info (Partition WITH_METIS "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
 add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
 add_feature_info (Threading WITH_TBB "Parallelization using Intel Threading Building Blocks")

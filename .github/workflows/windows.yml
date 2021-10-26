@@ -8,7 +8,7 @@ defaults:
 
 jobs:
   build:
-    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}
+    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}
     runs-on: windows-latest
     strategy:
       fail-fast: true
@@ -16,6 +16,7 @@ jobs:
         build_type: [Release, Debug]
         sys: [mingw32, mingw64]
         lib: [shared, static]
+        components: [minimal, lgpl, gpl]
         include:
           - sys: mingw32
             env: i686
@@ -44,7 +45,9 @@ jobs:
         CXX: ${{matrix.env}}-w64-mingw32-g++
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ -G Ninja \
-          -DBUILD_SHARED_LIBS=$([[ ${{matrix.lib}} == static ]] && echo OFF || echo ON)
+              -DBUILD_SHARED_LIBS=$([[ ${{matrix.lib}} == static ]] && echo OFF || echo ON) \
+              -DWITH_GPL=$([[ ${{matrix.components}} != gpl ]] && echo OFF || echo ON) \
+              -DWITH_LGPL=$([[ ! ${{matrix.components}} =~ gpl ]] && echo OFF || echo ON)
     - name: Build
       run: |
         cmake --build build_${{matrix.build_type}}/ --config ${{matrix.build_type}}

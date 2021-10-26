@@ -4,13 +4,14 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: GCC-${{matrix.build_type}}-${{matrix.lib}}
+    name: GCC-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
-          build_type: [Release, Debug]
-          lib: [shared, static]
+        build_type: [Release, Debug]
+        lib: [shared, static]
+        components: [minimal, lgpl, gpl]
 
     steps:
     - uses: actions/checkout@v2
@@ -36,7 +37,9 @@ jobs:
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
               -G Ninja \
-              -DBUILD_SHARED_LIBS=$([[ ${{matrix.lib}} == static ]] && echo OFF || echo ON)
+              -DBUILD_SHARED_LIBS=$([[ ${{matrix.lib}} == static ]] && echo OFF || echo ON) \
+              -DWITH_GPL=$([[ ${{matrix.components}} != gpl ]] && echo OFF || echo ON) \
+              -DWITH_LGPL=$([[ ! ${{matrix.components}} =~ gpl ]] && echo OFF || echo ON)
     - name: Build
       shell: bash
       run: |

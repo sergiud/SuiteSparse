@@ -767,72 +767,74 @@ add_library (colamd
   ${COLAMD_HDRS}
 )
 
-set (SPQR_HDRS
-  SPQR/Include/SuiteSparseQR.hpp
-  SPQR/Include/SuiteSparseQR_C.h
-  SPQR/Include/SuiteSparseQR_definitions.h
-)
-
-add_library (spqr
-  ${SPQR_HDRS}
-  SPQR/Source/spqr_1colamd.cpp
-  SPQR/Source/spqr_1factor.cpp
-  SPQR/Source/spqr_1fixed.cpp
-  SPQR/Source/spqr_analyze.cpp
-  SPQR/Source/spqr_append.cpp
-  SPQR/Source/spqr_assemble.cpp
-  SPQR/Source/spqr_cpack.cpp
-  SPQR/Source/spqr_csize.cpp
-  SPQR/Source/spqr_cumsum.cpp
-  SPQR/Source/spqr_debug.cpp
-  SPQR/Source/spqr_factorize.cpp
-  SPQR/Source/spqr_fcsize.cpp
-  SPQR/Source/spqr_freefac.cpp
-  SPQR/Source/spqr_freenum.cpp
-  SPQR/Source/spqr_freesym.cpp
-  SPQR/Source/spqr_front.cpp
-  SPQR/Source/spqr_fsize.cpp
-  SPQR/Source/spqr_happly.cpp
-  SPQR/Source/spqr_happly_work.cpp
-  SPQR/Source/spqr_hpinv.cpp
-  SPQR/Source/spqr_kernel.cpp
-  SPQR/Source/spqr_larftb.cpp
-  SPQR/Source/spqr_maxcolnorm.cpp
-  SPQR/Source/spqr_panel.cpp
-  SPQR/Source/spqr_parallel.cpp
-  SPQR/Source/spqr_rconvert.cpp
-  SPQR/Source/spqr_rcount.cpp
-  SPQR/Source/spqr_rhpack.cpp
-  SPQR/Source/spqr_rmap.cpp
-  SPQR/Source/spqr_rsolve.cpp
-  SPQR/Source/spqr_shift.cpp
-  SPQR/Source/spqr_stranspose1.cpp
-  SPQR/Source/spqr_stranspose2.cpp
-  SPQR/Source/spqr_tol.cpp
-  SPQR/Source/spqr_trapezoidal.cpp
-  SPQR/Source/spqr_type.cpp
-  SPQR/Source/SuiteSparseQR.cpp
-  SPQR/Source/SuiteSparseQR_C.cpp
-  SPQR/Source/SuiteSparseQR_expert.cpp
-  SPQR/Source/SuiteSparseQR_qmult.cpp
-)
-
-if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
-  target_sources (spqr PRIVATE
-    SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
-    SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
-    SPQR/SPQRGPU/spqrgpu_kernel.cpp
+if (WITH_SUPERNODAL)
+  set (SPQR_HDRS
+    SPQR/Include/SuiteSparseQR.hpp
+    SPQR/Include/SuiteSparseQR_C.h
+    SPQR/Include/SuiteSparseQR_definitions.h
   )
 
-  target_link_libraries (spqr PRIVATE suitesparsecuda)
-endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+  add_library (spqr
+    ${SPQR_HDRS}
+    SPQR/Source/spqr_1colamd.cpp
+    SPQR/Source/spqr_1factor.cpp
+    SPQR/Source/spqr_1fixed.cpp
+    SPQR/Source/spqr_analyze.cpp
+    SPQR/Source/spqr_append.cpp
+    SPQR/Source/spqr_assemble.cpp
+    SPQR/Source/spqr_cpack.cpp
+    SPQR/Source/spqr_csize.cpp
+    SPQR/Source/spqr_cumsum.cpp
+    SPQR/Source/spqr_debug.cpp
+    SPQR/Source/spqr_factorize.cpp
+    SPQR/Source/spqr_fcsize.cpp
+    SPQR/Source/spqr_freefac.cpp
+    SPQR/Source/spqr_freenum.cpp
+    SPQR/Source/spqr_freesym.cpp
+    SPQR/Source/spqr_front.cpp
+    SPQR/Source/spqr_fsize.cpp
+    SPQR/Source/spqr_happly.cpp
+    SPQR/Source/spqr_happly_work.cpp
+    SPQR/Source/spqr_hpinv.cpp
+    SPQR/Source/spqr_kernel.cpp
+    SPQR/Source/spqr_larftb.cpp
+    SPQR/Source/spqr_maxcolnorm.cpp
+    SPQR/Source/spqr_panel.cpp
+    SPQR/Source/spqr_parallel.cpp
+    SPQR/Source/spqr_rconvert.cpp
+    SPQR/Source/spqr_rcount.cpp
+    SPQR/Source/spqr_rhpack.cpp
+    SPQR/Source/spqr_rmap.cpp
+    SPQR/Source/spqr_rsolve.cpp
+    SPQR/Source/spqr_shift.cpp
+    SPQR/Source/spqr_stranspose1.cpp
+    SPQR/Source/spqr_stranspose2.cpp
+    SPQR/Source/spqr_tol.cpp
+    SPQR/Source/spqr_trapezoidal.cpp
+    SPQR/Source/spqr_type.cpp
+    SPQR/Source/SuiteSparseQR.cpp
+    SPQR/Source/SuiteSparseQR_C.cpp
+    SPQR/Source/SuiteSparseQR_expert.cpp
+    SPQR/Source/SuiteSparseQR_qmult.cpp
+  )
 
-if (WITH_TBB AND TBB_FOUND)
-  target_link_libraries (spqr PRIVATE TBB::tbb)
-  target_compile_definitions (spqr PRIVATE HAVE_TBB)
+  if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+    target_sources (spqr PRIVATE
+      SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
+      SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
+      SPQR/SPQRGPU/spqrgpu_kernel.cpp
+    )
 
-  set (DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
-endif (WITH_TBB AND TBB_FOUND)
+    target_link_libraries (spqr PRIVATE suitesparsecuda)
+  endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+
+  if (WITH_TBB AND TBB_FOUND)
+    target_link_libraries (spqr PRIVATE TBB::tbb)
+    target_compile_definitions (spqr PRIVATE HAVE_TBB)
+
+    set (DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
+  endif (WITH_TBB AND TBB_FOUND)
+endif (WITH_SUPERNODAL)
 
 set (SUITESPARSECONFIG_HDRS
   SuiteSparse_config/SuiteSparse_config.h
@@ -1048,7 +1050,6 @@ add_library (umfpack
 )
 
 target_link_libraries (cholmod PRIVATE BLAS::BLAS LAPACK::LAPACK)
-target_link_libraries (spqr PRIVATE BLAS::BLAS LAPACK::LAPACK)
 target_link_libraries (umfpack PRIVATE BLAS::BLAS LAPACK::LAPACK)
 
 # NOTE cholmod already depends on LAPACK
@@ -1109,13 +1110,9 @@ target_include_directories (suitesparseconfig PUBLIC
 )
 
 if (HAVE_BLAS_UNDERSCORE)
-  target_compile_definitions (cholmod PRIVATE BLAS_UNDERSCORE)
-  target_compile_definitions (umfpack PRIVATE BLAS_UNDERSCORE)
-  target_compile_definitions (spqr PRIVATE BLAS_UNDERSCORE)
+  add_compile_definitions (BLAS_UNDERSCORE)
 elseif (HAVE_BLAS_NO_UNDERSCORE)
-  target_compile_definitions (cholmod PRIVATE BLAS_NO_UNDERSCORE)
-  target_compile_definitions (umfpack PRIVATE BLAS_NO_UNDERSCORE)
-  target_compile_definitions (spqr PRIVATE BLAS_NO_UNDERSCORE)
+  add_compile_definitions (BLAS_NO_UNDERSCORE)
 endif (HAVE_BLAS_UNDERSCORE)
 
 if (HAVE_M)
@@ -1152,10 +1149,7 @@ target_include_directories (cholmod PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Supernodal>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
 )
-target_include_directories (spqr PUBLIC
-  $<INSTALL_INTERFACE:${SuiteSparse_SPQR_INCLUDE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/Include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SPQR_INCLUDE_DIR}>)
+
 target_include_directories (umfpack PUBLIC
   $<INSTALL_INTERFACE:${SuiteSparse_UMFPACK_INCLUDE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>
@@ -1179,10 +1173,22 @@ target_link_libraries (ccolamd PUBLIC suitesparseconfig)
 target_link_libraries (colamd PUBLIC suitesparseconfig)
 target_link_libraries (cholmod PRIVATE amd camd ccolamd colamd
   PUBLIC suitesparseconfig)
-target_link_libraries (spqr PUBLIC cholmod suitesparseconfig)
 target_link_libraries (klu PUBLIC suitesparseconfig)
 target_link_libraries (ldl PUBLIC suitesparseconfig)
 target_link_libraries (umfpack PUBLIC amd suitesparseconfig)
+
+if (TARGET spqr)
+  target_include_directories (spqr PUBLIC
+    $<INSTALL_INTERFACE:${SuiteSparse_SPQR_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SPQR_INCLUDE_DIR}>
+  )
+
+  target_link_libraries (spqr
+    PUBLIC cholmod suitesparseconfig
+    PRIVATE BLAS::BLAS LAPACK::LAPACK
+  )
+endif (TARGET spqr)
 
 # CUDA support
 if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
@@ -1301,26 +1307,33 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
   )
 
   # SPQR GPU
-  target_sources (spqr PRIVATE
-    SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
-    SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
-    SPQR/SPQRGPU/spqrgpu_kernel.cpp
-  )
+  if (TARGET spqr)
+    target_sources (spqr PRIVATE
+      SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
+      SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
+      SPQR/SPQRGPU/spqrgpu_kernel.cpp
+    )
 
-  target_link_libraries (spqr PRIVATE gpuqrengine)
+    target_link_libraries (spqr PRIVATE gpuqrengine)
+  endif (TARGET spqr)
 endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 
-set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod spqr umfpack
+
+set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod umfpack
   klu ldl suitesparseconfig)
 
 set_property (TARGET suitesparseconfig PROPERTY NAME_ALIAS SuiteSparse)
 set_property (TARGET suitesparseconfig PROPERTY HEADERS_VARIABLE
   SUITESPARSECONFIG_HDRS)
-set_property (TARGET spqr PROPERTY NAME_ALIAS SuiteSparseQR)
-set_property (TARGET spqr PROPERTY INSTALL_DESTINATION
-  ${SuiteSparse_SPQR_INCLUDE_DIR})
 set_property (TARGET suitesparseconfig PROPERTY INSTALL_DESTINATION
   ${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR})
+
+if (TARGET spqr)
+  list (APPEND _SuiteSparse_TARGETS spqr)
+  set_property (TARGET spqr PROPERTY NAME_ALIAS SuiteSparseQR)
+  set_property (TARGET spqr PROPERTY INSTALL_DESTINATION
+    ${SuiteSparse_SPQR_INCLUDE_DIR})
+endif (TARGET spqr)
 
 if (TARGET suitesparsecuda)
   list (APPEND _SuiteSparse_TARGETS suitesparsecuda)
@@ -1415,9 +1428,12 @@ set_component_version (cholmod 3.0.13)
 set_component_version (colamd 2.9.6)
 set_component_version (klu 1.3.9)
 set_component_version (ldl 2.2.6)
-set_component_version (spqr 2.0.9)
 set_component_version (suitesparseconfig "${VERSION}")
 set_component_version (umfpack 5.7.9)
+
+if (TARGET spqr)
+  set_component_version (spqr 2.0.9)
+endif (TARGET spqr)
 
 if (TARGET suitesparsecuda)
   set_component_version (suitesparsecuda 1.0.5)
@@ -1439,22 +1455,27 @@ set_target_properties (cholmod PROPERTIES EXPORT_NAME CHOLMOD)
 set_target_properties (colamd PROPERTIES EXPORT_NAME COLAMD)
 set_target_properties (klu PROPERTIES EXPORT_NAME KLU)
 set_target_properties (ldl PROPERTIES EXPORT_NAME LDL)
-set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
 set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
 set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
 
+if (TARGET spqr)
+  set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
+endif (TARGET spqr)
+
 if (WITH_DEMOS)
-  add_executable (cholmod_demo
-    CHOLMOD/Demo/cholmod_demo.h
-    CHOLMOD/Demo/cholmod_demo.c
-  )
-  target_link_libraries (cholmod_demo PRIVATE cholmod)
+  if (TARGET cholmod AND WITH_CHECK)
+    add_executable (cholmod_demo
+      CHOLMOD/Demo/cholmod_demo.h
+      CHOLMOD/Demo/cholmod_demo.c
+    )
+    target_link_libraries (cholmod_demo PRIVATE cholmod)
 
-  add_executable (cholmod_l_demo CHOLMOD/Demo/cholmod_l_demo.c)
-  target_link_libraries (cholmod_l_demo PRIVATE cholmod)
+    add_executable (cholmod_l_demo CHOLMOD/Demo/cholmod_l_demo.c)
+    target_link_libraries (cholmod_l_demo PRIVATE cholmod)
 
-  add_executable (cholmod_simple CHOLMOD/Demo/cholmod_simple.c)
-  target_link_libraries (cholmod_simple PRIVATE cholmod)
+    add_executable (cholmod_simple CHOLMOD/Demo/cholmod_simple.c)
+    target_link_libraries (cholmod_simple PRIVATE cholmod)
+  endif (TARGET cholmod AND WITH_CHECK)
 
   add_executable (umf4 UMFPACK/Demo/umf4.c)
   target_link_libraries (umf4 PRIVATE umfpack)
@@ -1479,20 +1500,22 @@ if (WITH_DEMOS)
     target_link_libraries (umf4hb PRIVATE umfpack)
   endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
 
-  add_executable (qrdemo SPQR/Demo/qrdemo.cpp)
-  add_executable (qrdemoc SPQR/Demo/qrdemoc.c)
-  add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
-  add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
+  if (TARGET spqr)
+    add_executable (qrdemo SPQR/Demo/qrdemo.cpp)
+    add_executable (qrdemoc SPQR/Demo/qrdemoc.c)
+    add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
+    add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
 
-  target_link_libraries (qrdemo PRIVATE spqr)
-  target_link_libraries (qrdemoc PRIVATE spqr)
-  target_link_libraries (qrsimple PRIVATE spqr)
-  target_link_libraries (qrsimplec PRIVATE spqr)
+    target_link_libraries (qrdemo PRIVATE spqr)
+    target_link_libraries (qrdemoc PRIVATE spqr)
+    target_link_libraries (qrsimple PRIVATE spqr)
+    target_link_libraries (qrsimplec PRIVATE spqr)
 
-  if (TARGET gpuqrengine)
-    add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
-    target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod suitesparsecuda)
-  endif (TARGET gpuqrengine)
+    if (TARGET gpuqrengine)
+      add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
+      target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod suitesparsecuda)
+    endif (TARGET gpuqrengine)
+  endif (TARGET spqr)
 endif (WITH_DEMOS)
 
 if (BUILD_CXSPARSE)

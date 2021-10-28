@@ -829,12 +829,12 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
   target_link_libraries (spqr PRIVATE suitesparsecuda)
 endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 
-if (WITH_TBB AND FOUND)
+if (WITH_TBB AND TBB_FOUND)
   target_link_libraries (spqr PRIVATE TBB::tbb)
   target_compile_definitions (spqr PRIVATE HAVE_TBB)
 
   set (DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
-endif (WITH_TBB AND FOUND)
+endif (WITH_TBB AND TBB_FOUND)
 
 set (SUITESPARSECONFIG_HDRS
   SuiteSparse_config/SuiteSparse_config.h

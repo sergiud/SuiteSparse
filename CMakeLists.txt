@@ -824,8 +824,6 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
     SPQR/SPQRGPU/spqrgpu_kernel.cpp
   )
 
-  target_include_directories (spqr PRIVATE ${CUDA_INCLUDE_DIRS})
-  target_link_libraries (spqr PRIVATE ${CUDA_LIBRARIES})
   target_link_libraries (spqr PRIVATE suitesparsecuda)
 endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 

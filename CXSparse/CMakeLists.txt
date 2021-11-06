@@ -302,16 +302,21 @@ add_executable (cs_ci_demo1
 )
 target_link_libraries (cs_ci_demo1 PRIVATE cxsparse)
 
-add_executable (cs_ci_demo2
+add_library (cs_ci_demo_base OBJECT
   Demo/cs_ci_demo.c
   Demo/cs_ci_demo.h
+)
+target_compile_definitions (cs_ci_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_COMPILE_DEFINITIONS>)
+target_include_directories (cs_ci_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_INCLUDE_DIRECTORIES>)
+
+add_executable (cs_ci_demo2
+  $<TARGET_OBJECTS:cs_ci_demo_base>
   Demo/cs_ci_demo2.c
 )
 target_link_libraries (cs_ci_demo2 PRIVATE cxsparse)
 
 add_executable (cs_ci_demo3
-  Demo/cs_ci_demo.c
-  Demo/cs_ci_demo.h
+  $<TARGET_OBJECTS:cs_ci_demo_base>
   Demo/cs_ci_demo3.c
 )
 target_link_libraries (cs_ci_demo3 PRIVATE cxsparse)
@@ -321,16 +326,21 @@ add_executable (cs_cl_demo1
 )
 target_link_libraries (cs_cl_demo1 PRIVATE cxsparse)
 
-add_executable (cs_cl_demo2
+add_library (cs_cl_demo_base OBJECT
   Demo/cs_cl_demo.c
   Demo/cs_cl_demo.h
+)
+target_compile_definitions (cs_cl_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_COMPILE_DEFINITIONS>)
+target_include_directories (cs_cl_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_INCLUDE_DIRECTORIES>)
+
+add_executable (cs_cl_demo2
+  $<TARGET_OBJECTS:cs_cl_demo_base>
   Demo/cs_cl_demo2.c
 )
 target_link_libraries (cs_cl_demo2 PRIVATE cxsparse)
 
 add_executable (cs_cl_demo3
-  Demo/cs_cl_demo.c
-  Demo/cs_cl_demo.h
+  $<TARGET_OBJECTS:cs_cl_demo_base>
   Demo/cs_cl_demo3.c
 )
 target_link_libraries (cs_cl_demo3 PRIVATE cxsparse)
@@ -340,16 +350,21 @@ add_executable (cs_di_demo1
 )
 target_link_libraries (cs_di_demo1 PRIVATE cxsparse)
 
-add_executable (cs_di_demo2
+add_library (cs_di_demo_base OBJECT
   Demo/cs_di_demo.c
   Demo/cs_di_demo.h
+)
+target_compile_definitions (cs_di_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_COMPILE_DEFINITIONS>)
+target_include_directories (cs_di_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_INCLUDE_DIRECTORIES>)
+
+add_executable (cs_di_demo2
+  $<TARGET_OBJECTS:cs_di_demo_base>
   Demo/cs_di_demo2.c
 )
 target_link_libraries (cs_di_demo2 PRIVATE cxsparse)
 
 add_executable (cs_di_demo3
-  Demo/cs_di_demo.c
-  Demo/cs_di_demo.h
+  $<TARGET_OBJECTS:cs_di_demo_base>
   Demo/cs_di_demo3.c
 )
 target_link_libraries (cs_di_demo3 PRIVATE cxsparse)
@@ -359,16 +374,21 @@ add_executable (cs_dl_demo1
 )
 target_link_libraries (cs_dl_demo1 PRIVATE cxsparse)
 
-add_executable (cs_dl_demo2
+add_library (cs_dl_demo_base OBJECT
   Demo/cs_dl_demo.c
   Demo/cs_dl_demo.h
+)
+target_compile_definitions (cs_dl_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_COMPILE_DEFINITIONS>)
+target_include_directories (cs_dl_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_INCLUDE_DIRECTORIES>)
+
+add_executable (cs_dl_demo2
+  $<TARGET_OBJECTS:cs_dl_demo_base>
   Demo/cs_dl_demo2.c
 )
 target_link_libraries (cs_dl_demo2 PRIVATE cxsparse)
 
 add_executable (cs_dl_demo3
-  Demo/cs_dl_demo.c
-  Demo/cs_dl_demo.h
+  $<TARGET_OBJECTS:cs_dl_demo_base>
   Demo/cs_dl_demo3.c
 )
 target_link_libraries (cs_dl_demo3 PRIVATE cxsparse)
@@ -378,19 +398,36 @@ add_executable (cs_demo1
 )
 target_link_libraries (cs_demo1 PRIVATE cxsparse)
 
-add_executable (cs_demo2
+add_library (cs_demo_base OBJECT
   Demo/cs_demo.c
   Demo/cs_demo.h
+)
+target_compile_definitions (cs_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_COMPILE_DEFINITIONS>)
+target_include_directories (cs_demo_base PRIVATE $<TARGET_PROPERTY:cxsparse,INTERFACE_INCLUDE_DIRECTORIES>)
+
+add_executable (cs_demo2
+  $<TARGET_OBJECTS:cs_demo_base>
   Demo/cs_demo2.c
 )
 target_link_libraries (cs_demo2 PRIVATE cxsparse)
 
 add_executable (cs_demo3
-  Demo/cs_demo.c
-  Demo/cs_demo.h
+  $<TARGET_OBJECTS:cs_demo_base>
   Demo/cs_demo3.c
 )
 target_link_libraries (cs_demo3 PRIVATE cxsparse)
+
+add_executable (cs_idemo
+  $<TARGET_OBJECTS:cs_demo_base>
+  Demo/cs_idemo.c
+)
+target_link_libraries (cs_idemo PRIVATE cxsparse)
+
+add_executable (cs_ldemo
+  $<TARGET_OBJECTS:cs_demo_base>
+  Demo/cs_ldemo.c
+)
+target_link_libraries (cs_ldemo PRIVATE cxsparse)
 
 if (MSVC)
   #set_source_files_properties (

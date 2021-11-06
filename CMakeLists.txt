@@ -123,9 +123,9 @@ if (NOT WITH_TBB)
   set (CMAKE_FIND_PACKAGE_DISABLE_TBB ON)
 endif (NOT WITH_TBB)
 
-find_package (BLAS)
+find_package (BLAS REQUIRED)
 find_package (CUDAToolkit)
-find_package (LAPACK)
+find_package (LAPACK REQUIRED)
 find_package (METIS 5.0)
 find_package (OpenMP COMPONENTS C)
 find_package (TBB 4.2 NO_MODULE)
@@ -169,8 +169,7 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 
 cmake_push_check_state (RESET)
-
-list (APPEND CMAKE_REQUIRED_LIBRARIES BLAS::BLAS LAPACK::LAPACK)
+set (CMAKE_REQUIRED_LIBRARIES BLAS::BLAS LAPACK::LAPACK)
 
 check_function_exists (sgemm HAVE_BLAS_NO_UNDERSCORE)
 check_function_exists (sgemm_ HAVE_BLAS_UNDERSCORE)
@@ -582,17 +581,12 @@ set (KLU_HDRS
 
 set (KLU_SRCS
   KLU/Source/klu.c
-  KLU/Source/klu_analyze.c
-  KLU/Source/klu_analyze_given.c
-  KLU/Source/klu_defaults.c
   KLU/Source/klu_diagnostics.c
   KLU/Source/klu_dump.c
   KLU/Source/klu_extract.c
   KLU/Source/klu_factor.c
   KLU/Source/klu_free_numeric.c
-  KLU/Source/klu_free_symbolic.c
   KLU/Source/klu_kernel.c
-  KLU/Source/klu_memory.c
   KLU/Source/klu_refactor.c
   KLU/Source/klu_scale.c
   KLU/Source/klu_solve.c
@@ -1072,23 +1066,47 @@ else (TARGET cholmod)
   )
 endif (TARGET cholmod)
 
-add_library (klu_int OBJECT ${KLU_SRCS})
+set (KLU_NO_COMPLEX_SRCS
+  KLU/Source/klu_defaults.c
+  KLU/Source/klu_analyze.c
+  KLU/Source/klu_analyze_given.c
+  KLU/Source/klu_free_symbolic.c
+  KLU/Source/klu_memory.c
+)
+
+add_library (klu_int OBJECT ${KLU_SRCS} ${KLU_NO_COMPLEX_SRCS})
 target_include_directories (klu_int PRIVATE $<TARGET_PROPERTY:klu,INCLUDE_DIRECTORIES>)
 target_compile_definitions (klu_int PRIVATE DINT)
 target_compile_definitions (klu_int PRIVATE klu_EXPORTS)
 
-add_library (klu_long OBJECT ${KLU_SRCS})
+add_library (klu_long OBJECT ${KLU_SRCS} ${KLU_NO_COMPLEX_SRCS})
 target_include_directories (klu_long PRIVATE $<TARGET_PROPERTY:klu,INCLUDE_DIRECTORIES>)
 target_compile_definitions (klu_long PRIVATE DLONG)
 target_compile_definitions (klu_long PRIVATE klu_EXPORTS)
 
+add_library (klu_zint OBJECT ${KLU_SRCS})
+target_include_directories (klu_zint PRIVATE $<TARGET_PROPERTY:klu,INCLUDE_DIRECTORIES>)
+target_compile_definitions (klu_zint PRIVATE DINT COMPLEX)
+target_compile_definitions (klu_zint PRIVATE klu_EXPORTS)
+
+add_library (klu_zlong OBJECT ${KLU_SRCS})
+target_include_directories (klu_zlong PRIVATE $<TARGET_PROPERTY:klu,INCLUDE_DIRECTORIES>)
+target_compile_definitions (klu_zlong PRIVATE DLONG COMPLEX)
+target_compile_definitions (klu_zlong PRIVATE klu_EXPORTS)
+
 add_library (klu
   $<TARGET_OBJECTS:klu_int>
   $<TARGET_OBJECTS:klu_long>
+  $<TARGET_OBJECTS:klu_zint>
+  $<TARGET_OBJECTS:klu_zlong>
   ${KLU_HDRS}
 )
 
-target_link_libraries (klu PRIVATE amd btf colamd)
+target_link_libraries (klu PUBLIC amd btf colamd)
+
+if (TARGET cholmod)
+  target_link_libraries (klu PRIVATE cholmod)
+endif (TARGET cholmod)
 
 add_library (ldl_int OBJECT ${LDL_SRCS})
 target_include_directories (ldl_int PRIVATE $<TARGET_PROPERTY:ldl,INCLUDE_DIRECTORIES>)
@@ -1105,6 +1123,8 @@ add_library (ldl
   $<TARGET_OBJECTS:ldl_long>
   ${LDL_HDRS}
 )
+
+target_link_libraries (ldl PRIVATE amd)
 
 set (SuiteSparse_AMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/AMD)
 set (SuiteSparse_BTF_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/BTF)
@@ -1493,6 +1513,46 @@ if (TARGET spqr)
 endif (TARGET spqr)
 
 if (WITH_DEMOS)
+  add_executable (amd_demo
+    AMD/Demo/amd_demo.c
+  )
+  target_link_libraries (amd_demo PRIVATE amd)
+
+  add_executable (amd_demo2
+    AMD/Demo/amd_demo2.c
+  )
+  target_link_libraries (amd_demo2 PRIVATE amd)
+
+  add_executable (amd_l_demo
+    AMD/Demo/amd_l_demo.c
+  )
+  target_link_libraries (amd_l_demo PRIVATE amd)
+
+  add_executable (amd_simple
+    AMD/Demo/amd_simple.c
+  )
+  target_link_libraries (amd_simple PRIVATE amd)
+
+  add_executable (camd_demo
+    CAMD/Demo/camd_demo.c
+  )
+  target_link_libraries (camd_demo PRIVATE camd)
+
+  add_executable (camd_demo2
+    CAMD/Demo/camd_demo2.c
+  )
+  target_link_libraries (camd_demo2 PRIVATE camd)
+
+  add_executable (camd_l_demo
+    CAMD/Demo/camd_l_demo.c
+  )
+  target_link_libraries (camd_l_demo PRIVATE camd)
+
+  add_executable (camd_simple
+    CAMD/Demo/camd_simple.c
+  )
+  target_link_libraries (camd_simple PRIVATE camd)
+
   if (TARGET cholmod AND WITH_CHECK)
     add_executable (cholmod_demo
       CHOLMOD/Demo/cholmod_demo.h
@@ -1506,6 +1566,67 @@ if (WITH_DEMOS)
     add_executable (cholmod_simple CHOLMOD/Demo/cholmod_simple.c)
     target_link_libraries (cholmod_simple PRIVATE cholmod)
   endif (TARGET cholmod AND WITH_CHECK)
+
+  add_executable (colamd_example
+    COLAMD/Demo/colamd_example.c
+  )
+  target_link_libraries (colamd_example PRIVATE colamd)
+
+  add_executable (colamd_l_example
+    COLAMD/Demo/colamd_l_example.c
+  )
+  target_link_libraries (colamd_l_example PRIVATE colamd)
+
+  add_executable (klu_simple
+    KLU/Demo/klu_simple.c
+  )
+  target_link_libraries (klu_simple PRIVATE klu)
+
+  if (TARGET cholmod)
+    add_executable (kludemo
+      KLU/Demo/kludemo.c
+    )
+    target_link_libraries (kludemo PRIVATE klu cholmod)
+
+    add_executable (kluldemo
+      KLU/Demo/kluldemo.c
+    )
+    target_link_libraries (kluldemo PRIVATE klu cholmod)
+  endif (TARGET cholmod)
+
+  add_executable (ldlamd
+    LDL/Demo/ldlmain.c
+  )
+  target_compile_definitions (ldlamd PRIVATE USE_AMD)
+  target_link_libraries (ldlamd PRIVATE amd ldl)
+
+  add_executable (ldlmain
+    LDL/Demo/ldlmain.c
+  )
+  target_link_libraries (ldlmain PRIVATE ldl)
+
+  add_executable (ldllmain
+    LDL/Demo/ldlmain.c
+  )
+  target_compile_definitions (ldllmain PRIVATE LDL_LONG)
+  target_link_libraries (ldllmain PRIVATE ldl)
+
+  add_executable (ldllamd
+    LDL/Demo/ldlmain.c
+  )
+  target_compile_definitions (ldllamd PRIVATE LDL_LONG USE_AMD)
+  target_link_libraries (ldllamd PRIVATE amd ldl)
+
+  add_executable (ldlsimple
+    LDL/Demo/ldlsimple.c
+  )
+  target_link_libraries (ldlsimple PRIVATE ldl)
+
+  add_executable (ldllsimple
+    LDL/Demo/ldlsimple.c
+  )
+  target_compile_definitions (ldllsimple PRIVATE LDL_LONG)
+  target_link_libraries (ldllsimple PRIVATE ldl)
 
   add_executable (umf4 UMFPACK/Demo/umf4.c)
   target_link_libraries (umf4 PRIVATE umfpack)

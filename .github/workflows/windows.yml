@@ -2,14 +2,13 @@ name: Windows
 
 on: [push, pull_request]
 
-defaults:
-  run:
-    shell: msys2 {0}
-
 jobs:
-  build:
+  build-mingw:
     name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     strategy:
       fail-fast: true
       matrix:
@@ -44,10 +43,99 @@ jobs:
         CC: ${{matrix.env}}-w64-mingw32-gcc
         CXX: ${{matrix.env}}-w64-mingw32-g++
       run: |
-        cmake -S . -B build_${{matrix.build_type}}/ -G Ninja \
-              -DBUILD_SHARED_LIBS=$([[ ${{matrix.lib}} == static ]] && echo OFF || echo ON) \
-              -DWITH_GPL=$([[ ${{matrix.components}} != gpl ]] && echo OFF || echo ON) \
-              -DWITH_LGPL=$([[ ! ${{matrix.components}} =~ gpl ]] && echo OFF || echo ON)
+        cmake -S . -B build_${{matrix.build_type}}/ \
+              -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+              -DCMAKE_INSTALL_PREFIX:PATH=./install \
+              -DWITH_GPL=${{matrix.components == 'gpl'}} \
+              -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} \
+              -G Ninja
+
     - name: Build
       run: |
-        cmake --build build_${{matrix.build_type}}/ --config ${{matrix.build_type}}
+        cmake --build build_${{matrix.build_type}}/ \
+              --config ${{matrix.build_type}}
+
+    - name: Install
+      run: |
+        cmake --build build_${{matrix.build_type}}/ \
+              --config ${{matrix.build_type}} \
+              --target install
+
+  build-msvc:
+    name: ${{matrix.msvc}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}
+    runs-on: ${{matrix.os}}
+    defaults:
+      run:
+        shell: powershell
+    strategy:
+      fail-fast: true
+      matrix:
+        build_type: [Release, Debug]
+        msvc: [VS-16-2019] # VS-15-2017, VS-17-2022
+        sys: [mingw64]
+        lib: [shared, static]
+        components: [minimal, lgpl, gpl]
+        include:
+          - sys: mingw64
+            env: x86_64
+              #- msvc: VS-15-2017
+              #  generator: "Visual Studio 15 2017"
+              #  os: windows-2016
+          - msvc: VS-16-2019
+            generator: "Visual Studio 16 2019"
+            os: windows-2019
+              #- msvc: VS-17-2022
+              #  generator: "Visual Studio 17 2022"
+              #  os: windows-2022
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ashutoshvarma/setup-ninja@master
+      with:
+        version: 1.10.0
+    - uses: lukka/get-cmake@v3.21.2
+      if: ${{ startswith(matrix.msvc, 'VS-17') }}
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{matrix.sys}}
+        path-type: inherit
+        install: >-
+          wget
+          mingw-w64-${{matrix.env}}-gcc-fortran
+
+    - name: Build BLAS and LAPACK
+      shell: msys2 {0}
+      run: |
+        wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.10.0.tar.gz
+        tar xvf v3.10.0.tar.gz
+        cmake -S lapack-3.10.0 -B build_lapack_${{matrix.build_type}}/ \
+              -DBUILD_SHARED_LIBS=ON \
+              -DCMAKE_GNUtoMS=ON \
+              -DCMAKE_INSTALL_PREFIX=./install \
+              -G Ninja
+        cmake --build build_lapack_${{matrix.build_type}}/ \
+              --config ${{matrix.build_type}}  \
+              --target install
+
+    - name: Configure
+      run: |
+        cmake -S . -B build_${{matrix.build_type}}/ `
+              -DBLAS_blas_LIBRARY=${{github.workspace}}/install/lib/libblas.lib `
+              -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
+              -DCMAKE_INSTALL_PREFIX:PATH=./install `
+              -DLAPACK_lapack_LIBRARY=${{github.workspace}}/install/lib/liblapack.lib `
+              -DWITH_FORTRAN=OFF `
+              -DWITH_GPL=${{matrix.components == 'gpl'}} `
+              -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} `
+              -G "${{matrix.generator}}"
+
+    - name: Build
+      run: |
+        cmake --build build_${{matrix.build_type}}/ `
+              --config ${{matrix.build_type}}
+
+    - name: Install
+      run: |
+        cmake --build build_${{matrix.build_type}}/ `
+              --config ${{matrix.build_type}} `
+              --target install

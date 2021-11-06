@@ -39,7 +39,7 @@ int main (void)
     printf ("\nA2:\n") ;
     cs_ci_print (A2, 0) ;
 
-    B = cs_ci_add (A1, A2, 1., -1.) ;   /* B = A1 - A2 */
+    B = cs_ci_add (A1, A2, CS_COMPLEX_ONE(), CS_COMPLEX_MINUS_ONE()) ;   /* B = A1 - A2 */
     printf ("\nB = conj(A):\n") ;
     cs_ci_print (B, 0) ;
 

@@ -23,7 +23,7 @@
  * Secondary routines:
  * -------------------
  * cholmod_allocate_factor	allocate a symbolic factor (LL' or LDL')
- * cholmod_reallocate_factor	change the # entries in a factor 
+ * cholmod_reallocate_factor	change the # entries in a factor
  * cholmod_change_factor	change the type of factor (e.g., LDL' to LL')
  * cholmod_pack_factor		pack the columns of a factor
  * cholmod_reallocate_column	resize a single column of a factor
@@ -382,7 +382,7 @@ int CHOLMOD(reallocate_column)
 	{
 	    xneed = Common->grow0 * (((double) L->nzmax) + xneed + 1) ;
 	}
-	if (xneed > Size_max ||
+	if (xneed > (double)(Size_max) ||
 		!CHOLMOD(reallocate_factor) ((Int) xneed, L, Common))
 	{
 	    /* out of memory, convert to simplicial symbolic */

@@ -522,7 +522,7 @@ static void simplicial_symbolic_to_simplicial_numeric
 		/* add extra space */
 		xlnz = (double) lnz ;
 		xlnz *= grow0 ;
-		xlnz = MIN (xlnz, Size_max) ;
+		xlnz = MIN (xlnz, (double)(Size_max)) ;
 		xlnz = MIN (xlnz, ((double) n * (double) n + (double) n) / 2) ;
 		lnz = (Int) xlnz ;
 	    }
@@ -702,8 +702,8 @@ static void change_simplicial_numeric
     grow1 = IS_NAN (grow1) ? 1 : grow1 ;
     ok = TRUE ;
     newLi = NULL ;
-    newLx = NULL ; 
-    newLz = NULL ; 
+    newLx = NULL ;
+    newLz = NULL ;
     lnz = 0 ;
 
     if (make_monotonic)
@@ -754,7 +754,7 @@ static void change_simplicial_numeric
 	{
 	    xlnz = (double) lnz ;
 	    xlnz *= grow0 ;
-	    xlnz = MIN (xlnz, Size_max) ;
+	    xlnz = MIN (xlnz, (double)(Size_max)) ;
 	    xlnz = MIN (xlnz, ((double) n * (double) n + (double) n) / 2) ;
 	    lnz = (Int) xlnz ;
 	}
@@ -1107,7 +1107,7 @@ int CHOLMOD(change_factor)
 	/* ------------------------------------------------------------------ */
 	/* convert to numeric */
 	/* ------------------------------------------------------------------ */
-	    
+
 	if (to_super)
 	{
 

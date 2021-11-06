@@ -28,7 +28,7 @@
  *	triplet form.  The latter is a dense matrix in column-major form.
  *
  *	<type> is one of: real, complex, pattern, or integer.
- *	The functions here convert the  "integer" and "pattern" types to real.  
+ *	The functions here convert the  "integer" and "pattern" types to real.
  *
  *	<storage> is one of: general, hermitian, symmetric, or skew-symmetric
  *
@@ -41,7 +41,7 @@
  *	a dense "array" matrix: 1: real, 2: complex.  This is compatible with
  *	the Matrix Market format, since pattern matrices must have two tokens
  *	per line, real matrices must have 3, and complex matrices must have 4.
- *	A storage of "general" implies an stype of zero (see below). 
+ *	A storage of "general" implies an stype of zero (see below).
  *	"symmetric" and "hermitian" imply an stype of -1. Skew-symmetric and
  *	complex symmetric matrices are always returned with both upper and lower
  *	triangular parts present, with an stype of zero, since CHOLMOD does not
@@ -72,7 +72,7 @@
  * The stype is first derived from the Matrix Market header.  If the stype
  * appears as the fourth integer in the first data line, it is determined from
  * that line.
- * 
+ *
  * If stype is present, it denotes the storage format for the matrix.
  * stype = 0 denotes an unsymmetric matrix (same as Matrix Market "general").
  * stype = -1 denotes a real symmetric or complex Hermitian matrix whose lower
@@ -432,7 +432,7 @@ static int read_header	/* returns TRUE if successful, FALSE on error */
 	    l3 = 0 ;
 	    l4 = 0 ;
 	    nitems = sscanf (buf, "%lg %lg %lg %lg\n", &l1, &l2, &l3, &l4) ;
-	    if (nitems < 2 || nitems > 4 || l1 > Int_max || l2 > Int_max)
+	    if (nitems < 2 || nitems > 4 || l1 > (double)(Int_max) || l2 > (double)(Int_max))
 	    {
 		/* invalid matrix */
 		return (FALSE) ;

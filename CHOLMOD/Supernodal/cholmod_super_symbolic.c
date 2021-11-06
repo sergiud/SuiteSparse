@@ -283,7 +283,7 @@ int CHOLMOD(super_symbolic2)
                         if ( max_fraction < 0 ) max_fraction = 0;
                         if ( max_fraction > 1 ) max_fraction = 1;
                         Common->maxGpuMemFraction = max_fraction;
-                    }	  
+                    }
                 }
             }
             else
@@ -315,7 +315,7 @@ int CHOLMOD(super_symbolic2)
         Common->useGPU = 0;
 #endif
 
-        /* Cache the fact that the symbolic factorization supports 
+        /* Cache the fact that the symbolic factorization supports
          * GPU acceleration */
         L->useGPU = Common->useGPU;
 
@@ -422,9 +422,9 @@ int CHOLMOD(super_symbolic2)
 #ifdef GPU_BLAS
 	    /* Ensure that the supernode will fit in the GPU buffers */
 	    /* Data size of 16 bytes must be assumed for case of PATTERN */
-	    || (for_whom == CHOLMOD_ANALYZE_FOR_CHOLESKY && L->useGPU && 
-		 (j-Super[nfsuper-1]+1) * 
-		 ColCount[Super[nfsuper-1]] * sizeof(double) * 2 >= 
+	    || (for_whom == CHOLMOD_ANALYZE_FOR_CHOLESKY && L->useGPU &&
+		 (j-Super[nfsuper-1]+1) *
+		 ColCount[Super[nfsuper-1]] * sizeof(double) * 2 >=
 		 Common->devBuffSize)
 #endif
 	    )
@@ -574,17 +574,17 @@ int CHOLMOD(super_symbolic2)
 		merge = ((ns <= nrelax1 && z < zrelax0) ||
 			 (ns <= nrelax2 && z < zrelax1) ||
 					  (z < zrelax2)) &&
-			(xtotsize < Int_max / sizeof (double)) ;
+			(xtotsize < (double)(Int_max) / sizeof (double)) ;
 
 	    }
 	}
 
 #ifdef GPU_BLAS
 	if ( for_whom == CHOLMOD_ANALYZE_FOR_CHOLESKY && L->useGPU ) {
-	  /* Ensure that the aggregated supernode fits in the device 
+	  /* Ensure that the aggregated supernode fits in the device
 	     supernode buffers */
 	  double xns = (double) ns;
-	  if ( ((xns * xns) + xns * (lnz1 - nscol1))*sizeof(double)*2  >= 
+	  if ( ((xns * xns) + xns * (lnz1 - nscol1))*sizeof(double)*2  >=
 	       Common->devBuffSize ) {
 	    merge = FALSE;
 	  }
@@ -673,7 +673,7 @@ int CHOLMOD(super_symbolic2)
             /* also compute xsize in double to guard against Int overflow */
             xxsize += ((double) nscol) * ((double) nsrow) ;
         }
-	if (ssize < 0 ||(find_xsize && xxsize > Int_max))
+	if (ssize < 0 ||(find_xsize && xxsize > (double)(Int_max)))
 	{
 	    /* Int overflow, clear workspace and return.
                QR factorization will not use xxsize, so that error is ignored.
@@ -964,7 +964,7 @@ int CHOLMOD(super_symbolic2)
 /* Analyzes A, AA', or A(:,f)*A(:,f)' in preparation for a supernodal numeric
  * factorization.  The user need not call this directly; cholmod_analyze is
  * a "simple" wrapper for this routine.
- * 
+ *
  * This function does all the analysis for a supernodal Cholesky factorization.
  *
  * workspace: Flag (nrow), Head (nrow), Iwork (2*nrow),

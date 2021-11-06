@@ -77,10 +77,11 @@ option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 
 cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD in Partition module" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_CHOLMOD "Enable CHOLMOD" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON "WITH_LGPL AND WITH_CHOLMOD" OFF)
 cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON "WITH_GPL" OFF)
-cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON "WITH_GPL" OFF)
+cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON "WITH_GPL AND WITH_CHOLMOD" OFF)
+cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON "WITH_GPL AND WITH_CHOLMOD" OFF)
 cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON "WITH_GPL" OFF)
 
 if (WITH_CUDA)
@@ -154,6 +155,7 @@ check_options (
   CAMD
   CHECK
   CHOLESKY
+  CHOLMOD
   GPL
   MATRIXOPS
   MODIFY
@@ -251,115 +253,117 @@ set (CAMD_SRCS
   CAMD/Source/camd_valid.c
 )
 
-set (CHOLMOD_HDRS
-  ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h
-  CHOLMOD/Include/cholmod.h
-  CHOLMOD/Include/cholmod_blas.h
-  CHOLMOD/Include/cholmod_camd.h
-  CHOLMOD/Include/cholmod_check.h
-  CHOLMOD/Include/cholmod_cholesky.h
-  CHOLMOD/Include/cholmod_complexity.h
-  CHOLMOD/Include/cholmod_core.h
-  CHOLMOD/Include/cholmod_function.h
-  CHOLMOD/Include/cholmod_gpu.h
-  CHOLMOD/Include/cholmod_gpu_kernels.h
-  CHOLMOD/Include/cholmod_internal.h
-  CHOLMOD/Include/cholmod_io64.h
-  CHOLMOD/Include/cholmod_matrixops.h
-  CHOLMOD/Include/cholmod_modify.h
-  CHOLMOD/Include/cholmod_partition.h
-  CHOLMOD/Include/cholmod_supernodal.h
-  CHOLMOD/Include/cholmod_template.h
-)
+if (WITH_CHOLMOD)
+  set (CHOLMOD_HDRS
+    ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h
+    CHOLMOD/Include/cholmod.h
+    CHOLMOD/Include/cholmod_blas.h
+    CHOLMOD/Include/cholmod_camd.h
+    CHOLMOD/Include/cholmod_check.h
+    CHOLMOD/Include/cholmod_cholesky.h
+    CHOLMOD/Include/cholmod_complexity.h
+    CHOLMOD/Include/cholmod_core.h
+    CHOLMOD/Include/cholmod_function.h
+    CHOLMOD/Include/cholmod_gpu.h
+    CHOLMOD/Include/cholmod_gpu_kernels.h
+    CHOLMOD/Include/cholmod_internal.h
+    CHOLMOD/Include/cholmod_io64.h
+    CHOLMOD/Include/cholmod_matrixops.h
+    CHOLMOD/Include/cholmod_modify.h
+    CHOLMOD/Include/cholmod_partition.h
+    CHOLMOD/Include/cholmod_supernodal.h
+    CHOLMOD/Include/cholmod_template.h
+  )
 
-set (CHOLMOD_SRCS
-  CHOLMOD/Check/cholmod_check.c
-  CHOLMOD/Check/cholmod_read.c
-  CHOLMOD/Check/cholmod_write.c
-  CHOLMOD/Cholesky/cholmod_amd.c
-  CHOLMOD/Cholesky/cholmod_analyze.c
-  CHOLMOD/Cholesky/cholmod_colamd.c
-  CHOLMOD/Cholesky/cholmod_etree.c
-  CHOLMOD/Cholesky/cholmod_factorize.c
-  CHOLMOD/Cholesky/cholmod_postorder.c
-  CHOLMOD/Cholesky/cholmod_rcond.c
-  CHOLMOD/Cholesky/cholmod_resymbol.c
-  CHOLMOD/Cholesky/cholmod_rowcolcounts.c
-  CHOLMOD/Cholesky/cholmod_rowfac.c
-  CHOLMOD/Cholesky/cholmod_solve.c
-  CHOLMOD/Cholesky/cholmod_spsolve.c
-  #CHOLMOD/Cholesky/t_cholmod_lsolve.c
-  #CHOLMOD/Cholesky/t_cholmod_ltsolve.c
-  #CHOLMOD/Cholesky/t_cholmod_rowfac.c
-  #CHOLMOD/Cholesky/t_cholmod_solve.c
-  CHOLMOD/Core/cholmod_aat.c
-  CHOLMOD/Core/cholmod_add.c
-  CHOLMOD/Core/cholmod_band.c
-  CHOLMOD/Core/cholmod_change_factor.c
-  CHOLMOD/Core/cholmod_common.c
-  CHOLMOD/Core/cholmod_complex.c
-  CHOLMOD/Core/cholmod_copy.c
-  CHOLMOD/Core/cholmod_dense.c
-  CHOLMOD/Core/cholmod_error.c
-  CHOLMOD/Core/cholmod_factor.c
-  CHOLMOD/Core/cholmod_memory.c
-  CHOLMOD/Core/cholmod_sparse.c
-  CHOLMOD/Core/cholmod_transpose.c
-  CHOLMOD/Core/cholmod_triplet.c
-  CHOLMOD/Core/cholmod_version.c
-  #CHOLMOD/Core/t_cholmod_change_factor.c
-  #CHOLMOD/Core/t_cholmod_dense.c
-  #CHOLMOD/Core/t_cholmod_transpose.c
-  #CHOLMOD/Core/t_cholmod_triplet.c
-  #CHOLMOD/Demo/cholmod_demo.c
-  #CHOLMOD/Demo/cholmod_l_demo.c
-  #CHOLMOD/Demo/cholmod_simple.c
-  #CHOLMOD/GPU/cholmod_gpu.c
-  #CHOLMOD/GPU/cholmod_gpu_kernels.c
-  CHOLMOD/MatrixOps/cholmod_drop.c
-  CHOLMOD/MatrixOps/cholmod_horzcat.c
-  CHOLMOD/MatrixOps/cholmod_norm.c
-  CHOLMOD/MatrixOps/cholmod_scale.c
-  CHOLMOD/MatrixOps/cholmod_sdmult.c
-  CHOLMOD/MatrixOps/cholmod_ssmult.c
-  CHOLMOD/MatrixOps/cholmod_submatrix.c
-  CHOLMOD/MatrixOps/cholmod_symmetry.c
-  CHOLMOD/MatrixOps/cholmod_vertcat.c
-  #CHOLMOD/MatrixOps/t_cholmod_sdmult.c
-  CHOLMOD/Modify/cholmod_rowadd.c
-  CHOLMOD/Modify/cholmod_rowdel.c
-  CHOLMOD/Modify/cholmod_updown.c
-  #CHOLMOD/Modify/t_cholmod_updown.c
-  #CHOLMOD/Modify/t_cholmod_updown_numkr.c
-  CHOLMOD/Partition/cholmod_camd.c
-  CHOLMOD/Partition/cholmod_ccolamd.c
-  CHOLMOD/Partition/cholmod_csymamd.c
-  CHOLMOD/Partition/cholmod_metis.c
-  CHOLMOD/Partition/cholmod_nesdis.c
-  CHOLMOD/Supernodal/cholmod_super_numeric.c
-  CHOLMOD/Supernodal/cholmod_super_solve.c
-  CHOLMOD/Supernodal/cholmod_super_symbolic.c
-  #CHOLMOD/Supernodal/t_cholmod_super_numeric.c
-  #CHOLMOD/Supernodal/t_cholmod_super_solve.c
-)
-
-if (NOT METIS_FOUND)
-  set_property (SOURCE
+  set (CHOLMOD_SRCS
     CHOLMOD/Check/cholmod_check.c
+    CHOLMOD/Check/cholmod_read.c
+    CHOLMOD/Check/cholmod_write.c
+    CHOLMOD/Cholesky/cholmod_amd.c
     CHOLMOD/Cholesky/cholmod_analyze.c
+    CHOLMOD/Cholesky/cholmod_colamd.c
+    CHOLMOD/Cholesky/cholmod_etree.c
+    CHOLMOD/Cholesky/cholmod_factorize.c
+    CHOLMOD/Cholesky/cholmod_postorder.c
+    CHOLMOD/Cholesky/cholmod_rcond.c
+    CHOLMOD/Cholesky/cholmod_resymbol.c
+    CHOLMOD/Cholesky/cholmod_rowcolcounts.c
+    CHOLMOD/Cholesky/cholmod_rowfac.c
+    CHOLMOD/Cholesky/cholmod_solve.c
+    CHOLMOD/Cholesky/cholmod_spsolve.c
+    #CHOLMOD/Cholesky/t_cholmod_lsolve.c
+    #CHOLMOD/Cholesky/t_cholmod_ltsolve.c
+    #CHOLMOD/Cholesky/t_cholmod_rowfac.c
+    #CHOLMOD/Cholesky/t_cholmod_solve.c
+    CHOLMOD/Core/cholmod_aat.c
+    CHOLMOD/Core/cholmod_add.c
+    CHOLMOD/Core/cholmod_band.c
+    CHOLMOD/Core/cholmod_change_factor.c
+    CHOLMOD/Core/cholmod_common.c
+    CHOLMOD/Core/cholmod_complex.c
+    CHOLMOD/Core/cholmod_copy.c
+    CHOLMOD/Core/cholmod_dense.c
+    CHOLMOD/Core/cholmod_error.c
+    CHOLMOD/Core/cholmod_factor.c
+    CHOLMOD/Core/cholmod_memory.c
+    CHOLMOD/Core/cholmod_sparse.c
+    CHOLMOD/Core/cholmod_transpose.c
+    CHOLMOD/Core/cholmod_triplet.c
+    CHOLMOD/Core/cholmod_version.c
+    #CHOLMOD/Core/t_cholmod_change_factor.c
+    #CHOLMOD/Core/t_cholmod_dense.c
+    #CHOLMOD/Core/t_cholmod_transpose.c
+    #CHOLMOD/Core/t_cholmod_triplet.c
+    #CHOLMOD/Demo/cholmod_demo.c
+    #CHOLMOD/Demo/cholmod_l_demo.c
+    #CHOLMOD/Demo/cholmod_simple.c
+    #CHOLMOD/GPU/cholmod_gpu.c
+    #CHOLMOD/GPU/cholmod_gpu_kernels.c
+    CHOLMOD/MatrixOps/cholmod_drop.c
+    CHOLMOD/MatrixOps/cholmod_horzcat.c
+    CHOLMOD/MatrixOps/cholmod_norm.c
+    CHOLMOD/MatrixOps/cholmod_scale.c
+    CHOLMOD/MatrixOps/cholmod_sdmult.c
+    CHOLMOD/MatrixOps/cholmod_ssmult.c
+    CHOLMOD/MatrixOps/cholmod_submatrix.c
+    CHOLMOD/MatrixOps/cholmod_symmetry.c
+    CHOLMOD/MatrixOps/cholmod_vertcat.c
+    #CHOLMOD/MatrixOps/t_cholmod_sdmult.c
+    CHOLMOD/Modify/cholmod_rowadd.c
+    CHOLMOD/Modify/cholmod_rowdel.c
+    CHOLMOD/Modify/cholmod_updown.c
+    #CHOLMOD/Modify/t_cholmod_updown.c
+    #CHOLMOD/Modify/t_cholmod_updown_numkr.c
     CHOLMOD/Partition/cholmod_camd.c
     CHOLMOD/Partition/cholmod_ccolamd.c
     CHOLMOD/Partition/cholmod_csymamd.c
-    CHOLMOD/Partition/cholmod_m.c
     CHOLMOD/Partition/cholmod_metis.c
     CHOLMOD/Partition/cholmod_nesdis.c
-    SPQR/Source/spqr_1colamd.cpp
-    SPQR/Source/spqr_analyze.cpp
-    APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
-endif (NOT METIS_FOUND)
+    CHOLMOD/Supernodal/cholmod_super_numeric.c
+    CHOLMOD/Supernodal/cholmod_super_solve.c
+    CHOLMOD/Supernodal/cholmod_super_symbolic.c
+    #CHOLMOD/Supernodal/t_cholmod_super_numeric.c
+    #CHOLMOD/Supernodal/t_cholmod_super_solve.c
+  )
 
-configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
+  if (NOT METIS_FOUND)
+    set_property (SOURCE
+      CHOLMOD/Check/cholmod_check.c
+      CHOLMOD/Cholesky/cholmod_analyze.c
+      CHOLMOD/Partition/cholmod_camd.c
+      CHOLMOD/Partition/cholmod_ccolamd.c
+      CHOLMOD/Partition/cholmod_csymamd.c
+      CHOLMOD/Partition/cholmod_m.c
+      CHOLMOD/Partition/cholmod_metis.c
+      CHOLMOD/Partition/cholmod_nesdis.c
+      SPQR/Source/spqr_1colamd.cpp
+      SPQR/Source/spqr_analyze.cpp
+      APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
+  endif (NOT METIS_FOUND)
+
+  configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
+endif (WITH_CHOLMOD)
 
 set (CCOLAMD_HDRS
   CCOLAMD/Include/ccolamd.h
@@ -697,43 +701,50 @@ add_library (camd
   ${CAMD_HDRS}
 )
 
-add_library (cholmod_int OBJECT ${CHOLMOD_SRCS})
-target_include_directories (cholmod_int PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
-target_compile_definitions (cholmod_int PRIVATE DINT)
-target_compile_definitions (cholmod_int PRIVATE cholmod_EXPORTS)
+if (WITH_CHOLMOD)
+  add_library (cholmod_int OBJECT ${CHOLMOD_SRCS})
+  target_include_directories (cholmod_int PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+  target_compile_definitions (cholmod_int PRIVATE DINT)
+  target_compile_definitions (cholmod_int PRIVATE cholmod_EXPORTS)
 
-add_library (cholmod_long OBJECT ${CHOLMOD_SRCS})
-target_include_directories (cholmod_long PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
-target_compile_definitions (cholmod_long PRIVATE DLONG)
-target_compile_definitions (cholmod_long PRIVATE cholmod_EXPORTS)
+  add_library (cholmod_long OBJECT ${CHOLMOD_SRCS})
+  target_include_directories (cholmod_long PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+  target_compile_definitions (cholmod_long PRIVATE DLONG)
+  target_compile_definitions (cholmod_long PRIVATE cholmod_EXPORTS)
 
-add_library (cholmod
-  $<TARGET_OBJECTS:cholmod_int>
-  $<TARGET_OBJECTS:cholmod_long>
-  ${CHOLMOD_HDRS}
-)
+  add_library (cholmod
+    $<TARGET_OBJECTS:cholmod_int>
+    $<TARGET_OBJECTS:cholmod_long>
+    ${CHOLMOD_HDRS}
+  )
 
-target_include_directories (cholmod PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
-)
+  target_include_directories (cholmod PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
+  )
 
-if (OpenMP_FOUND)
-  target_compile_definitions (cholmod PRIVATE HAVE_OPENMP)
-  target_link_libraries (cholmod PRIVATE OpenMP::OpenMP_C)
+  if (OpenMP_FOUND)
+    target_compile_definitions (cholmod PRIVATE HAVE_OPENMP)
+    target_link_libraries (cholmod PRIVATE OpenMP::OpenMP_C)
 
-  set (OpenMP_DEPENDENCY "find_dependency (OpenMP ${OpenMP_C_VERSION} COMPONENTS C)")
-endif (OpenMP_FOUND)
+    set (OpenMP_DEPENDENCY "find_dependency (OpenMP ${OpenMP_C_VERSION} COMPONENTS C)")
+  endif (OpenMP_FOUND)
 
-if (HAVE_FEENABLEEXCEPT)
-  target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
-endif (HAVE_FEENABLEEXCEPT)
+  if (HAVE_FEENABLEEXCEPT)
+    target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
+  endif (HAVE_FEENABLEEXCEPT)
 
-if (METIS_FOUND)
-  target_include_directories (cholmod SYSTEM PRIVATE ${METIS_INCLUDE_DIRS})
-  target_include_directories (cholmod SYSTEM PRIVATE
-    $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
-  target_link_libraries (cholmod PRIVATE ${METIS_LIBRARIES})
-endif (METIS_FOUND)
+  if (METIS_FOUND)
+    target_include_directories (cholmod SYSTEM PRIVATE ${METIS_INCLUDE_DIRS})
+    target_include_directories (cholmod SYSTEM PRIVATE
+      $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
+    target_link_libraries (cholmod PRIVATE ${METIS_LIBRARIES})
+  endif (METIS_FOUND)
+
+  target_link_libraries (cholmod
+    PRIVATE BLAS::BLAS LAPACK::LAPACK amd camd ccolamd colamd
+    PUBLIC suitesparseconfig
+  )
+endif (WITH_CHOLMOD)
 
 add_library (ccolamd_int OBJECT ${CCOLAMD_SRCS})
 target_include_directories (ccolamd_int PRIVATE $<TARGET_PROPERTY:ccolamd,INCLUDE_DIRECTORIES>)
@@ -1049,11 +1060,17 @@ add_library (umfpack
   UMFPACK/Source/umfpack_timer.c
 )
 
-target_link_libraries (cholmod PRIVATE BLAS::BLAS LAPACK::LAPACK)
 target_link_libraries (umfpack PRIVATE BLAS::BLAS LAPACK::LAPACK)
 
-# NOTE cholmod already depends on LAPACK
-target_link_libraries (umfpack PRIVATE cholmod)
+if (TARGET cholmod)
+  # NOTE cholmod already depends on LAPACK
+  target_link_libraries (umfpack PRIVATE cholmod)
+else (TARGET cholmod)
+  set_property (SOURCE
+    UMFPACK/Source/umf_cholmod.c
+    APPEND PROPERTY COMPILE_DEFINITIONS NCHOLMOD
+  )
+endif (TARGET cholmod)
 
 add_library (klu_int OBJECT ${KLU_SRCS})
 target_include_directories (klu_int PRIVATE $<TARGET_PROPERTY:klu,INCLUDE_DIRECTORIES>)
@@ -1139,16 +1156,19 @@ target_include_directories (colamd PUBLIC
   $<INSTALL_INTERFACE:${SuiteSparse_COLAMD_INCLUDE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/COLAMD/Include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>)
-target_include_directories (cholmod PUBLIC
-  $<INSTALL_INTERFACE:${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Cholesky>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Core>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/MatrixOps>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Modify>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Supernodal>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
-)
+
+if (TARGET cholmod)
+  target_include_directories (cholmod PUBLIC
+    $<INSTALL_INTERFACE:${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Cholesky>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Core>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/MatrixOps>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Modify>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Supernodal>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
+  )
+endif (TARGET cholmod)
 
 target_include_directories (umfpack PUBLIC
   $<INSTALL_INTERFACE:${SuiteSparse_UMFPACK_INCLUDE_DIR}>
@@ -1171,8 +1191,6 @@ target_link_libraries (btf PUBLIC suitesparseconfig)
 target_link_libraries (camd PUBLIC suitesparseconfig)
 target_link_libraries (ccolamd PUBLIC suitesparseconfig)
 target_link_libraries (colamd PUBLIC suitesparseconfig)
-target_link_libraries (cholmod PRIVATE amd camd ccolamd colamd
-  PUBLIC suitesparseconfig)
 target_link_libraries (klu PUBLIC suitesparseconfig)
 target_link_libraries (ldl PUBLIC suitesparseconfig)
 target_link_libraries (umfpack PUBLIC amd suitesparseconfig)
@@ -1282,29 +1300,31 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
     PRIVATE suitesparsecuda
   )
 
-  set (CHOLMOD_GPU_SRCS CHOLMOD/GPU/cholmod_gpu.c)
+  if (WITH_CHOLMOD)
+    set (CHOLMOD_GPU_SRCS CHOLMOD/GPU/cholmod_gpu.c)
 
-  add_library (cholmod_gpu_int OBJECT ${CHOLMOD_GPU_SRCS})
-  target_include_directories (cholmod_gpu_int PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
-  target_compile_definitions (cholmod_gpu_int PRIVATE DINT)
-  target_compile_definitions (cholmod_gpu_int PRIVATE cholmod_EXPORTS)
+    add_library (cholmod_gpu_int OBJECT ${CHOLMOD_GPU_SRCS})
+    target_include_directories (cholmod_gpu_int PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+    target_compile_definitions (cholmod_gpu_int PRIVATE DINT)
+    target_compile_definitions (cholmod_gpu_int PRIVATE cholmod_EXPORTS)
 
-  add_library (cholmod_gpu_long OBJECT ${CHOLMOD_GPU_SRCS})
-  target_include_directories (cholmod_gpu_long PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
-  target_compile_definitions (cholmod_gpu_long PRIVATE DLONG)
-  target_compile_definitions (cholmod_gpu_long PRIVATE cholmod_EXPORTS)
+    add_library (cholmod_gpu_long OBJECT ${CHOLMOD_GPU_SRCS})
+    target_include_directories (cholmod_gpu_long PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+    target_compile_definitions (cholmod_gpu_long PRIVATE DLONG)
+    target_compile_definitions (cholmod_gpu_long PRIVATE cholmod_EXPORTS)
 
-  target_sources (cholmod PRIVATE
-    $<TARGET_OBJECTS:cholmod_gpu_int>
-    $<TARGET_OBJECTS:cholmod_gpu_long>
-    CHOLMOD/GPU/cholmod_gpu_kernels.cu
-  )
+    target_sources (cholmod PRIVATE
+      $<TARGET_OBJECTS:cholmod_gpu_int>
+      $<TARGET_OBJECTS:cholmod_gpu_long>
+      CHOLMOD/GPU/cholmod_gpu_kernels.cu
+    )
 
-  target_compile_definitions (cholmod PUBLIC GPU_BLAS)
-  target_link_libraries (cholmod
-    PRIVATE CUDA::cudart suitesparsecuda
-    PUBLIC CUDA::cublas
-  )
+    target_compile_definitions (cholmod PUBLIC GPU_BLAS)
+    target_link_libraries (cholmod
+      PRIVATE CUDA::cudart suitesparsecuda
+      PUBLIC CUDA::cublas
+    )
+  endif (WITH_CHOLMOD)
 
   # SPQR GPU
   if (TARGET spqr)
@@ -1319,7 +1339,7 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 
 
-set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd cholmod umfpack
+set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd umfpack
   klu ldl suitesparseconfig)
 
 set_property (TARGET suitesparseconfig PROPERTY NAME_ALIAS SuiteSparse)
@@ -1327,6 +1347,10 @@ set_property (TARGET suitesparseconfig PROPERTY HEADERS_VARIABLE
   SUITESPARSECONFIG_HDRS)
 set_property (TARGET suitesparseconfig PROPERTY INSTALL_DESTINATION
   ${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR})
+
+if (TARGET cholmod)
+  list (APPEND _SuiteSparse_TARGETS cholmod)
+endif (TARGET cholmod)
 
 if (TARGET spqr)
   list (APPEND _SuiteSparse_TARGETS spqr)
@@ -1424,12 +1448,15 @@ set_component_version (amd 2.4.6)
 set_component_version (btf 1.2.6)
 set_component_version (camd 2.4.6)
 set_component_version (ccolamd 2.9.6)
-set_component_version (cholmod 3.0.13)
 set_component_version (colamd 2.9.6)
 set_component_version (klu 1.3.9)
 set_component_version (ldl 2.2.6)
 set_component_version (suitesparseconfig "${VERSION}")
 set_component_version (umfpack 5.7.9)
+
+if (TARGET cholmod)
+  set_component_version (cholmod 3.0.13)
+endif (TARGET cholmod)
 
 if (TARGET spqr)
   set_component_version (spqr 2.0.9)
@@ -1451,12 +1478,15 @@ set_target_properties (amd PROPERTIES EXPORT_NAME AMD)
 set_target_properties (btf PROPERTIES EXPORT_NAME BTF)
 set_target_properties (camd PROPERTIES EXPORT_NAME CAMD)
 set_target_properties (ccolamd PROPERTIES EXPORT_NAME CCOLAMD)
-set_target_properties (cholmod PROPERTIES EXPORT_NAME CHOLMOD)
 set_target_properties (colamd PROPERTIES EXPORT_NAME COLAMD)
 set_target_properties (klu PROPERTIES EXPORT_NAME KLU)
 set_target_properties (ldl PROPERTIES EXPORT_NAME LDL)
 set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
 set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
+
+if (TARGET cholmod)
+  set_target_properties (cholmod PROPERTIES EXPORT_NAME CHOLMOD)
+endif (TARGET cholmod)
 
 if (TARGET spqr)
   set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)

@@ -31,7 +31,6 @@ jobs:
         msystem: ${{matrix.sys}}
         install: >-
           mingw-w64-${{matrix.env}}-ccache
-          mingw-w64-${{matrix.env}}-cmake
           mingw-w64-${{matrix.env}}-gcc
           mingw-w64-${{matrix.env}}-gcc-fortran
           mingw-w64-${{matrix.env}}-intel-tbb
@@ -40,6 +39,25 @@ jobs:
           mingw-w64-${{matrix.env}}-ninja
           mingw-w64-${{matrix.env}}-openblas
           mingw-w64-${{matrix.env}}-openmp
+          unzip
+          wget
+
+    - name: Cache CMake
+      id: cache-cmake
+      uses: actions/cache@v2
+      with:
+        path: cmake-3.22.0-windows-x86_64
+        key: ${{runner.os}}-cmake-3.22.0
+
+    - name: Download CMake
+      if: steps.cache-cmake.outputs.cache-hit != 'true'
+      run: |
+        wget https://github.com/Kitware/CMake/releases/download/v3.22.0/cmake-3.22.0-windows-x86_64.zip
+        unzip cmake-3.22.0-windows-x86_64.zip
+
+    - name: Setup CMake
+      run: |
+        echo "export PATH=$(pwd)/cmake-3.22.0-windows-x86_64/bin:\$PATH" >> ~/.bash_profile
 
     - name: Setup Environment
       if: ${{matrix.build_type == 'Release'}}

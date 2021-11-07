@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required (VERSION 3.18)
+cmake_minimum_required (VERSION 3.22)
 
 if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   set (CMAKE_CUDA_ARCHITECTURES 75)
@@ -77,17 +77,24 @@ option (BUILD_CXSPARSE "Build CXSparse" ON)
 option (WITH_CUDA "Enable CUDA support" ON)
 option (WITH_DEMOS "Build demos" ON)
 option (WITH_FORTRAN "Enables Fortran support" ON)
-option (WITH_LGPL "Enable GNU LGPL modules" ON)
 option (WITH_METIS "Enables METIS support" ON)
 option (WITH_OPENMP "Enable OpenMP support" ON)
 option (WITH_PRINT "Print diagnostic messages" OFF)
 option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 
+set (WITH_LICENSE "GPL" CACHE STRING "Software license the binary distribution should adhere")
+set_property (CACHE WITH_LICENSE PROPERTY STRINGS "Minimal;GPL;LGPL")
+
+cmake_dependent_option (BUILD_SHARED_LIBS "Build shared libraires" OFF "WITH_LICENSE STREQUAL \"GPL\"" ON)
+
+cmake_dependent_option (WITH_LGPL "Enable GNU LGPL modules" ON "WITH_LICENSE MATCHES \"GPL\"" OFF)
+cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LICENSE STREQUAL \"GPL\"" OFF)
+
+cmake_dependent_option (WITH_CHOLMOD "Enable CHOLMOD" ON "WITH_LGPL" OFF)
+cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON "WITH_CHOLMOD" OFF)
+
 cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD in Partition module" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_CHOLMOD "Enable CHOLMOD" ON "WITH_LGPL" OFF)
-cmake_dependent_option (WITH_CHOLESKY "Enable the Cholesky module" ON "WITH_LGPL AND WITH_CHOLMOD" OFF)
-cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON "WITH_GPL AND WITH_CHOLMOD" OFF)
 cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON "WITH_GPL AND WITH_CHOLMOD" OFF)
 cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON "WITH_GPL" OFF)

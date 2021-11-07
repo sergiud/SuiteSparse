@@ -35,7 +35,7 @@ Besides full CMake support, this branch provides the following additions:
 ## Requirements
 
 * C and C++ compilers
-* CMake 3.18 or newer
+* CMake 3.22 or newer
 * SuiteSparse only (not required for CXSparse):
     - BLAS
     - LAPACK

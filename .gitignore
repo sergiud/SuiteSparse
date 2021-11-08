@@ -14,17 +14,17 @@
 gmon.out
 *.bak
 *.d
-*.gcda 
-*.gcno 
-*.aux 
-*.bbl 
-*.blg 
-*.log 
-*.toc 
-*.dvi 
-*.lof 
+*.gcda
+*.gcno
+*.aux
+*.bbl
+*.blg
+*.log
+*.toc
+*.dvi
+*.lof
 *.lot
-*.dll 
+*.dll
 *.dSYM
 my_*.out
 *.gcda
@@ -215,6 +215,4 @@ ktruss/ktruss_main
 ssget/files/ss_index_old.mat
 ssget/files/ssstats_old.csv
 
-# Do not ignore this file
-!.gitignore
-
+/build*/

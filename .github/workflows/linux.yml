@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: GCC-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}
+    name: GCC-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -15,6 +15,7 @@ jobs:
         build_type: [Release, Debug]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
+        gpu: [no-cuda, cuda]
 
     steps:
     - uses: actions/checkout@v2
@@ -34,11 +35,20 @@ jobs:
           ninja-build \
           nvidia-cuda-toolkit
 
+    # Due to a mismatch in LTO version used by GCC and CUDA compiler, enable
+    # -flto only when building the non-CUDA version of the library.
+    - name: Setup Environment
+      if: ${{matrix.build_type == 'Release' && matrix.gpu != 'cuda'}}
+      run: |
+        echo 'CFLAGS=-flto' >> $GITHUB_ENV
+        echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
+
     - name: Configure
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
+              -DWITH_CUDA=${{matrix.gpu == 'cuda'}} \
               -DWITH_GPL=${{matrix.components == 'gpl'}} \
               -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} \
               -G Ninja

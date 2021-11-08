@@ -77,30 +77,26 @@ jobs:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
-        msvc: [VS-16-2019] # VS-15-2017, VS-17-2022
+        msvc: [VS-16-2019, VS-17-2022]
         sys: [mingw64]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
         include:
           - sys: mingw64
             env: x86_64
-              #- msvc: VS-15-2017
-              #  generator: "Visual Studio 15 2017"
-              #  os: windows-2016
           - msvc: VS-16-2019
             generator: "Visual Studio 16 2019"
             os: windows-2019
-              #- msvc: VS-17-2022
-              #  generator: "Visual Studio 17 2022"
-              #  os: windows-2022
+          - msvc: VS-17-2022
+            generator: "Visual Studio 17 2022"
+            os: windows-2022
 
     steps:
     - uses: actions/checkout@v2
     - uses: ashutoshvarma/setup-ninja@master
       with:
         version: 1.10.0
-    - uses: lukka/get-cmake@v3.21.2
-      if: ${{ startswith(matrix.msvc, 'VS-17') }}
+
     - uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
@@ -109,16 +105,35 @@ jobs:
           wget
           mingw-w64-${{matrix.env}}-gcc-fortran
 
+    - name: Cache CMake
+      id: cache-cmake
+      uses: actions/cache@v2
+      with:
+        path: cmake-3.22.0-windows-x86_64
+        key: ${{runner.os}}-cmake-3.22.0
+
+    - name: Download CMake
+      if: steps.cache-cmake.outputs.cache-hit != 'true'
+      run: |
+        (New-Object System.Net.WebClient).DownloadFile("https://github.com/Kitware/CMake/releases/download/v3.22.0/cmake-3.22.0-windows-x86_64.zip", "cmake-3.22.0-windows-x86_64.zip");
+        Expand-Archive cmake-3.22.0-windows-x86_64.zip .;
+
+    - name: Setup CMake
+      run: |
+        echo "$((Get-Item .).FullName)/cmake-3.22.0-windows-x86_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
     - name: Build BLAS and LAPACK
       shell: msys2 {0}
       run: |
         wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.10.0.tar.gz
         tar xvf v3.10.0.tar.gz
+
         cmake -S lapack-3.10.0 -B build_lapack_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=ON \
               -DCMAKE_GNUtoMS=ON \
               -DCMAKE_INSTALL_PREFIX=./install \
               -G Ninja
+
         cmake --build build_lapack_${{matrix.build_type}}/ \
               --config ${{matrix.build_type}}  \
               --target install

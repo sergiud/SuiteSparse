@@ -837,7 +837,7 @@ if (WITH_SUPERNODAL)
     target_link_libraries (spqr PRIVATE TBB::tbb)
     target_compile_definitions (spqr PRIVATE HAVE_TBB)
 
-    set (DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
+    set (TBB_DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
   endif (WITH_TBB AND TBB_FOUND)
 endif (WITH_SUPERNODAL)
 

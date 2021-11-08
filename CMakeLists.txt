@@ -27,6 +27,13 @@ project (SuiteSparse LANGUAGES C CXX VERSION 5.10.1
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
 )
 
+set (CMAKE_DEBUG_POSTFIX _debug)
+set (CMAKE_C_VISIBILITY_PRESET hidden)
+set (CMAKE_CXX_VISIBILITY_PRESET hidden)
+set (CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+set (CMAKE_POSITION_INDEPENDENT_CODE ON)
+set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # SuiteSparse version
@@ -64,6 +71,7 @@ include (CPack)
 include (FeatureSummary)
 include (GenerateExportHeader)
 include (GNUInstallDirs)
+include (SuiteSparseBase)
 
 option (BUILD_CXSPARSE "Build CXSparse" ON)
 option (WITH_CUDA "Enable CUDA support" ON)
@@ -101,13 +109,6 @@ if (WITH_FORTRAN)
     enable_language (Fortran)
   endif (CMAKE_Fortran_COMPILER)
 endif (WITH_FORTRAN)
-
-set (CMAKE_DEBUG_POSTFIX _debug)
-set (CMAKE_C_VISIBILITY_PRESET hidden)
-set (CMAKE_CXX_VISIBILITY_PRESET hidden)
-set (CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
-set (CMAKE_POSITION_INDEPENDENT_CODE ON)
-set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
 
@@ -841,13 +842,8 @@ if (WITH_SUPERNODAL)
   endif (WITH_TBB AND TBB_FOUND)
 endif (WITH_SUPERNODAL)
 
-set (SUITESPARSECONFIG_HDRS
-  SuiteSparse_config/SuiteSparse_config.h
-)
-
 add_library (suitesparseconfig
-  SuiteSparse_config/SuiteSparse_config.c
-  ${SUITESPARSECONFIG_HDRS}
+  $<TARGET_OBJECTS:suitesparsebase>
 )
 
 add_library (umfpack_int OBJECT ${UMFPACK_INT_SRCS})
@@ -1132,7 +1128,6 @@ set (SuiteSparse_CAMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/CAMD)
 set (SuiteSparse_CCOLAMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/CCOLAMD)
 set (SuiteSparse_CHOLMOD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/CHOLMOD)
 set (SuiteSparse_COLAMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/COLAMD)
-set (SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse)
 set (SuiteSparse_KLU_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/KLU)
 set (SuiteSparse_LDL_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/LDL)
 set (SuiteSparse_SPQR_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/SPQR)

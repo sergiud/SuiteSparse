@@ -16,21 +16,17 @@
 # limitations under the License.
 #
 
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.12)
+project (cxsparse LANGUAGES C VERSION 3.2.0
+  DESCRIPTION "A Concise Sparse matrix package - Extended"
+  HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
+)
 
-if (POLICY CMP0054)
-  cmake_policy (SET CMP0054 NEW)
-endif (POLICY CMP0054)
-
-if (POLICY CMP0063)
-  cmake_policy (SET CMP0063 NEW)
-endif (POLICY CMP0063)
-
-#if (MSVC)
-  #project (cxsparse CXX)
-#else (MSVC)
-project (cxsparse LANGUAGES C VERSION 3.1.9)
-#endif (MSVC)
+set (CMAKE_DEBUG_POSTFIX _debug)
+set (CMAKE_C_VISIBILITY_PRESET hidden)
+set (CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+set (CMAKE_POSITION_INDEPENDENT_CODE ON)
+set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 set (MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
 set (MINOR_VERSION ${PROJECT_VERSION_MINOR})
@@ -68,11 +64,7 @@ include (CMakePushCheckState)
 include (ComponentVersion)
 include (GenerateExportHeader)
 include (GNUInstallDirs)
-
-set (SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse)
-
-set (CMAKE_C_VISIBILITY_PRESET hidden)
-set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+include (SuiteSparseBase)
 
 check_include_file (complex.h HAVE_COMPLEX_H)
 
@@ -111,6 +103,8 @@ set (_CXSparse_EXPORT_HEADER ${CMAKE_CURRENT_BINARY_DIR}/include/cs_export.h)
 
 set (CXSparse_HDRS
   ${_CXSparse_EXPORT_HEADER}
+  ${SuiteSparse_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}/SuiteSparse_export.h
+  ${SUITESPARSECONFIG_HDRS}
   Include/cs.h
 )
 
@@ -185,6 +179,7 @@ endif (MSVC)
 add_library (cxsparse
   $<TARGET_OBJECTS:cxsparse_int>
   $<TARGET_OBJECTS:cxsparse_long>
+  $<TARGET_OBJECTS:suitesparsebase>
   ${CXSparse_HDRS}
 )
 
@@ -218,42 +213,16 @@ generate_export_header (cxsparse EXPORT_FILE_NAME ${_CXSparse_EXPORT_HEADER})
 target_sources (cxsparse PRIVATE ${_CXSparse_EXPORT_HEADER})
 
 target_include_directories (cxsparse PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+  $<BUILD_INTERFACE:${SuiteSparse_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${SuiteSparse_SOURCE_DIR}/SuiteSparse_config>
   $<INSTALL_INTERFACE:${_CXSparse_CMake_INCLUDEDIR}>
 )
 
-set (SUITESPARSECONFIG_HDRS
-  ../SuiteSparse_config/SuiteSparse_config.h
-)
-
-add_library (cxsparseconfig
-  ../SuiteSparse_config/SuiteSparse_config.c
-  ${SUITESPARSECONFIG_HDRS}
-)
-
-target_include_directories (cxsparseconfig PUBLIC
-  $<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../SuiteSparse_config>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/../${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
-)
-
 if (HAVE_M)
-  target_link_libraries (cxsparseconfig INTERFACE m)
+  target_link_libraries (cxsparse PRIVATE m)
 endif (HAVE_M)
-
-set_property (TARGET cxsparseconfig PROPERTY NAME_ALIAS CXSparse)
-set_property (TARGET cxsparseconfig PROPERTY HEADERS_VARIABLE
-  SUITESPARSECONFIG_HDRS)
-set_property (TARGET cxsparseconfig PROPERTY INSTALL_DESTINATION
-  ${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR})
-set_property (TARGET cxsparseconfig PROPERTY DEFINE_SYMBOL
-  suitesparseconfig_EXPORTS)
-
-set_component_version (cxsparseconfig "${VERSION}")
-set_target_properties (cxsparseconfig PROPERTIES EXPORT_NAME Config)
-
-target_link_libraries (cxsparse PUBLIC cxsparseconfig)
 
 if (NOT HAVE_C99_COMPLEX STREQUAL "")
   target_compile_definitions (cxsparse PUBLIC CXSPARSE_C99_COMPLEX)
@@ -271,7 +240,7 @@ endif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 set_target_properties (cxsparse PROPERTIES PUBLIC_HEADER "${CXSparse_HDRS}")
 set_target_properties (cxsparse PROPERTIES EXPORT_NAME CXSparse)
 
-install (TARGETS cxsparse cxsparseconfig
+install (TARGETS cxsparse
   EXPORT cxsparse-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   PUBLIC_HEADER DESTINATION ${_CXSparse_CMake_INCLUDEDIR}
@@ -285,7 +254,7 @@ configure_package_config_file (cxsparse-config.cmake.in
 write_basic_package_version_file (cxsparse-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
 
-export (TARGETS cxsparse cxsparseconfig NAMESPACE CXSparse:: FILE cxsparse-targets.cmake)
+export (TARGETS cxsparse NAMESPACE CXSparse:: FILE cxsparse-targets.cmake)
 export (PACKAGE CXSparse)
 
 install (EXPORT cxsparse-targets NAMESPACE CXSparse::
@@ -313,13 +282,13 @@ add_executable (cs_ci_demo2
   $<TARGET_OBJECTS:cs_ci_demo_base>
   Demo/cs_ci_demo2.c
 )
-target_link_libraries (cs_ci_demo2 PRIVATE cxsparse)
+target_link_libraries (cs_ci_demo2 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
 
 add_executable (cs_ci_demo3
   $<TARGET_OBJECTS:cs_ci_demo_base>
   Demo/cs_ci_demo3.c
 )
-target_link_libraries (cs_ci_demo3 PRIVATE cxsparse)
+target_link_libraries (cs_ci_demo3 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
 
 add_executable (cs_cl_demo1
   Demo/cs_cl_demo1.c
@@ -337,13 +306,13 @@ add_executable (cs_cl_demo2
   $<TARGET_OBJECTS:cs_cl_demo_base>
   Demo/cs_cl_demo2.c
 )
-target_link_libraries (cs_cl_demo2 PRIVATE cxsparse)
+target_link_libraries (cs_cl_demo2 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
 
 add_executable (cs_cl_demo3
   $<TARGET_OBJECTS:cs_cl_demo_base>
   Demo/cs_cl_demo3.c
 )
-target_link_libraries (cs_cl_demo3 PRIVATE cxsparse)
+target_link_libraries (cs_cl_demo3 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
 
 add_executable (cs_di_demo1
   Demo/cs_di_demo1.c

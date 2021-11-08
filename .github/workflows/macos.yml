@@ -13,7 +13,6 @@ jobs:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
-        shared: [ON, OFF]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
 

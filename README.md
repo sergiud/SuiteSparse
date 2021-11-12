@@ -1,5 +1,6 @@
 # CMake support for SuiteSparse
 
+![Android](https://github.com/sergiud/suitesparse/actions/workflows/android.yml/badge.svg)
 ![Linux](https://github.com/sergiud/suitesparse/actions/workflows/linux.yml/badge.svg)
 ![macOS](https://github.com/sergiud/suitesparse/actions/workflows/macos.yml/badge.svg)
 ![Windows](https://github.com/sergiud/suitesparse/actions/workflows/windows.yml/badge.svg)

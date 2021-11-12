@@ -1,0 +1,42 @@
+name: Android
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: NDK-${{matrix.abi}}-API-${{matrix.api_level}}-${{matrix.build_type}}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: true
+      matrix:
+        abi:
+          - arm64-v8a
+          - armeabi-v7a
+          - x86
+          - x86_64
+        api_level: [28]
+        build_type: [Release, Debug]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Ninja
+      uses: ashutoshvarma/setup-ninja@master
+      with:
+        version: 1.10.0
+
+    - name: Configure
+      run: |
+        cmake -S . -B build_${{matrix.abi}} \
+              -DCMAKE_ANDROID_API=${{matrix.api_level}} \
+              -DCMAKE_ANDROID_ARCH_ABI=${{matrix.abi}} \
+              -DCMAKE_ANDROID_STL_TYPE=c++_shared \
+              -DCMAKE_SYSTEM_NAME=Android \
+              -G Ninja
+    - name: Build
+      run: |
+        cmake --build build_${{matrix.abi}} \
+              --config ${{matrix.build_type}}

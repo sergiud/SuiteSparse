@@ -31,6 +31,10 @@ add_library (suitesparsebase OBJECT
 
 set (SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse)
 
+target_compile_definitions (suitesparsebase PRIVATE
+  suitesparseconfig_EXPORTS
+)
+
 target_include_directories (suitesparsebase PRIVATE
   ${SuiteSparse_SOURCE_DIR}/SuiteSparse_config
   ${SuiteSparse_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}

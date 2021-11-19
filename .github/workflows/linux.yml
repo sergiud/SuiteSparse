@@ -9,6 +9,9 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      CCACHE_DIR: ${{github.workspace}}/ccache
+      DEBIAN_FRONTEND: noninteractive
     strategy:
       fail-fast: true
       matrix:
@@ -20,11 +23,21 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Setup Dependencies
+    - name: Update Packages
       run: |
         sudo apt-get update
-        DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
+
+    - name: Setup Download Dependencies
+      if: steps.cache-cmake.outputs.cache-hit != 'true'
+      run: |
+        sudo apt-get install -y \
+          wget
+
+    - name: Setup Minimal Dependencies
+      run: |
+        sudo apt-get install -y \
           build-essential \
+          ccache \
           cmake \
           gfortran \
           libblas-dev \
@@ -32,6 +45,14 @@ jobs:
           libmetis-dev \
           libomp-dev \
           libtbb-dev \
+          ninja-build \
+          nvidia-cuda-toolkit \
+          wget
+
+    - name: Setup CUDA Dependencies
+      if: ${{matrix.gpu == 'cuda'}}
+      run: |
+        sudo apt-get install -y \
           ninja-build \
           nvidia-cuda-toolkit
 
@@ -43,10 +64,21 @@ jobs:
         echo 'CFLAGS=-flto' >> $GITHUB_ENV
         echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
 
+    - name: Cache Build
+      id: cache-build
+      uses: actions/cache@v2
+      with:
+        path: ${{env.CCACHE_DIR}}
+        key: ${{runner.os}}-ccache-${{github.run_id}}
+        restore-keys: ${{runner.os}}-ccache-
+
     - name: Configure
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+              -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=ccache \
+              -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
+              -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
               -DWITH_CUDA=${{matrix.gpu == 'cuda'}} \
               -DWITH_GPL=${{matrix.components == 'gpl'}} \

@@ -608,7 +608,7 @@ set (LDL_SRCS
   LDL/Source/ldl.c
 )
 
-set (SUITESPARSECUDA_HDRS
+set (GPURUNTIME_HDRS
   SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Runtime.hpp
   SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Workspace.hpp
   SuiteSparse_GPURuntime/Include/SuiteSparseGPU_debug.hpp
@@ -659,6 +659,7 @@ add_library (amd
   $<TARGET_OBJECTS:amd_long>
   ${AMD_HDRS}
 )
+add_library (SuiteSparse::AMD ALIAS amd)
 
 add_library (btf_int OBJECT ${BTF_SRCS})
 target_include_directories (btf_int PRIVATE $<TARGET_PROPERTY:btf,INCLUDE_DIRECTORIES>)
@@ -675,6 +676,7 @@ add_library (btf
   $<TARGET_OBJECTS:btf_long>
   ${BTF_HDRS}
 )
+add_library (SuiteSparse::BTF ALIAS btf)
 
 target_include_directories (btf PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>
@@ -695,6 +697,7 @@ add_library (camd
   $<TARGET_OBJECTS:camd_long>
   ${CAMD_HDRS}
 )
+add_library (SuiteSparse::CAMD ALIAS camd)
 
 if (WITH_CHOLMOD)
   add_library (cholmod_int OBJECT ${CHOLMOD_SRCS})
@@ -712,6 +715,7 @@ if (WITH_CHOLMOD)
     $<TARGET_OBJECTS:cholmod_long>
     ${CHOLMOD_HDRS}
   )
+  add_library (SuiteSparse::CHOLMOD ALIAS cholmod)
 
   target_include_directories (cholmod PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include>
@@ -736,8 +740,13 @@ if (WITH_CHOLMOD)
   endif (METIS_FOUND)
 
   target_link_libraries (cholmod
-    PRIVATE BLAS::BLAS LAPACK::LAPACK amd camd ccolamd colamd
-    PUBLIC suitesparseconfig
+    PRIVATE BLAS::BLAS
+            LAPACK::LAPACK
+            SuiteSparse::AMD
+            SuiteSparse::CAMD
+            SuiteSparse::CCOLAMD
+            SuiteSparse::COLAMD
+    PUBLIC SuiteSparse::Config
   )
 endif (WITH_CHOLMOD)
 
@@ -756,6 +765,7 @@ add_library (ccolamd
   $<TARGET_OBJECTS:ccolamd_long>
   ${CCOLAMD_HDRS}
 )
+add_library (SuiteSparse::CCOLAMD ALIAS ccolamd)
 
 add_library (colamd_int OBJECT ${COLAMD_SRCS})
 target_include_directories (colamd_int PRIVATE $<TARGET_PROPERTY:colamd,INCLUDE_DIRECTORIES>)
@@ -772,6 +782,7 @@ add_library (colamd
   $<TARGET_OBJECTS:colamd_long>
   ${COLAMD_HDRS}
 )
+add_library (SuiteSparse::COLAMD ALIAS colamd)
 
 if (WITH_SUPERNODAL)
   set (SPQR_HDRS
@@ -823,6 +834,7 @@ if (WITH_SUPERNODAL)
     SPQR/Source/SuiteSparseQR_expert.cpp
     SPQR/Source/SuiteSparseQR_qmult.cpp
   )
+  add_library (SuiteSparse::SPQR ALIAS spqr)
 
   if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
     target_sources (spqr PRIVATE
@@ -831,7 +843,7 @@ if (WITH_SUPERNODAL)
       SPQR/SPQRGPU/spqrgpu_kernel.cpp
     )
 
-    target_link_libraries (spqr PRIVATE suitesparsecuda)
+    target_link_libraries (spqr PRIVATE SuiteSparse::GPURuntime)
   endif (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
   if (WITH_TBB AND TBB_FOUND)
@@ -845,6 +857,7 @@ endif (WITH_SUPERNODAL)
 add_library (suitesparseconfig
   $<TARGET_OBJECTS:suitesparsebase>
 )
+add_library (SuiteSparse::Config ALIAS suitesparseconfig)
 
 add_library (umfpack_int OBJECT ${UMFPACK_INT_SRCS})
 target_include_directories (umfpack_int PRIVATE $<TARGET_PROPERTY:umfpack,INCLUDE_DIRECTORIES>)
@@ -1049,12 +1062,13 @@ add_library (umfpack
   UMFPACK/Source/umfpack_tictoc.c
   UMFPACK/Source/umfpack_timer.c
 )
+add_library (SuiteSparse::UMFPACK ALIAS umfpack)
 
 target_link_libraries (umfpack PRIVATE BLAS::BLAS LAPACK::LAPACK)
 
 if (TARGET cholmod)
   # NOTE cholmod already depends on LAPACK
-  target_link_libraries (umfpack PRIVATE cholmod)
+  target_link_libraries (umfpack PRIVATE SuiteSparse::CHOLMOD)
 else (TARGET cholmod)
   set_property (SOURCE
     UMFPACK/Source/umf_cholmod.c
@@ -1097,11 +1111,16 @@ add_library (klu
   $<TARGET_OBJECTS:klu_zlong>
   ${KLU_HDRS}
 )
+add_library (SuiteSparse::KLU ALIAS klu)
 
-target_link_libraries (klu PUBLIC amd btf colamd)
+target_link_libraries (klu PUBLIC
+  SuiteSparse::AMD
+  SuiteSparse::BTF
+  SuiteSparse::COLAMD
+)
 
 if (TARGET cholmod)
-  target_link_libraries (klu PRIVATE cholmod)
+  target_link_libraries (klu PRIVATE SuiteSparse::CHOLMOD)
 endif (TARGET cholmod)
 
 add_library (ldl_int OBJECT ${LDL_SRCS})
@@ -1119,8 +1138,9 @@ add_library (ldl
   $<TARGET_OBJECTS:ldl_long>
   ${LDL_HDRS}
 )
+add_library (SuiteSparse::LDL ALIAS ldl)
 
-target_link_libraries (ldl PRIVATE amd)
+target_link_libraries (ldl PRIVATE SuiteSparse::AMD)
 
 set (SuiteSparse_AMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/AMD)
 set (SuiteSparse_BTF_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/BTF)
@@ -1201,14 +1221,14 @@ target_include_directories (ldl PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/LDL/Include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_LDL_INCLUDE_DIR}>)
 
-target_link_libraries (amd PUBLIC suitesparseconfig)
-target_link_libraries (btf PUBLIC suitesparseconfig)
-target_link_libraries (camd PUBLIC suitesparseconfig)
-target_link_libraries (ccolamd PUBLIC suitesparseconfig)
-target_link_libraries (colamd PUBLIC suitesparseconfig)
-target_link_libraries (klu PUBLIC suitesparseconfig)
-target_link_libraries (ldl PUBLIC suitesparseconfig)
-target_link_libraries (umfpack PUBLIC amd suitesparseconfig)
+target_link_libraries (amd PUBLIC SuiteSparse::Config)
+target_link_libraries (btf PUBLIC SuiteSparse::Config)
+target_link_libraries (camd PUBLIC SuiteSparse::Config)
+target_link_libraries (ccolamd PUBLIC SuiteSparse::Config)
+target_link_libraries (colamd PUBLIC SuiteSparse::Config)
+target_link_libraries (klu PUBLIC SuiteSparse::Config)
+target_link_libraries (ldl PUBLIC SuiteSparse::Config)
+target_link_libraries (umfpack PUBLIC amd SuiteSparse::Config)
 
 if (TARGET spqr)
   target_include_directories (spqr PUBLIC
@@ -1218,28 +1238,29 @@ if (TARGET spqr)
   )
 
   target_link_libraries (spqr
-    PUBLIC cholmod suitesparseconfig
+    PUBLIC SuiteSparse::CHOLMOD SuiteSparse::Config
     PRIVATE BLAS::BLAS LAPACK::LAPACK
   )
 endif (TARGET spqr)
 
 # CUDA support
 if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
-  add_library (suitesparsecuda
+  add_library (gpuruntime
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace.cpp
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_cpuAllocators.cpp
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_gpuAllocators.cpp
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_transfer.cpp
   )
+  add_library (SuiteSparse::GPURuntime ALIAS gpuruntime)
 
-  target_include_directories (suitesparsecuda PUBLIC
+  target_include_directories (gpuruntime PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_GPURuntime_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_GPURuntime_INCLUDE_DIR}>
   )
 
-  target_link_libraries (suitesparsecuda
-    PUBLIC suitesparseconfig
+  target_link_libraries (gpuruntime
+    PUBLIC SuiteSparse::Config
     PRIVATE CUDA::cudart
   )
 
@@ -1312,7 +1333,7 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
   target_link_libraries (gpuqrengine
     PUBLIC CUDA::cublas
-    PRIVATE suitesparsecuda
+    PRIVATE gpuruntime
   )
 
   if (WITH_CHOLMOD)
@@ -1336,7 +1357,7 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
     target_compile_definitions (cholmod PUBLIC GPU_BLAS)
     target_link_libraries (cholmod
-      PRIVATE CUDA::cudart suitesparsecuda
+      PRIVATE CUDA::cudart gpuruntime
       PUBLIC CUDA::cublas
     )
   endif (WITH_CHOLMOD)
@@ -1373,10 +1394,10 @@ if (TARGET spqr)
     ${SuiteSparse_SPQR_INCLUDE_DIR})
 endif (TARGET spqr)
 
-if (TARGET suitesparsecuda)
-  list (APPEND _SuiteSparse_TARGETS suitesparsecuda)
-  set_property (TARGET suitesparsecuda PROPERTY NAME_ALIAS GPURuntime)
-endif (TARGET suitesparsecuda)
+if (TARGET gpuruntime)
+  list (APPEND _SuiteSparse_TARGETS gpuruntime)
+  set_property (TARGET gpuruntime PROPERTY NAME_ALIAS GPURuntime)
+endif (TARGET gpuruntime)
 
 if (TARGET gpuqrengine)
   list (APPEND _SuiteSparse_TARGETS gpuqrengine)
@@ -1476,9 +1497,9 @@ if (TARGET spqr)
   set_component_version (spqr 2.0.9)
 endif (TARGET spqr)
 
-if (TARGET suitesparsecuda)
-  set_component_version (suitesparsecuda 1.0.5)
-endif (TARGET suitesparsecuda)
+if (TARGET gpuruntime)
+  set_component_version (gpuruntime 1.0.5)
+endif (TARGET gpuruntime)
 
 if (TARGET gpuqrengine)
   set_component_version (gpuqrengine 1.0.5)
@@ -1510,139 +1531,139 @@ if (WITH_DEMOS)
   add_executable (amd_demo
     AMD/Demo/amd_demo.c
   )
-  target_link_libraries (amd_demo PRIVATE amd)
+  target_link_libraries (amd_demo PRIVATE SuiteSparse::AMD)
 
   add_executable (amd_demo2
     AMD/Demo/amd_demo2.c
   )
-  target_link_libraries (amd_demo2 PRIVATE amd)
+  target_link_libraries (amd_demo2 PRIVATE SuiteSparse::AMD)
 
   add_executable (amd_l_demo
     AMD/Demo/amd_l_demo.c
   )
-  target_link_libraries (amd_l_demo PRIVATE amd)
+  target_link_libraries (amd_l_demo PRIVATE SuiteSparse::AMD)
 
   add_executable (amd_simple
     AMD/Demo/amd_simple.c
   )
-  target_link_libraries (amd_simple PRIVATE amd)
+  target_link_libraries (amd_simple PRIVATE SuiteSparse::AMD)
 
   add_executable (camd_demo
     CAMD/Demo/camd_demo.c
   )
-  target_link_libraries (camd_demo PRIVATE camd)
+  target_link_libraries (camd_demo PRIVATE SuiteSparse::CAMD)
 
   add_executable (camd_demo2
     CAMD/Demo/camd_demo2.c
   )
-  target_link_libraries (camd_demo2 PRIVATE camd)
+  target_link_libraries (camd_demo2 PRIVATE SuiteSparse::CAMD)
 
   add_executable (camd_l_demo
     CAMD/Demo/camd_l_demo.c
   )
-  target_link_libraries (camd_l_demo PRIVATE camd)
+  target_link_libraries (camd_l_demo PRIVATE SuiteSparse::CAMD)
 
   add_executable (camd_simple
     CAMD/Demo/camd_simple.c
   )
-  target_link_libraries (camd_simple PRIVATE camd)
+  target_link_libraries (camd_simple PRIVATE SuiteSparse::CAMD)
 
   if (TARGET cholmod AND WITH_CHECK)
     add_executable (cholmod_demo
       CHOLMOD/Demo/cholmod_demo.h
       CHOLMOD/Demo/cholmod_demo.c
     )
-    target_link_libraries (cholmod_demo PRIVATE cholmod)
+    target_link_libraries (cholmod_demo PRIVATE SuiteSparse::CHOLMOD)
 
     add_executable (cholmod_l_demo CHOLMOD/Demo/cholmod_l_demo.c)
-    target_link_libraries (cholmod_l_demo PRIVATE cholmod)
+    target_link_libraries (cholmod_l_demo PRIVATE SuiteSparse::CHOLMOD)
 
     add_executable (cholmod_simple CHOLMOD/Demo/cholmod_simple.c)
-    target_link_libraries (cholmod_simple PRIVATE cholmod)
+    target_link_libraries (cholmod_simple PRIVATE SuiteSparse::CHOLMOD)
   endif (TARGET cholmod AND WITH_CHECK)
 
   add_executable (colamd_example
     COLAMD/Demo/colamd_example.c
   )
-  target_link_libraries (colamd_example PRIVATE colamd)
+  target_link_libraries (colamd_example PRIVATE SuiteSparse::COLAMD)
 
   add_executable (colamd_l_example
     COLAMD/Demo/colamd_l_example.c
   )
-  target_link_libraries (colamd_l_example PRIVATE colamd)
+  target_link_libraries (colamd_l_example PRIVATE SuiteSparse::COLAMD)
 
   add_executable (klu_simple
     KLU/Demo/klu_simple.c
   )
-  target_link_libraries (klu_simple PRIVATE klu)
+  target_link_libraries (klu_simple PRIVATE SuiteSparse::KLU)
 
   if (TARGET cholmod)
     add_executable (kludemo
       KLU/Demo/kludemo.c
     )
-    target_link_libraries (kludemo PRIVATE klu cholmod)
+  target_link_libraries (kludemo PRIVATE SuiteSparse::KLU SuiteSparse::CHOLMOD)
 
     add_executable (kluldemo
       KLU/Demo/kluldemo.c
     )
-    target_link_libraries (kluldemo PRIVATE klu cholmod)
+    target_link_libraries (kluldemo PRIVATE SuiteSparse::KLU SuiteSparse::CHOLMOD)
   endif (TARGET cholmod)
 
   add_executable (ldlamd
     LDL/Demo/ldlmain.c
   )
   target_compile_definitions (ldlamd PRIVATE USE_AMD)
-  target_link_libraries (ldlamd PRIVATE amd ldl)
+  target_link_libraries (ldlamd PRIVATE SuiteSparse::AMD SuiteSparse::LDL)
 
   add_executable (ldlmain
     LDL/Demo/ldlmain.c
   )
-  target_link_libraries (ldlmain PRIVATE ldl)
+  target_link_libraries (ldlmain PRIVATE SuiteSparse::LDL)
 
   add_executable (ldllmain
     LDL/Demo/ldlmain.c
   )
   target_compile_definitions (ldllmain PRIVATE LDL_LONG)
-  target_link_libraries (ldllmain PRIVATE ldl)
+  target_link_libraries (ldllmain PRIVATE SuiteSparse::LDL)
 
   add_executable (ldllamd
     LDL/Demo/ldlmain.c
   )
   target_compile_definitions (ldllamd PRIVATE LDL_LONG USE_AMD)
-  target_link_libraries (ldllamd PRIVATE amd ldl)
+  target_link_libraries (ldllamd PRIVATE SuiteSparse::AMD SuiteSparse::LDL)
 
   add_executable (ldlsimple
     LDL/Demo/ldlsimple.c
   )
-  target_link_libraries (ldlsimple PRIVATE ldl)
+  target_link_libraries (ldlsimple PRIVATE SuiteSparse::LDL)
 
   add_executable (ldllsimple
     LDL/Demo/ldlsimple.c
   )
   target_compile_definitions (ldllsimple PRIVATE LDL_LONG)
-  target_link_libraries (ldllsimple PRIVATE ldl)
+  target_link_libraries (ldllsimple PRIVATE SuiteSparse::LDL)
 
   add_executable (umf4 UMFPACK/Demo/umf4.c)
-  target_link_libraries (umf4 PRIVATE umfpack)
+  target_link_libraries (umf4 PRIVATE SuiteSparse::UMFPACK)
 
   add_executable (umfpack_di_demo UMFPACK/Demo/umfpack_di_demo.c)
-  target_link_libraries (umfpack_di_demo PRIVATE umfpack)
+  target_link_libraries (umfpack_di_demo PRIVATE SuiteSparse::UMFPACK)
 
   add_executable (umfpack_dl_demo UMFPACK/Demo/umfpack_dl_demo.c)
-  target_link_libraries (umfpack_dl_demo PRIVATE umfpack)
+  target_link_libraries (umfpack_dl_demo PRIVATE SuiteSparse::UMFPACK)
 
   add_executable (umfpack_zi_demo UMFPACK/Demo/umfpack_zi_demo.c)
-  target_link_libraries (umfpack_zi_demo PRIVATE umfpack)
+  target_link_libraries (umfpack_zi_demo PRIVATE SuiteSparse::UMFPACK)
 
   add_executable (umfpack_zl_demo UMFPACK/Demo/umfpack_zl_demo.c)
-  target_link_libraries (umfpack_zl_demo PRIVATE umfpack)
+  target_link_libraries (umfpack_zl_demo PRIVATE SuiteSparse::UMFPACK)
 
   add_executable (umfpack_simple UMFPACK/Demo/umfpack_simple.c)
-  target_link_libraries (umfpack_simple PRIVATE umfpack)
+  target_link_libraries (umfpack_simple PRIVATE SuiteSparse::UMFPACK)
 
   if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
     add_executable (umf4hb UMFPACK/Demo/umf4_f77wrapper.c UMFPACK/Demo/umf4hb.f)
-    target_link_libraries (umf4hb PRIVATE umfpack)
+    target_link_libraries (umf4hb PRIVATE SuiteSparse::UMFPACK)
   endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
 
   if (TARGET spqr)
@@ -1651,14 +1672,18 @@ if (WITH_DEMOS)
     add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
     add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
 
-    target_link_libraries (qrdemo PRIVATE spqr)
-    target_link_libraries (qrdemoc PRIVATE spqr)
-    target_link_libraries (qrsimple PRIVATE spqr)
-    target_link_libraries (qrsimplec PRIVATE spqr)
+    target_link_libraries (qrdemo PRIVATE SuiteSparse::SPQR)
+    target_link_libraries (qrdemoc PRIVATE SuiteSparse::SPQR)
+    target_link_libraries (qrsimple PRIVATE SuiteSparse::SPQR)
+    target_link_libraries (qrsimplec PRIVATE SuiteSparse::SPQR)
 
     if (TARGET gpuqrengine)
       add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
-      target_link_libraries (qrdemo_gpu PRIVATE spqr cholmod suitesparsecuda)
+      target_link_libraries (qrdemo_gpu PRIVATE
+        SuiteSparse::CHOLMOD
+        SuiteSparse::GPURuntime
+        SuiteSparse::SPQR
+      )
     endif (TARGET gpuqrengine)
   endif (TARGET spqr)
 endif (WITH_DEMOS)

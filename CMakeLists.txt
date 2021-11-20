@@ -165,9 +165,9 @@ check_options (
   SUPERNODAL
 )
 
-if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
   set (CUDA_DEPENDENCY "find_dependency (CUDAToolkit ${CUDAToolkit_VERSION})")
-endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+endif (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
 cmake_push_check_state (RESET)
 set (CMAKE_REQUIRED_LIBRARIES BLAS::BLAS LAPACK::LAPACK)
@@ -824,7 +824,7 @@ if (WITH_SUPERNODAL)
     SPQR/Source/SuiteSparseQR_qmult.cpp
   )
 
-  if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+  if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
     target_sources (spqr PRIVATE
       SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
       SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
@@ -832,7 +832,7 @@ if (WITH_SUPERNODAL)
     )
 
     target_link_libraries (spqr PRIVATE suitesparsecuda)
-  endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+  endif (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
   if (WITH_TBB AND TBB_FOUND)
     target_link_libraries (spqr PRIVATE TBB::tbb)
@@ -1224,7 +1224,7 @@ if (TARGET spqr)
 endif (TARGET spqr)
 
 # CUDA support
-if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
+if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
   add_library (suitesparsecuda
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace.cpp
     SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_cpuAllocators.cpp
@@ -1351,8 +1351,7 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER)
 
     target_link_libraries (spqr PRIVATE gpuqrengine)
   endif (TARGET spqr)
-endif (WITH_CUDA AND CMAKE_CUDA_COMPILER)
-
+endif (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
 set (_SuiteSparse_TARGETS amd btf camd ccolamd colamd umfpack
   klu ldl suitesparseconfig)
@@ -1641,10 +1640,10 @@ if (WITH_DEMOS)
   add_executable (umfpack_simple UMFPACK/Demo/umfpack_simple.c)
   target_link_libraries (umfpack_simple PRIVATE umfpack)
 
-  if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
+  if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
     add_executable (umf4hb UMFPACK/Demo/umf4_f77wrapper.c UMFPACK/Demo/umf4hb.f)
     target_link_libraries (umf4hb PRIVATE umfpack)
-  endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER)
+  endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
 
   if (TARGET spqr)
     add_executable (qrdemo SPQR/Demo/qrdemo.cpp)

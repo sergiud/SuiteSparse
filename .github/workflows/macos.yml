@@ -24,23 +24,6 @@ jobs:
       with:
         version: 1.10.0
 
-    - name: Cache CMake
-      id: cache-cmake
-      uses: actions/cache@v2
-      with:
-        path: cmake-3.22.0-macos-universal
-        key: ${{ runner.os }}-cmake-3.22.0
-
-    - name: Download CMake
-      if: steps.cache-cmake.outputs.cache-hit != 'true'
-      run: |
-        wget https://github.com/Kitware/CMake/releases/download/v3.22.0/cmake-3.22.0-macos-universal.tar.gz
-        tar xvf cmake-3.22.0-macos-universal.tar.gz
-
-    - name: Setup CMake
-      run: |
-        echo $(pwd)/cmake-3.22.0-macos-universal/CMake.app/Contents/bin >> $GITHUB_PATH
-
     - name: Setup Environment
       if: ${{matrix.build_type == 'Release'}}
       run: |

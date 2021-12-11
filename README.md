@@ -42,7 +42,7 @@ Besides full CMake support, this branch provides the following additions:
     - (optional) CUDA compiler and toolkit
     - (optional) Fortran compiler
     - (optional) METIS
-    - (optional) TBB
+    - (optional) TBB prior to version 2021.4
 
 ## Usage
 

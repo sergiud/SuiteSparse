@@ -136,7 +136,7 @@ find_package (CUDAToolkit)
 find_package (LAPACK REQUIRED)
 find_package (METIS 5.0)
 find_package (OpenMP COMPONENTS C)
-find_package (TBB 4.2 NO_MODULE)
+find_package (TBB 4.2...<2021.4 NO_MODULE)
 
 function (check_options)
   foreach (_OPT ${ARGV})

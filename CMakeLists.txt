@@ -1,7 +1,7 @@
 #
 # CMake support layer for SuiteSparse
 #
-# Copyright 2016-2021 Sergiu Deitsch <sergiu.deitsch@gmail.com>
+# Copyright 2016-2022 Sergiu Deitsch <sergiu.deitsch@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,20 +41,7 @@ set (MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
 set (MINOR_VERSION ${PROJECT_VERSION_MINOR})
 set (VERSION_PATCH ${PROJECT_VERSION_PATCH})
 
-set (SHORT_VERSION "${MAJOR_VERSION}.${MINOR_VERSION}")
-
-if (NOT VERSION_PATCH EQUAL 0)
-  set (SHORT_VERSION "${SHORT_VERSION}.${VERSION_PATCH}")
-endif (NOT VERSION_PATCH EQUAL 0)
-
-set (VERSION ${PROJECT_VERSION})
-
-set (CPACK_PACKAGE_NAME SuiteSparse)
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "SuiteSparse: an extended version of CSparse")
-set (CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION})
-set (CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION})
-set (CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
-set (CPACK_PACKAGE_VERSION ${SHORT_VERSION})
 
 include (CheckCCompilerFlag)
 include (CheckFunctionExists)
@@ -71,6 +58,7 @@ include (CPack)
 include (FeatureSummary)
 include (GenerateExportHeader)
 include (GNUInstallDirs)
+include (InstallRequiredSystemLibraries)
 include (SuiteSparseBase)
 
 option (BUILD_CXSPARSE "Build CXSparse" ON)
@@ -1460,12 +1448,6 @@ set (SuiteSparse_CMake_INSTALLDIR ${SuiteSparse_CMake_LIBDIR}/cmake)
 
 target_sources (suitesparseconfig PRIVATE ${_output_CMake_MODULES})
 
-install (TARGETS ${_SuiteSparse_TARGETS}
-  EXPORT suitesparse-targets
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
-  LIBRARY DESTINATION ${SuiteSparse_CMake_LIBDIR} COMPONENT Development
-  ARCHIVE DESTINATION ${SuiteSparse_CMake_LIBDIR} COMPONENT Development)
-
 set (SuiteSparse_NAMESPACE SuiteSparse::)
 
 configure_package_config_file (suitesparse-config.cmake.in
@@ -1493,7 +1475,7 @@ set_component_version (ccolamd 2.9.6)
 set_component_version (colamd 2.9.6)
 set_component_version (klu 1.3.9)
 set_component_version (ldl 2.2.6)
-set_component_version (suitesparseconfig "${VERSION}")
+set_component_version (suitesparseconfig ${SuiteSparse_VERSION})
 set_component_version (umfpack 5.7.9)
 
 if (TARGET cholmod)
@@ -1608,12 +1590,18 @@ if (WITH_DEMOS)
     add_executable (kludemo
       KLU/Demo/kludemo.c
     )
-  target_link_libraries (kludemo PRIVATE SuiteSparse::KLU SuiteSparse::CHOLMOD)
+    target_link_libraries (kludemo PRIVATE SuiteSparse::KLU SuiteSparse::CHOLMOD)
 
     add_executable (kluldemo
       KLU/Demo/kluldemo.c
     )
     target_link_libraries (kluldemo PRIVATE SuiteSparse::KLU SuiteSparse::CHOLMOD)
+
+    install (TARGETS
+      kludemo
+      kluldemo
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
+    )
   endif (TARGET cholmod)
 
   add_executable (ldlamd
@@ -1668,9 +1656,32 @@ if (WITH_DEMOS)
   add_executable (umfpack_simple UMFPACK/Demo/umfpack_simple.c)
   target_link_libraries (umfpack_simple PRIVATE SuiteSparse::UMFPACK)
 
+  set (SuiteSparse_BIN_TARGETS
+    amd_demo
+    amd_demo2
+    amd_l_demo
+    camd_demo
+    camd_demo2
+    camd_l_demo
+    camd_simple
+    colamd_example
+    colamd_l_example
+    ldlamd
+    ldlmain
+    ldlsimple
+    umf4
+    umfpack_di_demo
+    umfpack_dl_demo
+    umfpack_simple
+    umfpack_zi_demo
+    umfpack_zl_demo
+  )
+
   if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
     add_executable (umf4hb UMFPACK/Demo/umf4_f77wrapper.c UMFPACK/Demo/umf4hb.f)
     target_link_libraries (umf4hb PRIVATE SuiteSparse::UMFPACK)
+
+    list (APPEND SuiteSparse_BIN_TARGETS umf4hb)
   endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
 
   if (TARGET spqr)
@@ -1684,6 +1695,13 @@ if (WITH_DEMOS)
     target_link_libraries (qrsimple PRIVATE SuiteSparse::SPQR)
     target_link_libraries (qrsimplec PRIVATE SuiteSparse::SPQR)
 
+    list (APPEND SuiteSparse_BIN_TARGETS
+      qrdemo
+      qrdemoc
+      qrsimple
+      qrsimplec
+    )
+
     if (TARGET gpuqrengine)
       add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
       target_link_libraries (qrdemo_gpu PRIVATE
@@ -1691,13 +1709,34 @@ if (WITH_DEMOS)
         SuiteSparse::GPURuntime
         SuiteSparse::SPQR
       )
+
+      list (APPEND SuiteSparse_BIN_TARGETS
+        qrdemo_gpu
+      )
     endif (TARGET gpuqrengine)
   endif (TARGET spqr)
 endif (WITH_DEMOS)
 
+install (TARGETS ${_SuiteSparse_TARGETS} ${SuiteSparse_BIN_TARGETS}
+  EXPORT suitesparse-targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
+  LIBRARY DESTINATION ${SuiteSparse_CMake_LIBDIR} COMPONENT Development
+  ARCHIVE DESTINATION ${SuiteSparse_CMake_LIBDIR} COMPONENT Development)
+
 if (BUILD_CXSPARSE)
   add_subdirectory (CXSparse)
 endif (BUILD_CXSPARSE)
+
+if (WIN32)
+  foreach (bin IN LISTS SuiteSparse_BIN_TARGETS)
+    install (CODE
+"
+include (BundleUtilities)
+fixup_bundle (\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${bin}${CMAKE_EXECUTABLE_SUFFIX} \"\" \"\")
+"
+      COMPONENT Runtime)
+  endforeach (bin)
+endif (WIN32)
 
 add_feature_info (CUDA WITH_CUDA "GPU accelerated CHOLMOD using CUDA")
 add_feature_info (GPL WITH_GPL "GNU GPL modules")

@@ -102,15 +102,23 @@ jobs:
         include:
           - sys: mingw64
             env: x86_64
+            system: Win64
           - msvc: VS-16-2019
             generator: "Visual Studio 16 2019"
             os: windows-2019
+            marker: vc16
           - msvc: VS-17-2022
             generator: "Visual Studio 17 2022"
             os: windows-2022
+            marker: vc17
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Query Tags
+      run: |
+        git fetch --unshallow --tags
+
     - uses: ashutoshvarma/setup-ninja@master
       with:
         version: 1.10.0
@@ -121,14 +129,8 @@ jobs:
         path-type: inherit
         install: >-
           wget
+          mingw-w64-${{matrix.env}}-ccache
           mingw-w64-${{matrix.env}}-gcc-fortran
-
-    - name: Cache LAPACK
-      id: cache-lapack
-      uses: actions/cache@v2
-      with:
-        path: lapack-3.10.0
-        key: ${{runner.os}}-lapack-3.10.0
 
     - name: Download LAPACK
       if: steps.cache-lapack.outputs.cache-hit != 'true'
@@ -137,15 +139,8 @@ jobs:
         wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.10.0.tar.gz
         tar xvf v3.10.0.tar.gz
 
-    - name: Cache BLAS and LAPACK Build
-      id: cache-lapack-build
-      uses: actions/cache@v2
-      with:
-        path: ${{env.CCACHE_DIR}}
-        key: ${{runner.os}}-ccache-${{github.run_id}}
-        restore-keys: ${{runner.os}}-ccache-
-
-    - name: Build BLAS and LAPACK
+    - name: Build LAPACK
+      if: steps.cache-lapack.outputs.cache-hit != 'true'
       shell: msys2 {0}
       run: |
         cmake -S lapack-3.10.0 -B build_lapack_${{matrix.build_type}}/ \
@@ -160,12 +155,32 @@ jobs:
               --config ${{matrix.build_type}} \
               --target install
 
+    - name: Cache LAPACK
+      id: cache-lapack
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{env.CCACHE_DIR}}
+          ${{github.workspace}}/install
+        key: ${{runner.os}}-lapack-3.10
+
+    - name: Setup MSYS2 Environment
+      shell: msys2 {0}
+      run: |
+        echo "$(cygpath -m /${{matrix.sys}}/bin)" >> $GITHUB_PATH
+
+    - name: Setup Environment
+      run: |
+        echo "${{github.workspace}}/install/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "VERSION_SUFFIX=$(git describe --tags)-${{matrix.marker}}-${{matrix.system}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: Configure
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ `
+              -A x64 `
               -DBLAS_blas_LIBRARY=${{github.workspace}}/install/lib/libblas.lib `
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
-              -DCMAKE_INSTALL_PREFIX:PATH=./install `
+              -DCMAKE_INSTALL_PREFIX:PATH=${{github.workspace}}/install-suitesparse `
               -DLAPACK_lapack_LIBRARY=${{github.workspace}}/install/lib/liblapack.lib `
               -DWITH_FORTRAN=OFF `
               -DWITH_GPL=${{matrix.components == 'gpl'}} `
@@ -182,3 +197,23 @@ jobs:
         cmake --build build_${{matrix.build_type}}/ `
               --config ${{matrix.build_type}} `
               --target install
+
+    - name: Prepare Deployment
+      run: |
+        New-Item -ItemType "directory" -Path "${{github.workspace}}/deploy"
+        Copy-Item -Path "${{github.workspace}}/install/*" -Destination "${{github.workspace}}/deploy/" -Recurse -Force
+        Copy-Item -Path "${{github.workspace}}/install-suitesparse/*" -Destination "${{github.workspace}}/deploy/" -Recurse -Force
+        Compress-Archive -Path "${{github.workspace}}/deploy/*" -Destination "SuiteSparse-${{env.VERSION_SUFFIX}}.zip"
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: SuiteSparse-${{env.VERSION_SUFFIX}}
+        path: |
+          deploy/
+
+    - name: Deploy
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/') && matrix.lib == 'shared'
+      with:
+        files:
+          SuiteSparse-${{env.VERSION_SUFFIX}}.zip

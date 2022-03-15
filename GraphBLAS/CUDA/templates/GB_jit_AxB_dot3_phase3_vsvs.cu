@@ -19,13 +19,13 @@
 
 //  Blocksize is 1024, uses warp and block reductions to count zombies produced.
 //******************************************************************************
-#define GB_KERNEL
+#define GB_CUDA_KERNEL
 #include <limits>
 #include <cstdint>
 #include <stdio.h>
 #include <cooperative_groups.h>
 #include "matrix.h"
-#include "mySemiRing.h"
+//#include "GB_binary_search.h"
 
 using namespace cooperative_groups;
 
@@ -117,16 +117,14 @@ __global__ void AxB_dot3_phase3_vsvs
    int pfirst, plast;
 
    GB_PARTITION (pfirst, plast, dots, blockIdx.x, gridDim.x ) ;
-   /* 
    if( threadIdx.x ==0 )
    {
       printf("block%d %d dots/thrd, start,end = %ld,%ld pf,pl=%d,%d blockDim=%d\n",
-               blockIdx.x, (dots + blockDim.x*gridDim.x -1)/(blockDim.x*gridDim.x), 
+               blockIdx.x, (dots + blockDim.x*gridDim.x -1)/(blockDim.x*gridDim.x),
                start, end, pfirst, plast, blockDim.x);
    }
    __syncthreads();
-   */
-   
+
 
    int zc = 0 ;
      

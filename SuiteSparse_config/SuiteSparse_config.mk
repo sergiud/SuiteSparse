@@ -7,7 +7,7 @@
 # and GraphBLAS.  The configuration settings for GraphBLAS are determined by
 # GraphBLAS/CMakeLists.txt
 
-SUITESPARSE_VERSION = 5.10.1
+SUITESPARSE_VERSION = 5.11.0
 
     #---------------------------------------------------------------------------
     # determine what system we are on
@@ -187,7 +187,7 @@ SUITESPARSE_VERSION = 5.10.1
             #   -Wl,--end-group -lpthread -lm
             # using dynamic linking:
             ifeq ($(UNAME),Linux)
-                BLAS ?= -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -liomp5 -lpthread -lm
+                BLAS ?= -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl
                 LAPACK ?=
             endif
         else
@@ -261,8 +261,6 @@ SUITESPARSE_VERSION = 5.10.1
                 MAGMA_LIB     = -L/opt/magma-2.4.0/lib/ -lmagma
         NVCC          = $(CUDA_PATH)/bin/nvcc
         NVCCFLAGS     = -Xcompiler -fPIC -O3 \
-                            -gencode=arch=compute_50,code=sm_50 \
-                            -gencode=arch=compute_53,code=sm_53 \
                             -gencode=arch=compute_53,code=sm_53 \
                             -gencode=arch=compute_60,code=compute_60
     endif
@@ -336,17 +334,9 @@ SUITESPARSE_VERSION = 5.10.1
     #
     # -DNPARTITION      do not include the CHOLMOD partition module
     # -DNEXPERT         do not include the functions in SuiteSparseQR_expert.cpp
-    # -DHAVE_TBB        enable the use of Intel's Threading Building Blocks
     # -DGPU_BLAS        enable the use of the CUDA BLAS
 
     SPQR_CONFIG ?= $(GPU_CONFIG)
-
-    # to compile with Intel's TBB, use TBB=-ltbb -DSPQR_CONFIG=-DHAVE_TBB
-    TBB ?=
-    # TBB = -ltbb -DSPQR_CONFIG=-DHAVE_TBB
-
-    # TODO: this *mk file should auto-detect the presence of Intel's TBB,
-    # and set the compiler flags accordingly.
 
 #===============================================================================
 # System-dependent configurations
@@ -357,8 +347,9 @@ SUITESPARSE_VERSION = 5.10.1
     #---------------------------------------------------------------------------
 
     ifeq ($(UNAME),Linux)
-        # add the realtime library, librt, and SuiteSparse/lib
-        LDLIBS += -lrt -Wl,-rpath=$(INSTALL_LIB)
+        # add the posix realtime extensions library: librt
+        LDLIBS += -lrt
+        LDFLAGS += -Wl,-rpath=$(INSTALL_LIB)
     endif
 
     #---------------------------------------------------------------------------
@@ -448,11 +439,14 @@ SUITESPARSE_VERSION = 5.10.1
 SO_OPTS = $(LDFLAGS)
 
 ifeq ($(UNAME),Windows)
-    # Cygwin Make on Windows (untested)
+    # Cygwin Make on Windows
     AR_TARGET = $(LIBRARY).lib
-    SO_PLAIN  = $(LIBRARY).dll
+    SO_TARGET  = $(LIBRARY).dll
+    # The following two links are just garbage copies of the real target
+    # they aren't actually supported by this OS
     SO_MAIN   = $(LIBRARY).$(SO_VERSION).dll
-    SO_TARGET = $(LIBRARY).$(VERSION).dll
+    SO_PLAIN = $(LIBRARY).$(VERSION).dll
+    SO_OPTS  += -shared
     SO_INSTALL_NAME = echo
 else
     # Mac or Linux/Unix
@@ -474,8 +468,9 @@ else
         SO_PLAIN  = $(LIBRARY).so
         SO_MAIN   = $(LIBRARY).so.$(SO_VERSION)
         SO_TARGET = $(LIBRARY).so.$(VERSION)
-        SO_OPTS  += -shared -Wl,-soname -Wl,$(SO_MAIN) -Wl,--no-undefined
-        # Linux/Unix *.so files can be moved without modification:
+        SO_OPTS  += -shared -Wl,-soname -Wl,$(SO_MAIN) -Wl,--no-undefined \
+                     -Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
+        # Use rpath ORIGIN so that Linux/Unix *.so files can be moved without modification:
         SO_INSTALL_NAME = echo
     endif
 endif
@@ -579,7 +574,6 @@ config:
 	@echo 'parallel make jobs:       JOBS=           ' '$(JOBS)'
 	@echo 'BLAS library:             BLAS=           ' '$(BLAS)'
 	@echo 'LAPACK library:           LAPACK=         ' '$(LAPACK)'
-	@echo 'Intel TBB library:        TBB=            ' '$(TBB)'
 	@echo 'Other libraries:          LDLIBS=         ' '$(LDLIBS)'
 	@echo 'static library:           AR_TARGET=      ' '$(AR_TARGET)'
 	@echo 'shared library (full):    SO_TARGET=      ' '$(SO_TARGET)'

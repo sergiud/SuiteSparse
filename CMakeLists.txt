@@ -22,7 +22,7 @@ if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   set (CMAKE_CUDA_ARCHITECTURES 75)
 endif (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 
-project (SuiteSparse LANGUAGES C CXX VERSION 5.10.1
+project (SuiteSparse LANGUAGES C CXX VERSION 5.11.0
   DESCRIPTION "A suite of sparse matrix packages"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
 )

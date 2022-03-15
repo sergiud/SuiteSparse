@@ -18,9 +18,9 @@ bool GB_AxB_dot3_cuda_branch
 )
 {
         // very rough estimate of the work to do
-        double adeg = ((double) GB_NNZ (A)) / ((double) GB_IMAX (1, A->nvec)) ;
-        double bdeg = ((double) GB_NNZ (B)) / ((double) GB_IMAX (1, B->nvec)) ;
-        double work = GB_NNZ (M) * GB_IMIN (adeg, bdeg) ;
+        double adeg = ((double) GB_nnz (A)) / ((double) GB_IMAX (1, A->nvec)) ;
+        double bdeg = ((double) GB_nnz (B)) / ((double) GB_IMAX (1, B->nvec)) ;
+        double work = GB_nnz (M) * GB_IMIN (adeg, bdeg) ;
 
         // TODO if A or B are not accessed (first, 2nd, or pair ops)
         // then the type if A can be user-defined here, for CUDA.
@@ -34,11 +34,19 @@ bool GB_AxB_dot3_cuda_branch
         // operators (such as BOR_BSHIFT on INT32 inputs).
 
         int ngpus_to_use = GB_ngpus_to_use (work) ;
-        GBURBLE (" work:%g gpus:%d ", work, ngpus_to_use) ;
+        GBURBLE (" work:%g GPUs:%d ", work, ngpus_to_use) ;
         if (ngpus_to_use > 0
+            // FIXME: FUTURE: user-defined types and operators
             && (semiring->header_size == 0)     // semiring is built-in
             && (A->type->code != GB_UDT_code)
-            && (B->type->code != GB_UDT_code))
+            && (B->type->code != GB_UDT_code)
+            // FIXME: M could be hypersparse.  we should handle this
+            && !GB_IS_HYPERSPARSE (M)
+            // FIXME: this is easy
+            && !A->iso && !B->iso
+            // FIXME:
+            && !GB_IS_BITMAP (A) && !GB_IS_BITMAP (B)
+            && !GB_IS_FULL (A) && !GB_IS_FULL (B))
         {
             return true;
         }

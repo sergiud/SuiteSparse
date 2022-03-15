@@ -45,7 +45,12 @@ function SuiteSparse_install (do_demo)
 % If you get errors building or using METIS, just remove the metis-5.1.0
 % folder.  This often occurs on Windows.
 %
-% Copyright 1990-2020, Timothy A. Davis, http://suitesparse.com.
+% Before using SuiteSparse_install, you must compile the GraphBLAS library.
+% In the system shell while in the SuiteSparse folder, type "make gbinstall" if
+% you have MATLAB R2020b or earlier, or type "make gbrenamed" if you have
+% MATLAB 9.10 (R2021a) or later.
+%
+% Copyright 1990-2022, Timothy A. Davis, http://suitesparse.com.
 % In collaboration with (in alphabetical order): Patrick Amestoy, David
 % Bateman, Jinhao Chen.  Yanqing Chen, Iain Duff, Les Foster, William Hager,
 % Scott Kolodziej, Chris Lourenco, Stefan Larimore, Erick Moreno-Centeno,
@@ -334,6 +339,7 @@ end
 
 % compile and install SLIP_LU
 try
+    fprintf ('try to install SLIP_LU (requires GMP and MPFR)') ;
     paths = add_to_path (paths, [SuiteSparse '/SLIP_LU/MATLAB']) ;
     SLIP_install (do_demo) ;
 catch me

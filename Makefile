@@ -44,9 +44,9 @@ endif
 #       sudo make install INSTALL=/usr/local
 # See SuiteSparse/README.md for more details.
 # (note that CSparse is not installed; CXSparse is installed instead)
-install: metisinstall
+install: metisinstall gbinstall moninstall
 	( cd SuiteSparse_config && $(MAKE) install )
-	( cd Mongoose  && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
+	# ( cd Mongoose  && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
 	( cd AMD && $(MAKE) install )
 	( cd BTF && $(MAKE) install )
 	( cd CAMD && $(MAKE) install )
@@ -63,7 +63,7 @@ ifneq (,$(GPU_CONFIG))
 	( cd GPUQREngine && $(MAKE) install )
 endif
 	( cd SPQR && $(MAKE) install )
-	( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
+	# ( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
 #	( cd PIRO_BAND && $(MAKE) install )
 #	( cd SKYLINE_SVD && $(MAKE) install )
 	( cd SLIP_LU && $(MAKE) install )
@@ -296,16 +296,22 @@ gb:
 	echo $(CMAKE_OPTIONS)
 	( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' )
 
-# just install GraphBLAS
-gbinstall:
+# compile and install GraphBLAS
+gbinstall: gb
 	echo $(CMAKE_OPTIONS)
 	( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
+
+# compile and install GraphBLAS libgraphblas_renamed, for MATLAB
+gbrenamed:
+	echo $(CMAKE_OPTIONS)
+	( cd GraphBLAS/GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' )
+	( cd GraphBLAS/GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
 
 # just compile Mongoose
 mon:
 	( cd Mongoose && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' )
 
-# just install Mongoose
-moninstall:
+# compile and install Mongoose
+moninstall: mon
 	( cd Mongoose  && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
 

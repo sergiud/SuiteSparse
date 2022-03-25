@@ -31,6 +31,22 @@
 #include "cs_export.h"
 
 #ifndef NCOMPLEX
+/*
+ * A workaround for Visual Studio 2022 which does not define _Dcomplex if the
+ * consumer enabled the /std:c++17 flag. In this case, <complex.h> includes
+ * <ccomplex> which in turn includes <complex> that omits the necessary type
+ * definition.
+ */
+#if defined(__cplusplus) && defined(_MSC_VER)
+/* Adjust the definition of _CRT_USE_C_COMPLEX_H unless it is already defined
+ * and at the same time is non zero */
+#  if !(defined(_CRT_USE_C_COMPLEX_H) && !_CRT_USE_C_COMPLEX_H)
+#    if defined(_CRT_USE_C_COMPLEX_H)
+#      undef _CRT_USE_C_COMPLEX_H
+#    endif
+#    define _CRT_USE_C_COMPLEX_H 1
+#  endif
+#endif
 #include <complex.h>
 #endif /* !defined(NCOMPLEX) */
 

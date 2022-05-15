@@ -218,3 +218,4 @@ ssget/files/ss_index_old.mat
 ssget/files/ssstats_old.csv
 
 /build*/
+*.orig

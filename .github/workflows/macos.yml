@@ -4,25 +4,39 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: AppleClang-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}
+    name: AppleClang-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
     runs-on: macos-latest
     defaults:
       run:
         shell: bash
+    env:
+      CCACHE_DIR: ${{github.workspace}}/ccache
     strategy:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
+        metis: [no-metis, metis]
+        exclude:
+          # METIS is only usable if CHOLMOD is compiled
+          - components: minimal
+            metis: metis
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Setup Ninja
-      uses: ashutoshvarma/setup-ninja@master
-      with:
-        version: 1.10.0
+    - name: Setup Dependencies
+      run: >-
+        brew install
+        ccache
+        metis
+        ninja
+
+    - name: Setup METIS Dependencies
+      if: ${{matrix.metis == 'metis'}}
+      run: |
+        brew install metis
 
     - name: Setup Environment
       if: ${{matrix.build_type == 'Release'}}
@@ -30,13 +44,25 @@ jobs:
         echo 'CFLAGS=-flto' >> $GITHUB_ENV
         echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
 
+    - name: Cache Build
+      id: cache-build
+      uses: actions/cache@v2
+      with:
+        path: ${{env.CCACHE_DIR}}
+        key: ${{runner.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}-ccache-${{github.run_id}}
+        restore-keys: ${{runner.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}-ccache-
+
     - name: Configure
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+              -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=ccache \
+              -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
+              -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} \
               -DWITH_GPL=${{matrix.components == 'gpl'}} \
               -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} \
+              -DWITH_METIS=${{matrix.metis == 'metis'}} \
               -G Ninja
 
     - name: Build

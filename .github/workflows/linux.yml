@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: ${{matrix.os}}-GCC-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}
+    name: ${{matrix.os}}-GCC-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}
     runs-on: ${{matrix.os}}
     defaults:
       run:
@@ -22,6 +22,11 @@ jobs:
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
         gpu: [no-cuda, cuda]
+        metis: [no-metis, metis]
+        exclude:
+          # METIS is only usable if CHOLMOD is compiled
+          - components: minimal
+            metis: metis
 
     steps:
     - uses: actions/checkout@v2
@@ -44,12 +49,17 @@ jobs:
           gfortran \
           libblas-dev \
           liblapack-dev \
-          libmetis-dev \
           libomp-dev \
           libtbb-dev \
           ninja-build \
           nvidia-cuda-toolkit \
           wget
+
+    - name: Setup METIS Dependencies
+      if: ${{matrix.metis == 'metis'}}
+      run: |
+        sudo apt-get install -y \
+          libmetis-dev \
 
     - name: Setup CUDA Dependencies
       if: ${{matrix.gpu == 'cuda'}}
@@ -71,8 +81,8 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{env.CCACHE_DIR}}
-        key: ${{matrix.os}}-ccache-${{github.run_id}}
-        restore-keys: ${{matrix.os}}-ccache-
+        key: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}-ccache-${{github.run_id}}
+        restore-keys: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}-ccache-
 
     - name: Configure
       run: |
@@ -82,9 +92,11 @@ jobs:
               -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
+              -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} \
               -DWITH_CUDA=${{matrix.gpu == 'cuda'}} \
               -DWITH_GPL=${{matrix.components == 'gpl'}} \
               -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} \
+              -DWITH_METIS=${{matrix.metis == 'metis'}} \
               -G Ninja
 
     - name: Build

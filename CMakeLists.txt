@@ -103,6 +103,7 @@ endif (WITH_FORTRAN)
 check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
 
 if (NOT WITH_METIS)
+  # FIXME Does not work with a find module
   set (CMAKE_FIND_PACKAGE_DISABLE_METIS ON)
 endif (NOT WITH_METIS)
 
@@ -126,6 +127,10 @@ function (check_options)
     # Map PARTITION to WITH_METIS
     if (_OPT STREQUAL PARTITION)
       set (_OPT_NAME METIS)
+
+      if (NOT METIS_FOUND)
+        set (WITH_METIS OFF)
+      endif (NOT METIS_FOUND)
     else (_OPT STREQUAL PARTITION)
       set (_OPT_NAME ${_OPT})
     endif (_OPT STREQUAL PARTITION)
@@ -336,20 +341,17 @@ if (WITH_CHOLMOD)
     #CHOLMOD/Supernodal/t_cholmod_super_solve.c
   )
 
-  if (NOT METIS_FOUND)
+  if (NOT WITH_METIS OR NOT METIS_FOUND)
     set_property (SOURCE
       CHOLMOD/Check/cholmod_check.c
-      CHOLMOD/Cholesky/cholmod_analyze.c
       CHOLMOD/Partition/cholmod_camd.c
       CHOLMOD/Partition/cholmod_ccolamd.c
       CHOLMOD/Partition/cholmod_csymamd.c
       CHOLMOD/Partition/cholmod_m.c
       CHOLMOD/Partition/cholmod_metis.c
       CHOLMOD/Partition/cholmod_nesdis.c
-      SPQR/Source/spqr_1colamd.cpp
-      SPQR/Source/spqr_analyze.cpp
       APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
-  endif (NOT METIS_FOUND)
+  endif (NOT WITH_METIS OR NOT METIS_FOUND)
 
   configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
@@ -722,12 +724,13 @@ if (WITH_CHOLMOD)
     target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
   endif (HAVE_FEENABLEEXCEPT)
 
-  if (METIS_FOUND)
-    target_include_directories (cholmod SYSTEM PRIVATE ${METIS_INCLUDE_DIRS})
-    target_include_directories (cholmod SYSTEM PRIVATE
-      $<BUILD_INTERFACE:${METIS_INCLUDE_DIRS}>)
-    target_link_libraries (cholmod PRIVATE ${METIS_LIBRARIES})
-  endif (METIS_FOUND)
+  if (WITH_METIS AND METIS_FOUND)
+    target_link_libraries (cholmod PRIVATE METIS::METIS)
+
+    add_library (cholmod_partition INTERFACE)
+    add_library (SuiteSparse::Partition ALIAS cholmod_partition)
+    target_link_libraries (cholmod_partition INTERFACE cholmod)
+  endif (WITH_METIS AND METIS_FOUND)
 
   target_link_libraries (cholmod
     PRIVATE BLAS::BLAS
@@ -1375,6 +1378,10 @@ set_property (TARGET suitesparseconfig PROPERTY INSTALL_DESTINATION
 
 if (TARGET cholmod)
   list (APPEND _SuiteSparse_TARGETS cholmod)
+
+  if (TARGET cholmod_partition)
+    list (APPEND _SuiteSparse_TARGETS cholmod_partition)
+  endif (TARGET cholmod_partition)
 endif (TARGET cholmod)
 
 if (TARGET spqr)
@@ -1395,6 +1402,11 @@ if (TARGET gpuqrengine)
 endif (TARGET gpuqrengine)
 
 foreach (_target ${_SuiteSparse_TARGETS})
+  if (_target STREQUAL cholmod_partition)
+    # cholmod_partition is meta library that does provide its own headers.
+    continue ()
+  endif (_target STREQUAL cholmod_partition)
+
   get_property (_alias TARGET ${_target} PROPERTY NAME_ALIAS)
   string (TOUPPER "${_target}" _upper_target)
 
@@ -1463,6 +1475,13 @@ install (FILES
   DESTINATION ${SuiteSparse_CMake_INSTALLDIR}
   COMPONENT Development)
 
+if (TARGET SuiteSparse::Partition)
+  install (FILES
+    cmake/FindMETIS.cmake
+    DESTINATION ${SuiteSparse_CMake_INSTALLDIR}
+    COMPONENT Development)
+endif (TARGET SuiteSparse::Partition)
+
 set_component_version (amd 2.4.6)
 set_component_version (btf 1.2.6)
 set_component_version (camd 2.4.6)
@@ -1506,6 +1525,10 @@ set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
 if (TARGET cholmod)
   set_target_properties (cholmod PROPERTIES EXPORT_NAME CHOLMOD)
 endif (TARGET cholmod)
+
+if (TARGET cholmod_partition)
+  set_target_properties (cholmod_partition PROPERTIES EXPORT_NAME Partition)
+endif (TARGET cholmod_partition)
 
 if (TARGET spqr)
   set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
@@ -1722,7 +1745,7 @@ if (BUILD_CXSPARSE)
   add_subdirectory (CXSparse)
 endif (BUILD_CXSPARSE)
 
-if (WIN32)
+if (MSVC)
   foreach (bin IN LISTS SuiteSparse_BIN_TARGETS)
     install (CODE
 "
@@ -1731,7 +1754,7 @@ fixup_bundle (\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${b
 "
       COMPONENT Runtime)
   endforeach (bin)
-endif (WIN32)
+endif (MSVC)
 
 add_feature_info (CUDA WITH_CUDA "GPU accelerated CHOLMOD using CUDA")
 add_feature_info (GPL WITH_GPL "GNU GPL modules")
@@ -1741,7 +1764,7 @@ add_feature_info (Check WITH_CHECK "Check module")
 add_feature_info (Cholesky WITH_CHOLESKY "Cholesky module")
 add_feature_info (Fortran WITH_FORTRAN "Fortran compilation")
 add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
-add_feature_info (Partition WITH_METIS "Partition module")
+add_feature_info (Partition "WITH_METIS AND METIS_FOUND" "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
 add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
 add_feature_info (Threading WITH_TBB "Parallelization using Intel Threading Building Blocks")

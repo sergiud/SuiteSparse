@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-mingw:
-    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}
+    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
     runs-on: windows-latest
     defaults:
       run:
@@ -18,6 +18,11 @@ jobs:
         sys: [mingw32, mingw64]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
+        metis: [no-metis, metis]
+        exclude:
+          # METIS is only usable if CHOLMOD is compiled
+          - components: minimal
+            metis: metis
         include:
           - sys: mingw32
             env: i686
@@ -26,7 +31,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: msys2/setup-msys2@v2
+
+    - name: Setup Dependencies
+      uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
         install: >-
@@ -36,12 +43,17 @@ jobs:
           mingw-w64-${{matrix.env}}-gcc-fortran
           mingw-w64-${{matrix.env}}-intel-tbb
           mingw-w64-${{matrix.env}}-lapack
-          mingw-w64-${{matrix.env}}-metis
           mingw-w64-${{matrix.env}}-ninja
           mingw-w64-${{matrix.env}}-openblas
           mingw-w64-${{matrix.env}}-openmp
           unzip
           wget
+
+    - name: Setup METIS Dependencies
+      if: ${{matrix.metis == 'metis'}}
+      run: >-
+        pacman --noconfirm -S
+        mingw-w64-${{matrix.env}}-metis
 
     - name: Setup Environment
       if: ${{matrix.build_type == 'Release'}}
@@ -54,8 +66,8 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{env.CCACHE_DIR}}
-        key: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-ccache-${{github.run_id}}
-        restore-keys: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-ccache-
+        key: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-${{github.run_id}}
+        restore-keys: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-
 
     - name: Configure
       env:
@@ -68,8 +80,10 @@ jobs:
               -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
+              -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} \
               -DWITH_GPL=${{matrix.components == 'gpl'}} \
               -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} \
+              -DWITH_METIS=${{matrix.metis == 'metis'}} \
               -G Ninja
 
     - name: Build
@@ -84,10 +98,11 @@ jobs:
               --target install
 
   build-msvc:
-    name: ${{matrix.msvc}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}
+    name: ${{matrix.msvc}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
     runs-on: ${{matrix.os}}
     env:
       CCACHE_DIR: ${{github.workspace}}/ccache
+      CL: /MP
     defaults:
       run:
         shell: powershell
@@ -99,6 +114,11 @@ jobs:
         sys: [mingw64]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
+        metis: [no-metis, metis]
+        exclude:
+          # METIS is only usable if CHOLMOD is compiled
+          - components: minimal
+            metis: metis
         include:
           - sys: mingw64
             env: x86_64
@@ -123,7 +143,8 @@ jobs:
       with:
         version: 1.10.0
 
-    - uses: msys2/setup-msys2@v2
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
         path-type: inherit
@@ -131,6 +152,15 @@ jobs:
           wget
           mingw-w64-${{matrix.env}}-ccache
           mingw-w64-${{matrix.env}}-gcc-fortran
+
+    - name: Cache LAPACK
+      id: cache-lapack
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{env.CCACHE_DIR}}
+          ${{github.workspace}}/install
+        key: ${{runner.os}}-lapack-3.10
 
     - name: Download LAPACK
       if: steps.cache-lapack.outputs.cache-hit != 'true'
@@ -155,14 +185,40 @@ jobs:
               --config ${{matrix.build_type}} \
               --target install
 
-    - name: Cache LAPACK
-      id: cache-lapack
+    - name: Cache METIS
+      if: matrix.metis == 'metis'
+      id: cache-metis
       uses: actions/cache@v2
       with:
-        path: |
-          ${{env.CCACHE_DIR}}
-          ${{github.workspace}}/install
-        key: ${{runner.os}}-lapack-3.10
+        path: metis/
+        key: ${{runner.os}}-metis-5.1.1
+
+    - name: Download METIS
+      if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
+      run: |
+        (New-Object System.Net.WebClient).DownloadFile("https://github.com/KarypisLab/METIS/archive/refs/tags/v5.1.1-DistDGL-v0.5.zip", "v5.1.1-DistDGL-v0.5.zip");
+        (New-Object System.Net.WebClient).DownloadFile("https://github.com/KarypisLab/GKlib/archive/refs/tags/METIS-v5.1.1-DistDGL-0.5.zip", "v5.1.1-DistDGL-v0.5-GKlib.zip");
+        7z x v5.1.1-DistDGL-v0.5.zip;
+        7z x v5.1.1-DistDGL-v0.5-GKlib.zip;
+
+    - name: Build METIS
+      if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
+      run: |
+        Push-Location METIS-5.1.1-DistDGL-v0.5
+        Copy-Item ${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5/* -Destination GKlib/ -Recurse
+        New-Item -ItemType directory -Path build
+        Copy-Item include -Destination build/xinclude -Recurse
+        (Get-Content CMakeLists.txt) -Replace 'MSVC', 'FALSE' | Set-Content CMakeLists.txt
+        (Get-Content include/metis.h) -Replace '//#define', '#define' | Set-Content build/xinclude/metis.h
+        Pop-Location
+
+        cmake -S METIS-5.1.1-DistDGL-v0.5 -B build-metis `
+              -A x64 `
+              -DBUILD_SHARED_LIBS=OFF `
+              -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis `
+              -DMETIS_INSTALL:BOOL=ON `
+              -G "${{matrix.generator}}"
+        cmake --build build-metis --target install
 
     - name: Setup MSYS2 Environment
       shell: msys2 {0}
@@ -172,7 +228,7 @@ jobs:
     - name: Setup Environment
       run: |
         echo "${{github.workspace}}/install/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "VERSION_SUFFIX=$(git describe --tags)-${{matrix.marker}}-${{matrix.system}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "VERSION_SUFFIX=$(git describe --tags)-${{matrix.marker}}-${{matrix.system}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Configure
       run: |
@@ -180,11 +236,14 @@ jobs:
               -A x64 `
               -DBLAS_blas_LIBRARY=${{github.workspace}}/install/lib/libblas.lib `
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
-              -DCMAKE_INSTALL_PREFIX:PATH=${{github.workspace}}/install-suitesparse `
+              -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install-suitesparse `
+              -DCMAKE_PREFIX_PATH=${{github.workspace}}/metis `
+              -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} `
               -DLAPACK_lapack_LIBRARY=${{github.workspace}}/install/lib/liblapack.lib `
               -DWITH_FORTRAN=OFF `
               -DWITH_GPL=${{matrix.components == 'gpl'}} `
               -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} `
+              -DWITH_METIS=${{matrix.metis == 'metis'}} `
               -G "${{matrix.generator}}"
 
     - name: Build
@@ -203,6 +262,14 @@ jobs:
         New-Item -ItemType "directory" -Path "${{github.workspace}}/deploy"
         Copy-Item -Path "${{github.workspace}}/install/*" -Destination "${{github.workspace}}/deploy/" -Recurse -Force
         Copy-Item -Path "${{github.workspace}}/install-suitesparse/*" -Destination "${{github.workspace}}/deploy/" -Recurse -Force
+
+    - name: Prepare METIS Deployment
+      if: matrix.metis == 'metis'
+      run: |
+        Copy-Item -Path "${{github.workspace}}/metis/*" -Destination "${{github.workspace}}/deploy/" -Recurse -Force
+
+    - name: Generate Archive
+      run: |
         Compress-Archive -Path "${{github.workspace}}/deploy/*" -Destination "SuiteSparse-${{env.VERSION_SUFFIX}}.zip"
 
     - uses: actions/upload-artifact@v2

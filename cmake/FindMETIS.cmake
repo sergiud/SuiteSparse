@@ -1,16 +1,5 @@
-# Module for locating METIS.
 #
-# Read-only variables:
-#   METIS_FOUND
-#     Indicates whether the library has been found.
-#
-#   METIS_INCLUDE_DIRS
-#      Specifies METIS' include directory.
-#
-#   METIS_LIBRARIES
-#     Specifies METIS libraries that should be passed to target_link_libararies.
-#
-# Copyright (c) 2016, 2021 Sergiu Deitsch
+# Copyright (c) 2022 Sergiu Deitsch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +18,25 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+#
+#[=======================================================================[.rst:
+Module for locating METIS
+=========================
+
+Read-only variables:
+
+``METIS_FOUND``
+  Indicates whether the library has been found.
+
+``METIS_VERSION``
+  Indicates library version.
+
+Targets
+-------
+
+``METIS::METIS``
+  Specifies targets that should be passed to target_link_libararies.
+]=======================================================================]
 
 include (FindPackageHandleStandardArgs)
 
@@ -44,8 +52,8 @@ find_library (METIS_LIBRARY_RELEASE NAMES metis
 
 if (METIS_LIBRARY_RELEASE)
   if (METIS_LIBRARY_DEBUG)
-    set (METIS_LIBRARY debug ${METIS_LIBRARY_RELEASE} optimized
-      ${METIS_LIBRARY_DEBUG} CACHE STRING "METIS library")
+    set (METIS_LIBRARY debug ${METIS_LIBRARY_DEBUG} optimized
+      ${METIS_LIBRARY_RELEASE} CACHE STRING "METIS library")
   else (METIS_LIBRARY_DEBUG)
     set (METIS_LIBRARY ${METIS_LIBRARY_RELEASE} CACHE FILEPATH "METIS library")
   endif (METIS_LIBRARY_DEBUG)
@@ -73,8 +81,38 @@ endif (EXISTS ${_METIS_VERSION_HEADER})
 mark_as_advanced (METIS_INCLUDE_DIR METIS_LIBRARY_DEBUG METIS_LIBRARY_RELEASE
   METIS_LIBRARY)
 
-set (METIS_INCLUDE_DIRS ${METIS_INCLUDE_DIR})
-set (METIS_LIBRARIES ${METIS_LIBRARY})
+if (NOT TARGET METIS::METIS)
+  if (METIS_INCLUDE_DIR OR METIS_LIBRARY)
+    add_library (METIS::METIS IMPORTED UNKNOWN)
+  endif (METIS_INCLUDE_DIR OR METIS_LIBRARY)
+endif (NOT TARGET METIS::METIS)
+
+if (METIS_INCLUDE_DIR)
+  set_property (TARGET METIS::METIS PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+    ${METIS_INCLUDE_DIR})
+endif (METIS_INCLUDE_DIR)
+
+if (METIS_LIBRARY_RELEASE)
+  set_property (TARGET METIS::METIS PROPERTY IMPORTED_LOCATION_RELEASE
+    ${METIS_LIBRARY_RELEASE})
+  set_property (TARGET METIS::METIS APPEND PROPERTY IMPORTED_CONFIGURATIONS
+    RELEASE)
+endif (METIS_LIBRARY_RELEASE)
+
+if (METIS_LIBRARY_DEBUG)
+  set_property (TARGET METIS::METIS PROPERTY IMPORTED_LOCATION_DEBUG
+    ${METIS_LIBRARY_DEBUG})
+  set_property (TARGET METIS::METIS APPEND PROPERTY IMPORTED_CONFIGURATIONS
+    DEBUG)
+endif (METIS_LIBRARY_DEBUG)
+
+if (METIS_INCLUDE_DIR)
+  set (METIS_INCLUDE_DIRS ${METIS_INCLUDE_DIR})
+endif (METIS_INCLUDE_DIR)
+
+if (METIS_LIBRARY)
+  set (METIS_LIBRARIES ${METIS_LIBRARY})
+endif (METIS_LIBRARY)
 
 find_package_handle_standard_args (METIS REQUIRED_VARS
   METIS_INCLUDE_DIR METIS_LIBRARY VERSION_VAR METIS_VERSION)

@@ -4,8 +4,8 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: GCC-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}
-    runs-on: ubuntu-latest
+    name: ${{matrix.os}}-GCC-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}
+    runs-on: ${{matrix.os}}
     defaults:
       run:
         shell: bash
@@ -15,6 +15,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        os:
+          - ubuntu-20.04
+          - ubuntu-22.04
         build_type: [Release, Debug]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
@@ -68,8 +71,8 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{env.CCACHE_DIR}}
-        key: ${{runner.os}}-ccache-${{github.run_id}}
-        restore-keys: ${{runner.os}}-ccache-
+        key: ${{matrix.os}}-ccache-${{github.run_id}}
+        restore-keys: ${{matrix.os}}-ccache-
 
     - name: Configure
       run: |

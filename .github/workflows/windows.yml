@@ -271,6 +271,12 @@ jobs:
       run: |
         Compress-Archive -Path "${{github.workspace}}/deploy/*" -Destination "SuiteSparse-${{env.VERSION_SUFFIX}}.zip"
 
+    - name: Generate Hashes
+      run: |
+        $archive = "SuiteSparse-${{env.VERSION_SUFFIX}}.zip"
+        $hash = $(Get-FileHash -Algorithm SHA256 -Path "$archive").Hash
+        echo "$archive $hash" | Out-File -FilePath "$archive.sha256"
+
     - uses: actions/upload-artifact@v3
       with:
         name: SuiteSparse-${{env.VERSION_SUFFIX}}
@@ -282,4 +288,5 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/') && matrix.lib == 'shared'
       with:
         files:
+          SuiteSparse-${{env.VERSION_SUFFIX}}.sha256
           SuiteSparse-${{env.VERSION_SUFFIX}}.zip

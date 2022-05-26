@@ -49,8 +49,8 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{env.CCACHE_DIR}}
-        key: ${{runner.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}-ccache-${{github.run_id}}
-        restore-keys: ${{runner.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}-ccache-
+        key: ${{runner.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-${{github.run_id}}
+        restore-keys: ${{runner.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-
 
     - name: Configure
       run: |

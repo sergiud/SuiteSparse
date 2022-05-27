@@ -9,6 +9,7 @@ include (CMakeFindDependencyMacro)
 find_dependency (BLAS)
 find_dependency (LAPACK)
 @CUDA_DEPENDENCY@
+@METIS_DEPENDENCY@
 @OpenMP_DEPENDENCY@
 @TBB_DEPENDENCY@
 

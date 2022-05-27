@@ -730,6 +730,8 @@ if (WITH_CHOLMOD)
     add_library (cholmod_partition INTERFACE)
     add_library (SuiteSparse::Partition ALIAS cholmod_partition)
     target_link_libraries (cholmod_partition INTERFACE cholmod)
+
+    set (METIS_DEPENDENCY "find_dependency (METIS ${METIS_VERSION})")
   endif (WITH_METIS AND METIS_FOUND)
 
   target_link_libraries (cholmod

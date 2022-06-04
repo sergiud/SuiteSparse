@@ -4,6 +4,8 @@ endif (CMAKE_VERSION VERSION_LESS 3.18)
 
 @PACKAGE_INIT@
 
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
+
 include (CMakeFindDependencyMacro)
 
 find_dependency (BLAS)

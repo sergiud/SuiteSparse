@@ -22,9 +22,11 @@ if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   set (CMAKE_CUDA_ARCHITECTURES 75)
 endif (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 
-project (SuiteSparse LANGUAGES C CXX VERSION 5.12.0
+project (SuiteSparse
   DESCRIPTION "A suite of sparse matrix packages"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
+  LANGUAGES C
+  VERSION 5.12.0
 )
 
 set (CMAKE_DEBUG_POSTFIX _debug)
@@ -57,9 +59,7 @@ include (InstallRequiredSystemLibraries)
 include (SuiteSparseBase)
 
 option (BUILD_CXSPARSE "Build CXSparse" ON)
-option (WITH_CUDA "Enable CUDA support" ON)
 option (WITH_DEMOS "Build demos" ON)
-option (WITH_FORTRAN "Enables Fortran support" ON)
 option (WITH_METIS "Enables METIS support" ON)
 option (WITH_OPENMP "Enable OpenMP support" ON)
 option (WITH_PRINT "Print diagnostic messages" OFF)
@@ -68,7 +68,14 @@ option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
 set (WITH_LICENSE "GPL" CACHE STRING "Software license the binary distribution should adhere")
 set_property (CACHE WITH_LICENSE PROPERTY STRINGS "Minimal;GPL;LGPL")
 
+check_language (CUDA)
+check_language (CXX)
+check_language (Fortran)
+
 cmake_dependent_option (BUILD_SHARED_LIBS "Build shared libraires" OFF "WITH_LICENSE STREQUAL \"GPL\"" ON)
+
+cmake_dependent_option (WITH_CUDA "Enable CUDA support" ON "CMAKE_CXX_COMPILER AND CMAKE_CUDA_COMPILER" OFF)
+cmake_dependent_option (WITH_FORTRAN "Enables Fortran support" ON "CMAKE_Fortran_COMPILER" OFF)
 
 cmake_dependent_option (WITH_LGPL "Enable GNU LGPL modules" ON "WITH_LICENSE MATCHES \"GPL\"" OFF)
 cmake_dependent_option (WITH_GPL "Enable GNU GPL modules" ON "WITH_LICENSE STREQUAL \"GPL\"" OFF)
@@ -80,24 +87,21 @@ cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD i
 cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON "WITH_GPL AND WITH_CHOLMOD" OFF)
 cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON "WITH_GPL AND WITH_CHOLMOD" OFF)
-cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON "WITH_GPL" OFF)
+cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON "CMAKE_CXX_COMPILER AND WITH_GPL" OFF)
 
 if (WITH_CUDA)
-  check_language (CUDA)
-
-  if (CMAKE_CUDA_COMPILER)
-    enable_language (CUDA)
-  endif (CMAKE_CUDA_COMPILER)
+  enable_language (CUDA)
 else (WITH_CUDA)
   set (CMAKE_FIND_PACKAGE_DISABLE_CUDAToolkit ON)
 endif (WITH_CUDA)
 
-if (WITH_FORTRAN)
-  check_language (Fortran)
+# CUDA and SPQR require a C++ compiler
+if (WITH_SUPERNODAL OR WITH_CUDA)
+  enable_language (CXX)
+endif (WITH_SUPERNODAL OR WITH_CUDA)
 
-  if (CMAKE_Fortran_COMPILER)
-    enable_language (Fortran)
-  endif (CMAKE_Fortran_COMPILER)
+if (WITH_FORTRAN)
+  enable_language (Fortran)
 endif (WITH_FORTRAN)
 
 check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)

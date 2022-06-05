@@ -34,11 +34,12 @@ Besides full CMake support, this branch provides the following additions:
 
 ## Requirements
 
-* C and C++ compilers
+* C99 compiler (or Microsoft C compiler with complex math support)
 * CMake 3.22 or newer
 * SuiteSparse only (not required for CXSparse):
     - BLAS
     - LAPACK
+    - (optional) C++98 compiler
     - (optional) CUDA compiler and toolkit
     - (optional) Fortran compiler
     - (optional) METIS

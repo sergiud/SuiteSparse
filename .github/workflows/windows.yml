@@ -70,9 +70,6 @@ jobs:
         restore-keys: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-
 
     - name: Configure
-      env:
-        CC: ${{matrix.env}}-w64-mingw32-gcc
-        CXX: ${{matrix.env}}-w64-mingw32-g++
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \

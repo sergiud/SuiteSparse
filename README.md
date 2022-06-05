@@ -44,19 +44,20 @@ Besides full CMake support, this branch provides the following additions:
     - (optional) METIS
     - (optional) TBB prior to version 2021.4
 
-## Usage
+## Getting Started
 
 First, compile using
 
 ```bash
-$ cmake . -B build/
+$ cmake -S . -B build/
 $ cmake --build build/
 ```
 
 Then, one can consume SuiteSparse either directly from the build directory or
 after installing the project as follows:
+
 ```cmake
-find_package (SuiteSparse 5.10 NO_MODULE)
+find_package (SuiteSparse 5.12 NO_MODULE)
 
 add_executable (myexe main.cpp)
 target_link_libraries (myexe PRIVATE SuiteSparse::CHOLMOD)

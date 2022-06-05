@@ -1507,7 +1507,7 @@ set_component_version (suitesparseconfig ${SuiteSparse_VERSION})
 set_component_version (umfpack 5.7.9)
 
 if (TARGET cholmod)
-  set_component_version (cholmod 3.0.13)
+  set_component_version (cholmod 3.0.14)
 endif (TARGET cholmod)
 
 if (TARGET spqr)

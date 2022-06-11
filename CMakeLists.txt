@@ -92,7 +92,7 @@ cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON "CMAKE
 if (WITH_CUDA)
   enable_language (CUDA)
 else (WITH_CUDA)
-  set (CMAKE_FIND_PACKAGE_DISABLE_CUDAToolkit ON)
+  set (CMAKE_DISABLE_FIND_PACKAGE_CUDAToolkit ON)
 endif (WITH_CUDA)
 
 # CUDA and SPQR require a C++ compiler
@@ -107,12 +107,11 @@ endif (WITH_FORTRAN)
 check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
 
 if (NOT WITH_METIS)
-  # FIXME Does not work with a find module
-  set (CMAKE_FIND_PACKAGE_DISABLE_METIS ON)
+  set (CMAKE_DISABLE_FIND_PACKAGE_METIS ON)
 endif (NOT WITH_METIS)
 
 if (NOT WITH_OPENMP)
-  set (CMAKE_FIND_PACKAGE_DISABLE_OpenMP ON)
+  set (CMAKE_DISABLE_FIND_PACKAGE_OpenMP ON)
 endif (NOT WITH_OPENMP)
 
 if (NOT WITH_TBB)
@@ -131,10 +130,6 @@ function (check_options)
     # Map PARTITION to WITH_METIS
     if (_OPT STREQUAL PARTITION)
       set (_OPT_NAME METIS)
-
-      if (NOT METIS_FOUND)
-        set (WITH_METIS OFF)
-      endif (NOT METIS_FOUND)
     else (_OPT STREQUAL PARTITION)
       set (_OPT_NAME ${_OPT})
     endif (_OPT STREQUAL PARTITION)
@@ -1782,7 +1777,7 @@ add_feature_info (Check WITH_CHECK "Check module")
 add_feature_info (Cholesky WITH_CHOLESKY "Cholesky module")
 add_feature_info (Fortran WITH_FORTRAN "Fortran compilation")
 add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
-add_feature_info (Partition "WITH_METIS AND METIS_FOUND" "Partition module")
+add_feature_info (Partition "WITH_METIS" "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
 add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
 add_feature_info (Threading WITH_TBB "Parallelization using Intel Threading Building Blocks")

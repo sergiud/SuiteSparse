@@ -340,7 +340,7 @@ if (WITH_CHOLMOD)
     #CHOLMOD/Supernodal/t_cholmod_super_solve.c
   )
 
-  if (NOT WITH_METIS)
+  if (NOT METIS_FOUND)
     set_property (SOURCE
       CHOLMOD/Check/cholmod_check.c
       CHOLMOD/Partition/cholmod_camd.c
@@ -350,7 +350,7 @@ if (WITH_CHOLMOD)
       CHOLMOD/Partition/cholmod_metis.c
       CHOLMOD/Partition/cholmod_nesdis.c
       APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
-  endif (NOT WITH_METIS)
+  endif (NOT METIS_FOUND)
 
   configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
@@ -707,7 +707,7 @@ if (WITH_CHOLMOD)
     ${CHOLMOD_HDRS}
   )
 
-  if (WITH_METIS)
+  if (METIS_FOUND)
     set (_METIS_IN ${SuiteSparse_SOURCE_DIR}/cmake/FindMETIS.cmake)
     set (_METIS_OUT ${SuiteSparse_BINARY_DIR}/FindMETIS.cmake)
 
@@ -719,7 +719,7 @@ if (WITH_CHOLMOD)
     )
 
     target_sources (cholmod PRIVATE ${_METIS_OUT})
-  endif (WITH_METIS)
+  endif (METIS_FOUND)
 
   add_library (SuiteSparse::CHOLMOD ALIAS cholmod)
 
@@ -738,7 +738,7 @@ if (WITH_CHOLMOD)
     target_compile_definitions (cholmod PRIVATE _GNU_SOURCE)
   endif (HAVE_FEENABLEEXCEPT)
 
-  if (WITH_METIS AND METIS_FOUND)
+  if (METIS_FOUND)
     target_link_libraries (cholmod PRIVATE METIS::METIS)
 
     add_library (cholmod_partition INTERFACE)
@@ -746,7 +746,7 @@ if (WITH_CHOLMOD)
     target_link_libraries (cholmod_partition INTERFACE cholmod)
 
     set (METIS_DEPENDENCY "find_dependency (METIS ${METIS_VERSION})")
-  endif (WITH_METIS AND METIS_FOUND)
+  endif (METIS_FOUND)
 
   target_link_libraries (cholmod
     PRIVATE BLAS::BLAS
@@ -855,12 +855,12 @@ if (WITH_SUPERNODAL)
     target_link_libraries (spqr PRIVATE SuiteSparse::GPURuntime)
   endif (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
-  if (WITH_TBB AND TBB_FOUND)
+  if (TBB_FOUND)
     target_link_libraries (spqr PRIVATE TBB::tbb)
     target_compile_definitions (spqr PRIVATE HAVE_TBB)
 
     set (TBB_DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
-  endif (WITH_TBB AND TBB_FOUND)
+  endif (TBB_FOUND)
 endif (WITH_SUPERNODAL)
 
 add_library (suitesparseconfig
@@ -1780,7 +1780,7 @@ add_feature_info (Check WITH_CHECK "Check module")
 add_feature_info (Cholesky WITH_CHOLESKY "Cholesky module")
 add_feature_info (Fortran WITH_FORTRAN "Fortran compilation")
 add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
-add_feature_info (Partition "WITH_METIS" "Partition module")
+add_feature_info (Partition WITH_METIS "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
 add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
 add_feature_info (Threading WITH_TBB "Parallelization using Intel Threading Building Blocks")

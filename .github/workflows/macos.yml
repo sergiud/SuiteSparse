@@ -30,7 +30,6 @@ jobs:
       run: >-
         brew install
         ccache
-        metis
         ninja
 
     - name: Setup METIS Dependencies
@@ -56,8 +55,10 @@ jobs:
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
               -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
+              -DCMAKE_DISABLE_FIND_PACKAGE_METIS=${{matrix.metis != 'metis'}} \
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
               -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} \
               -DWITH_GPL=${{matrix.components == 'gpl'}} \
@@ -67,11 +68,9 @@ jobs:
 
     - name: Build
       run: |
-        cmake --build build_${{matrix.build_type}}/ \
-              --config ${{matrix.build_type}}
+        cmake --build build_${{matrix.build_type}}/
 
     - name: Install
       run: |
         cmake --build build_${{matrix.build_type}}/ \
-              --config ${{matrix.build_type}} \
               --target install

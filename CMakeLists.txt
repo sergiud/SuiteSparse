@@ -340,7 +340,7 @@ if (WITH_CHOLMOD)
     #CHOLMOD/Supernodal/t_cholmod_super_solve.c
   )
 
-  if (NOT WITH_METIS OR NOT METIS_FOUND)
+  if (NOT WITH_METIS)
     set_property (SOURCE
       CHOLMOD/Check/cholmod_check.c
       CHOLMOD/Partition/cholmod_camd.c
@@ -350,19 +350,7 @@ if (WITH_CHOLMOD)
       CHOLMOD/Partition/cholmod_metis.c
       CHOLMOD/Partition/cholmod_nesdis.c
       APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
-  else (NOT WITH_METIS OR NOT METIS_FOUND)
-    set (_METIS_IN ${SuiteSparse_SOURCE_DIR}/cmake/FindMETIS.cmake)
-    set (_METIS_OUT ${SuiteSparse_BINARY_DIR}/FindMETIS.cmake)
-
-    add_custom_command (
-      OUTPUT ${_METIS_OUT}
-      COMMAND ${CMAKE_COMMAND} -E create_symlink ${_METIS_IN} ${_METIS_OUT}
-      DEPENDS ${_METIS_IN}
-      COMMENT "Creating FindMETIS.cmake symlink in build directory"
-    )
-
-    list (APPEND CHOLMOD_SRCS ${_METIS_OUT})
-  endif (NOT WITH_METIS OR NOT METIS_FOUND)
+  endif (NOT WITH_METIS)
 
   configure_file (CHOLMOD/Include/cholmod_config.h.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h)
@@ -718,6 +706,21 @@ if (WITH_CHOLMOD)
     $<TARGET_OBJECTS:cholmod_long>
     ${CHOLMOD_HDRS}
   )
+
+  if (WITH_METIS)
+    set (_METIS_IN ${SuiteSparse_SOURCE_DIR}/cmake/FindMETIS.cmake)
+    set (_METIS_OUT ${SuiteSparse_BINARY_DIR}/FindMETIS.cmake)
+
+    add_custom_command (
+      OUTPUT ${_METIS_OUT}
+      COMMAND ${CMAKE_COMMAND} -E create_symlink ${_METIS_IN} ${_METIS_OUT}
+      DEPENDS ${_METIS_IN}
+      COMMENT "Creating FindMETIS.cmake symlink in build directory"
+    )
+
+    target_sources (cholmod PRIVATE ${_METIS_OUT})
+  endif (WITH_METIS)
+
   add_library (SuiteSparse::CHOLMOD ALIAS cholmod)
 
   target_include_directories (cholmod PUBLIC

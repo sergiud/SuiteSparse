@@ -157,20 +157,20 @@ jobs:
         path: |
           ${{env.CCACHE_DIR}}
           ${{github.workspace}}/install
-        key: ${{runner.os}}-lapack-3.10
+        key: ${{runner.os}}-lapack-3.10.1
 
     - name: Download LAPACK
       if: steps.cache-lapack.outputs.cache-hit != 'true'
       shell: msys2 {0}
       run: |
-        wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.10.0.tar.gz
-        tar xvf v3.10.0.tar.gz
+        wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.10.1.tar.gz
+        tar xvf v3.10.1.tar.gz
 
     - name: Build LAPACK
       if: steps.cache-lapack.outputs.cache-hit != 'true'
       shell: msys2 {0}
       run: |
-        cmake -S lapack-3.10.0 -B build_lapack_${{matrix.build_type}}/ \
+        cmake -S lapack-3.10.1 -B build_lapack_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=ON \
               -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=$(which ccache) \
               -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=$(which ccache) \

@@ -4,8 +4,8 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: AppleClang-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
-    runs-on: macos-latest
+    name: ${{matrix.os}}-AppleClang-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
+    runs-on: ${{matrix.os}}
     defaults:
       run:
         shell: bash
@@ -14,6 +14,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        os: [macos-11, macos-12]
         build_type: [Release, Debug]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
@@ -48,8 +49,8 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{env.CCACHE_DIR}}
-        key: ${{runner.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-${{github.run_id}}
-        restore-keys: ${{runner.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-
+        key: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-${{github.run_id}}
+        restore-keys: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-
 
     - name: Configure
       run: |

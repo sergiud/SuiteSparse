@@ -188,7 +188,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: metis/
-        key: ${{runner.os}}-metis-5.1.1
+        key: ${{matrix.generator}}-metis-5.1.1-${{matrix.build_type}}
 
     - name: Download METIS
       if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
@@ -215,7 +215,9 @@ jobs:
               -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis `
               -DMETIS_INSTALL:BOOL=ON `
               -G "${{matrix.generator}}"
-        cmake --build build-metis --target install
+        cmake --build build-metis `
+              --config ${{matrix.build_type}} `
+              --target install
 
     - name: Setup MSYS2 Environment
       shell: msys2 {0}

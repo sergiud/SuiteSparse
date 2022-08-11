@@ -73,6 +73,7 @@ jobs:
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
               -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=ccache \
@@ -172,6 +173,7 @@ jobs:
       run: |
         cmake -S lapack-3.10.1 -B build_lapack_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=ON \
+              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
               -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=$(which ccache) \
               -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=$(which ccache) \
               -DCMAKE_GNUtoMS=ON \

@@ -30,7 +30,7 @@ jobs:
             env: x86_64
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Setup Dependencies
       uses: msys2/setup-msys2@v2
@@ -63,7 +63,7 @@ jobs:
 
     - name: Cache Build
       id: cache-build
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{env.CCACHE_DIR}}
         key: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-${{github.run_id}}
@@ -131,7 +131,7 @@ jobs:
             marker: vc17
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Query Tags
       run: |
@@ -153,7 +153,7 @@ jobs:
 
     - name: Cache LAPACK
       id: cache-lapack
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ${{env.CCACHE_DIR}}
@@ -187,7 +187,7 @@ jobs:
     - name: Cache METIS
       if: matrix.metis == 'metis'
       id: cache-metis
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: metis/
         key: ${{matrix.msvc}}-metis-5.1.1-${{matrix.build_type}}

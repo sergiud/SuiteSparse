@@ -29,7 +29,7 @@ jobs:
             metis: metis
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Update Packages
       run: |
@@ -78,7 +78,7 @@ jobs:
 
     - name: Cache Build
       id: cache-build
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{env.CCACHE_DIR}}
         key: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}-ccache-${{github.run_id}}

@@ -87,7 +87,8 @@ cmake_dependent_option (WITH_CAMD "Enable interfaces to CAMD, CCOLAMD, CSYMAMD i
 cmake_dependent_option (WITH_CHECK "Enable the Check module" ON "WITH_LGPL" OFF)
 cmake_dependent_option (WITH_MATRIXOPS "Enable the MatrixOps module" ON "WITH_GPL AND WITH_CHOLMOD" OFF)
 cmake_dependent_option (WITH_MODIFY "Enable the Modify module" ON "WITH_GPL AND WITH_CHOLMOD" OFF)
-cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON "CMAKE_CXX_COMPILER AND WITH_GPL" OFF)
+cmake_dependent_option (WITH_SUPERNODAL "Enable the Supernodal module" ON
+  "WITH_CHOLESKY AND CMAKE_CXX_COMPILER AND WITH_GPL" OFF)
 
 if (WITH_CUDA)
   enable_language (CUDA)
@@ -1591,7 +1592,7 @@ if (WITH_DEMOS)
   )
   target_link_libraries (camd_simple PRIVATE SuiteSparse::CAMD)
 
-  if (TARGET cholmod AND WITH_CHECK)
+  if (WITH_CHOLESKY AND WITH_CHECK)
     add_executable (cholmod_demo
       CHOLMOD/Demo/cholmod_demo.h
       CHOLMOD/Demo/cholmod_demo.c
@@ -1603,7 +1604,7 @@ if (WITH_DEMOS)
 
     add_executable (cholmod_simple CHOLMOD/Demo/cholmod_simple.c)
     target_link_libraries (cholmod_simple PRIVATE SuiteSparse::CHOLMOD)
-  endif (TARGET cholmod AND WITH_CHECK)
+  endif (WITH_CHOLESKY AND WITH_CHECK)
 
   add_executable (colamd_example
     COLAMD/Demo/colamd_example.c
@@ -1719,22 +1720,24 @@ if (WITH_DEMOS)
   endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
 
   if (TARGET spqr)
-    add_executable (qrdemo SPQR/Demo/qrdemo.cpp)
-    add_executable (qrdemoc SPQR/Demo/qrdemoc.c)
-    add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
-    add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
+    if (WITH_CHECK)
+      add_executable (qrdemo SPQR/Demo/qrdemo.cpp)
+      add_executable (qrdemoc SPQR/Demo/qrdemoc.c)
+      add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
+      add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
 
-    target_link_libraries (qrdemo PRIVATE SuiteSparse::SPQR)
-    target_link_libraries (qrdemoc PRIVATE SuiteSparse::SPQR)
-    target_link_libraries (qrsimple PRIVATE SuiteSparse::SPQR)
-    target_link_libraries (qrsimplec PRIVATE SuiteSparse::SPQR)
+      target_link_libraries (qrdemo PRIVATE SuiteSparse::SPQR)
+      target_link_libraries (qrdemoc PRIVATE SuiteSparse::SPQR)
+      target_link_libraries (qrsimple PRIVATE SuiteSparse::SPQR)
+      target_link_libraries (qrsimplec PRIVATE SuiteSparse::SPQR)
 
-    list (APPEND SuiteSparse_BIN_TARGETS
-      qrdemo
-      qrdemoc
-      qrsimple
-      qrsimplec
-    )
+      list (APPEND SuiteSparse_BIN_TARGETS
+        qrdemo
+        qrdemoc
+        qrsimple
+        qrsimplec
+      )
+    endif (WITH_CHECK)
 
     if (TARGET gpuqrengine)
       add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)

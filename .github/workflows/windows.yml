@@ -158,7 +158,7 @@ jobs:
         path: |
           ${{env.CCACHE_DIR}}
           ${{github.workspace}}/install
-        key: ${{runner.os}}-lapack-3.10.1
+        key: ${{matrix.msvc}}-lapack-3.10.1
 
     - name: Download LAPACK
       if: steps.cache-lapack.outputs.cache-hit != 'true'
@@ -190,7 +190,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: metis/
-        key: ${{matrix.generator}}-metis-5.1.1-${{matrix.build_type}}
+        key: ${{matrix.msvc}}-metis-5.1.1-${{matrix.build_type}}
 
     - name: Download METIS
       if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'

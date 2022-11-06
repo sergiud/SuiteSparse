@@ -175,6 +175,7 @@ jobs:
 
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
+      if: steps.cache-lapack.outputs.cache-hit != 'true'
       with:
         msystem: ${{matrix.sys}}
         path-type: inherit

@@ -158,7 +158,7 @@ jobs:
         path: |
           ${{env.CCACHE_DIR}}
           ${{github.workspace}}/install
-        key: ${{matrix.msvc}}-lapack-3.10.1
+        key: ${{matrix.msvc}}-lapack-3.10.1-${{matrix.build_type}}
 
     - name: Download LAPACK
       if: steps.cache-lapack.outputs.cache-hit != 'true'

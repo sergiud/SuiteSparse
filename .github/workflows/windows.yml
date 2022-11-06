@@ -190,7 +190,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: metis/
-        key: ${{matrix.msvc}}-metis-5.1.1-${{matrix.build_type}}
+        key: ${{matrix.msvc}}-metis-5.1.1-${{matrix.build_type}}-shared
 
     - name: Download METIS
       if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
@@ -207,15 +207,17 @@ jobs:
         Copy-Item ${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5/* -Destination GKlib/ -Recurse
         New-Item -ItemType directory -Path build
         Copy-Item include -Destination build/xinclude -Recurse
+        (Get-Content CMakeLists.txt) -Replace 'add_subdirectory\("programs"\)', '' | Set-Content CMakeLists.txt
         (Get-Content CMakeLists.txt) -Replace 'MSVC', 'FALSE' | Set-Content CMakeLists.txt
         (Get-Content include/metis.h) -Replace '//#define', '#define' | Set-Content build/xinclude/metis.h
         Pop-Location
 
         cmake -S METIS-5.1.1-DistDGL-v0.5 -B build-metis `
               -A x64 `
-              -DBUILD_SHARED_LIBS=OFF `
               -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis `
+              -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON `
               -DMETIS_INSTALL:BOOL=ON `
+              -DSHARED=ON `
               -G "${{matrix.generator}}"
         cmake --build build-metis `
               --config ${{matrix.build_type}} `
@@ -229,6 +231,7 @@ jobs:
     - name: Setup Environment
       run: |
         echo "${{github.workspace}}/install/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "${{github.workspace}}/metis/lib" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "VERSION_SUFFIX=$(git describe --tags)-${{matrix.marker}}-${{matrix.system}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Configure

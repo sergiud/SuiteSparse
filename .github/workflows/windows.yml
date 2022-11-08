@@ -159,13 +159,22 @@ jobs:
       if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
       shell: msys2 {0}
       env:
-        CMAKE_GENERATOR: 'MinGW Makefiles'      
+        CMAKE_GENERATOR: 'MinGW Makefiles'
       run: |
-        sed -i 's|CMAKE_VERBOSE_MAKEFILE|CMAKE_GNUtoMS|' ./METIS-5.1.1-DistDGL-v0.5/Makefile
-	sed -i '/sys\/resource.h/d' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_arch.h
-	sed -i -E 's|\<__(arg[cv])\>|\1|g' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_getopt.h
-        make -C METIS-5.1.1-DistDGL-v0.5/ config shared=1 prefix='${{github.workspace}}/metis' gklib_path='${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5'
-        make -C METIS-5.1.1-DistDGL-v0.5/ install
+        sed -i '/CMAKE_VERBOSE_MAKEFILE/d' ./METIS-5.1.1-DistDGL-v0.5/Makefile
+        sed -i -E 's|^(\s*)CONFIG_FLAGS|\1override CONFIG_FLAGS|g' ./METIS-5.1.1-DistDGL-v0.5/Makefile
+        sed -i 's|\<make\>|$(MAKE)|g' ./METIS-5.1.1-DistDGL-v0.5/Makefile
+        sed -i '/sys\/resource.h/d' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_arch.h
+        sed -i -E 's|\<__(arg[cv])\>|\1|g' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_getopt.h
+        mingw32-make -C METIS-5.1.1-DistDGL-v0.5/ \
+          config \
+          CONFIG_FLAGS='-DCMAKE_GNUtoMS=ON -DCMAKE_C_STANDARD_LIBRARIES=-lregex' \
+          debug=0 \
+          shared=1 \
+          gklib_path='${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5' \
+          prefix="$(cygpath -u '${{github.workspace}}/metis')"
+        mingw32-make -C METIS-5.1.1-DistDGL-v0.5/build install
+        mv '${{github.workspace}}/metis/lib/libmetis.lib' '${{github.workspace}}/metis/lib/metis.lib'
 
     - name: Cache LAPACK
       id: cache-lapack

@@ -163,6 +163,7 @@ jobs:
       run: |
         sed -i 's|CMAKE_VERBOSE_MAKEFILE|CMAKE_GNUtoMS|' ./METIS-5.1.1-DistDGL-v0.5/Makefile
 	sed -i '/sys\/resource.h/d' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_arch.h
+	sed -i -E 's|\<__(arg[cv])\>|\1|g' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_getopt.h
         make -C METIS-5.1.1-DistDGL-v0.5/ config shared=1 prefix='${{github.workspace}}/metis' gklib_path='${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5'
         make -C METIS-5.1.1-DistDGL-v0.5/ install
 

@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
+    if: false
     name: ${{matrix.os}}-GCC-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.gpu}}-${{matrix.metis}}
     runs-on: ${{matrix.os}}
     defaults:

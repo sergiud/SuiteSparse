@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-mingw:
+    if: false
     name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
     runs-on: windows-latest
     defaults:
@@ -108,23 +109,15 @@ jobs:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
-        msvc: [VS-16-2019, VS-17-2022]
+        msvc: [VS-17-2022]
         sys: [mingw64]
-        lib: [shared, static]
-        components: [minimal, lgpl, gpl]
-        metis: [no-metis, metis]
-        exclude:
-          # METIS is only usable if CHOLMOD is compiled
-          - components: minimal
-            metis: metis
+        lib: [shared]
+        components: [gpl]
+        metis: [metis]
         include:
           - sys: mingw64
             env: x86_64
             system: Win64
-          - msvc: VS-16-2019
-            generator: "Visual Studio 16 2019"
-            os: windows-2019
-            marker: vc16
           - msvc: VS-17-2022
             generator: "Visual Studio 17 2022"
             os: windows-2022

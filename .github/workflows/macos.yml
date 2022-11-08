@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
+    if: false
     name: ${{matrix.os}}-AppleClang-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
     runs-on: ${{matrix.os}}
     defaults:

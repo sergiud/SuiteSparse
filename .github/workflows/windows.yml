@@ -137,7 +137,7 @@ jobs:
           mingw-w64-${{matrix.env}}-cmake
           mingw-w64-${{matrix.env}}-gcc
           mingw-w64-${{matrix.env}}-gcc-fortran
-          mingw-w64-${{matrix.env}}-make
+          mingw-w64-${{matrix.env}}-ninja
 
     - name: Cache METIS
       if: matrix.metis == 'metis'
@@ -161,19 +161,23 @@ jobs:
       env:
         CMAKE_GENERATOR: 'MinGW Makefiles'
       run: |
-        sed -i '/CMAKE_VERBOSE_MAKEFILE/d' ./METIS-5.1.1-DistDGL-v0.5/Makefile
-        sed -i -E 's|^(\s*)CONFIG_FLAGS|\1override CONFIG_FLAGS|g' ./METIS-5.1.1-DistDGL-v0.5/Makefile
-        sed -i 's|\<make\>|$(MAKE)|g' ./METIS-5.1.1-DistDGL-v0.5/Makefile
         sed -i '/sys\/resource.h/d' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_arch.h
         sed -i -E 's|\<__(arg[cv])\>|\1|g' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_getopt.h
-        mingw32-make -C METIS-5.1.1-DistDGL-v0.5/ \
-          config \
-          CONFIG_FLAGS='-DCMAKE_GNUtoMS=ON -DCMAKE_C_STANDARD_LIBRARIES=-lregex' \
-          debug=0 \
-          shared=1 \
-          gklib_path='${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5' \
-          prefix="$(cygpath -u '${{github.workspace}}/metis')"
-        mingw32-make -C METIS-5.1.1-DistDGL-v0.5/build install
+        
+        mkdir -p ./build-metis/xinclude
+        echo '#define IDXTYPEWIDTH 32' > ./build-metis/xinclude/metis.h
+        echo '#define REALTYPEWIDTH 32' > ./build-metis/xinclude/metis.h
+        cat ./METIS-5.1.1-DistDGL-v0.5/include/metis.h >> ./build-metis/xinclude/metis.h
+        cp ./METIS-5.1.1-DistDGL-v0.5/include/CMakeLists.txt ./build-metis/xinclude
+
+        cmake -S ./METIS-5.1.1-DistDGL-v0.5/ -B ./build-metis/ \
+          -DCMAKE_GNUtoMS=ON \
+          -DCMAKE_C_STANDARD_LIBRARIES=-lregex \
+          -DSHARED=ON \
+          -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+          -DGKLIB_PATH=${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5 \
+          -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis
+        cmake --build ./build-metis --target install
         mv '${{github.workspace}}/metis/lib/libmetis.lib' '${{github.workspace}}/metis/lib/metis.lib'
 
     - name: Cache LAPACK

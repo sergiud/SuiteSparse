@@ -175,8 +175,8 @@ jobs:
           -DCMAKE_C_STANDARD_LIBRARIES=-lregex \
           -DSHARED=ON \
           -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-          -DGKLIB_PATH=${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5 \
-          -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis
+          -DGKLIB_PATH='${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5' \
+          -DCMAKE_INSTALL_PREFIX='${{github.workspace}}/metis'
         cmake --build ./build-metis --target install
         mv '${{github.workspace}}/metis/lib/libmetis.lib' '${{github.workspace}}/metis/lib/metis.lib'
 

@@ -183,7 +183,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
           -DGKLIB_PATH='${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5' \
           -DCMAKE_INSTALL_PREFIX='${{github.workspace}}/metis'
-        cmake --build ./build-metis/ --target install/${INSTALL_TARGET_SUFFIX}
+        cmake --build ./build-metis/ --target install/${{env.INSTALL_TARGET_SUFFIX}}
         mv '${{github.workspace}}/metis/lib/libmetis.lib' '${{github.workspace}}/metis/lib/metis.lib'
 
     - name: Cache LAPACK
@@ -217,7 +217,7 @@ jobs:
 
         cmake --build build_lapack_${{matrix.build_type}}/ \
               --config ${{matrix.build_type}} \
-              --target install/${INSTALL_TARGET_SUFFIX}
+              --target install/${{env.INSTALL_TARGET_SUFFIX}}
 
     - name: Setup MSYS2 Environment
       shell: msys2 {0}

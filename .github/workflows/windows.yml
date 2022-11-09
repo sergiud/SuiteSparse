@@ -164,11 +164,13 @@ jobs:
         sed -i '/sys\/resource.h/d' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_arch.h
         sed -i -E 's|\<__(arg[cv])\>|\1|g' ./GKlib-METIS-v5.1.1-DistDGL-0.5/gk_getopt.h
         
-        mkdir -p ./build-metis/xinclude
-        echo '#define IDXTYPEWIDTH 32' > ./build-metis/xinclude/metis.h
-        echo '#define REALTYPEWIDTH 32' > ./build-metis/xinclude/metis.h
-        cat ./METIS-5.1.1-DistDGL-v0.5/include/metis.h >> ./build-metis/xinclude/metis.h
-        cp ./METIS-5.1.1-DistDGL-v0.5/include/CMakeLists.txt ./build-metis/xinclude
+        pushd ./METIS-5.1.1-DistDGL-v0.5
+        mkdir -p ./build/xinclude
+        echo '#define IDXTYPEWIDTH 32' > ./build/xinclude/metis.h
+        echo '#define REALTYPEWIDTH 32' > ./build/xinclude/metis.h
+        cat ./include/metis.h >> ./build/xinclude/metis.h
+        cp ./include/CMakeLists.txt ./build/xinclude
+        popd
 
         cmake -S ./METIS-5.1.1-DistDGL-v0.5/ -B ./build-metis/ \
           -DCMAKE_GNUtoMS=ON \
@@ -177,7 +179,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
           -DGKLIB_PATH='${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5' \
           -DCMAKE_INSTALL_PREFIX='${{github.workspace}}/metis'
-        cmake --build ./build-metis --target install
+        cmake --build ./build-metis/ --target install
         mv '${{github.workspace}}/metis/lib/libmetis.lib' '${{github.workspace}}/metis/lib/metis.lib'
 
     - name: Cache LAPACK

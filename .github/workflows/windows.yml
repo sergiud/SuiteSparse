@@ -138,6 +138,12 @@ jobs:
           mingw-w64-${{matrix.env}}-gcc
           mingw-w64-${{matrix.env}}-gcc-fortran
           mingw-w64-${{matrix.env}}-ninja
+          
+    - name: Setup MSYS2 Deployment
+      if: ${{matrix.build_type == 'Release'}}
+      shell: msys2 {0}
+      run: |
+        echo INSTALL_TARGET_SUFFIX=/strip >> $GITHUB_ENV
 
     - name: Cache METIS
       if: matrix.metis == 'metis'
@@ -177,7 +183,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
           -DGKLIB_PATH='${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5' \
           -DCMAKE_INSTALL_PREFIX='${{github.workspace}}/metis'
-        cmake --build ./build-metis/ --target install${{matrix.build_type == 'Release' ? '/strip' : ''}}
+        cmake --build ./build-metis/ --target install/${INSTALL_TARGET_SUFFIX}
         mv '${{github.workspace}}/metis/lib/libmetis.lib' '${{github.workspace}}/metis/lib/metis.lib'
 
     - name: Cache LAPACK
@@ -211,7 +217,7 @@ jobs:
 
         cmake --build build_lapack_${{matrix.build_type}}/ \
               --config ${{matrix.build_type}} \
-              --target install${{matrix.build_type == 'Release' ? '/strip' : ''}}
+              --target install/${INSTALL_TARGET_SUFFIX}
 
     - name: Setup MSYS2 Environment
       shell: msys2 {0}

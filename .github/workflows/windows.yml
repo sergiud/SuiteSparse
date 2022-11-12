@@ -139,29 +139,29 @@ jobs:
       uses: actions/cache@v3
       with:
         path: metis/
-        key: ${{matrix.msvc}}-metis-5.1.1-${{matrix.build_type}}-shared
+        key: ${{matrix.msvc}}-metis-5.1.0-${{matrix.build_type}}-shared
 
     - name: Download METIS
       if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
       run: |
-        (New-Object System.Net.WebClient).DownloadFile("https://github.com/KarypisLab/METIS/archive/refs/tags/v5.1.1-DistDGL-v0.5.zip", "v5.1.1-DistDGL-v0.5.zip");
-        (New-Object System.Net.WebClient).DownloadFile("https://github.com/KarypisLab/GKlib/archive/refs/tags/METIS-v5.1.1-DistDGL-0.5.zip", "v5.1.1-DistDGL-v0.5-GKlib.zip");
-        7z x v5.1.1-DistDGL-v0.5.zip;
-        7z x v5.1.1-DistDGL-v0.5-GKlib.zip;
+        (New-Object System.Net.WebClient).DownloadFile("http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz", "metis-5.1.0.tar.gz");
+        7z x metis-5.1.0.tar.gz;
+        7z x metis-5.1.0.tar;
 
     - name: Build METIS
       if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
       run: |
-        Push-Location METIS-5.1.1-DistDGL-v0.5
-        Copy-Item ${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5/* -Destination GKlib/ -Recurse
-        New-Item -ItemType directory -Path build
+        Push-Location metis-5.1.0
         Copy-Item include -Destination build/xinclude -Recurse
         (Get-Content CMakeLists.txt) -Replace 'add_subdirectory\("programs"\)', '' | Set-Content CMakeLists.txt
         (Get-Content CMakeLists.txt) -Replace 'MSVC', 'FALSE' | Set-Content CMakeLists.txt
-        (Get-Content include/metis.h) -Replace '//#define', '#define' | Set-Content build/xinclude/metis.h
+        (Get-Content include/metis.h) -Replace '^\s*#define COMPILER_MSC.*$', '' | Set-Content include/metis.h
+        Copy-Item include/metis.h -Destination build/xinclude/
+        (Get-Content GKlib/gk_arch.h) -Replace '#define rint.*$', '' | Set-Content GKlib/gk_arch.h
+        (Get-Content GKlib/gk_arch.h) -Replace '#define INFINITY.*$', '' | Set-Content GKlib/gk_arch.h
         Pop-Location
 
-        cmake -S METIS-5.1.1-DistDGL-v0.5 -B build-metis `
+        cmake -S metis-5.1.0 -B build-metis `
               -A x64 `
               -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis `
               -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON `

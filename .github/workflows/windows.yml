@@ -236,6 +236,7 @@ jobs:
               -A x64 `
               -DBLAS_blas_LIBRARY=${{github.workspace}}/install/lib/libblas.lib `
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
+              -DCMAKE_Fortran_COMPILER= `
               -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install-suitesparse `
               -DCMAKE_PREFIX_PATH=${{github.workspace}}/metis `
               -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} `

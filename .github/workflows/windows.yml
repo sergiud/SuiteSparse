@@ -133,10 +133,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: ashutoshvarma/setup-ninja@master
-      with:
-        version: 1.10.0
-
     - name: Cache METIS
       if: matrix.metis == 'metis'
       id: cache-metis
@@ -186,6 +182,7 @@ jobs:
           wget
           mingw-w64-${{matrix.env}}-ccache
           mingw-w64-${{matrix.env}}-gcc-fortran
+          mingw-w64-${{matrix.env}}-ninja
 
     - name: Cache LAPACK
       id: cache-lapack

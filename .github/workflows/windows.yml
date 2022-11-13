@@ -137,6 +137,46 @@ jobs:
       with:
         version: 1.10.0
 
+    - name: Cache METIS
+      if: matrix.metis == 'metis'
+      id: cache-metis
+      uses: actions/cache@v3
+      with:
+        path: metis/
+        key: ${{matrix.msvc}}-metis-5.1.1-${{matrix.build_type}}-shared
+
+    - name: Download METIS
+      if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
+      run: |
+        (New-Object System.Net.WebClient).DownloadFile("https://github.com/KarypisLab/METIS/archive/refs/tags/v5.1.1-DistDGL-v0.5.zip", "v5.1.1-DistDGL-v0.5.zip");
+        (New-Object System.Net.WebClient).DownloadFile("https://github.com/KarypisLab/GKlib/archive/refs/tags/METIS-v5.1.1-DistDGL-0.5.zip", "v5.1.1-DistDGL-v0.5-GKlib.zip");
+        7z x v5.1.1-DistDGL-v0.5.zip;
+        7z x v5.1.1-DistDGL-v0.5-GKlib.zip;
+
+    - name: Build METIS
+      if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
+      run: |
+        Push-Location METIS-5.1.1-DistDGL-v0.5
+        Copy-Item ${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5/* -Destination GKlib/ -Recurse
+        New-Item -ItemType directory -Path build
+        Copy-Item include -Destination build/xinclude -Recurse
+        (Get-Content CMakeLists.txt) -Replace 'add_subdirectory\("programs"\)', '' | Set-Content CMakeLists.txt
+        (Get-Content CMakeLists.txt) -Replace 'MSVC', 'FALSE' | Set-Content CMakeLists.txt
+        (Get-Content include/metis.h) -Replace '//#define', '#define' | Set-Content build/xinclude/metis.h
+        Pop-Location
+
+        cmake -S METIS-5.1.1-DistDGL-v0.5 -B build-metis `
+              -A x64 `
+              -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis `
+              -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON `
+              -DMETIS_INSTALL:BOOL=ON `
+              -DSHARED=ON `
+              -G "${{matrix.generator}}"
+        cmake --build build-metis `
+              --config ${{matrix.build_type}} `
+              --target install
+
+
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
@@ -178,45 +218,6 @@ jobs:
 
         cmake --build build_lapack_${{matrix.build_type}}/ \
               --config ${{matrix.build_type}} \
-              --target install
-
-    - name: Cache METIS
-      if: matrix.metis == 'metis'
-      id: cache-metis
-      uses: actions/cache@v3
-      with:
-        path: metis/
-        key: ${{matrix.msvc}}-metis-5.1.1-${{matrix.build_type}}-shared
-
-    - name: Download METIS
-      if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
-      run: |
-        (New-Object System.Net.WebClient).DownloadFile("https://github.com/KarypisLab/METIS/archive/refs/tags/v5.1.1-DistDGL-v0.5.zip", "v5.1.1-DistDGL-v0.5.zip");
-        (New-Object System.Net.WebClient).DownloadFile("https://github.com/KarypisLab/GKlib/archive/refs/tags/METIS-v5.1.1-DistDGL-0.5.zip", "v5.1.1-DistDGL-v0.5-GKlib.zip");
-        7z x v5.1.1-DistDGL-v0.5.zip;
-        7z x v5.1.1-DistDGL-v0.5-GKlib.zip;
-
-    - name: Build METIS
-      if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
-      run: |
-        Push-Location METIS-5.1.1-DistDGL-v0.5
-        Copy-Item ${{github.workspace}}/GKlib-METIS-v5.1.1-DistDGL-0.5/* -Destination GKlib/ -Recurse
-        New-Item -ItemType directory -Path build
-        Copy-Item include -Destination build/xinclude -Recurse
-        (Get-Content CMakeLists.txt) -Replace 'add_subdirectory\("programs"\)', '' | Set-Content CMakeLists.txt
-        (Get-Content CMakeLists.txt) -Replace 'MSVC', 'FALSE' | Set-Content CMakeLists.txt
-        (Get-Content include/metis.h) -Replace '//#define', '#define' | Set-Content build/xinclude/metis.h
-        Pop-Location
-
-        cmake -S METIS-5.1.1-DistDGL-v0.5 -B build-metis `
-              -A x64 `
-              -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis `
-              -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON `
-              -DMETIS_INSTALL:BOOL=ON `
-              -DSHARED=ON `
-              -G "${{matrix.generator}}"
-        cmake --build build-metis `
-              --config ${{matrix.build_type}} `
               --target install
 
     - name: Setup MSYS2 Environment

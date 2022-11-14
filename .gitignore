@@ -138,10 +138,6 @@ CXSparse/Tcov/cov.sort
 CXSparse/Tcov/cover.out
 CXSparse/Tcov/covs.out
 CXSparse/Tcov/cs_*.c
-CXSparse/Tcov/cs*_ci.c
-CXSparse/Tcov/cs*_cl.c
-CXSparse/Tcov/cs*_di.c
-CXSparse/Tcov/cs*_dl.c
 CXSparse/Tcov/*.out
 CXSparse/Tcov/cs_demo1_ci
 CXSparse/Tcov/cs_demo1_cl
@@ -182,7 +178,7 @@ UMFPACK/Tcov/cover.out
 # ignore these specific files in the Package/MATLAB directories
 MATLAB_Tools/spqr_rank/save_samples_demo_spqr_rank.mat
 CXSparse/MATLAB/CSparse/cs_cl_*.c
-CXSparse/MATLAB/Test/cs_*.c
+CXSparse/MATLAB/Test/cs_cl_*.c
 
 RBio/Tcov/RBdemo
 RBio/Tcov/RBdemo.c

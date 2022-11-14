@@ -1,11 +1,14 @@
-cmake_minimum_required(VERSION 3.20.1)
+cmake_minimum_required ( VERSION 3.19 )
 
 # CMake build for generating googletest c++ files that can be compiled and executed in parallel.
 # Build can be customized to speed up development by allowing the targeting of specific
 # specific parameters. The output of this build is an executable that can be used to
 # run the gtests.
 
-project(GRAPHBLAS_CUDA VERSION 0.1 LANGUAGES CXX CUDA)
+project ( GRAPHBLAS_CUDA
+    VERSION "${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}"
+    LANGUAGES CXX CUDA )
+cmake_policy ( SET CMP0135 NEW )    # URL download timestamp policy
 
 set(CMAKE_CUDA_FLAGS "-cudart=static -lineinfo ")
 set(CMAKE_CXX_STANDARD 17)
@@ -22,13 +25,20 @@ add_library(graphblascuda SHARED
             ${GRAPHBLAS_CUDA_SOURCES}
 )
 
+set_target_properties ( graphblascuda PROPERTIES
+    VERSION ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}
+    SOVERSION ${GraphBLAS_VERSION_MAJOR}
+    C_STANDARD_REQUIRED 11 )
+
 set(RMM_WRAP_INCLUDES "../rmm_wrap")
 
 message(STATUS "RMM_WRAP_INCLUDES: ${RMM_WRAP_INCLUDES}")
 set(GRAPHBLAS_CUDA_INCLUDES
         ${RMM_WRAP_INCLUDES}
         ../Source
+        ../Source/Shared
         ../Source/Template
+        ../Source/SharedTemplate
         ../Include
         ../CUDA)
 
@@ -54,14 +64,47 @@ target_include_directories(graphblascuda PUBLIC
         ${GRAPHBLAS_CUDA_INCLUDES})
 set_target_properties(graphblascuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(graphblascuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-set_target_properties(graphblascuda PROPERTIES CUDA_ARCHITECTURES "75")
+set_target_properties(graphblascuda PROPERTIES CUDA_ARCHITECTURES "52;75;80" )
 
 target_link_libraries(graphblascuda CUDA::nvrtc CUDA::cudart_static CUDA::nvToolsExt )
 
-install ( TARGETS graphblascuda
+#-------------------------------------------------------------------------------
+# installation location
+#-------------------------------------------------------------------------------
+
+if ( GLOBAL_INSTALL )
+    # install in /usr/local/lib and /usr/local/include.
+    # requires "sudo make install"
+    message ( STATUS "Installation will be system-wide (requires 'sudo make install')" )
+    install ( TARGETS graphblascuda
         LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} )
+#   if ( BUILD_GRB_STATIC_LIBRARY )
+#       install ( TARGETS graphblas_static
+#           ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+#   endif ( )
+endif ( )
+
+if ( INSIDE_SUITESPARSE )
+    # also install in SuiteSparse/lib and SuiteSparse/include;
+    # does not require "sudo make install", just "make install"
+    message ( STATUS "Installation in ../../lib and ../../include," )
+    message ( STATUS "  with 'make local ; make install'. No 'sudo' required." )
+    install ( TARGETS graphblascuda
+        LIBRARY       DESTINATION ${SUITESPARSE_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+#   if ( BUILD_GRB_STATIC_LIBRARY )
+#       install ( TARGETS graphblas_static
+#           ARCHIVE       DESTINATION ${SUITESPARSE_LIBDIR} )
+#   endif ( )
+endif ( )
+
+# install ( TARGETS graphblascuda
+#         LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+#         ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+
+#-------------------------------------------------------------------------------
 
 # 1. Execute enumify/stringify/jitify logic to compile ptx kernels and compile/link w/ relevant *.cu files.
 
@@ -90,32 +133,33 @@ set(CUDA_TEST_FORMATS sparse dense sparse_dense reduce)
 # Separate individual kernels from larger "overview" test (e.g. 2-level testing structure)
 # We want to test all the *_cuda versions
 
+# FIXME
 set(CUDA_TEST_CPP_FILES "")
-foreach(var ${CUDA_TEST_SUITES})
-    foreach(semiring ${CUDA_TEST_SEMIRINGS})
-        foreach(kernel ${CUDA_TEST_KERNELS})
-            foreach(format ${CUDA_TEST_FORMATS})
-
-                # TODO: Have Python script also build separate cudaTest.cpp (named something
-                # like AxB_dot3_cuda_tests.cpp) for each suite. This way we should be able to
-                # easily ignore them from the build
-                add_custom_command(
-                        OUTPUT
-                        ${CMAKE_CURRENT_BINARY_DIR}/${var}_${semiring}_${format}_test_instances.hpp
-                        ${CMAKE_CURRENT_BINARY_DIR}/${var}_${semiring}_${format}_cuda_tests.cpp
-                        DEPENDS
-                        jitFactory.hpp
-                        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test/testGen_cmake.py "\"${CMAKE_CURRENT_SOURCE_DIR}\"" "\"${var}\"" "\"${CUDA_TEST_MONOIDS}\""
-                            "\"${CUDA_TEST_BINOPS}\"" "\"${semiring}\"" "\"${CUDA_TEST_DATATYPES}\""
-                            "\"${kernel}\""
-                )
-
-                # Construct final list of files to compile (in parallel)
-                list(APPEND CUDA_TEST_CPP_FILES ${CMAKE_CURRENT_BINARY_DIR}/${var}_${semiring}_${format}_cuda_tests.cpp)
+if ( FALSE )
+    foreach(var ${CUDA_TEST_SUITES})
+        foreach(semiring ${CUDA_TEST_SEMIRINGS})
+            foreach(kernel ${CUDA_TEST_KERNELS})
+                foreach(format ${CUDA_TEST_FORMATS})
+                    # TODO: Have Python script also build separate cudaTest.cpp (named something
+                    # like AxB_dot3_cuda_tests.cpp) for each suite. This way we should be able to
+                    # easily ignore them from the build
+                    add_custom_command(
+                            OUTPUT
+                            ${CMAKE_CURRENT_BINARY_DIR}/${var}_${semiring}_${format}_test_instances.hpp
+                            ${CMAKE_CURRENT_BINARY_DIR}/${var}_${semiring}_${format}_cuda_tests.cpp
+                            DEPENDS
+                            jitFactory.hpp
+                            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test/testGen_cmake.py "\"${CMAKE_CURRENT_SOURCE_DIR}\"" "\"${var}\"" "\"${CUDA_TEST_MONOIDS}\""
+                                "\"${CUDA_TEST_BINOPS}\"" "\"${semiring}\"" "\"${CUDA_TEST_DATATYPES}\""
+                                "\"${kernel}\""
+                    )
+                    # Construct final list of files to compile (in parallel)
+                    list(APPEND CUDA_TEST_CPP_FILES ${CMAKE_CURRENT_BINARY_DIR}/${var}_${semiring}_${format}_cuda_tests.cpp)
+                endforeach()
             endforeach()
         endforeach()
     endforeach()
-endforeach()
+endif ( )
 
 include(FetchContent)
 FetchContent_Declare(
@@ -152,7 +196,7 @@ add_executable(graphblascuda_test ${CUDA_TEST_CPP_FILES} ${CMAKE_CURRENT_SOURCE_
 
 set_target_properties(graphblascuda_test PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(graphblascuda_test PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-set_target_properties(graphblascuda_test PROPERTIES CUDA_ARCHITECTURES "75")
+set_target_properties(graphblascuda_test PROPERTIES CUDA_ARCHITECTURES "52;75;80" )
 
 include(GoogleTest)
 

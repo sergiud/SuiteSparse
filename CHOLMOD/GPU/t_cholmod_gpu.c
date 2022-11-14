@@ -1,11 +1,12 @@
-/* ========================================================================== */
-/* === GPU/t_cholmod_gpu ==================================================== */
-/* ========================================================================== */
+//------------------------------------------------------------------------------
+// CHOLMOD/GPU/t_cholmod_gpu: template for cholmod_super_numeric
+//------------------------------------------------------------------------------
 
-/* -----------------------------------------------------------------------------
- * CHOLMOD/GPU Module.  Copyright (C) 2005-2012, Timothy A. Davis
- * http://www.suitesparse.com
- * -------------------------------------------------------------------------- */
+// CHOLMOD/GPU Module.  Copyright (C) 2005-2022, Timothy A. Davis.
+// All Rights Reserved.
+// SPDX-License-Identifier: GPL-2.0+
+
+//------------------------------------------------------------------------------
 
 /* GPU BLAS template routine for cholmod_super_numeric. */
 
@@ -13,7 +14,7 @@
 /* === include files and definitions ======================================== */
 /* ========================================================================== */
 
-#ifdef GPU_BLAS
+#ifdef SUITESPARSE_CUDA
 
 #include <string.h>
 #include "cholmod_template.h"
@@ -81,18 +82,18 @@ int TEMPLATE2 (CHOLMOD (gpu_init))
     void *Cwork,
     cholmod_factor *L,
     cholmod_common *Common,
-    Int nsuper,
-    Int n,
-    Int nls,
+    int64_t nsuper,
+    int64_t n,
+    int64_t nls,
     cholmod_gpu_pointers *gpu_p
 )
 {
-    Int i, k, maxSize ;
+    int64_t i, k, maxSize ;
     cublasStatus_t cublasError ;
     cudaError_t cudaErr ;
     size_t maxBytesSize, HostPinnedSize ;
 
-    feenableexcept (FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW );
+//  feenableexcept (FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW );
 
     maxSize = L->maxcsize;
 
@@ -101,7 +102,7 @@ int TEMPLATE2 (CHOLMOD (gpu_init))
         (void *) ((size_t) Cwork & ~(4*1024-1)))) ;
 
     /* make sure the assumed buffer sizes are large enough */
-    if ( (nls+2*n+4)*sizeof(Int) > Common->devBuffSize ) {
+    if ( (nls+2*n+4)*sizeof(int64_t) > Common->devBuffSize ) {
         ERROR (CHOLMOD_GPU_PROBLEM,"\n\n"
                "GPU Memory allocation error.  Ls, Map and RelativeMap exceed\n"
                "devBuffSize.  It is not clear if this is due to insufficient\n"
@@ -121,14 +122,14 @@ int TEMPLATE2 (CHOLMOD (gpu_init))
     gpu_p->d_A[0] = Common->dev_mempool + 3*Common->devBuffSize;
     gpu_p->d_A[1] = Common->dev_mempool + 4*Common->devBuffSize;
     gpu_p->d_Ls = Common->dev_mempool + 5*Common->devBuffSize;
-    gpu_p->d_Map = gpu_p->d_Ls + (nls+1)*sizeof(Int) ;
-    gpu_p->d_RelativeMap = gpu_p->d_Map + (n+1)*sizeof(Int) ;
+    gpu_p->d_Map = gpu_p->d_Ls + (nls+1)*sizeof(int64_t) ;
+    gpu_p->d_RelativeMap = gpu_p->d_Map + (n+1)*sizeof(int64_t) ;
 
     /* Copy all of the Ls and Lpi data to the device.  If any supernodes are
      * to be computed on the device then this will be needed, so might as
      * well do it now.   */
 
-    cudaErr = cudaMemcpy ( gpu_p->d_Ls, L->s, nls*sizeof(Int),
+    cudaErr = cudaMemcpy ( gpu_p->d_Ls, L->s, nls*sizeof(int64_t),
                            cudaMemcpyHostToDevice );
     CHOLMOD_HANDLE_CUDA_ERROR(cudaErr,"cudaMemcpy(d_Ls)");
 
@@ -205,23 +206,23 @@ int TEMPLATE2 (CHOLMOD (gpu_init))
 void TEMPLATE2 (CHOLMOD (gpu_reorder_descendants))
 (
     cholmod_common *Common,
-    Int *Super,
-    Int *locals,
-    Int *Lpi,
-    Int *Lpos,
-    Int *Head,
-    Int *Next,
-    Int *Previous,
-    Int *ndescendants,
-    Int *tail,
-    Int *mapCreatedOnGpu,
+    int64_t *Super,
+    int64_t *locals,
+    int64_t *Lpi,
+    int64_t *Lpos,
+    int64_t *Head,
+    int64_t *Next,
+    int64_t *Previous,
+    int64_t *ndescendants,
+    int64_t *tail,
+    int64_t *mapCreatedOnGpu,
     cholmod_gpu_pointers *gpu_p
 )
 {
 
-    Int prevd, nextd, firstcpu, d, k, kd1, kd2, ndcol, pdi, pdend, pdi1;
-    Int dnext, ndrow2, p;
-    Int n_descendant = 0;
+    int64_t prevd, nextd, firstcpu, d, k, kd1, kd2, ndcol, pdi, pdend, pdi1;
+    int64_t dnext, ndrow2, p;
+    int64_t n_descendant = 0;
     double score;
 
     /* use h_Lx[0] to buffer the GPU-eligible descendants */
@@ -279,7 +280,11 @@ void TEMPLATE2 (CHOLMOD (gpu_reorder_descendants))
         Head[*locals] = scores[0].d;
         if ( n_descendant > 1 ) {
 
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS)   \
+            #ifdef _OPENMP
+            int nthreads = cholmod_nthreads ((double) n_descendant, Common) ;
+            #endif
+
+#pragma omp parallel for num_threads(nthreads)   \
     if (n_descendant > 64)
 
             for ( k=1; k<n_descendant; k++ ) {
@@ -354,9 +359,9 @@ void TEMPLATE2 (CHOLMOD (gpu_reorder_descendants))
 void TEMPLATE2 (CHOLMOD (gpu_initialize_supernode))
 (
     cholmod_common *Common,
-    Int nscol,
-    Int nsrow,
-    Int psi,
+    int64_t nscol,
+    int64_t nsrow,
+    int64_t psi,
     cholmod_gpu_pointers *gpu_p
 )
 {
@@ -368,8 +373,8 @@ void TEMPLATE2 (CHOLMOD (gpu_initialize_supernode))
     CHOLMOD_HANDLE_CUDA_ERROR(cuErr,"cudaMemset(d_A)");
 
     /* Create the Map on the device */
-    createMapOnDevice ( (Int *)(gpu_p->d_Map),
-                        (Int *)(gpu_p->d_Ls), psi, nsrow );
+    createMapOnDevice ( (int64_t *)(gpu_p->d_Map),
+                        (int64_t *)(gpu_p->d_Ls), psi, nsrow );
 
     return;
 
@@ -399,14 +404,14 @@ void TEMPLATE2 (CHOLMOD (gpu_initialize_supernode))
 
 int TEMPLATE2 (CHOLMOD (gpu_updateC))
 (
-    Int ndrow1,         /* C is ndrow2-by-ndrow2 */
-    Int ndrow2,
-    Int ndrow,          /* leading dimension of Lx */
-    Int ndcol,          /* L1 is ndrow1-by-ndcol */
-    Int nsrow,
-    Int pdx1,           /* L1 starts at Lx + L_ENTRY*pdx1 */
+    int64_t ndrow1,         /* C is ndrow2-by-ndrow2 */
+    int64_t ndrow2,
+    int64_t ndrow,          /* leading dimension of Lx */
+    int64_t ndcol,          /* L1 is ndrow1-by-ndcol */
+    int64_t nsrow,
+    int64_t pdx1,           /* L1 starts at Lx + L_ENTRY*pdx1 */
     /* L2 starts at Lx + L_ENTRY*(pdx1 + ndrow1) */
-    Int pdi1,
+    int64_t pdi1,
     double *Lx,
     double *C,
     cholmod_common *Common,
@@ -417,7 +422,7 @@ int TEMPLATE2 (CHOLMOD (gpu_updateC))
     double alpha, beta ;
     cublasStatus_t cublasStatus ;
     cudaError_t cudaStat [2] ;
-    Int ndrow3 ;
+    int64_t ndrow3 ;
     int icol, irow;
     int iHostBuff, iDevBuff ;
 
@@ -459,8 +464,13 @@ int TEMPLATE2 (CHOLMOD (gpu_updateC))
     /* copy Lx to the GPU */
     /* ---------------------------------------------------------------------- */
 
+    #ifdef _OPENMP
+    double work = (double) ndcol * (double) ndrow2 * L_ENTRY ;
+    int nthreads = cholmod_nthreads (work, Common) ;
+    #endif
+
     /* copy host data to pinned buffer first for better H2D bandwidth */
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS) if (ndcol > 32)
+#pragma omp parallel for num_threads(nthreads) if (ndcol > 32)
     for ( icol=0; icol<ndcol; icol++ ) {
         for ( irow=0; irow<ndrow2*L_ENTRY; irow++ ) {
             gpu_p->h_Lx[iHostBuff][icol*ndrow2*L_ENTRY+irow] =
@@ -487,9 +497,9 @@ int TEMPLATE2 (CHOLMOD (gpu_updateC))
     /* create the relative map for this descendant supernode */
     /* ---------------------------------------------------------------------- */
 
-    createRelativeMapOnDevice ( (Int *)(gpu_p->d_Map),
-                                (Int *)(gpu_p->d_Ls),
-                                (Int *)(gpu_p->d_RelativeMap),
+    createRelativeMapOnDevice ( (int64_t *)(gpu_p->d_Map),
+                                (int64_t *)(gpu_p->d_Ls),
+                                (int64_t *)(gpu_p->d_RelativeMap),
                                 pdi1, ndrow2,
                                 &(Common->gpuStream[iDevBuff]) );
 
@@ -637,18 +647,18 @@ void TEMPLATE2 (CHOLMOD (gpu_final_assembly))
 (
     cholmod_common *Common,
     double *Lx,
-    Int psx,
-    Int nscol,
-    Int nsrow,
+    int64_t psx,
+    int64_t nscol,
+    int64_t nsrow,
     int supernodeUsedGPU,
     int *iHostBuff,
     int *iDevBuff,
     cholmod_gpu_pointers *gpu_p
 )
 {
-    Int iidx, i, j;
-    Int iHostBuff2 ;
-    Int iDevBuff2 ;
+    int64_t iidx, i, j;
+    int64_t iHostBuff2 ;
+    int64_t iDevBuff2 ;
 
     if ( supernodeUsedGPU ) {
 
@@ -671,7 +681,12 @@ void TEMPLATE2 (CHOLMOD (gpu_final_assembly))
 
             /* copy update assembled on CPU to a pinned buffer */
 
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS)   \
+            #ifdef _OPENMP
+            double work = (double) nscol * (double) nsrow * L_ENTRY ;
+            int nthreads = cholmod_nthreads (work, Common) ;
+            #endif
+
+#pragma omp parallel for num_threads(nthreads)   \
     private(iidx) if (nscol>32)
 
             for ( j=0; j<nscol; j++ ) {
@@ -721,7 +736,12 @@ void TEMPLATE2 (CHOLMOD (gpu_final_assembly))
 
             /* place final assembled supernode in pinned buffer */
 
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS)   \
+            #ifdef _OPENMP
+            double work = (double) nscol * (double) nscol * L_ENTRY ;
+            int nthreads = cholmod_nthreads (work, Common) ;
+            #endif
+
+#pragma omp parallel for num_threads(nthreads)   \
     private(iidx) if (nscol>32)
 
             for ( j=0; j<nscol; j++ ) {
@@ -739,7 +759,12 @@ void TEMPLATE2 (CHOLMOD (gpu_final_assembly))
             /* assemble with CPU updates */
             cudaDeviceSynchronize();
 
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS)   \
+            #ifdef _OPENMP
+            double work = (double) nscol * (double) nsrow * L_ENTRY ;
+            int nthreads = cholmod_nthreads (work, Common) ;
+            #endif
+
+#pragma omp parallel for num_threads(nthreads)   \
     private(iidx) if (nscol>32)
 
             for ( j=0; j<nscol; j++ ) {
@@ -772,11 +797,11 @@ void TEMPLATE2 (CHOLMOD (gpu_final_assembly))
 
 int TEMPLATE2 (CHOLMOD (gpu_lower_potrf))
 (
-    Int nscol2,     /* S is nscol2-by-nscol2 */
-    Int nsrow,      /* leading dimension of S */
-    Int psx,        /* S is located at Lx + L_ENTRY*psx */
+    int64_t nscol2,     /* S is nscol2-by-nscol2 */
+    int64_t nsrow,      /* leading dimension of S */
+    int64_t psx,        /* S is located at Lx + L_ENTRY*psx */
     double *Lx,     /* contains S; overwritten with Cholesky factor */
-    Int *info,      /* BLAS info return value */
+    int64_t *info,      /* BLAS info return value */
     cholmod_common *Common,
     cholmod_gpu_pointers *gpu_p
 )
@@ -785,8 +810,9 @@ int TEMPLATE2 (CHOLMOD (gpu_lower_potrf))
     double alpha, beta ;
     cudaError_t cudaStat ;
     cublasStatus_t cublasStatus ;
-    Int j, nsrow2, nb, n, gpu_lda, lda, gpu_ldb ;
-    int ilda, ijb, iinfo ;
+    int64_t j, nsrow2, nb, n, gpu_lda, lda, gpu_ldb ;
+    int ilda, ijb ;
+    int64_t iinfo ;
 #ifndef NTIMER
     double tstart ;
 #endif
@@ -888,7 +914,7 @@ int TEMPLATE2 (CHOLMOD (gpu_lower_potrf))
 
     for (j = 0 ; j < n ; j += nb)
     {
-        Int jb = nb < (n-j) ? nb : (n-j) ;
+        int64_t jb = nb < (n-j) ? nb : (n-j) ;
 
         /* ------------------------------------------------------------------ */
         /* do the CUDA BLAS dsyrk */
@@ -1005,12 +1031,18 @@ int TEMPLATE2 (CHOLMOD (gpu_lower_potrf))
 
         ilda = (int) lda ;
         ijb  = jb ;
+        bool ok = true ;
 #ifdef REAL
-        LAPACK_DPOTRF ("L", &ijb, A + L_ENTRY * (j + j*lda), &ilda, &iinfo) ;
+        SUITESPARSE_LAPACK_dpotrf ("L", ijb, A + L_ENTRY * (j + j*lda), ilda, iinfo, ok) ;
 #else
-        LAPACK_ZPOTRF ("L", &ijb, A + L_ENTRY * (j + j*lda), &ilda, &iinfo) ;
+        SUITESPARSE_LAPACK_zpotrf ("L", ijb, A + L_ENTRY * (j + j*lda), ilda, iinfo, ok) ;
 #endif
         *info = iinfo ;
+
+        if (!ok)
+        {
+            ERROR (CHOLMOD_TOO_LARGE, "problem too large for the BLAS") ;
+        }
 
         if (*info != 0)
         {
@@ -1132,10 +1164,10 @@ int TEMPLATE2 (CHOLMOD (gpu_lower_potrf))
 
 int TEMPLATE2 (CHOLMOD (gpu_triangular_solve))
 (
-    Int nsrow2,     /* L1 and S2 are nsrow2-by-nscol2 */
-    Int nscol2,     /* L1 is nscol2-by-nscol2 */
-    Int nsrow,      /* leading dimension of L1, L2, and S2 */
-    Int psx,        /* L1 is at Lx+L_ENTRY*psx;
+    int64_t nsrow2,     /* L1 and S2 are nsrow2-by-nscol2 */
+    int64_t nscol2,     /* L1 is nscol2-by-nscol2 */
+    int64_t nsrow,      /* leading dimension of L1, L2, and S2 */
+    int64_t psx,        /* L1 is at Lx+L_ENTRY*psx;
                      * L2 at Lx+L_ENTRY*(psx+nscol2)*/
     double *Lx,     /* holds L1, L2, and S2 */
     cholmod_common *Common,
@@ -1145,16 +1177,16 @@ int TEMPLATE2 (CHOLMOD (gpu_triangular_solve))
     double *devPtrA, *devPtrB ;
     cudaError_t cudaStat ;
     cublasStatus_t cublasStatus ;
-    Int gpu_lda, gpu_ldb, gpu_rowstep ;
+    int64_t gpu_lda, gpu_ldb, gpu_rowstep ;
 
-    Int gpu_row_start = 0 ;
-    Int gpu_row_max_chunk, gpu_row_chunk;
+    int64_t gpu_row_start = 0 ;
+    int64_t gpu_row_max_chunk, gpu_row_chunk;
     int ibuf = 0;
     int iblock = 0;
     int iHostBuff = (Common->ibuffer+CHOLMOD_HOST_SUPERNODE_BUFFERS-1) %
         CHOLMOD_HOST_SUPERNODE_BUFFERS;
     int i, j;
-    Int iidx;
+    int64_t iidx;
     int iwrap;
 
 #ifndef NTIMER
@@ -1272,8 +1304,8 @@ int TEMPLATE2 (CHOLMOD (gpu_triangular_solve))
 
         if ( iblock >= CHOLMOD_HOST_SUPERNODE_BUFFERS )
         {
-            Int gpu_row_start2 ;
-            Int gpu_row_end ;
+            int64_t gpu_row_start2 ;
+            int64_t gpu_row_end ;
 
             /* then CHOLMOD_HOST_SUPERNODE_BUFFERS worth of work has been
              *  scheduled, so check for completed events and copy result into
@@ -1289,7 +1321,13 @@ int TEMPLATE2 (CHOLMOD (gpu_triangular_solve))
 
             if ( gpu_row_end > nsrow ) gpu_row_end = nsrow;
 
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS)   \
+            #ifdef _OPENMP
+            double work = (double) nscol2 *
+                (double) (gpu_row_end - gpu_row_start2) * L_ENTRY ;
+            int nthreads = cholmod_nthreads (work, Common) ;
+            #endif
+
+#pragma omp parallel for num_threads(nthreads)   \
     private(iidx) if ( nscol2 > 32 )
 
             for ( j=0; j<nscol2; j++ ) {
@@ -1303,7 +1341,12 @@ int TEMPLATE2 (CHOLMOD (gpu_triangular_solve))
 
     /* Convenient to copy the L1 block here */
 
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS)   \
+    #ifdef _OPENMP
+    double work = (double) nscol2 * (double) nscol2 * L_ENTRY ;
+    int nthreads = cholmod_nthreads (work, Common) ;
+    #endif
+
+#pragma omp parallel for num_threads(nthreads)   \
 private ( iidx ) if ( nscol2 > 32 )
 
     for ( j=0; j<nscol2; j++ ) {
@@ -1317,19 +1360,25 @@ private ( iidx ) if ( nscol2 > 32 )
     for ( iwrap=0; iwrap<CHOLMOD_HOST_SUPERNODE_BUFFERS; iwrap++ )
     {
         int i, j;
-        Int gpu_row_start2 = nscol2 + (iblock-CHOLMOD_HOST_SUPERNODE_BUFFERS)
+        int64_t gpu_row_start2 = nscol2 + (iblock-CHOLMOD_HOST_SUPERNODE_BUFFERS)
             *gpu_row_max_chunk;
         if (iblock-CHOLMOD_HOST_SUPERNODE_BUFFERS >= 0 &&
             gpu_row_start2 < nsrow )
         {
-            Int iidx;
-            Int gpu_row_end = gpu_row_start2+gpu_row_max_chunk;
+            int64_t iidx;
+            int64_t gpu_row_end = gpu_row_start2+gpu_row_max_chunk;
             if ( gpu_row_end > nsrow ) gpu_row_end = nsrow;
             cudaEventSynchronize ( Common->updateCBuffersFree
                                    [iblock%CHOLMOD_HOST_SUPERNODE_BUFFERS] );
             /* copy into Lx */
 
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS)   \
+            #ifdef _OPENMP
+            double work = (double) nscol2 *
+                (double) (gpu_row_end - gpu_row_start2) * L_ENTRY ;
+            int nthreads = cholmod_nthreads (work, Common) ;
+            #endif
+
+#pragma omp parallel for num_threads(nthreads)   \
     private(iidx) if ( nscol2 > 32 )
 
             for ( j=0; j<nscol2; j++ ) {
@@ -1365,20 +1414,25 @@ void TEMPLATE2 (CHOLMOD (gpu_copy_supernode))
 (
     cholmod_common *Common,
     double *Lx,
-    Int psx,
-    Int nscol,
-    Int nscol2,
-    Int nsrow,
+    int64_t psx,
+    int64_t nscol,
+    int64_t nscol2,
+    int64_t nsrow,
     int supernodeUsedGPU,
     int iHostBuff,
     cholmod_gpu_pointers *gpu_p
 )
 {
-    Int iidx, i, j;
+    int64_t iidx, i, j;
     if ( supernodeUsedGPU && nscol2 * L_ENTRY >= CHOLMOD_POTRF_LIMIT ) {
         cudaDeviceSynchronize();
 
-#pragma omp parallel for num_threads(CHOLMOD_OMP_NUM_THREADS)   \
+        #ifdef _OPENMP
+        double work = (double) nscol * (double) nscol * L_ENTRY ;
+        int nthreads = cholmod_nthreads (work, Common) ;
+        #endif
+
+#pragma omp parallel for num_threads(nthreads)   \
     private(iidx,i,j) if (nscol>32)
 
         for ( j=0; j<nscol; j++ ) {

@@ -2,21 +2,28 @@
 # Makefile for all SuiteSparse packages
 #-------------------------------------------------------------------------------
 
-SUITESPARSE = $(CURDIR)
-export SUITESPARSE
+# edit this variable to pass options to cmake:
+export CMAKE_OPTIONS ?=
 
-default: go
+# edit this variable to control parallel make:
+export JOBS ?= 8
 
-include SuiteSparse_config/SuiteSparse_config.mk
+# do not modify this variable
+export SUITESPARSE = $(CURDIR)
 
-# Compile the default rules for each package.  Compiled libraries for all
-# packages are placed in SuiteSparse/lib, except for Mongoose and GraphBLAS.
-# Those two packages use CMake, and their compiled libraries are placed in
-# Mongoose/build and GraphBLAS/build, respectively.  Then "make install"
-# installs all libraries SuiteSparse/lib.
-go: metis
+#-------------------------------------------------------------------------------
+
+# Compile the default rules for each package.
+
+# default: "make install" will install all libraries in /usr/local/lib
+# and include files in /usr/local/include.  Not installed in SuiteSparse/lib.
+default: library
+
+# compile; "sudo make install" will install only in /usr/local
+# (or whatever your CMAKE_INSTALL_PREFIX is)
+library:
 	( cd SuiteSparse_config && $(MAKE) )
-	( cd Mongoose && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' )
+	( cd Mongoose && $(MAKE) )
 	( cd AMD && $(MAKE) )
 	( cd BTF && $(MAKE) )
 	( cd CAMD && $(MAKE) )
@@ -29,72 +36,105 @@ go: metis
 	( cd KLU && $(MAKE) )
 	( cd UMFPACK && $(MAKE) )
 	( cd RBio && $(MAKE) )
-ifneq ($(GPU_CONFIG),)
 	( cd SuiteSparse_GPURuntime && $(MAKE) )
 	( cd GPUQREngine && $(MAKE) )
-endif
 	( cd SPQR && $(MAKE) )
-	( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' )
-	( cd SLIP_LU && $(MAKE) )
-#	( cd PIRO_BAND && $(MAKE) )
-#	( cd SKYLINE_SVD && $(MAKE) )
+	( cd SPEX && $(MAKE) )
+	( cd GraphBLAS && $(MAKE) )
 
-# install all packages in SuiteSparse/lib and SuiteSparse/include.  Use the
-# following command to install in /usr/local/lib and /usr/local/include:
-#       sudo make install INSTALL=/usr/local
-# See SuiteSparse/README.md for more details.
-# (note that CSparse is not installed; CXSparse is installed instead)
-install: metisinstall gbinstall moninstall
+# compile; "make install" only in  SuiteSparse/lib and SuiteSparse/include
+local:
+	( cd SuiteSparse_config && $(MAKE) local )
+	( cd Mongoose && $(MAKE) local )
+	( cd AMD && $(MAKE) local )
+	( cd BTF && $(MAKE) local )
+	( cd CAMD && $(MAKE) local )
+	( cd CCOLAMD && $(MAKE) local )
+	( cd COLAMD && $(MAKE) local )
+	( cd CHOLMOD && $(MAKE) local )
+	( cd CSparse && $(MAKE) )  # CSparse is compiled but not installed
+	( cd CXSparse && $(MAKE) local )
+	( cd LDL && $(MAKE) local )
+	( cd KLU && $(MAKE) local )
+	( cd UMFPACK && $(MAKE) local )
+	( cd RBio && $(MAKE) local )
+	( cd SuiteSparse_GPURuntime && $(MAKE) local )
+	( cd GPUQREngine && $(MAKE) local )
+	( cd SPQR && $(MAKE) local )
+	( cd SPEX && $(MAKE) local )
+	( cd GraphBLAS && $(MAKE) local )
+
+# compile; "sudo make install" will install only in /usr/local
+# (or whatever your CMAKE_INSTALL_PREFIX is)
+global:
+	( cd SuiteSparse_config && $(MAKE) global )
+	( cd Mongoose && $(MAKE) global )
+	( cd AMD && $(MAKE) global )
+	( cd BTF && $(MAKE) global )
+	( cd CAMD && $(MAKE) global )
+	( cd CCOLAMD && $(MAKE) global )
+	( cd COLAMD && $(MAKE) global )
+	( cd CHOLMOD && $(MAKE) global )
+	( cd CSparse && $(MAKE) )  # CSparse is compiled but not installed
+	( cd CXSparse && $(MAKE) global )
+	( cd LDL && $(MAKE) global )
+	( cd KLU && $(MAKE) global )
+	( cd UMFPACK && $(MAKE) global )
+	( cd RBio && $(MAKE) global )
+	( cd SuiteSparse_GPURuntime && $(MAKE) global )
+	( cd GPUQREngine && $(MAKE) global )
+	( cd SPQR && $(MAKE) global )
+	( cd SPEX && $(MAKE) global )
+	( cd GraphBLAS && $(MAKE) global )
+
+# compile; "sudo make install" will install only in /usr/local
+# (or whatever your CMAKE_INSTALL_PREFIX is)
+both:
+	( cd SuiteSparse_config && $(MAKE) both )
+	( cd Mongoose && $(MAKE) both )
+	( cd AMD && $(MAKE) both )
+	( cd BTF && $(MAKE) both )
+	( cd CAMD && $(MAKE) both )
+	( cd CCOLAMD && $(MAKE) both )
+	( cd COLAMD && $(MAKE) both )
+	( cd CHOLMOD && $(MAKE) both )
+	( cd CSparse && $(MAKE) )  # CSparse is compiled but not installed
+	( cd CXSparse && $(MAKE) both )
+	( cd LDL && $(MAKE) both )
+	( cd KLU && $(MAKE) both )
+	( cd UMFPACK && $(MAKE) both )
+	( cd RBio && $(MAKE) both )
+	( cd SuiteSparse_GPURuntime && $(MAKE) both )
+	( cd GPUQREngine && $(MAKE) both )
+	( cd SPQR && $(MAKE) both )
+	( cd SPEX && $(MAKE) both )
+	( cd GraphBLAS && $(MAKE) both )
+
+# install all packages.  Location depends on prior "make", "make global" etc
+install:
 	( cd SuiteSparse_config && $(MAKE) install )
-	# ( cd Mongoose  && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
+	( cd Mongoose  && $(MAKE) install )
 	( cd AMD && $(MAKE) install )
 	( cd BTF && $(MAKE) install )
 	( cd CAMD && $(MAKE) install )
 	( cd CCOLAMD && $(MAKE) install )
 	( cd COLAMD && $(MAKE) install )
 	( cd CHOLMOD && $(MAKE) install )
-	( cd CXSparse && $(MAKE) install )
+	( cd CXSparse && $(MAKE) install ) # CXSparse is installed instead
 	( cd LDL && $(MAKE) install )
 	( cd KLU && $(MAKE) install )
 	( cd UMFPACK && $(MAKE) install )
 	( cd RBio && $(MAKE) install )
-ifneq (,$(GPU_CONFIG))
 	( cd SuiteSparse_GPURuntime && $(MAKE) install )
 	( cd GPUQREngine && $(MAKE) install )
-endif
 	( cd SPQR && $(MAKE) install )
-	# ( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
-#	( cd PIRO_BAND && $(MAKE) install )
-#	( cd SKYLINE_SVD && $(MAKE) install )
-	( cd SLIP_LU && $(MAKE) install )
-	$(CP) README.md $(INSTALL_DOC)/SuiteSparse_README.md
-	chmod 644 $(INSTALL_DOC)/SuiteSparse_README.md
-
-metisinstall: metis
-ifeq (,$(MY_METIS_LIB))
-        # install METIS from SuiteSparse/metis-5.1.0
-	@mkdir -p $(INSTALL_LIB)
-	@mkdir -p $(INSTALL_INCLUDE)
-	@mkdir -p $(INSTALL_DOC)
-	- $(CP) lib/libmetis.* $(INSTALL_LIB)
-	- $(CP) metis-5.1.0/manual/manual.pdf $(INSTALL_DOC)/METIS_manual.pdf
-	- $(CP) metis-5.1.0/README.txt $(INSTALL_DOC)/METIS_README.txt
-        # the following is needed only on the Mac, so *.dylib is hardcoded:
-	$(SO_INSTALL_NAME) $(INSTALL_LIB)/libmetis.dylib $(INSTALL_LIB)/libmetis.dylib
-	- $(CP) include/metis.h $(INSTALL_INCLUDE)
-	chmod 755 $(INSTALL_LIB)/libmetis.*
-	chmod 644 $(INSTALL_INCLUDE)/metis.h
-	chmod 644 $(INSTALL_DOC)/METIS_manual.pdf
-	chmod 644 $(INSTALL_DOC)/METIS_README.txt
-endif
+	( cd SPEX && $(MAKE) install )
+	( cd GraphBLAS && $(MAKE) install )
 
 # uninstall all packages
 uninstall:
-	$(RM) $(INSTALL_DOC)/SuiteSparse_README.md
 	( cd SuiteSparse_config && $(MAKE) uninstall )
-	- ( cd metis-5.1.0 && $(MAKE) uninstall )
-	- ( cd GraphBLAS && $(MAKE) uninstall )
-	- ( cd Mongoose  && $(MAKE) uninstall )
+	( cd Mongoose  && $(MAKE) uninstall )
 	( cd AMD && $(MAKE) uninstall )
 	( cd CAMD && $(MAKE) uninstall )
 	( cd COLAMD && $(MAKE) uninstall )
@@ -104,85 +144,21 @@ uninstall:
 	( cd CCOLAMD && $(MAKE) uninstall )
 	( cd UMFPACK && $(MAKE) uninstall )
 	( cd CHOLMOD && $(MAKE) uninstall )
-	( cd CSparse && $(MAKE) uninstall )
 	( cd CXSparse && $(MAKE) uninstall )
 	( cd RBio && $(MAKE) uninstall )
 	( cd SuiteSparse_GPURuntime && $(MAKE) uninstall )
 	( cd GPUQREngine && $(MAKE) uninstall )
 	( cd SPQR && $(MAKE) uninstall )
-	( cd SLIP_LU && $(MAKE) uninstall )
-#	( cd PIRO_BAND && $(MAKE) uninstall )
-#	( cd SKYLINE_SVD && $(MAKE) uninstall )
-ifeq (,$(MY_METIS_LIB))
-        # uninstall METIS, which came from SuiteSparse/metis-5.1.0
-	$(RM) $(INSTALL_LIB)/libmetis.*
-	$(RM) $(INSTALL_INCLUDE)/metis.h
-	$(RM) $(INSTALL_DOC)/METIS_manual.pdf
-	$(RM) $(INSTALL_DOC)/METIS_README.txt
-endif
-	$(RM) -r $(INSTALL_DOC)
+	( cd SPEX && $(MAKE) uninstall )
+	( cd GraphBLAS && $(MAKE) uninstall )
 
-# compile the dynamic libraries.  For GraphBLAS and Mongoose, this also builds
-# the static library
-library: metis
-	( cd SuiteSparse_config && $(MAKE) )
-	( cd Mongoose  && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' library )
-	( cd AMD && $(MAKE) library )
-	( cd BTF && $(MAKE) library )
-	( cd CAMD && $(MAKE) library )
-	( cd CCOLAMD && $(MAKE) library )
-	( cd COLAMD && $(MAKE) library )
-	( cd CHOLMOD && $(MAKE) library )
-	( cd KLU && $(MAKE) library )
-	( cd LDL && $(MAKE) library )
-	( cd UMFPACK && $(MAKE) library )
-	( cd CSparse && $(MAKE) library )
-	( cd CXSparse && $(MAKE) library )
-	( cd RBio && $(MAKE) library )
-ifneq (,$(GPU_CONFIG))
-	( cd SuiteSparse_GPURuntime && $(MAKE) library )
-	( cd GPUQREngine && $(MAKE) library )
-endif
-	( cd SPQR && $(MAKE) library )
-	( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' library )
-	( cd SLIP_LU && $(MAKE) library )
-#	( cd PIRO_BAND && $(MAKE) library )
-#	( cd SKYLINE_SVD && $(MAKE) library )
-
-# compile the static libraries (except for metis, GraphBLAS, and Mongoose).
-# metis is only dynamic, and the 'make static' for GraphBLAS and Mongoose makes
-# both the dynamic and static libraries.
-static: metis
-	( cd SuiteSparse_config && $(MAKE) static )
-	( cd Mongoose  && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' static )
-	( cd AMD && $(MAKE) static )
-	( cd BTF && $(MAKE) static )
-	( cd CAMD && $(MAKE) static )
-	( cd CCOLAMD && $(MAKE) static )
-	( cd COLAMD && $(MAKE) static )
-	( cd CHOLMOD && $(MAKE) static )
-	( cd KLU && $(MAKE) static )
-	( cd LDL && $(MAKE) static )
-	( cd UMFPACK && $(MAKE) static )
-	( cd CSparse && $(MAKE) static )
-	( cd CXSparse && $(MAKE) static )
-	( cd RBio && $(MAKE) static )
-ifneq (,$(GPU_CONFIG))
-	( cd SuiteSparse_GPURuntime && $(MAKE) static )
-	( cd GPUQREngine && $(MAKE) static )
-endif
-	( cd SPQR && $(MAKE) static )
-	( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' static )
-	( cd SLIP_LU && $(MAKE) static )
-#	( cd PIRO_BAND && $(MAKE) static )
-#	( cd SKYLINE_SVD && $(MAKE) static )
+# Remove all files not in the original distribution
+distclean: purge
 
 # Remove all files not in the original distribution
 purge:
 	- ( cd SuiteSparse_config && $(MAKE) purge )
-	- ( cd metis-5.1.0 && $(MAKE) distclean )
 	- ( cd AMD && $(MAKE) purge )
-	- ( cd GraphBLAS && $(MAKE) purge )
 	- ( cd Mongoose  && $(MAKE) purge )
 	- ( cd CAMD && $(MAKE) purge )
 	- ( cd COLAMD && $(MAKE) purge )
@@ -195,22 +171,18 @@ purge:
 	- ( cd CSparse && $(MAKE) purge )
 	- ( cd CXSparse && $(MAKE) purge )
 	- ( cd RBio && $(MAKE) purge )
-	- ( cd MATLAB_Tools/SuiteSparseCollection && $(RM) *.mex* )
-	- ( cd MATLAB_Tools/SSMULT && $(RM) *.mex* )
 	- ( cd SuiteSparse_GPURuntime && $(MAKE) purge )
 	- ( cd GPUQREngine && $(MAKE) purge )
 	- ( cd SPQR && $(MAKE) purge )
-	- ( cd SLIP_LU && $(MAKE) purge )
-#	- ( cd PIRO_BAND && $(MAKE) purge )
-#	- ( cd SKYLINE_SVD && $(MAKE) purge )
-	- $(RM) MATLAB_Tools/*/*.mex* MATLAB_Tools/spok/private/*.mex*
-	- $(RM) -r include/* bin/* lib/* share/*
+	- $(RM) MATLAB_Tools/*/*.mex* MATLAB_Tools/*/*/*.mex*
+	- $(RM) MATLAB_Tools/*/*.o    MATLAB_Tools/*/*/*.o
+	- $(RM) -r include/* bin/* lib/*
+	- ( cd SPEX && $(MAKE) purge )
+	- ( cd GraphBLAS && $(MAKE) purge )
 
 # Remove all files not in the original distribution, but keep the libraries
 clean:
 	- ( cd SuiteSparse_config && $(MAKE) clean )
-	- ( cd metis-5.1.0 && $(MAKE) clean )
-	- ( cd GraphBLAS && $(MAKE) clean )
 	- ( cd Mongoose  && $(MAKE) clean )
 	- ( cd AMD && $(MAKE) clean )
 	- ( cd CAMD && $(MAKE) clean )
@@ -227,14 +199,35 @@ clean:
 	- ( cd SuiteSparse_GPURuntime && $(MAKE) clean )
 	- ( cd GPUQREngine && $(MAKE) clean )
 	- ( cd SPQR && $(MAKE) clean )
-	- ( cd SLIP_LU && $(MAKE) clean )
-#	- ( cd PIRO_BAND && $(MAKE) clean )
-#	- ( cd SKYLINE_SVD && $(MAKE) clean )
+	- ( cd SPEX && $(MAKE) clean )
+	- ( cd GraphBLAS && $(MAKE) clean )
+
+# Run all demos
+demos:
+	- ( cd SuiteSparse_config && $(MAKE) demos )
+	- ( cd Mongoose && $(MAKE) demos )
+	- ( cd AMD && $(MAKE) demos )
+	- ( cd CAMD && $(MAKE) demos )
+	- ( cd COLAMD && $(MAKE) demos )
+	- ( cd BTF && $(MAKE) demos )
+	- ( cd KLU && $(MAKE) demos )
+	- ( cd LDL && $(MAKE) demos )
+	- ( cd CCOLAMD && $(MAKE) demos )
+	- ( cd UMFPACK && $(MAKE) demos )
+	- ( cd CHOLMOD && $(MAKE) demos )
+	- ( cd CSparse && $(MAKE) demos )
+	- ( cd CXSparse && $(MAKE) demos )
+	- ( cd RBio && $(MAKE) demos )
+	- ( cd SuiteSparse_GPURuntime && $(MAKE) demos )
+	- ( cd GPUQREngine && $(MAKE) demos )
+	- ( cd SPQR && $(MAKE) demos )
+	- ( cd SPEX && $(MAKE) demos )
+	- ( cd GraphBLAS && $(MAKE) demos )
 
 # Create the PDF documentation
 docs:
 	( cd GraphBLAS && $(MAKE) docs )
-	( cd Mongoose  && $(MAKE) docs )
+#	( cd Mongoose  && $(MAKE) docs )
 	( cd AMD && $(MAKE) docs )
 	( cd CAMD && $(MAKE) docs )
 	( cd KLU && $(MAKE) docs )
@@ -242,76 +235,21 @@ docs:
 	( cd UMFPACK && $(MAKE) docs )
 	( cd CHOLMOD && $(MAKE) docs )
 	( cd SPQR && $(MAKE) docs )
-	( cd SLIP_LU && $(MAKE) docs )
-#	( cd PIRO_BAND && $(MAKE) docs )
-#	( cd SKYLINE_SVD && $(MAKE) docs )
-
-distclean: purge
-
-# Create CXSparse from CSparse
-# Note that the CXSparse directory should initially not exist.
-cx:
-	( cd CSparse ; $(MAKE) purge )
-	( cd SuiteSparse_config && $(MAKE) )
-	( cd CXSparse_newfiles ; tar cfv - * | gzip -9 > ../CXSparse_newfiles.tar.gz )
-	./CSparse_to_CXSparse CSparse CXSparse CXSparse_newfiles.tar.gz
-	( cd CXSparse/Demo ; $(MAKE) )
-	( cd CXSparse/Demo ; $(MAKE) > cs_demo.out )
-	( cd CXSparse ; $(MAKE) purge )
-	$(RM) -f CXSparse_newfiles.tar.gz
+	( cd SPEX && $(MAKE) docs )
 
 # statement coverage (Linux only); this requires a lot of time.
-# The umfpack tcov requires a lot of disk space in /tmp
-cov: purge
+cov: local install
 	( cd CXSparse && $(MAKE) cov )
 	( cd CSparse && $(MAKE) cov )
 	( cd CHOLMOD && $(MAKE) cov )
 	( cd KLU && $(MAKE) cov )
 	( cd SPQR && $(MAKE) cov )
 	( cd UMFPACK && $(MAKE) cov )
-	( cd SLIP_LU && $(MAKE) cov )
-#	( cd PIRO_BAND && $(MAKE) cov )
-#	( cd SKYLINE_SVD && $(MAKE) cov )
+	( cd SPEX && $(MAKE) cov )
 
-# configure and compile METIS, placing the libmetis.* library in
-# SuiteSparse/lib and the metis.h include file in SuiteSparse/include.
-metis: include/metis.h
+gbmatlab:
+	( cd GraphBLAS/GraphBLAS && $(MAKE) )
 
-# Install the shared version of METIS in SuiteSparse/lib.
-# The SO_INSTALL_NAME commmand is only needed on the Mac, so *.dylib is
-# hardcoded below.
-include/metis.h:
-ifeq (,$(MY_METIS_LIB))
-	- ( cd metis-5.1.0 && $(MAKE) config shared=1 prefix=$(SUITESPARSE) cc=$(CC) )
-	- ( cd metis-5.1.0 && $(MAKE) )
-	- ( cd metis-5.1.0 && $(MAKE) install )
-	- $(SO_INSTALL_NAME) $(SUITESPARSE)/lib/libmetis.dylib \
-                             $(SUITESPARSE)/lib/libmetis.dylib
-else
-	@echo 'Using pre-installed METIS 5.1.0 library at ' '[$(MY_METIS_LIB)]'
-endif
-
-# just compile GraphBLAS
-gb:
-	echo $(CMAKE_OPTIONS)
-	( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' )
-
-# compile and install GraphBLAS
-gbinstall: gb
-	echo $(CMAKE_OPTIONS)
-	( cd GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
-
-# compile and install GraphBLAS libgraphblas_renamed, for MATLAB
-gbrenamed:
-	echo $(CMAKE_OPTIONS)
-	( cd GraphBLAS/GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' )
-	( cd GraphBLAS/GraphBLAS && $(MAKE) JOBS=$(JOBS) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
-
-# just compile Mongoose
-mon:
-	( cd Mongoose && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' )
-
-# compile and install Mongoose
-moninstall: mon
-	( cd Mongoose  && $(MAKE) CMAKE_OPTIONS='$(CMAKE_OPTIONS)' install )
+gblocal:
+	( cd GraphBLAS/GraphBLAS && $(MAKE) local && $(MAKE) install )
 

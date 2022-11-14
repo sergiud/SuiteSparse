@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 
 // SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -51,11 +51,14 @@ void mexFunction
                 version [0], version [1], version [2], date) ;
         char *compiler ;
         int cver [3] ;
+        bool have_openmp ;
         OK (GxB_get (GxB_COMPILER_NAME, &compiler)) ;
         OK (GxB_get (GxB_COMPILER_VERSION, cver)) ;
-        printf ("GraphBLAS compiled with %s (v%d.%d.%d)\n\n", compiler,
-            cver [0], cver [1], cver [2]) ;
-        printf ("@GrB License: GNU General Public License v3.0 or later\n\n") ;
+        OK (GxB_get (GxB_LIBRARY_OPENMP, &have_openmp)) ;
+        printf ("GraphBLAS compiled with %s (v%d.%d.%d), %s OpenMP\n", compiler,
+            cver [0], cver [1], cver [2],
+            have_openmp ? "with" : "without") ;
+        printf ("@GrB License: Apache-2.0\n\n") ;
         OK (GxB_Global_Option_get (GxB_API_ABOUT, &spec)) ;
         printf ("Spec:\n%s\n", spec) ;
         OK (GxB_Global_Option_get (GxB_API_URL, &url)) ;

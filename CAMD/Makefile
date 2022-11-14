@@ -1,63 +1,94 @@
-#------------------------------------------------------------------------------
-# CAMD Makefile
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+# SuiteSparse/CAMD/Makefile
+#-------------------------------------------------------------------------------
 
-SUITESPARSE ?= $(realpath $(CURDIR)/..)
-export SUITESPARSE
+# CAMD: Copyright (c) 2009-2022, Timothy A. Davis, Patrick Amestoy, Iain Duff,
+# Yanqing Chen.  All Rights Reserved.
+# SPDX-License-Identifier: BSD-3-clause
 
-default: all
+#-------------------------------------------------------------------------------
 
-include ../SuiteSparse_config/SuiteSparse_config.mk
+# A simple Makefile for CAMD, which relies on cmake to do the
+# actual build.  All the work is done in cmake so this Makefile is just for
+# convenience.
 
-demos: all
+# To compile with an alternate compiler:
+#
+#       make CC=gcc CXX=g++
+#
+# To compile/install for system-wide usage:
+#
+#       make
+#       sudo make install
+#
+# To compile/install for local usage (SuiteSparse/lib and SuiteSparse/include):
+#
+#       make local
+#       make install
+#
+# To clean up the files:
+#
+#       make clean
 
-# Compile all C code.  Do not compile the FORTRAN versions.
-all:
-	( cd Lib    ; $(MAKE) )
-	( cd Demo   ; $(MAKE) )
+JOBS ?= 8
 
-# compile just the C-callable libraries (not Demos)
+default: library
+
+# default is to install only in /usr/local
 library:
-	( cd Lib    ; $(MAKE) )
+	( cd build && cmake $(CMAKE_OPTIONS) .. && $(MAKE) --jobs=${JOBS} )
 
-# compile the static libraries only
-static:
-	( cd Lib    ; $(MAKE) static )
+# install only in SuiteSparse/lib and SuiteSparse/include
+local:
+	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=0 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
 
-# remove object files, but keep the compiled programs and library archives
-clean:
-	( cd Lib    ; $(MAKE) clean )
-	( cd Demo   ; $(MAKE) clean )
-	( cd MATLAB ; $(RM) $(CLEAN) )
-	( cd Doc    ; $(MAKE) clean )
+# install only in /usr/local (default)
+global:
+	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=0 .. && $(MAKE) --jobs=${JOBS} )
 
-# clean, and then remove compiled programs and library archives
-purge:
-	( cd Lib    ; $(MAKE) purge )
-	( cd Demo   ; $(MAKE) purge )
-	( cd MATLAB ; $(RM) $(CLEAN) ; $(RM) *.mex* )
-	( cd Doc    ; $(MAKE) purge )
+# install in SuiteSparse/lib both and SuiteSparse/include and /usr/local
+both:
+	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
 
-distclean: purge
+debug:
+	( cd build && cmake $(CMAKE_OPTIONS) -DCMAKE_BUILD_TYPE=Debug .. && $(MAKE) --jobs=${JOBS} )
 
-# create PDF documents for the original distribution
-docs:
-	( cd Doc    ; $(MAKE) )
+all: library
 
-# get ready for distribution
-dist: purge
-	( cd Demo   ; $(MAKE) dist )
-	( cd Doc    ; $(MAKE) )
+demos: library
+	( cd build && cmake $(CMAKE_OPTIONS) -DDEMO=1 .. && $(MAKE) --jobs=${JOBS} )
+	./build/camd_demo > build/camd_demo.out
+	- diff Demo/camd_demo.out build/camd_demo.out
+	./build/camd_l_demo > build/camd_l_demo.out
+	- diff Demo/camd_l_demo.out build/camd_l_demo.out
+	./build/camd_demo2 > build/camd_demo2.out
+	- diff Demo/camd_demo2.out build/camd_demo2.out
+	./build/camd_simple > build/camd_simple.out
+	- diff Demo/camd_simple.out build/camd_simple.out
 
-ccode: library
+# just compile after running cmake&& do not run cmake again
+remake:
+	( cd build && $(MAKE) --jobs=${JOBS} )
 
-lib: library
+# just run cmake to set things up
+setup:
+	( cd build && cmake $(CMAKE_OPTIONS) .. )
 
-# install CAMD
 install:
-	( cd Lib ; $(MAKE) install )
+	( cd build && $(MAKE) install )
 
-# uninstall CAMD
+# remove any installed libraries and #include files
 uninstall:
-	( cd Lib ; $(MAKE) uninstall )
+	- xargs rm < build/install_manifest.txt
+
+# remove all files not in the distribution
+clean:
+	- $(RM) -rf build/* Config/*.tmp MATLAB/*.o MATLAB/*.mex*
+
+purge: clean
+
+distclean: clean
+
+docs:
+	( cd Doc && $(MAKE) )
 

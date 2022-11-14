@@ -3,6 +3,7 @@
 %-------------------------------------------------------------------------------
 
 \documentclass[11pt]{article}
+\batchmode
 
 \newcommand{\m}[1]{{\bf{#1}}}       % for matrices and vectors
 \newcommand{\tr}{^{\sf T}}          % transpose
@@ -21,7 +22,7 @@ DrTimothyAldenDavis@gmail.com, http://www.suitesparse.com }
 \title{User Guide for CHOLMOD: a sparse Cholesky factorization and
 modification package}
 
-\date{VERSION 3.0.14, Oct 22, 2019}
+\input{cholmod_version.tex}
 \maketitle
 
 %-------------------------------------------------------------------------------
@@ -42,13 +43,13 @@ modification package}
     that can factorize symmetric indefinite matrices if all of their
     leading submatrices are well-conditioned ($\m{D}$ is diagonal).
     CHOLMOD is written in ANSI/ISO C, with both
-    C and MATLAB interfaces.  This code works on Microsoft Windows and many versions
-    of Unix and Linux.
+    C and MATLAB interfaces.  This code works on Microsoft Windows and many
+    versions of Unix and Linux.
 \end{abstract}
 %-------------------------------------------------------------------------------
 
-CHOLMOD Copyright\copyright 2005-2015 by Timothy A. Davis.  Portions are also
-copyrighted by William W. Hager (the {\tt Modify} Module),
+CHOLMOD Copyright\copyright 2005-2022 by Timothy A. Davis, All Rights Reserved.
+Portions are also copyrighted by William W. Hager (the {\tt Modify} Module),
 and the University of Florida (the {\tt Partition} and {\tt Core} Modules).
 All Rights Reserved.
 
@@ -255,8 +256,7 @@ along with CHOLMOD, but three of which are not.  Those included with CHOLMOD are
     {\tt -DNCAMD} flag.
 \item {\tt SuiteSparse\_config}:
     a single place where all sparse matrix packages authored
-    or co-authored by Davis are configured.  Also includes a version of the
-    {\tt xerbla} routine for the BLAS.
+    or co-authored by Davis are configured.
 \end{itemize}
 
 Three other packages are required for optimal performance:
@@ -283,41 +283,7 @@ Three other packages are required for optimal performance:
 \end{itemize}
 
 You must first obtain and install LAPACK, and the BLAS.
-METIS 5.1.0 is optional; a copy of it is in {\tt SuiteSparse}.
-System-dependent configurations in the
-{\tt SuiteSparse\_config/SuiteSparse\_config.mk} file.
-This file has been changed in CHOLMOD version 3.0.7;
-it now automatically detects your system, your BLAS, and whether or not
-you have CUDA installed, and whether or not you have METIS 5.1.0.
-You still may need to edit it to refine the
-compilation parameters for your particular system, but it is likely it
-will work unmodified.
-
-\noindent
-Here are some of the various parameters that you can control in your
-{\tt SuiteSparse\_config/SuiteSparse\_config.mk} file.
-You can set them without editing that file, simply by including
-them on your {\tt make} command.  For example, to {\tt -lmyblas},
-use {\tt make BLAS=-lmyblas}.  For a complete list, including
-their default values, do {\tt make config}.
-\begin{itemize}
-\item {\tt CC = } your C compiler, such as {\tt cc}.
-\item {\tt CF = } optimization flags, such as {\tt -O}.
-\item {\tt RANLIB = } your system's {\tt ranlib} program, if needed.
-\item {\tt ARCHIVE =} the command to create a library (such as {\tt ar}).
-\item {\tt RM =} the command to delete a file.
-\item {\tt MV =} the command to rename a file.
-\item {\tt F77 =} the command to compile a Fortran program (optional).
-\item {\tt F77FLAGS =} the Fortran compiler flags (optional).
-\item {\tt F77LIB =} the Fortran libraries (optional).
-\item {\tt LDLIBS = } basic libraries, such as {\tt -lm}.
-\item {\tt BLAS =} your BLAS library.
-\item {\tt LAPACK =} your LAPACK library.
-\item {\tt METIS\_PATH =} the path to your copy of the METIS 5.1.0 source code.
-\item {\tt METIS =} your METIS library.
-\item {\tt GPU\_CONFIG = } configuration settings specific to the CUDA BLAS.
-\item {\tt CHOLMOD\_CONFIG = } configuration settings specific to CHOLMOD.
-\end{itemize}
+METIS 5.1.0 is optional; a copy of it is in {\tt SuiteSparse\_metis}.
 
 \noindent
 CHOLMOD's specific settings are given by the {\tt CHOLMOD\_CONFIG} string:
@@ -333,25 +299,10 @@ CHOLMOD's specific settings are given by the {\tt CHOLMOD\_CONFIG} string:
 \item {\tt -DNMODIFY}:	    do not include the Modify module.
 \item {\tt -DNSUPERNODAL}:  do not include the Supernodal module.
 \item {\tt -DNPRINT}:	    do not print anything.
-\item {\tt -D'LONGBLAS=long'} or {\tt -DLONGBLAS='long long'}
-			    defines the integers used by LAPACK
-                            and the BLAS (defaults to {\tt int}).
-\item {\tt -DNSUNPERF}:	    for Solaris only.  If defined, do not use the
-                            Sun Performance Library.
-\item {\tt -DNLARGEFILE}:   CHOLMOD now assumes support for large files (2GB or
-                            larger).  If this causes problems, you can compile
-                            CHOLMOD with -DNLARGEFILE.  To use large files, you
-                            should {\tt \#include "cholmod.h"} (or at least
-                            {\tt \#include "cholmod\_io64.h"}) before any other
-                            {\tt \#include} statements, in your application
-                            that uses CHOLMOD.  You may need to use {\tt
-                            fopen64} to create a file pointer to pass to
-                            CHOLMOD, if you are using a non-gcc compiler.
 \end{itemize}
 
 Type {\tt make} in the {\tt CHOLMOD} directory.  The AMD,
-COLAMD, CAMD, CCOLAMD, and {\tt CHOLMOD} libraries will be compiled,
-as will the C version of the null-output {\tt xerbla} routine in case you need it.
+COLAMD, CAMD, CCOLAMD, and {\tt CHOLMOD} libraries will be compiled.
 No Fortran compiler is required in this case.  A short demo program will
 be compiled and tested on a few matrices.  The residuals should all be small.
 Compare your output with the {\tt CHOLMOD/Demo/make.out} file.
@@ -363,11 +314,7 @@ your programs with the
 {\tt libcolamd.*},
 LAPACK,
 and
-BLAS libraries,
-as well as the {\tt xerbla} library if you need it
-({\tt SuiteSparse\_config/xerbla/libcerbla.*} for the C version or
-\newline
- {\tt SuiteSparse\_config/xerbla/libxerbla.*} for the Fortran version).
+BLAS libraries.
 Unless you use {\tt -DNPARTITION}, you must also link with the METIS 5.1.0
 library.
 Unless {\tt -DNCAMD} is present at compile time,
@@ -443,7 +390,7 @@ Each function is described in the next sections.
 \newpage
 \subsection{{\tt lchol}: $\m{LL}\tr$ factorization}				\input{_lchol_m.tex}
 \subsection{{\tt ldlchol}: $\m{LDL}\tr$ factorization}				\input{_ldlchol_m.tex}
-\newpage
+% \newpage
 \subsection{{\tt ldlsolve}: solve using an $\m{LDL}\tr$ factorization}		\input{_ldlsolve_m.tex}
 \subsection{{\tt ldlsplit}: split an $\m{LDL}\tr$ factorization}		\input{_ldlsplit_m.tex}
 \newpage
@@ -478,15 +425,30 @@ Each function is described in the next sections.
 This is the preferred method, since it allows METIS to be reconfigured to
 use the MATLAB memory-management functions instead of {\tt malloc} and {\tt free};
 this avoids the issue of METIS terminating MATLAB if it runs out of memory.
-It is also simpler for Windows users, who do not have the {\tt make}
-command (unless you obtain a copy of {\tt Cygwin}).
 
 Start MATLAB, {\tt cd} to the {\tt CHOLMOD/MATLAB} directory, and
 type {\tt cholmod\_make} in the MATLAB command window.  This will compile
 the MATLAB interfaces for AMD, COLAMD, CAMD, CCOLAMD, METIS, and CHOLMOD.
 
 %-------------------------------------------------------------------------------
-\newpage \section{Using CHOLMOD with GPU acceleration}
+\section{Using CHOLMOD with OpenMP acceleration}
+%-------------------------------------------------------------------------------
+
+CHOLMOD includes OpenMP acceleration for some operations.
+In CHOLMOD versions prior to v6.0.0, the number of threads to use was controlled
+by a compile time parameter.  This is now replaced with run-time controls.
+
+\verb'Common->nthreads_max' defaults to \verb'omp_get_max_threads()', or 1 if
+OpenMP is not in use.  This value controls the maximum number of threads that
+CHOLMOD will use.  If zero or less, the default is used.  The
+\verb'Common->chunk' parameter controls how many threads are used when the work
+to do is low.  If $w$ is a count of operations to perform, $c$ =
+\verb'Common->chunk', and $m$ = \verb'Common->nthreads_max', then a parallel
+region will use $\max (1, \min (\lfloor w/c \rfloor, m))$ threads.  These
+parameters can be revised by the user application at run time.
+
+%-------------------------------------------------------------------------------
+\section{Using CHOLMOD with GPU acceleration}
 %-------------------------------------------------------------------------------
 
 Starting with CHOLMOD v2.0.0, it is possible to accelerate the numerical
@@ -510,14 +472,8 @@ Only the {\tt long} integer version of CHOLMOD can leverage GPU acceleration.
 %-------------------------------------------------------------------------------
 
 In order to support GPU processing, CHOLMOD must be compiled with the
-preprocessor macro {\tt GPU\_BLAS} defined.  All GPU code is conditional upon
-this macro.  As well, the environment variable {\tt CUDA\_ROOT} must be defined
-and point to the installation of the CUDA toolkit to be used for compilation of
-CHOLMOD.  Typically this would be {\tt /usr/local/cuda}.
-
-The {\tt SuiteSparse\_config.mk} should automatically detect if you have
-CUDA installed on your system.  If so, then it will do everything for you
-without the need to edit the {\tt SuiteSparse\_config.mk} file.
+preprocessor macro \verb'ENABLE_CUDA' defined.  It is enabled by default
+but can be disabled by setting this to false when using cmake.
 
 %-------------------------------------------------------------------------------
 \subsection{Enabling GPU acceleration in CHOLMOD}
@@ -551,7 +507,7 @@ present, CHOLMOD will continue using the CPU only.  Consequently it is always
 safe to request GPU processing.
 
 %-------------------------------------------------------------------------------
-\newpage \subsection{Adjustable parameters}
+\subsection{Adjustable parameters}
 %-------------------------------------------------------------------------------
 
 There are a number of parameters that have been added to CHOLMOD to control GPU
@@ -762,22 +718,24 @@ sub-directory (a folder for Windows users) within the CHOLMOD directory
     \item {\tt Modify}: sparse Cholesky update/downdate and row-add/row-delete
     \item {\tt MatrixOps}: sparse matrix operators (add, multiply, norm, scale)
     \item {\tt Supernodal}: supernodal sparse Cholesky factorization
-    \item {\tt Partition}: graph-partitioning-based orderings
+    \item {\tt Partition}: graph-partitioning-based orderings,
+        which uses a slightly modified copy of METIS 5.1.0 in the
+        \verb'SuiteSparse_metis' folder.
     \end{enumerate}
 
-\noindent Two additional Modules are required to compile the CHOLMOD library:
+\noindent Additional directories provide
+    support functions and documentation:
     \begin{enumerate}
     \item {\tt Include}: include files for CHOLMOD and programs that use CHOLMOD
-    \item {\tt Lib}: where the CHOLMOD library is built
-    \end{enumerate}
-
-\noindent Five additional Modules provide support functions and documentation:
-    \begin{enumerate}
     \item {\tt Demo}: simple programs that illustrate the use of CHOLMOD
     \item {\tt Doc}: documentation (including this document)
     \item {\tt MATLAB}: CHOLMOD's interface to MATLAB
     \item {\tt Tcov}: an exhaustive test coverage (requires Linux or Solaris)
     \item {\tt Valgrind}: runs the {\tt Tcov} test under {\tt valgrind} (requires Linux)
+    \item \verb'cmake_modules':  how other packages can find CHOLMOD when
+        using cmake.
+    \item \verb'Config':  a folder containing the input files to create the
+        \verb'cholmod.h' include file, via cmake.
     \end{enumerate}
 
 %-------------------------------------------------------------------------------
@@ -1143,7 +1101,7 @@ In the descriptions below,
     \end{itemize}
 
 %-------------------------------------------------------------------------------
-\newpage \subsection{{\tt Supernodal} Module: supernodal sparse Cholesky factorization}
+\subsection{{\tt Supernodal} Module: supernodal sparse Cholesky factorization}
 %-------------------------------------------------------------------------------
 
 The {\tt Supernodal} Module performs
@@ -1267,7 +1225,7 @@ These definitions are used within the {\tt cholmod\_common} object,
 called {\tt Common} both here and throughout the code.
 
 %---------------------------------------
-\newpage \subsection{{\tt cholmod\_common}: parameters, statistics, and workspace}
+\subsection{{\tt cholmod\_common}: parameters, statistics, and workspace}
 %---------------------------------------
 
 \input{_common.tex}
@@ -3393,7 +3351,7 @@ option should be 1.
 If option is 2, this function can be used to compute the numerical and
 pattern symmetry, where 0 is a completely unsymmetric matrix, and 1 is a
 perfectly symmetric matrix.  This option is used when computing the following
-statistics for the matrices in the UF Sparse Matrix Collection.
+statistics for the matrices in the SuiteSparse Matrix Collection.
 
 	numerical symmetry: number of matched off-diagonal nonzeros over
 	the total number of off-diagonal entries.  A real entry $a_{ij}$,  $i \ne j$,

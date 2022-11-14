@@ -1,79 +1,124 @@
 #-------------------------------------------------------------------------------
-# UMFPACK Makefile
+# SuiteSparse/UMFPACK/Makefile
 #-------------------------------------------------------------------------------
 
-SUITESPARSE ?= $(realpath $(CURDIR)/..)
-export SUITESPARSE
+# UMFPACK: Copyright (c) 1995-2022, Timothy A. Davis.  All Rights Reserved.
+# SPDX-License-Identifier: GPL-2.0+
 
-default: all
+#-------------------------------------------------------------------------------
 
-include ../SuiteSparse_config/SuiteSparse_config.mk
+# A simple Makefile for UMFPACK, which relies on cmake to do the
+# actual build.  All the work is done in cmake so this Makefile is just for
+# convenience.
 
-# compile all C code (except hb, fortran, and fortran64), incl. AMD and demos
-all:
-	( cd Lib    ; $(MAKE) --jobs=$(JOBS) )
-	( cd Demo   ; $(MAKE) )
+# To compile with an alternate compiler:
+#
+#       make CC=gcc CXX=g++
+#
+# To compile/install for system-wide usage:
+#
+#       make
+#       sudo make install
+#
+# To compile/install for local usage (SuiteSparse/lib and SuiteSparse/include):
+#
+#       make local
+#       make install
+#
+# To clean up the files:
+#
+#       make clean
 
-# compile just the C-callable UMFPACK library
+JOBS ?= 8
+
+default: library
+
+# default is to install only in /usr/local
 library:
-	( cd Lib    ; $(MAKE) --jobs=$(JOBS) )
+	( cd build && cmake $(CMAKE_OPTIONS) .. && $(MAKE) --jobs=${JOBS} )
 
-# compile the static libraries only
-static:
-	( cd Lib    ; $(MAKE) static --jobs=$(JOBS) )
+# install only in SuiteSparse/lib and SuiteSparse/include
+local:
+	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=0 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
 
-# compile the FORTRAN interface and demo program
-fortran:
-	( cd Demo   ; $(MAKE) fortran )
+# install only in /usr/local (default)
+global:
+	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=0 .. && $(MAKE) --jobs=${JOBS} )
 
-# compile the 64-bit FORTRAN interface and demo program
-fortran64:
-	( cd Demo   ; $(MAKE) fortran64 )
+# install in SuiteSparse/lib both and SuiteSparse/include and /usr/local
+both:
+	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
 
-# compile the Harwell/Boeing demo program
-hb:
-	( cd Demo   ; $(MAKE) hb )
+debug:
+	( cd build && cmake $(CMAKE_OPTIONS) -DCMAKE_BUILD_TYPE=Debug .. && $(MAKE) --jobs=${JOBS} )
 
-# remove object files, but keep the compiled programs and library archives
-clean:
-	( cd Lib    ; $(MAKE) clean )
-	( cd Demo   ; $(MAKE) clean )
-	( cd Doc    ; $(MAKE) clean )
-	( cd MATLAB ; $(MAKE) clean )
-	( cd MATLAB ; $(RM) $(CLEAN) rename.h )
+all: library
 
-# clean, and then remove compiled programs and library archives
-purge:
-	( cd Lib    ; $(MAKE) purge )
-	( cd Demo   ; $(MAKE) purge )
-	( cd Doc    ; $(MAKE) purge )
-	( cd Tcov   ; $(MAKE) purge )
-	( cd MATLAB ; $(MAKE) purge )
+demos: library
+	( cd build && cmake $(CMAKE_OPTIONS) -DDEMO=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && ./umfpack_simple )
+	- ( cd build && ./umfpack_di_demo > umfpack_di_demo.out && diff ../Demo/umfpack_di_demo.out umfpack_di_demo.out )
+	- ( cd build && ./umfpack_dl_demo > umfpack_dl_demo.out && diff ../Demo/umfpack_dl_demo.out umfpack_dl_demo.out )
+	- ( cd build && ./umfpack_zi_demo > umfpack_zi_demo.out && diff ../Demo/umfpack_zi_demo.out umfpack_zi_demo.out )
+	- ( cd build && ./umfpack_zl_demo > umfpack_zl_demo.out && diff ../Demo/umfpack_zl_demo.out umfpack_zl_demo.out )
 
-# create PDF documents for the original distribution
-docs:
-	( cd Doc    ; $(MAKE) )
+# demos requiring a Fortran compiler
+fdemos: demos
+	( cd build && cmake $(CMAKE_OPTIONS) -DDEMO=1 -DFDEMO=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && ./readhb_nozeros < ../Demo/HB/can_24.psa > tmp_A          )
+	( cd build && ./readhb_size    < ../Demo/HB/can_24.psa > tmp_Asize      )
+	( cd build && ./umf4                                                    )
+	( cd build && ./readhb_nozeros < ../Demo/HB/west0067.rua > tmp_A        )
+	( cd build && ./readhb_size    < ../Demo/HB/west0067.rua > tmp_Asize    )
+	( cd build && ./umf4                                                    )
+	( cd build && ./readhb_nozeros < ../Demo/HB/fs_183_6.rua > tmp_A        )
+	( cd build && ./readhb_size    < ../Demo/HB/fs_183_6.rua > tmp_Asize    )
+	( cd build && ./umf4                                                    )
+	( cd build && ./readhb         < ../Demo/HB/fs_183_6.rua > tmp_A        )
+	( cd build && ./readhb_size    < ../Demo/HB/fs_183_6.rua > tmp_Asize    )
+	( cd build && ./umf4                                                    )
+	( cd build && ./readhb         < ../Demo/HB/arc130.rua > tmp_A          )
+	( cd build && ./readhb_size    < ../Demo/HB/arc130.rua > tmp_Asize      )
+	( cd build && ./umf4                                                    )
+	( cd build && ./readhb_nozeros < ../Demo/HB/arc130.rua > tmp_A          )
+	( cd build && ./readhb_size    < ../Demo/HB/arc130.rua > tmp_Asize      )
+	( cd build && ./umf4                                                    )
+	( cd build && ./readhb_nozeros < ../Demo/HB/arc130.rua > tmp_A          )
+	( cd build && ./readhb_size    < ../Demo/HB/arc130.rua > tmp_Asize      )
+	( cd build && ./umf4 a 1e-6                                             )
+	( cd build && ./umf4hb         < ../Demo/HB/west0067.rua > umf4hb.out   )
+	- diff ./Demo/umf4hb.out  ./build/umf4hb.out 
+	( cd build && ./umf4zhb        < ../Demo/HB/qc324.cua > umf4zhb.out     )
+	- diff ./Demo/umf4zhb.out ./build/umf4zhb.out
 
-# get ready for distribution
-dist: purge
-	( cd Demo   ; $(MAKE) dist )
-	( cd Doc    ; $(MAKE) )
+cov:
+	( cd Tcov && $(MAKE) )
 
-distclean: purge
+# just compile after running cmake; do not run cmake again
+remake:
+	( cd build && $(MAKE) --jobs=${JOBS} )
 
-ccode: library
+# just run cmake to set things up
+setup:
+	( cd build && cmake $(CMAKE_OPTIONS) .. )
 
-lib: library
-
-# statement coverage (requires Linux; takes a lot of time and disk space)
-cov: purge
-	( cd Tcov ; $(MAKE) )
-
-# install UMFPACK
 install:
-	( cd Lib ; $(MAKE) install )
+	( cd build && $(MAKE) install )
 
-# uninstall UMFPACK
+# remove any installed libraries and #include files
 uninstall:
-	( cd Lib ; $(MAKE) uninstall )
+	- xargs rm < build/install_manifest.txt
+
+# remove all files not in the distribution
+clean:
+	- $(RM) -rf build/* Config/*.tmp MATLAB/*.o MATLAB/*.mex* timelog.m
+	- $(RM) -rf MATLAB/*/*.o MATLAB/*/*.mex*
+	( cd Tcov && $(MAKE) purge )
+
+purge: clean
+
+distclean: clean
+
+docs:
+	( cd Doc && $(MAKE) )
 

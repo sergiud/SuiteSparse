@@ -219,10 +219,12 @@ int UMF_cholmod
     user_info [2] = flops ;
 
     CHOLMOD_free_factor (&L, &cm) ;
-    if (print_level > 0) 
+#ifndef NCHECK
+    if (print_level > 0)
     {
         CHOLMOD_print_common ("for UMFPACK", &cm) ;
     }
+#endif
     CHOLMOD_finish (&cm) ;
     return (TRUE) ;
 #else

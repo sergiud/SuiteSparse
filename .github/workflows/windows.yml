@@ -226,7 +226,7 @@ jobs:
       run: |
         echo "${{github.workspace}}/install/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "${{github.workspace}}/metis/lib" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        echo "VERSION_SUFFIX=${{github.ref_name}}-${{matrix.marker}}-${{matrix.system}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "VERSION_SUFFIX=${{github.ref_name}}-${{matrix.marker}}-${{matrix.system}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}".replace('/', '-') | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Configure
       run: |

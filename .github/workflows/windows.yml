@@ -15,7 +15,7 @@ jobs:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
-        sys: [mingw32, mingw64]
+        sys: [mingw64]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
         metis: [no-metis, metis]
@@ -24,8 +24,6 @@ jobs:
           - components: minimal
             metis: metis
         include:
-          - sys: mingw32
-            env: i686
           - sys: mingw64
             env: x86_64
 

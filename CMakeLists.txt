@@ -1,7 +1,7 @@
 #
 # CMake support layer for SuiteSparse
 #
-# Copyright 2023 Sergiu Deitsch <sergiu.deitsch@gmail.com>
+# Copyright 2024 Sergiu Deitsch <sergiu.deitsch@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required (VERSION 3.22)
+cmake_minimum_required (VERSION 3.22...3.29)
 
 if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   set (CMAKE_CUDA_ARCHITECTURES 75)

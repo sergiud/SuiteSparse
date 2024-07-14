@@ -1,7 +1,7 @@
 #
 # CMake support layer for SuiteSparse
 #
-# Copyright 2016-2021 Sergiu Deitsch <sergiu.deitsch@gmail.com>
+# Copyright 2024 Sergiu Deitsch <sergiu.deitsch@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.12..3.30)
 project (cxsparse LANGUAGES C VERSION 3.2.0
   DESCRIPTION "A Concise Sparse matrix package - Extended"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
@@ -221,7 +221,7 @@ target_include_directories (cxsparse PUBLIC
 )
 
 if (HAVE_M)
-  target_link_libraries (cxsparse PRIVATE m)
+  target_link_libraries (cxsparse PUBLIC m)
 endif (HAVE_M)
 
 if (NOT HAVE_C99_COMPLEX STREQUAL "")
@@ -282,13 +282,13 @@ add_executable (cs_ci_demo2
   $<TARGET_OBJECTS:cs_ci_demo_base>
   Demo/cs_ci_demo2.c
 )
-target_link_libraries (cs_ci_demo2 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
+target_link_libraries (cs_ci_demo2 PRIVATE cxsparse)
 
 add_executable (cs_ci_demo3
   $<TARGET_OBJECTS:cs_ci_demo_base>
   Demo/cs_ci_demo3.c
 )
-target_link_libraries (cs_ci_demo3 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
+target_link_libraries (cs_ci_demo3 PRIVATE cxsparse)
 
 add_executable (cs_cl_demo1
   Demo/cs_cl_demo1.c
@@ -306,13 +306,13 @@ add_executable (cs_cl_demo2
   $<TARGET_OBJECTS:cs_cl_demo_base>
   Demo/cs_cl_demo2.c
 )
-target_link_libraries (cs_cl_demo2 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
+target_link_libraries (cs_cl_demo2 PRIVATE cxsparse)
 
 add_executable (cs_cl_demo3
   $<TARGET_OBJECTS:cs_cl_demo_base>
   Demo/cs_cl_demo3.c
 )
-target_link_libraries (cs_cl_demo3 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
+target_link_libraries (cs_cl_demo3 PRIVATE cxsparse)
 
 add_executable (cs_di_demo1
   Demo/cs_di_demo1.c

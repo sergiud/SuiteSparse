@@ -28,7 +28,7 @@ jobs:
             env: x86_64
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup Dependencies
       uses: msys2/setup-msys2@v2
@@ -129,7 +129,7 @@ jobs:
             marker: vc17
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Cache METIS
       if: matrix.metis == 'metis'

@@ -274,13 +274,13 @@ add_executable (cs_ci_demo2
   $<TARGET_OBJECTS:cs_ci_demo_base>
   Demo/cs_ci_demo2.c
 )
-target_link_libraries (cs_ci_demo2 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
+target_link_libraries (cs_ci_demo2 PRIVATE cxsparse)
 
 add_executable (cs_ci_demo3
   $<TARGET_OBJECTS:cs_ci_demo_base>
   Demo/cs_ci_demo3.c
 )
-target_link_libraries (cs_ci_demo3 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
+target_link_libraries (cs_ci_demo3 PRIVATE cxsparse)
 
 add_executable (cs_cl_demo1
   Demo/cs_cl_demo1.c
@@ -298,13 +298,20 @@ add_executable (cs_cl_demo2
   $<TARGET_OBJECTS:cs_cl_demo_base>
   Demo/cs_cl_demo2.c
 )
-target_link_libraries (cs_cl_demo2 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
+target_link_libraries (cs_cl_demo2 PRIVATE cxsparse)
 
 add_executable (cs_cl_demo3
   $<TARGET_OBJECTS:cs_cl_demo_base>
   Demo/cs_cl_demo3.c
 )
-target_link_libraries (cs_cl_demo3 PRIVATE cxsparse $<$<BOOL:${HAVE_M}>:m>)
+target_link_libraries (cs_cl_demo3 PRIVATE cxsparse)
+
+if (HAVE_M)
+  target_link_libraries (cs_ci_demo2 PRIVATE m)
+  target_link_libraries (cs_ci_demo3 PRIVATE m)
+  target_link_libraries (cs_cl_demo2 PRIVATE m)
+  target_link_libraries (cs_cl_demo3 PRIVATE m)
+endif (HAVE_M)
 
 add_executable (cs_di_demo1
   Demo/cs_di_demo1.c

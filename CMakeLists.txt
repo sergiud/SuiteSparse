@@ -881,6 +881,8 @@ if (WITH_CHOLMOD)
 
   if (OpenMP_FOUND)
     target_compile_definitions (cholmod PRIVATE HAVE_OPENMP)
+    target_link_libraries (cholmod_int PRIVATE OpenMP::OpenMP_C)
+    target_link_libraries (cholmod_long PRIVATE OpenMP::OpenMP_C)
     target_link_libraries (cholmod PRIVATE
       OpenMP::OpenMP_C
     )
@@ -1238,7 +1240,6 @@ if (WITH_LICENSE STREQUAL "GPL")
 
   target_link_libraries (umfpack PRIVATE
     BLAS::BLAS
-    LAPACK::LAPACK
   )
 
   if (TARGET cholmod)
@@ -1298,10 +1299,6 @@ if (WITH_LICENSE MATCHES "GPL")
   )
 
   if (TARGET cholmod)
-    target_link_libraries (klu PRIVATE
-      SuiteSparse::CHOLMOD
-    )
-
     add_library (klu_cholmod
       KLU/User/klu_cholmod.c
       KLU/User/klu_l_cholmod.c
@@ -1505,6 +1502,17 @@ endif (TARGET spqr)
 
 # CUDA support
 if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
+  if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # Shared cuBLAS loads cuBLASLt through its own runtime dependencies.
+    get_target_property (_SuiteSparse_CUBLAS_DEPENDENCIES CUDA::cublas
+      INTERFACE_LINK_LIBRARIES)
+    if (_SuiteSparse_CUBLAS_DEPENDENCIES)
+      list (REMOVE_ITEM _SuiteSparse_CUBLAS_DEPENDENCIES CUDA::cublasLt)
+      set_property (TARGET CUDA::cublas PROPERTY INTERFACE_LINK_LIBRARIES
+        "${_SuiteSparse_CUBLAS_DEPENDENCIES}")
+    endif (_SuiteSparse_CUBLAS_DEPENDENCIES)
+  endif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+
   add_library (gpuruntime
     SPQR/GPURuntime/Source/SuiteSparseGPU_Workspace.cpp
     SPQR/GPURuntime/Source/SuiteSparseGPU_Workspace_cpuAllocators.cpp
@@ -1527,6 +1535,9 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
   )
 
   target_compile_definitions (gpuruntime PUBLIC SPQR_HAS_CUDA)
+
+  # C++ compilers add a math runtime that LWYU reports as unused.
+  set_property (TARGET gpuruntime PROPERTY LINK_WHAT_YOU_USE OFF)
 
   # GPUQREngine
 
@@ -1565,6 +1576,7 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/GPUQREngine/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_GPUQREngine_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_GPUQREngine_INCLUDE_DIR}>
+    $<TARGET_PROPERTY:CUDA::cudart,INTERFACE_INCLUDE_DIRECTORIES>
   )
 
   target_include_directories (gpuqrengine PRIVATE
@@ -1576,9 +1588,11 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
   target_link_libraries (gpuqrengine
     PRIVATE
-      CUDA::cublas
       gpuruntime
   )
+
+  # C++ compilers add a math runtime that LWYU reports as unused.
+  set_property (TARGET gpuqrengine PROPERTY LINK_WHAT_YOU_USE OFF)
 
   if (WITH_CHOLMOD)
     set (CHOLMOD_GPU_SRCS CHOLMOD/GPU/cholmod_gpu.c)
@@ -1612,9 +1626,11 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
     target_link_libraries (cholmod
       PRIVATE
         CUDA::cudart
-        gpuruntime
         CUDA::cublas
     )
+
+    # CUDA linkers add C++ runtimes that LWYU reports as unused.
+    set_property (TARGET cholmod PROPERTY LINK_WHAT_YOU_USE OFF)
   endif (WITH_CHOLMOD)
 
   # SPQR GPU
@@ -1941,6 +1957,10 @@ if (WITH_DEMOS)
       AMD/Demo/amd_f77simple.f
       $<TARGET_OBJECTS:amd_f77_amd_objects>
     )
+
+    # Fortran compilers add runtime libraries that LWYU reports as unused.
+    set_property (TARGET amd_f77cross amd_f77demo amd_f77simple
+      PROPERTY LINK_WHAT_YOU_USE OFF)
   endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
 
   add_executable (ccolamd_example
@@ -2067,6 +2087,11 @@ if (WITH_DEMOS)
       SuiteSparse::KLU_CHOLMOD
     )
 
+    if (NOT BUILD_SHARED_LIBS)
+      # Static CHOLMOD propagates BLAS/LAPACK unused by these ordering demos.
+      set_property (TARGET kludemo kluldemo PROPERTY LINK_WHAT_YOU_USE OFF)
+    endif (NOT BUILD_SHARED_LIBS)
+
     if (HAVE_M)
       target_link_libraries (kludemo PRIVATE m)
       target_link_libraries (kluldemo PRIVATE m)
@@ -2151,6 +2176,13 @@ if (WITH_DEMOS)
       SuiteSparse::Config
       SuiteSparse::UMFPACK
     )
+
+    if (NOT BUILD_SHARED_LIBS AND TARGET cholmod)
+      # Static CHOLMOD propagates LAPACK unused by these UMFPACK demos.
+      set_property (TARGET umf4 umfpack_di_demo umfpack_dl_demo
+        umfpack_zi_demo umfpack_zl_demo umfpack_simple
+        PROPERTY LINK_WHAT_YOU_USE OFF)
+    endif (NOT BUILD_SHARED_LIBS AND TARGET cholmod)
   endif (TARGET umfpack)
 
   set (SuiteSparse_BIN_TARGETS
@@ -2262,6 +2294,10 @@ if (WITH_DEMOS)
       )
       target_link_libraries (umf4zhb64 PRIVATE SuiteSparse::UMFPACK)
 
+      # Fortran compilers add runtime libraries that LWYU reports as unused.
+      set_property (TARGET umf4hb umf4hb64 umf4zhb umf4zhb64
+        PROPERTY LINK_WHAT_YOU_USE OFF)
+
       list (APPEND SuiteSparse_BIN_TARGETS
         umf4hb
         umf4hb64
@@ -2291,6 +2327,10 @@ if (WITH_DEMOS)
       target_link_libraries (qrsimple PRIVATE SuiteSparse::SPQR)
       target_link_libraries (qrsimplec PRIVATE SuiteSparse::SPQR)
       target_link_libraries (qrsimplec_int32 PRIVATE SuiteSparse::SPQR)
+
+      # C++ compilers add runtime libraries that LWYU reports as unused.
+      set_property (TARGET qrdemo qrdemo_int32 qrsimple
+        PROPERTY LINK_WHAT_YOU_USE OFF)
 
       list (APPEND SuiteSparse_BIN_TARGETS
         qrdemo
@@ -2326,6 +2366,10 @@ if (WITH_DEMOS)
         SuiteSparse::CHOLMOD
         SuiteSparse::SPQR
       )
+
+      # C++ compilers add runtime libraries that LWYU reports as unused.
+      set_property (TARGET qrdemo_gpu qrdemo_gpu2 qrdemo_gpu3
+        PROPERTY LINK_WHAT_YOU_USE OFF)
       list (APPEND SuiteSparse_BIN_TARGETS
         qrdemo_gpu
         qrdemo_gpu2
@@ -2352,6 +2396,11 @@ if (WITH_DEMOS)
         $<TARGET_PROPERTY:ccolamd,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:colamd,INTERFACE_INCLUDE_DIRECTORIES>
       )
+      if (NOT BUILD_SHARED_LIBS AND TARGET gpuqrengine)
+        # Static CUDA libraries propagate unused GPU and compiler runtimes.
+        set_property (TARGET ${_SuiteSparse_CHOLMOD_DEMO_TARGET}
+          PROPERTY LINK_WHAT_YOU_USE OFF)
+      endif (NOT BUILD_SHARED_LIBS AND TARGET gpuqrengine)
     endforeach (_SuiteSparse_CHOLMOD_DEMO_TARGET)
   endif (TARGET cholmod_di_demo)
 endif (WITH_DEMOS)

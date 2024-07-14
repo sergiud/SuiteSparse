@@ -86,6 +86,7 @@ jobs:
               -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
+              -DCMAKE_LINK_WHAT_YOU_USE=ON \
               -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} \
               -DWITH_CUDA=${{matrix.gpu == 'cuda'}} \
               -DWITH_LICENSE=${{matrix.components == 'gpl' && 'GPL' || matrix.components == 'lgpl' && 'LGPL' || 'Minimal'}} \
@@ -95,7 +96,11 @@ jobs:
     - name: Build
       run: |
         cmake --build build_${{matrix.build_type}}/ \
-              --config ${{matrix.build_type}}
+              --config ${{matrix.build_type}} 2>&1 | tee build.log
+        if grep -Fq 'Warning: Unused direct dependencies:' build.log; then
+          echo '::error::LWYU detected unused direct dependencies'
+          exit 1
+        fi
 
     - name: Test
       run: |

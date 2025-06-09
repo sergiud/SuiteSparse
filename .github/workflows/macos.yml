@@ -17,6 +17,7 @@ jobs:
         os:
           - macos-13
           - macos-14
+          - macos-15
         build_type: [Release, Debug]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]

@@ -4,8 +4,9 @@ on: [push, pull_request]
 
 jobs:
   build-mingw:
-    name: ${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
-    runs-on: windows-latest
+    if: false
+    name: mingw64-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
+    runs-on: ${{matrix.os}}
     defaults:
       run:
         shell: msys2 {0}
@@ -15,8 +16,10 @@ jobs:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
-        sys: [mingw64]
         lib: [shared, static]
+        arch:
+          - arm64
+          - x64
         components: [minimal, lgpl, gpl]
         metis: [no-metis, metis]
         exclude:
@@ -24,14 +27,21 @@ jobs:
           - components: minimal
             metis: metis
         include:
-          - sys: mingw64
+          - arch: x64
+            os: windows-2022
             env: x86_64
+            sys: mingw64
+          - arch: arm64
+            os: windows-11-arm
+            env: clang-aarch64
+            sys: clangarm64
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup Dependencies
+    - name: Setup Dependencies (x86_64)
       uses: msys2/setup-msys2@v2
+      if: ${{matrix.sys == 'mingw64'}}
       with:
         msystem: ${{matrix.sys}}
         install: >-
@@ -46,6 +56,25 @@ jobs:
           mingw-w64-${{matrix.env}}-openmp
           unzip
           wget
+
+    - name: Setup Dependencies (clang-aarch64)
+      uses: msys2/setup-msys2@v2
+      if: ${{matrix.sys == 'clangarm64'}}
+      with:
+        msystem: ${{matrix.sys}}
+        install: >-
+          mingw-w64-${{matrix.env}}-ccache
+          mingw-w64-${{matrix.env}}-clang
+          mingw-w64-${{matrix.env}}-cmake
+          mingw-w64-${{matrix.env}}-flang
+          mingw-w64-${{matrix.env}}-intel-tbb
+          mingw-w64-${{matrix.env}}-lapack
+          mingw-w64-${{matrix.env}}-ninja
+          mingw-w64-${{matrix.env}}-openblas
+          mingw-w64-${{matrix.env}}-openmp
+          unzip
+          wget
+
 
     - name: Setup METIS Dependencies
       if: ${{matrix.metis == 'metis'}}
@@ -94,7 +123,7 @@ jobs:
               --target install
 
   build-msvc:
-    name: ${{matrix.msvc}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
+    name: ${{matrix.msvc}}-${{matrix.arch}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}
     runs-on: ${{matrix.os}}
     env:
       CCACHE_DIR: ${{github.workspace}}/ccache
@@ -106,8 +135,10 @@ jobs:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
-        msvc: [VS-16-2019, VS-17-2022]
-        sys: [mingw64]
+        msvc: [VS-17-2022]
+        arch:
+          - arm64
+          - x64
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
         metis: [no-metis, metis]
@@ -116,17 +147,19 @@ jobs:
           - components: minimal
             metis: metis
         include:
-          - sys: mingw64
-            env: x86_64
-            system: Win64
-          - msvc: VS-16-2019
-            generator: "Visual Studio 16 2019"
-            os: windows-2019
-            marker: vc16
           - msvc: VS-17-2022
             generator: "Visual Studio 17 2022"
-            os: windows-2022
             marker: vc17
+          - arch: x64
+            env: x86_64
+            os: windows-2022
+            sys: mingw64
+            system: Win64
+          - arch: arm64
+            env: clang-aarch64
+            os: windows-11-arm
+            sys: clangarm64
+            system: arm64
 
     steps:
     - uses: actions/checkout@v4
@@ -137,7 +170,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: metis/
-        key: ${{matrix.msvc}}-metis-5.1.0-${{matrix.build_type}}-shared
+        key: ${{matrix.msvc}}-${{matrix.arch}}-metis-5.1.0-${{matrix.build_type}}-shared
 
     - name: Download METIS
       if: matrix.metis == 'metis' && steps.cache-metis.outputs.cache-hit != 'true'
@@ -160,7 +193,7 @@ jobs:
         Pop-Location
 
         cmake -S metis-5.1.0 -B build-metis `
-              -A x64 `
+              -A ${{matrix.arch}} `
               -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis `
               -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON `
               -DMETIS_INSTALL:BOOL=ON `
@@ -170,16 +203,30 @@ jobs:
               --config ${{matrix.build_type}} `
               --target install
 
-
-    - name: Setup MSYS2
+    - name: Setup MSYS2 (x86_64)
       uses: msys2/setup-msys2@v2
+      if: ${{matrix.sys == 'mingw64'}}
       with:
         msystem: ${{matrix.sys}}
         path-type: inherit
         install: >-
           wget
           mingw-w64-${{matrix.env}}-ccache
+          mingw-w64-${{matrix.env}}-cmake
           mingw-w64-${{matrix.env}}-gcc-fortran
+          mingw-w64-${{matrix.env}}-ninja
+
+    - name: Setup MSYS2 (aarch64)
+      uses: msys2/setup-msys2@v2
+      if: ${{matrix.sys == 'clangarm64'}}
+      with:
+        msystem: ${{matrix.sys}}
+        path-type: inherit
+        install: >-
+          wget
+          mingw-w64-${{matrix.env}}-ccache
+          mingw-w64-${{matrix.env}}-cmake
+          mingw-w64-${{matrix.env}}-flang
           mingw-w64-${{matrix.env}}-ninja
 
     - name: Cache LAPACK
@@ -189,7 +236,7 @@ jobs:
         path: |
           ${{env.CCACHE_DIR}}
           ${{github.workspace}}/install
-        key: ${{matrix.msvc}}-lapack-3.12.0-${{matrix.build_type}}
+        key: ${{matrix.msvc}}-${{matrix.arch}}-lapack-3.12.0-${{matrix.build_type}}
 
     - name: Download LAPACK
       if: steps.cache-lapack.outputs.cache-hit != 'true'
@@ -198,10 +245,28 @@ jobs:
         wget https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v3.12.0.tar.gz
         tar xvf v3.12.0.tar.gz
 
-    - name: Build LAPACK
-      if: steps.cache-lapack.outputs.cache-hit != 'true'
+    - name: Build LAPACK (x86_64)
+      if: matrix.arch == 'x64' && steps.cache-lapack.outputs.cache-hit != 'true'
       shell: msys2 {0}
       run: |
+        cmake -S lapack-3.12.0 -B build_lapack_${{matrix.build_type}}/ \
+              -DBUILD_SHARED_LIBS=ON \
+              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+              -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=$(which ccache) \
+              -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=$(which ccache) \
+              -DCMAKE_GNUtoMS=ON \
+              -DCMAKE_INSTALL_PREFIX=./install \
+              -G Ninja
+
+        cmake --build build_lapack_${{matrix.build_type}}/ \
+              --config ${{matrix.build_type}} \
+              --target install
+
+    - name: Build LAPACK (aarch64)
+      if: matrix.arch == 'arm64' && steps.cache-lapack.outputs.cache-hit != 'true'
+      shell: msys2 {0}
+      run: |
+        cat ./cmake/Flang.cmake >> lapack-3.12.0/CMakeLists.txt
         cmake -S lapack-3.12.0 -B build_lapack_${{matrix.build_type}}/ \
               -DBUILD_SHARED_LIBS=ON \
               -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
@@ -229,7 +294,7 @@ jobs:
     - name: Configure
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ `
-              -A x64 `
+              -A ${{matrix.arch}} `
               -DBLAS_blas_LIBRARY=${{github.workspace}}/install/lib/libblas.lib `
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
               -DCMAKE_Fortran_COMPILER= `

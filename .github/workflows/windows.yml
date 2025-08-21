@@ -39,11 +39,11 @@ jobs:
           mingw-w64-${{matrix.env}}-cmake
           mingw-w64-${{matrix.env}}-gcc
           mingw-w64-${{matrix.env}}-gcc-fortran
-          mingw-w64-${{matrix.env}}-intel-tbb
           mingw-w64-${{matrix.env}}-lapack
           mingw-w64-${{matrix.env}}-ninja
           mingw-w64-${{matrix.env}}-openblas
           mingw-w64-${{matrix.env}}-openmp
+          mingw-w64-${{matrix.env}}-tbb
           unzip
           wget
 

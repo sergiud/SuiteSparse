@@ -265,7 +265,7 @@ jobs:
       run: |
         Compress-Archive -Path "${{github.workspace}}/deploy/*" -Destination "SuiteSparse-${{env.VERSION_SUFFIX}}.zip"
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       with:
         name: SuiteSparse-${{env.VERSION_SUFFIX}}
         path: |

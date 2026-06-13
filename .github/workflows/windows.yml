@@ -106,7 +106,7 @@ jobs:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
-        msvc: [VS-17-2022]
+        msvc: [VS-17-2022, VS-18-2026]
         sys: [mingw64]
         lib: [shared, static]
         components: [minimal, lgpl, gpl]
@@ -121,8 +121,12 @@ jobs:
             system: Win64
           - msvc: VS-17-2022
             generator: "Visual Studio 17 2022"
-            os: windows-2025
+            os: windows-2022
             marker: vc17
+          - msvc: VS-18-2026
+            generator: "Visual Studio 18 2026"
+            os: windows-2025-vs2026
+            marker: vc18
 
     steps:
     - uses: actions/checkout@v6

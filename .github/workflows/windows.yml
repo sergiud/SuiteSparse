@@ -42,7 +42,7 @@ jobs:
           mingw-w64-${{matrix.env}}-lapack
           mingw-w64-${{matrix.env}}-ninja
           mingw-w64-${{matrix.env}}-openblas
-          mingw-w64-${{matrix.env}}-openmp
+          mingw-w64-${{matrix.env}}-llvm-openmp
           mingw-w64-${{matrix.env}}-tbb
           unzip
           wget

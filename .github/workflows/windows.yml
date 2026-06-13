@@ -158,6 +158,7 @@ jobs:
         cmake -S metis-5.1.0 -B build-metis `
               -A x64 `
               -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/metis `
+              -DCMAKE_POLICY_VERSION_MINIMUM="3.5" `
               -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON `
               -DMETIS_INSTALL:BOOL=ON `
               -DSHARED=ON `

@@ -61,7 +61,7 @@ jobs:
 
     - name: Cache Build
       id: cache-build
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: ${{env.CCACHE_DIR}}
         key: ${{runner.os}}-${{matrix.sys}}-${{matrix.env}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.components}}-${{matrix.metis}}-ccache-${{github.run_id}}
@@ -134,7 +134,7 @@ jobs:
     - name: Cache METIS
       if: matrix.metis == 'metis'
       id: cache-metis
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: metis/
         key: ${{matrix.msvc}}-metis-5.1.0-${{matrix.build_type}}-shared
@@ -185,7 +185,7 @@ jobs:
 
     - name: Cache LAPACK
       id: cache-lapack
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: |
           ${{env.CCACHE_DIR}}

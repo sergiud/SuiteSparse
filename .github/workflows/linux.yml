@@ -95,8 +95,7 @@ jobs:
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
               -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} \
               -DWITH_CUDA=${{matrix.gpu == 'cuda'}} \
-              -DWITH_GPL=${{matrix.components == 'gpl'}} \
-              -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} \
+              -DWITH_LICENSE=${{matrix.components == 'gpl' && 'GPL' || matrix.components == 'lgpl' && 'LGPL' || 'Minimal'}} \
               -DWITH_METIS=${{matrix.metis == 'metis'}} \
               -G Ninja
 

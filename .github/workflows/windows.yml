@@ -77,8 +77,7 @@ jobs:
               -DCMAKE_Fortran_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_INSTALL_PREFIX:PATH=./install \
               -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} \
-              -DWITH_GPL=${{matrix.components == 'gpl'}} \
-              -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} \
+              -DWITH_LICENSE=${{matrix.components == 'gpl' && 'GPL' || matrix.components == 'lgpl' && 'LGPL' || 'Minimal'}} \
               -DWITH_METIS=${{matrix.metis == 'metis'}} \
               -G Ninja
 
@@ -239,8 +238,7 @@ jobs:
               -DCMAKE_REQUIRE_FIND_PACKAGE_METIS=${{matrix.metis == 'metis'}} `
               -DLAPACK_lapack_LIBRARY=${{github.workspace}}/install/lib/liblapack.lib `
               -DWITH_FORTRAN=OFF `
-              -DWITH_GPL=${{matrix.components == 'gpl'}} `
-              -DWITH_LGPL=${{contains(matrix.components, 'gpl')}} `
+              -DWITH_LICENSE=${{matrix.components == 'gpl' && 'GPL' || matrix.components == 'lgpl' && 'LGPL' || 'Minimal'}} `
               -DWITH_METIS=${{matrix.metis == 'metis'}} `
               -G "${{matrix.generator}}"
 

@@ -238,7 +238,10 @@ if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 endif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 
 set_target_properties (cxsparse PROPERTIES PUBLIC_HEADER "${CXSparse_HDRS}")
-set_target_properties (cxsparse PROPERTIES EXPORT_NAME CXSparse)
+set_target_properties (cxsparse PROPERTIES
+  EXPORT_NAME CXSparse
+  SPDX_LICENSE LGPL-2.1-or-later
+)
 
 install (TARGETS cxsparse
   EXPORT cxsparse-targets

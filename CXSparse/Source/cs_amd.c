@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_amd: approximate minimum degree
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* clear w */
 static CS_INT cs_wclear (CS_INT mark, CS_INT lemax, CS_INT *w, CS_INT n)
@@ -59,8 +62,8 @@ CS_INT *cs_amd (CS_INT order, const cs *A)  /* order 0:natural, 1:Chol, 2:LU, 3:
     cs_fkeep (C, &cs_diag, NULL) ;          /* drop diagonal entries */
     Cp = C->p ;
     cnz = Cp [n] ;
-    P = (CS_INT *)cs_malloc (n+1, sizeof (CS_INT)) ;     /* allocate result */
-    W = (CS_INT *)cs_malloc (8*(n+1), sizeof (CS_INT)) ; /* get workspace */
+    P = (CS_INT *) cs_malloc (n+1, sizeof (CS_INT)) ;     /* allocate result */
+    W = (CS_INT *) cs_malloc (8*(n+1), sizeof (CS_INT)) ; /* get workspace */
     t = cnz + cnz/5 + 2*n ;                 /* add elbow room to C */
     if (!P || !W || !cs_sprealloc (C, t)) return (cs_idone (P, C, W, 0)) ;
     len  = W           ; nv     = W +   (n+1) ; next   = W + 2*(n+1) ;

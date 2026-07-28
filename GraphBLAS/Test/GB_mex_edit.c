@@ -2,29 +2,36 @@
 // GB_mex_edit: add/remove entries from a matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
 #include "GB_mex.h"
+#include "GB_mex_errors.h"
 
 #define USAGE "C = GB_mex_edit (C, I, J, X, Action)"
 
 #define FREE_ALL                        \
 {                                       \
     GrB_Matrix_free_(&C) ;              \
+    GrB_Matrix_free_(&B) ;              \
     GB_mx_put_global (true) ;           \
 }
 
+#undef  OK
 #define OK(method)                      \
 {                                       \
     info = method ;                     \
     if (info != GrB_SUCCESS)            \
     {                                   \
+        printf ("info %d line %d\n", info, __LINE__) ; \
         mexErrMsgTxt ("fail") ;         \
     }                                   \
 }
+
+#define GET_DEEP_COPY
+#define FREE_DEEP_COPY ;
 
 void mexFunction
 (
@@ -35,9 +42,9 @@ void mexFunction
 )
 {
 
-    GrB_Matrix C = NULL ;
-    GrB_Index *I = NULL, ni = 0, I_range [3] ;
-    GrB_Index *J = NULL, nj = 0, J_range [3] ;
+    GrB_Matrix C = NULL, B = NULL ;
+    uint64_t *I = NULL, ni = 0, I_range [3] ;       // OK
+    uint64_t *J = NULL, nj = 0, J_range [3] ;       // OK
     bool ignore ;
     bool malloc_debug = false ;
     GrB_Info info = GrB_SUCCESS ;
@@ -67,8 +74,8 @@ void mexFunction
         mexErrMsgTxt ("C failed") ;
     }
 
-    GrB_Index ncols ;
-    GxB_Format_Value fmt ;
+    uint64_t ncols ;
+    int fmt ;
     bool is_hyper ;
     OK (GrB_Matrix_ncols (&ncols, C)) ;
     OK (GxB_Matrix_Option_get (C, GxB_FORMAT, &fmt)) ;
@@ -76,14 +83,14 @@ void mexFunction
     bool is_vector = (fmt == GxB_BY_COL && !is_hyper && ncols == 1) ;
 
     // get I
-    if (!GB_mx_mxArray_to_indices (&I, pargin [1], &ni, I_range, &ignore))
+    if (!GB_mx_mxArray_to_indices (pargin [1], &I, &ni, I_range, &ignore, NULL))
     {
         FREE_ALL ;
         mexErrMsgTxt ("I failed") ;
     }
 
     // get J
-    if (!GB_mx_mxArray_to_indices (&J, pargin [2], &nj, J_range, &ignore))
+    if (!GB_mx_mxArray_to_indices (pargin [2], &J, &nj, J_range, &ignore, NULL))
     {
         FREE_ALL ;
         mexErrMsgTxt ("J failed") ;
@@ -168,6 +175,16 @@ void mexFunction
 
     OK (GrB_Scalar_free (&Scalar)) ;
     GB_Global_malloc_debug_set (save) ;
+
+    //--------------------------------------------------------------------------
+    // duplicate the matrix and check if it stays the same
+    //--------------------------------------------------------------------------
+
+    METHOD (GrB_Matrix_dup (&B, C)) ;
+    CHECK (GB_mx_isequal (B, C, 0)) ;
+    OK (GrB_Matrix_wait (C, GrB_MATERIALIZE)) ;
+    OK (GrB_Matrix_wait (B, GrB_MATERIALIZE)) ;
+    CHECK (GB_mx_isequal (B, C, 0)) ;
 
     //--------------------------------------------------------------------------
     // return C as a built-in sparse matrix

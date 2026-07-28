@@ -35,8 +35,8 @@ function C = subsasgn (C, S, A)
 %
 % See also GrB/subsref, GrB/subsindex, GrB.assign, GrB.subassign.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 % FUTURE: add all forms of linear indexing.
 

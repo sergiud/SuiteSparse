@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_counts: column counts for sparse Cholesky
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* column counts of LL'=A or LL'=A'A, given parent & post ordering */
 #define HEAD(k,j) (ata ? head [k] : j)
@@ -22,8 +25,8 @@ CS_INT *cs_counts (const cs *A, const CS_INT *parent, const CS_INT *post, CS_INT
     if (!CS_CSC (A) || !parent || !post) return (NULL) ;    /* check inputs */
     m = A->m ; n = A->n ;
     s = 4*n + (ata ? (n+m+1) : 0) ;
-    delta = colcount = (CS_INT *)cs_malloc (n, sizeof (CS_INT)) ;    /* allocate result */
-    w = (CS_INT *)cs_malloc (s, sizeof (CS_INT)) ;                   /* get workspace */
+    delta = colcount = (CS_INT *) cs_malloc (n, sizeof (CS_INT)) ;    /* allocate result */
+    w = (CS_INT *) cs_malloc (s, sizeof (CS_INT)) ;                   /* get workspace */
     AT = cs_transpose (A, 0) ;                          /* AT = A' */
     if (!AT || !colcount || !w) return (cs_idone (colcount, AT, w, 0)) ;
     ancestor = w ; maxfirst = w+n ; prevleaf = w+2*n ; first = w+3*n ;

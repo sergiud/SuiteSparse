@@ -4,7 +4,8 @@ function test26 (do_metis)
 %   test26
 % See also cholmod_test
 
-% Copyright 2007, Timothy A. Davis, http://www.suitesparse.com
+% Copyright 2006-2023, Timothy A. Davis, All Rights Reserved.
+% SPDX-License-Identifier: GPL-2.0+
 
 fprintf ('=================================================================\n');
 fprintf ('test26: test logical full and sparse matrices\n') ;
@@ -55,19 +56,19 @@ if (do_metis)
     s1 = bisect (A) ;
     s2 = bisect (C) ;
     if (any (s1 ~= s2))
-	error ('test 26 failed (bisect)!') ;
+        error ('test 26 failed (bisect)!') ;
     end
 
     p1 = metis (A) ;
     p2 = metis (C) ;
     if (any (p1 ~= p2))
-	error ('test 26 failed (metis)!') ;
+        error ('test 26 failed (metis)!') ;
     end
 
     p1 = nesdis (A) ;
     p2 = nesdis (C) ;
     if (any (p1 ~= p2))
-	error ('test 26 failed (nesdis)!') ;
+        error ('test 26 failed (nesdis)!') ;
     end
 
 end

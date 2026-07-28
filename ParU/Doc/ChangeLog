@@ -1,0 +1,46 @@
+July 31, 2026: version 1.1.1
+
+    * MATLAB on Intel systems: do not rely on mkl.h for the paru mexFunction
+        since MathWorks does not distribute it with MATLAB.
+    * fix undefined behavoir: check if std::set.empty() before using set.end()
+
+Nov 1, 2025: version 1.1.0
+
+    * performance: better detection and control of threading in the BLAS
+
+July 25, 2025: version 1.0.1
+
+    * minor updates to build system
+    * BLAS and OpenMP: restore settings after setting them in
+        ParU_Factorize, ParU_LSolve, and ParU_USolve.
+
+Oct 10, 2024: version 1.0.0
+
+    * first stable release
+
+Aug 20, 2024: version 0.3.0
+
+    * added parameter to ParU_Get
+
+Aug 2, 2024: version 0.2.0
+
+    * major changes to the API: as compared to the draft 0.1 version.
+    * nearly stable release: the API should be unchanged when v1.0.0
+        is released.
+
+Mar 22, 2024: version 0.1.3
+
+    * minor updates to build system
+
+Jan 20, 2024: version 0.1.2
+
+    * minor update to build system
+
+Jan 10, 2024: version 0.1.1
+
+    * minor update to build system
+
+Dec 30, 2023: version 0.1.0
+
+    * first release: in SuiteSparse 7.4.0
+

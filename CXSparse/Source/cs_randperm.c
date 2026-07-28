@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_randperm: generate a random permutation
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* return a random permutation vector, the identity perm, or p = n-1:-1:0.
  * seed = -1 means p = n-1:-1:0.  seed = 0 means p = identity.  otherwise
@@ -6,7 +9,7 @@ CS_INT *cs_randperm (CS_INT n, CS_INT seed)
 {
     CS_INT *p, k, j, t ;
     if (seed == 0) return (NULL) ;      /* return p = NULL (identity) */
-    p = (CS_INT *)cs_malloc (n, sizeof (CS_INT)) ;   /* allocate result */
+    p = (CS_INT *) cs_malloc (n, sizeof (CS_INT)) ;   /* allocate result */
     if (!p) return (NULL) ;             /* out of memory */
     for (k = 0 ; k < n ; k++) p [k] = n-k-1 ;
     if (seed == -1) return (p) ;        /* return reverse permutation */

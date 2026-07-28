@@ -1,18 +1,26 @@
 function grbshow
-%GBSHOW create a test coverage report in tmp_cover/
+%GRBSHOW create a test coverage report in tmp_cover/
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
 if (ispc)
     error ('The tests in Tcov are not ported to Windows') ;
 end
 
+GB_mex_finalize ;
 infiles = [ dir('tmp_source/*.*') ; dir('tmp_include/*.*') ] ;
 
 nfiles = length (infiles) ;
 
-load grbstat.mat
+% load grbstat.mat
+global GraphBLAS_grbcov
+n = grblines ;
+c = sum (GraphBLAS_grbcov > 0) ;
+if (c == n)
+    fprintf ('all %d lines covered\n', n) ;
+    return
+end
 
 for k = 1:nfiles
 
@@ -37,7 +45,9 @@ for k = 1:nfiles
             ~isempty (strfind (cline, '++')))
             % got one; get the count
             k1 = strfind (cline, '[') ;
+            k1 = k1 (1) ;
             k2 = strfind (cline, ']') ;
+            k2 = k2 (1) ;
             s = cline (k1+1:k2-1) ;
             i = str2num (s) + 1 ;
             c = GraphBLAS_grbcov (i) ;
@@ -55,5 +65,6 @@ for k = 1:nfiles
     fclose (f_input) ;
 
 end
+
 
 

@@ -8,6 +8,7 @@ function mongoose_make (run_test)
 % See also mongoose_test, mongoose_make
 
 %   Copyright (c) 2018, N. Yeralan, S. Kolodziej, T. Davis, W. Hager
+%   SPDX-License-Identifier: GPL-3.0-only
 
 if (nargin < 1)
     run_test = 1;
@@ -22,6 +23,8 @@ is64 = (~isempty (strfind (computer, '64'))) ;  %#ok
 if (is64)
     % 64-bit MATLAB
     flags = ' -largeArrayDims' ;
+else
+    error ('32-bit MATLAB not supported') ;
 end
 
 include = '-I. -I../Include -I../External/Include -I../../SuiteSparse_config' ;
@@ -32,8 +35,11 @@ flags = [flags ' -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE'] ;
 % We're compiling this from within a mex function.
 flags = [flags ' -DGP_MEX_FUNCTION'] ;
 
-% Append optimization and 64-bit flags
-flags = [flags ' -DDLONG -O -silent COPTIMFLAGS="-O3 -fwrapv"'];
+% Append optimization
+flags = [flags ' -O -silent COPTIMFLAGS="-O3 -fwrapv"'];
+
+% Append while building objects for shared library
+flags = [flags ' -DMONGOOSE_BUILDING'];
 
 cpp_flags = '' ;
 lib = '';
@@ -42,6 +48,11 @@ if (isunix)
         % Mac doesn't need librt
         lib = [lib ' -lrt'];
     end
+end
+
+if (ispc)
+    % disable the SuiteSparse_config timer
+    flags = [' -DNTIMER ' flags] ;
 end
 
 % Fix the include & library path.
@@ -102,24 +113,10 @@ obj_files = mex_compile(config_src, 'c', flags, include, details);
 obj_list = [obj_list obj_files];
 
 % Build Mongoose
-% Check if library is built already
-% fprintf('\n\nSearching for Mongoose...');
-location = fileparts(mfilename('fullpath'));
-if (exist([location '/../Lib/libmongoose.a'], 'file') == 2)
-    % fprintf('\nMongoose static library found! Using static linking.\n');
-    lib = [lib ' -L../Lib -lmongoose'];
-else
-    % fprintf('\nMongoose static library not found! Compiling Mongoose using mex.\n');
+obj_files = mex_compile(mongoose_src, 'cpp', [cpp_flags flags], include, details);
+obj_list = [obj_list obj_files];
 
-    % Compile Mongoose
-    % fprintf('\n\nBuilding Mongoose');
-    obj_files = mex_compile(mongoose_src, 'cpp', [cpp_flags flags], include, details);
-    obj_list = [obj_list obj_files];
-end
-    
-
-% fprintf('\nBuilding MEX Utilities') ;
-
+% build MEX utilities
 obj_files = mex_compile(mex_util_src, 'cpp', [cpp_flags flags], include, details);
 obj_list = [obj_list obj_files];
 
@@ -158,7 +155,12 @@ for f = files
         slash = slash (end) + 1 ;
     end
     o = ff (slash:end) ;
-    obj_files = [obj_files ' ' o '.o'] ;        %#ok
+    if (ispc)
+        obj = '.obj' ;
+    else
+        obj = '.o' ;
+    end
+    obj_files = [obj_files ' ' o obj] ;        %#ok
     s = sprintf ('mex %s %s -c %s.%s', flags, include, ff, ext) ;
     kk = do_cmd (s, kk, details) ;
 end
@@ -178,8 +180,3 @@ else
 end
 eval (s) ;
 
-%-------------------------------------------------------------------------------
-% function v = getversion
-% determine the MATLAB version, and return it as a double.
-% v = sscanf (version, '%d.%d.%d') ;
-% v = 10.^(0:-1:-(length(v)-1)) * v ;

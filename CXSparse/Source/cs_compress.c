@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_compress: convert triplet to sparse compressed-column
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* C = compressed-column form of a triplet matrix T */
 cs *cs_compress (const cs *T)
@@ -8,7 +11,7 @@ cs *cs_compress (const cs *T)
     if (!CS_TRIPLET (T)) return (NULL) ;                /* check inputs */
     m = T->m ; n = T->n ; Ti = T->i ; Tj = T->p ; Tx = T->x ; nz = T->nz ;
     C = cs_spalloc (m, n, nz, Tx != NULL, 0) ;          /* allocate result */
-    w = (CS_INT *)cs_calloc (n, sizeof (CS_INT)) ;                   /* get workspace */
+    w = (CS_INT *) cs_calloc (n, sizeof (CS_INT)) ;                   /* get workspace */
     if (!C || !w) return (cs_done (C, w, NULL, 0)) ;    /* out of memory */
     Cp = C->p ; Ci = C->i ; Cx = C->x ;
     for (k = 0 ; k < nz ; k++) w [Tj [k]]++ ;           /* column counts */

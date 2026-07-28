@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_dupl: remove duplicates from a sparse matrix
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* remove duplicate entries from A */
 CS_INT cs_dupl (cs *A)
@@ -6,7 +9,7 @@ CS_INT cs_dupl (cs *A)
     CS_ENTRY *Ax ;
     if (!CS_CSC (A)) return (0) ;               /* check inputs */
     m = A->m ; n = A->n ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
-    w = (CS_INT *)cs_malloc (m, sizeof (CS_INT)) ;           /* get workspace */
+    w = (CS_INT *) cs_malloc (m, sizeof (CS_INT)) ;           /* get workspace */
     if (!w) return (0) ;                        /* out of memory */
     for (i = 0 ; i < m ; i++) w [i] = -1 ;      /* row i not yet seen */
     for (j = 0 ; j < n ; j++)
@@ -17,7 +20,7 @@ CS_INT cs_dupl (cs *A)
             i = Ai [p] ;                        /* A(i,j) is nonzero */
             if (w [i] >= q)
             {
-                Ax[w[i]] = CS_ADD(Ax[w[i]], Ax[p]);          /* A(i,j) is a duplicate */
+                Ax [w [i]] = CS_ADD (Ax [w [i]], Ax [p]) ;          /* A(i,j) is a duplicate */
             }
             else
             {

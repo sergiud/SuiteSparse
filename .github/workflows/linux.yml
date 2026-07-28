@@ -69,14 +69,6 @@ jobs:
           ninja-build \
           nvidia-cuda-toolkit
 
-    # Due to a mismatch in LTO version used by GCC and CUDA compiler, enable
-    # -flto only when building the non-CUDA version of the library.
-    - name: Setup Environment
-      if: ${{matrix.build_type == 'Release' && matrix.gpu != 'cuda'}}
-      run: |
-        echo 'CFLAGS=-flto' >> $GITHUB_ENV
-        echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
-
     - name: Cache Build
       id: cache-build
       uses: actions/cache@v6
@@ -88,6 +80,7 @@ jobs:
     - name: Configure
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
+              -DBUILD_TESTING=ON \
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
               -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=ccache \
               -DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=ccache \
@@ -103,6 +96,12 @@ jobs:
       run: |
         cmake --build build_${{matrix.build_type}}/ \
               --config ${{matrix.build_type}}
+
+    - name: Test
+      run: |
+        ctest --test-dir build_${{matrix.build_type}}/ \
+              --build-config ${{matrix.build_type}} \
+              --output-on-failure
 
     - name: Install
       run: |

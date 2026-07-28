@@ -53,12 +53,6 @@ jobs:
         pacman --noconfirm -S
         mingw-w64-${{matrix.env}}-metis
 
-    - name: Setup Environment
-      if: ${{matrix.build_type == 'Release'}}
-      run: |
-        echo 'CFLAGS=-flto' >> ~/.bash_profile
-        echo 'CXXFLAGS=-flto' >> ~/.bash_profile
-
     - name: Cache Build
       id: cache-build
       uses: actions/cache@v6
@@ -70,6 +64,7 @@ jobs:
     - name: Configure
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ \
+              -DBUILD_TESTING=ON \
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
               -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
               -DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=ccache \
@@ -85,6 +80,12 @@ jobs:
       run: |
         cmake --build build_${{matrix.build_type}}/ \
               --config ${{matrix.build_type}}
+
+    - name: Test
+      run: |
+        ctest --test-dir build_${{matrix.build_type}}/ \
+              --build-config ${{matrix.build_type}} \
+              --output-on-failure
 
     - name: Install
       run: |
@@ -229,6 +230,7 @@ jobs:
     - name: Configure
       run: |
         cmake -S . -B build_${{matrix.build_type}}/ `
+              -DBUILD_TESTING=ON `
               -A x64 `
               -DBLAS_blas_LIBRARY=${{github.workspace}}/install/lib/libblas.lib `
               -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
@@ -246,6 +248,12 @@ jobs:
       run: |
         cmake --build build_${{matrix.build_type}}/ `
               --config ${{matrix.build_type}}
+
+    - name: Test
+      run: |
+        ctest --test-dir build_${{matrix.build_type}}/ `
+              --build-config ${{matrix.build_type}} `
+              --output-on-failure
 
     - name: Install
       run: |

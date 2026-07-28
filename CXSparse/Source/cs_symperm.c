@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_symperm: symmetric permutation of a sparse matrix
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* C = A(p,p) where A and C are symmetric the upper part stored; pinv not p */
 cs *cs_symperm (const cs *A, const CS_INT *pinv, CS_INT values)
@@ -8,7 +11,7 @@ cs *cs_symperm (const cs *A, const CS_INT *pinv, CS_INT values)
     if (!CS_CSC (A)) return (NULL) ;                    /* check inputs */
     n = A->n ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     C = cs_spalloc (n, n, Ap [n], values && (Ax != NULL), 0) ; /* alloc result*/
-    w = (CS_INT *)cs_calloc (n, sizeof (CS_INT)) ;                   /* get workspace */
+    w = (CS_INT *) cs_calloc (n, sizeof (CS_INT)) ;                   /* get workspace */
     if (!C || !w) return (cs_done (C, w, NULL, 0)) ;    /* out of memory */
     Cp = C->p ; Ci = C->i ; Cx = C->x ;
     for (j = 0 ; j < n ; j++)           /* count entries in each column of C */

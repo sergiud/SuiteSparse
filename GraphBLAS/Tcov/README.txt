@@ -1,10 +1,10 @@
-SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 
 GraphBLAS/Tcov: statement coverage tests
 
-Requirements:  the mex command must use a C compiler supporting ANSI C11.
-Microft Visual Studio does not support ANSI C11 so this test is not available
+Requirements:  the mex command must use a C compiler supporting C11.
+Microft Visual Studio does not support C11 so this test is not available
 on Windows unless you use another compiler.
 
 Since nearly all GraphBLAS tests are in *.m files, I have taken the unusual
@@ -41,14 +41,15 @@ Files in GraphBLAS/Tcov:
     Contents.m     for 'help Tcov'; list of files
 
     grbcov.m        makes the tests, runs them, and lists the test coverage
-    grbcover.m      compile GraphBLAS for statement coverage testing
+
+    grbmake.m       compile GraphBLAS for test coverage
+    grbcov_testmake.m   compile ../Tests/*.c for statement coverage testing
     grbcover_edit.m create a version of GraphBLAS for statement coverage tests
     testcov.m       run all GraphBLAS tests, with statement coverage
     grbshow.m       create a test coverage report in tmp_cover/
     Makefile        just for 'make clean' and 'make purge'
     README.txt      this file
 
-    GB_cover_util.c     get/put the coverage
     log_*.txt           100% test coverage certificates
 
     tmp_cover       where coverage reports are placed

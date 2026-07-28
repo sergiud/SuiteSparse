@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_scatter: scatter a scaled sparse vector into a dense vector
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse */
 CS_INT cs_scatter (const cs *A, CS_INT j, CS_ENTRY beta, CS_INT *w, CS_ENTRY *x, CS_INT mark,
@@ -14,9 +17,9 @@ CS_INT cs_scatter (const cs *A, CS_INT j, CS_ENTRY beta, CS_INT *w, CS_ENTRY *x,
         {
             w [i] = mark ;                      /* i is new entry in column j */
             Ci [nz++] = i ;                     /* add i to pattern of C(:,j) */
-            if (x) x [i] = CS_MUL(beta, Ax [p]) ;      /* x(i) = beta*A(i,j) */
+            if (x) x [i] = CS_MUL (beta, Ax [p]) ;      /* x(i) = beta*A(i,j) */
         }
-        else if (x) x [i] = CS_ADD(x[i], CS_MUL(beta, Ax [p])) ;    /* i exists in C(:,j) already */
+        else if (x) x [i] = CS_ADD (x [i], CS_MUL (beta, Ax [p])) ;    /* i exists in C(:,j) already */
     }
     return (nz) ;
 }

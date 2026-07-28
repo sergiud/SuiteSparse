@@ -1,7 +1,7 @@
 function test104
 %TEST104 export/import
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
 rng ('default')
@@ -17,17 +17,30 @@ for m = [0 1 5 100]
         for d = [0 0.1 0.5 inf]
             A = GB_spec_random (m, n, d) ;
             nz = nnz (A.pattern) ;
+            if (nz > 0 & nz < 20)
+                fprintf ('\ninput matrix format:\n') ;
+                display (A.matrix) ;
+            end
             is_sparse = (nz < m*n) ;
             fprintf ('.') ;
             for fmat = fmts
+                if (nz > 0 & nz < 20)
+                    if (fmat == 1 || fmat == 3 || fmat == 5 || fmat == 7)
+                        fprintf ('---------- row-wise format: %d\n', fmat) ;
+                        display (A.matrix) ;
+                    elseif (fmat == 2 || fmat == 4 || fmat == 6 || fmat == 8)
+                        fprintf ('---------- col-wise format: %d\n', fmat) ;
+                        display (A.matrix) ;
+                    end
+                end
                 for fexport = 0:14
                     try
-                        C = GB_mex_export_import (A, fmat, fexport) ;
-                        GB_spec_compare (C, A) ;
-                        C = GB_mex_export_import (A, fmat, fexport, 1) ;
-                        GB_spec_compare (C, A) ;
-                        C = GB_mex_export_import (A, fmat, fexport, 502) ;
-                        GB_spec_compare (C, A) ;
+                        C1 = GB_mex_export_import (A, fmat, fexport) ;
+                        GB_spec_compare (C1, A) ;
+                        C2 = GB_mex_export_import (A, fmat, fexport, 1) ;
+                        GB_spec_compare (C2, A) ;
+                        C3 = GB_mex_export_import (A, fmat, fexport, 502) ;
+                        GB_spec_compare (C3, A) ;
                     catch me
                         % should fail if A is sparse and it is attempted to
                         % be exported as full

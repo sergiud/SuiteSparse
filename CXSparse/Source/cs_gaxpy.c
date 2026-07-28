@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_gaxpy: sparse matrix times dense vector
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* y = A*x+y */
 CS_INT cs_gaxpy (const cs *A, const CS_ENTRY *x, CS_ENTRY *y)
@@ -10,7 +13,7 @@ CS_INT cs_gaxpy (const cs *A, const CS_ENTRY *x, CS_ENTRY *y)
     {
         for (p = Ap [j] ; p < Ap [j+1] ; p++)
         {
-            y [Ai [p]] = CS_ADD(y[Ai[p]], CS_MUL(Ax [p], x [j])) ;
+            y [Ai [p]] = CS_ADD (y [Ai [p]], CS_MUL (Ax [p], x [j])) ;
         }
     }
     return (1) ;

@@ -2,7 +2,7 @@
 // GB_mex_AxB: compute C=A*B, A'*B, A*B', or A'*B'
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
@@ -44,14 +44,14 @@ int64_t bnrows = 0 ;
 int64_t bncols = 0 ;
 struct GB_Matrix_opaque C_header ;
 
-GrB_Desc_Value AxB_method = GxB_DEFAULT ;
+int AxB_method = GxB_DEFAULT ;
 
-GrB_Info axb (GB_Context Context) ;
-GrB_Info axb_complex (GB_Context Context) ;
+GrB_Info axb (GB_Werk Werk) ;
+GrB_Info axb_complex (GB_Werk Werk) ;
 
 //------------------------------------------------------------------------------
 
-GrB_Info axb (GB_Context Context)
+GrB_Info axb (GB_Werk Werk)
 {
 
     // create the Semiring for regular z += x*y
@@ -66,7 +66,7 @@ GrB_Info axb (GB_Context Context)
     }
 
     struct GB_Matrix_opaque MT_header ;
-    GrB_Matrix MT = GB_clear_static_header (&MT_header) ;
+    GrB_Matrix MT = GB_clear_matrix_header (&MT_header) ;
 
     // C = A*B, A'*B, A*B', or A'*B'
     info = GB_AxB_meta (C, NULL,
@@ -88,17 +88,16 @@ GrB_Info axb (GB_Context Context)
         &ignore2,   // done_in_place
         AxB_method,
         true,       // do the sort
-        Context) ;
+        Werk) ;
 
     GrB_Monoid_free_(&add) ;
     GrB_Semiring_free_(&semiring) ;
-
     return (info) ;
 }
 
 //------------------------------------------------------------------------------
 
-GrB_Info axb_complex (GB_Context Context)
+GrB_Info axb_complex (GB_Werk Werk)
 {
 
     // C = A*B, complex case
@@ -163,7 +162,7 @@ GrB_Info axb_complex (GB_Context Context)
     }
 
     struct GB_Matrix_opaque MT_header ;
-    GrB_Matrix MT = GB_clear_static_header (&MT_header) ;
+    GrB_Matrix MT = GB_clear_matrix_header (&MT_header) ;
 
     info = GB_AxB_meta (C, NULL,
         false,      // C_replace
@@ -184,11 +183,10 @@ GrB_Info axb_complex (GB_Context Context)
         &ignore2,   // done_in_place
         AxB_method,
         true,       // do the sort
-        Context) ;
+        Werk) ;
 
     GrB_Matrix_free_(&Bconj) ;
     GrB_Matrix_free_(&Aconj) ;
-
     return (info) ;
 }
 
@@ -217,7 +215,7 @@ void mexFunction
     add = NULL ;
     semiring = NULL ;
 
-    GB_CONTEXT (USAGE) ;
+    GB_WERK (USAGE) ;
 
     // check inputs
     if (nargout > 1 || nargin < 2 || nargin > 5)
@@ -250,11 +248,11 @@ void mexFunction
 
     // get the axb_method
     // 0 or not present: default
-    // 1001: Gustavson
-    // 1003: dot
-    // 1004: hash
-    // 1005: saxpy
-    GET_SCALAR (4, GrB_Desc_Value, AxB_method, GxB_DEFAULT) ;
+    // 7081: Gustavson
+    // 7083: dot
+    // 7084: hash
+    // 7085: saxpy
+    GET_SCALAR (4, int, AxB_method, GxB_DEFAULT) ;
 
     if (! ((AxB_method == GxB_DEFAULT) ||
         (AxB_method == GxB_AxB_GUSTAVSON) ||
@@ -275,15 +273,15 @@ void mexFunction
         mexErrMsgTxt ("invalid dimensions") ;
     }
 
-    C = GB_clear_static_header (&C_header) ;
+    C = GB_clear_matrix_header (&C_header) ;
 
     if (A->type == Complex)
     {
-        METHOD (axb_complex (Context)) ;
+        METHOD (axb_complex (Werk)) ;
     }
     else
     {
-        METHOD (axb (Context)) ;
+        METHOD (axb (Werk)) ;
     }
 
     // return C

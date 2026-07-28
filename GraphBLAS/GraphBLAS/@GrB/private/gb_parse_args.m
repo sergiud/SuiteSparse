@@ -9,8 +9,8 @@ function [m, n, type] = gb_parse_args (func, varargin)
 %   C = GrB.ones (... , 'like', G) ;
 %   C = GrB.ones (... , 'int8') ;
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 % parse the type
 type = 'double' ;

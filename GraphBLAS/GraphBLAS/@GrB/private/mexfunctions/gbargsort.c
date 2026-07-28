@@ -2,8 +2,8 @@
 // gbargsort: sort a GraphBLAS matrix
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ void mexFunction
     //--------------------------------------------------------------------------
 
     GrB_Matrix C = NULL, P = NULL ;
-    GrB_Index nrows, ncols ;
+    uint64_t nrows, ncols ;
     OK (GrB_Matrix_nrows (&nrows, A)) ;
     OK (GrB_Matrix_ncols (&ncols, A)) ;
     OK (GrB_Matrix_new (&C, type, nrows, ncols)) ;
@@ -116,8 +116,7 @@ void mexFunction
     // sort the matrix
     //--------------------------------------------------------------------------
 
-    GrB_Info info = (GxB_Matrix_sort (C, P, op, A, desc)) ;
-    OK (info) ;
+    OK (GxB_Matrix_sort (C, P, op, A, desc)) ;
 
     //--------------------------------------------------------------------------
     // add 1 to the entries in P, to convert to 1-based indexing
@@ -133,11 +132,12 @@ void mexFunction
     // return result
     //--------------------------------------------------------------------------
 
+    OK (GrB_Matrix_free (&A)) ;
     pargout [0] = gb_export (&C, KIND_GRB) ;
     if (nargout > 1)
     { 
         pargout [1] = gb_export (&P, KIND_GRB) ;
     }
-    GB_WRAPUP ;
+    gb_wrapup ( ) ;
 }
 

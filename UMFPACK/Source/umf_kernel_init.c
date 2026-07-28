@@ -1,11 +1,11 @@
-/* ========================================================================== */
-/* === UMF_kernel_init ====================================================== */
-/* ========================================================================== */
+//------------------------------------------------------------------------------
+// UMFPACK/Source/umf_kernel_init: initializations for umf_kernel
+//------------------------------------------------------------------------------
 
-/* -------------------------------------------------------------------------- */
-/* Copyright (c) 2005-2012 by Timothy A. Davis, http://www.suitesparse.com.   */
-/* All Rights Reserved.  See ../Doc/License.txt for License.                  */
-/* -------------------------------------------------------------------------- */
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
+// SPDX-License-Identifier: GPL-2.0+
+
+//------------------------------------------------------------------------------
 
 /*
     Initialize the kernel: scale the matrix, load the initial elements, and
@@ -52,12 +52,21 @@ PRIVATE Int packsp	/* returns new value of pnew */
     Entry *Bx, *Bx2 ;
     Int p, i, len, len_new, *Bi, *Bi2 ;
 
+// #ifndef NDEBUG
+//     Int save = UMF_debug ;
+//     UMF_debug = 999 ;
+// #endif
+
     /* get the pointers to the sparse vector, and its length */
     p = *p_p ;
     len = *p_len ;
     Bi = (Int   *) (Memory + p) ; p += UNITS (Int,   len) ;
     Bx = (Entry *) (Memory + p) ; p += UNITS (Entry, len) ;
     DEBUGm4 (("  p "ID" len "ID" pnew "ID"\n", p, len, pnew)) ;
+
+#ifndef NDEBUG
+    Int pold = p ;
+#endif
 
     /* the vector resides in Bi [0..len-1] and Bx [0..len-1] */
 
@@ -108,14 +117,27 @@ PRIVATE Int packsp	/* returns new value of pnew */
     DEBUGm4 (("  pnew "ID" len_new "ID"\n", pnew, len_new)) ;
 
     /* shift the vector upwards, into its new space */
+#if 1
+    // revised for UMFPACK 6.3.7 as a workaround for the Intel icx 2025.2 bug:
+    memmove (Bi2, Bi, len_new * sizeof (Int)) ;
+    memmove (Bx2, Bx, len_new * sizeof (Entry)) ;
+#else
+    // Note that the space for source and destination can overlap.  When it
+    // does, it triggers a bug in the Intel icx 2025.2 compiler.  This fails
+    // here, even if vectorization is turned off; see the ATandT/twotone matrix
+    // in the ParU/Demos/paru_benchmark test:
+    // /home/davis/dev2/SuiteSparse/ParU/build/paru_benchmark ~/matrices/twotone.mtx
+    UMFPACK_NOVECTOR
     for (p = 0 ; p < len_new ; p++)
     {
 	Bi2 [p] = Bi [p] ;
     }
+    UMFPACK_NOVECTOR
     for (p = 0 ; p < len_new ; p++)
     {
 	Bx2 [p] = Bx [p] ;
     }
+#endif
 
 #ifndef NDEBUG
     for (p = 0 ; p < len_new ; p++)
@@ -123,9 +145,17 @@ PRIVATE Int packsp	/* returns new value of pnew */
 	DEBUGm4 (("    packed vec: i "ID" value: ", Bi2 [p])) ;
 	EDEBUGk (-4, Bx2 [p]) ;
 	DEBUGm4 (("\n")) ;
+        // This assertion fails if the old version (with for loops, "if 0")
+        // is used above with the Intel icx 2025.2 compiler:
+        if (Bi2 [p] < 0) printf ("Hey! Memory %lu pold %ld pnew %ld lenold %ld len_new %ld\n",
+            (uint64_t) Memory, (int64_t) pold, (int64_t) pnew, (int64_t) len, (int64_t) len_new) ;
 	ASSERT (Bi2 [p] >= 0) ;
     }
 #endif
+
+// #ifndef NDEBUG
+//     UMF_debug = save ;
+// #endif
 
     /* return the pointer to the space just after the new vector */
     return (pnew) ;
@@ -136,7 +166,7 @@ PRIVATE Int packsp	/* returns new value of pnew */
 /* === UMF_kernel_init ====================================================== */
 /* ========================================================================== */
 
-GLOBAL Int UMF_kernel_init
+Int UMF_kernel_init
 (
     const Int Ap [ ],		/* user's input matrix (not modified) */
     const Int Ai [ ],

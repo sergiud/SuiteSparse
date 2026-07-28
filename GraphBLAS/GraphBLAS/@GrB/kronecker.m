@@ -13,10 +13,10 @@ function C = kronecker (arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 %
 % T is then accumulated into C via C<#M,replace> = accum (C,T).
 %
-% See also kron, GrB/kron.
+% See also kron, GrB/kron, GrB.binopinfo.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 if (isobject (arg1))
     arg1 = arg1.opaque ;

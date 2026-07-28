@@ -2,8 +2,8 @@
 // gb_mxget_int64_scalar: return an int64 scalar
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ uint64_t gb_mxget_uint64_scalar // return uint64 value of a MATLAB scalar
 
     if (!gb_mxarray_is_scalar (mxscalar))
     { 
-        GB_COV_PUT ;
+        GBCOV_PUT ;
         mexErrMsgIdAndTxt ("GrB:error", "%s must be a scalar", name) ;
     }
 

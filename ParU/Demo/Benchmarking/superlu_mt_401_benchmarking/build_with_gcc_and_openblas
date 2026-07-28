@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Fresh build of SuperLU_MT 4.0.1 with gcc, OpenBLAS and OpenMP
+
+rm -rf build/*
+cd build
+export MKL_THREADING_LAYER=GNU
+CC=gcc CXX=g++ cmake -DPLAT=_OPENMP -DBLA_VENDOR=OpenBLAS ..
+# cmake -LA . | grep -v NOTFOUND
+cmake --build . --config Release
+ldd EXAMPLE/pdlinsolx_paru

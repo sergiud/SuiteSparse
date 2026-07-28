@@ -1,23 +1,12 @@
 #
 # CMake support layer for SuiteSparse
 #
-# Copyright 2016-2021 Sergiu Deitsch <sergiu.deitsch@gmail.com>
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: 2026 Sergiu Deitsch
+# SPDX-License-Identifier: Apache-2.0
 #
 
-cmake_minimum_required (VERSION 3.12)
-project (cxsparse LANGUAGES C VERSION 3.2.0
+cmake_minimum_required (VERSION 3.22)
+project (cxsparse LANGUAGES C VERSION 4.4.2
   DESCRIPTION "A Concise Sparse matrix package - Extended"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
 )
@@ -46,8 +35,6 @@ set (CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION})
 set (CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION})
 set (CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
 set (CPACK_PACKAGE_VERSION ${SHORT_VERSION})
-
-list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 if (NOT CPack_CMake_INCLUDED)
   include (CPack)
@@ -172,14 +159,10 @@ target_compile_definitions (cxsparse_long PRIVATE CS_LONG $<TARGET_PROPERTY:cxsp
 target_compile_definitions (cxsparse_long PRIVATE cxsparse_EXPORTS)
 target_include_directories (cxsparse_long PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
 
-if (MSVC)
-  #set_source_files_properties (${SRCS} PROPERTIES LANGUAGE CXX)
-endif (MSVC)
-
 add_library (cxsparse
   $<TARGET_OBJECTS:cxsparse_int>
   $<TARGET_OBJECTS:cxsparse_long>
-  $<TARGET_OBJECTS:suitesparsebase>
+  Source/cxsparse_version.c
   ${CXSparse_HDRS}
 )
 
@@ -223,6 +206,8 @@ target_include_directories (cxsparse PUBLIC
 if (HAVE_M)
   target_link_libraries (cxsparse PRIVATE m)
 endif (HAVE_M)
+
+target_link_libraries (cxsparse PUBLIC SuiteSparse::Config)
 
 if (NOT HAVE_C99_COMPLEX STREQUAL "")
   target_compile_definitions (cxsparse PUBLIC CXSPARSE_C99_COMPLEX)
@@ -268,6 +253,7 @@ install (FILES
   DESTINATION ${_CXSparse_CMake_INSTALLDIR})
 
 set_component_version (cxsparse ${VERSION})
+set_target_properties (cxsparse PROPERTIES OUTPUT_NAME cxsparse)
 
 add_executable (cs_ci_demo1
   Demo/cs_ci_demo1.c

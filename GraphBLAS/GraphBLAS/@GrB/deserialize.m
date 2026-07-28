@@ -21,8 +21,8 @@ function G = deserialize (blob, mode, arg3)
 %
 % See also GrB.serialize, GrB.load, GrB.save, GrB/struct.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 % The type may also be specified, as an optional arg3 string:
 % G = GrB.deserialize (blob, 'fast', 'single') for example.  This is

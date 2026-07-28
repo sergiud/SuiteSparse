@@ -1,9 +1,11 @@
-/* ========================================================================== */
-/* === RBio/RBio/RBtype.c: MATLAB mexFunction to find matrix type =========== */
-/* ========================================================================== */
+//------------------------------------------------------------------------------
+// RBio/RBio/RBio.h: MATLAB function to find matrix type for RBio
+//------------------------------------------------------------------------------
 
-/* Copyright 2009, Timothy A. Davis, All Rights Reserved.
-   Refer to RBio/Doc/license.txt for the RBio license. */
+// RBio, Copyright (c) 2009-2022, Timothy A. Davis.  All Rights Reserved.
+// SPDX-License-Identifier: GPL-2.0+
+
+//------------------------------------------------------------------------------
 
 /*
 -----------------------------------------------------------------------
@@ -34,9 +36,9 @@
 -----------------------------------------------------------------------
 */
 
+#include "mex.h"
 #include "RBio.h"
 #define TRUE (1)
-#define Long SuiteSparse_long
 
 void mexFunction
 (
@@ -47,9 +49,9 @@ void mexFunction
 )
 {
     double xmin, xmax ;
-    Long *Ap, *Ai ;
+    int64_t *Ap, *Ai ;
     double *Ax, *Az ;
-    Long nrow, ncol, nnz, mkind, skind, mkind_in ;
+    int64_t nrow, ncol, nnz, mkind, skind, mkind_in ;
     char mtype [4] ;
 
     /* ---------------------------------------------------------------------- */
@@ -70,8 +72,8 @@ void mexFunction
         mexErrMsgTxt ("A must be sparse and double") ;
     }
 
-    Ap = (Long *) mxGetJc (pargin [0]) ;
-    Ai = (Long *) mxGetIr (pargin [0]) ;
+    Ap = (int64_t *) mxGetJc (pargin [0]) ;
+    Ai = (int64_t *) mxGetIr (pargin [0]) ;
     Ax = mxGetPr (pargin [0]) ;
     Az = mxGetPi (pargin [0]) ;
     nrow = mxGetM (pargin [0]) ;

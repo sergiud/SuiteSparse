@@ -1,51 +1,61 @@
 function grbmake
-%GBMAKE compile the GraphBLAS library for statement coverage testing
+%GRBMAKE compile the GraphBLAS library for statement coverage testing
 %
 % This function compiles ../Source to create the
 % libgraphblas_tcov.so (or *.dylib) library, inserting code code for statement
 % coverage testing.  It does not compile the mexFunctions.
 %
-% See also: grbcover, grbcover_edit
+% See also: grbcov_testmake, grbcover_edit
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
 if (ispc)
     error ('The tests in Tcov are not ported to Windows') ;
 end
 
-% copy the GB_rename.h file
+% copy the GB_rename.h and GB_coverage.c files
 copyfile ('../GraphBLAS/rename/GB_rename.h', 'tmp_include/GB_rename.h') ;
+copyfile ('GB_coverage.c', 'tmp_source/GB_coverage.c') ;
 
 % create the include files and place in tmp_include
-hfiles = [ dir('../Include/*') ; ...
-           dir('../Source/*.h') ; ...
-%          dir('../lz4/*.h') ; ...
-%          dir('../lz4/*.c') ; ...
-%          dir('../zstd/zstd_subset/*.h') ; ...
-%          dir('../zstd/zstd_subset/*/*.c') ; ...
-%          dir('../zstd/zstd_subset/*/*.h') ; ...
-           dir('../Source/Template') ; ...
-           dir('../Source/Generated1/*.h') ; ...
-           dir('../Source/Generated2/*.h') ; ] ;
+hfiles = [ ...
+        dir('../Include/GraphBLAS.h') ; ...
+        dir('../Source/*.h') ; ...
+        dir('../GraphBLAS/Config/*.h') ; ...
+        dir('../Source/include') ; ...
+        dir('../Source/*/*.h') ; ...
+        dir('../Source/*/include') ; ...
+        dir('../Source/*/template') ; ...
+        dir('../Source/*/factory') ; ...
+        dir('../JITpackage/*.h') ; ...
+        dir('../FactoryKernels/*.h') ; ] ;
+
 count = grbcover_edit (hfiles, 0, 'tmp_include') ;
 fprintf ('hfile count: %d\n', count) ;
 
 % create the C files and place in tmp_source
-cfiles = [ dir('../Source/*.c') ; ...
-           dir('../Source/Generated1/*.c') ; ...
-           dir('../Source/Generated2/*.c') ; ...
-           dir('GB_cover_finish.c')
-           ] ;
+cfiles = [ dir('../Source/*/*.c') ; ...
+        dir('../FactoryKernels/*.c') ; ...
+        % use Tcov/PreJIT kernels ...
+        dir('PreJIT/*.c') ; ...
+        % not the PreJIT kernels in the primary source:
+        % dir('../PreJIT/*.c') ; ...
+        % dir('../Config/GB_prejit.c') ; ...
+        dir('../JITpackage/*.c')
+        ] ;
+
 count = grbcover_edit (cfiles, count, 'tmp_source') ;
 fprintf ('cfile count: %d\n', count) ;
 
-% create the GB_cover_finish.c file and place in tmp_source
-f = fopen ('tmp_source/GB_cover_finish.c', 'w') ;
-fprintf (f, '#include "GB.h"\n') ;
-fprintf (f, 'int64_t GB_cov [GBCOVER_MAX] ;\n') ;
-fprintf (f, 'int GB_cover_max = %d ;\n', count) ;
-fclose (f) ;
+% save the count
+fp = fopen ('tmp_cover/count', 'w') ;
+fprintf (fp, '%d\n', count) ;
+fclose (fp) ;
+
+% revise this to match Source/include/GB_coverage.h
+GBCOVER_MAX = 31000 ;
+assert (count < GBCOVER_MAX) ;
 
 % compile the libgraphblas_tcov.so library
 
@@ -57,9 +67,10 @@ else
 end
 
 if (need_rename)
-    fprintf ('Rename with -DGBRENAME=1\n') ;
-    system (sprintf ('make -j%d RENAME="-DGBRENAME=1"', feature ('numcores'))) ;
+    fprintf ('Rename with -DGBMATLAB=1\n') ;
+    system (sprintf ('make -j%d MATLAB="-DGBMATLAB=1"', feature ('numcores'))) ;
 else
     system (sprintf ('make -j%d', feature ('numcores'))) ;
 end
+
 

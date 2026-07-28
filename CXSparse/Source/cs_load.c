@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_load: load a triplet matrix from a file
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* load a triplet matrix from a file */
 cs *cs_load (FILE *f)
@@ -17,7 +20,8 @@ cs *cs_load (FILE *f)
 #endif
     {
 #ifdef CS_COMPLEX
-        if (!cs_entry (T, (CS_INT) i, (CS_INT) j, CS_COMPLEX_MAKE(x, xi))) return (cs_spfree (T)) ;
+        if (!cs_entry (T, (CS_INT) i, (CS_INT) j,
+            CS_COMPLEX_MAKE (x, xi))) return (cs_spfree (T)) ;
 #else
         if (!cs_entry (T, (CS_INT) i, (CS_INT) j, x)) return (cs_spfree (T)) ;
 #endif

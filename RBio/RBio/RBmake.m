@@ -8,7 +8,8 @@ function RBmake
 %
 % See also RBread, RBwrite, RBtype, RBraw, RBinstall.
 %
-% Copyright 2009, Timothy A. Davis
+% RBio, Copyright (c) 2009-2022, Timothy A. Davis.  All Rights Reserved.
+% SPDX-License-Identifier: GPL-2.0+
 
 mexcmd = ['mex -O %s %s RBerror.c ../Source/RBio.c ' ...
     '../../SuiteSparse_config/SuiteSparse_config.c ' ...
@@ -22,6 +23,11 @@ catch
     % if ispc fails, assume we are on a Windows PC if it's not unix
     pc = ~isunix ;
     mac = 0 ;
+end
+
+if (pc)
+    % disable the SuiteSparse_config timer
+    mexcmd = [mexcmd ' -DNTIMER '] ;
 end
 
 if (~(pc || mac))

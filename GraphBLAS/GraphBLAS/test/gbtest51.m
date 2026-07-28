@@ -1,8 +1,8 @@
 function gbtest51
 %GBTEST51 test GrB.tricount and concatenate
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 files =  {
 './matrix/2blocks'
@@ -43,7 +43,7 @@ valid_count = [
 for k = 1:nfiles
     % fprintf ('--------------------------load file:\n') ;
     filename = files {k} ;
-    T = load (fullfile (filepath, filename)) ;
+    T = load ('-ascii', fullfile (filepath, filename)) ;
     nz = size (T, 1) ;
     X = ones (nz,1) ;
     G = GrB.build (int64 (T (:,1)), int64 (T (:,2)), X, desc) ;

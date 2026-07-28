@@ -1,6 +1,12 @@
-/* ========================================================================== */
-/* === KLU/Include/klu_internal.h =========================================== */
-/* ========================================================================== */
+//------------------------------------------------------------------------------
+// KLU/Include/klu_internal.h: internal include file for KLU
+//------------------------------------------------------------------------------
+
+// KLU, Copyright (c) 2004-2023, University of Florida.  All Rights Reserved.
+// Authors: Timothy A. Davis and Ekanathan Palamadai.
+// SPDX-License-Identifier: LGPL-2.1+
+
+//------------------------------------------------------------------------------
 
 /* For internal use in KLU routines only, not for user programs */
 
@@ -31,11 +37,7 @@
 
 /* ========================================================================== */
 
-#include <stdio.h>
 #include <assert.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <math.h>
 
 #undef ASSERT
 #ifndef NDEBUG
@@ -234,10 +236,13 @@ Int KLU_valid_LU
     Unit LU [ ]
 );
 
+KLU_NO_EXPORT
 size_t KLU_add_size_t (size_t a, size_t b, Int *ok) ;
 
+KLU_NO_EXPORT
 size_t KLU_mult_size_t (size_t a, size_t k, Int *ok) ;
 
+KLU_NO_EXPORT
 KLU_symbolic *KLU_alloc_symbolic (Int n, Int *Ap, Int *Ai, KLU_common *Common) ;
 
 #endif

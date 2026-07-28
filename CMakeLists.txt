@@ -1,22 +1,13 @@
 #
 # CMake support layer for SuiteSparse
 #
-# Copyright 2026 Sergiu Deitsch <sergiu.deitsch@gmail.com>
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: 2026 Sergiu Deitsch
+# SPDX-License-Identifier: Apache-2.0
 #
 
 cmake_minimum_required (VERSION 3.22)
+
+cmake_policy (SET CMP0069 NEW)
 
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3)
   if (CMAKE_VERSION VERSION_LESS 4.4)
@@ -36,7 +27,7 @@ project (SuiteSparse
   DESCRIPTION "A suite of sparse matrix packages"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
   LANGUAGES C
-  VERSION 5.13.0
+  VERSION 7.12.3
 )
 
 set (CMAKE_DEBUG_POSTFIX _debug)
@@ -60,6 +51,9 @@ include (CheckTypeSize)
 include (CMakeDependentOption)
 include (CMakePackageConfigHelpers)
 include (CMakePushCheckState)
+include (CheckIPOSupported)
+option (BUILD_TESTING "Build SuiteSparse tests" OFF)
+include (CTest)
 include (ComponentVersion)
 include (CPack)
 include (FeatureSummary)
@@ -73,12 +67,28 @@ option (WITH_METIS "Enables METIS support" ON)
 option (WITH_OPENMP "Enable OpenMP support" ON)
 option (WITH_PRINT "Print diagnostic messages" OFF)
 option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
+option (SUITESPARSE_ENABLE_IPO
+  "Enable IPO or LTO for Release builds when supported" ON)
+
+if (NOT DEFINED CMAKE_LINK_WHAT_YOU_USE)
+  set (CMAKE_LINK_WHAT_YOU_USE OFF CACHE BOOL
+    "Report shared library dependencies that are not used")
+endif (NOT DEFINED CMAKE_LINK_WHAT_YOU_USE)
 
 set (WITH_LICENSE "GPL" CACHE STRING "Software license the binary distribution should adhere")
 set_property (CACHE WITH_LICENSE PROPERTY STRINGS "Minimal;GPL;LGPL")
 
-check_language (CUDA)
 check_language (CXX)
+if (DEFINED CMAKE_CUDA_HOST_COMPILER)
+  set (SuiteSparse_CUDA_HOST_COMPILER
+    "${CMAKE_CUDA_HOST_COMPILER}")
+elseif (DEFINED ENV{CUDAHOSTCXX})
+  set (SuiteSparse_CUDA_HOST_COMPILER "$ENV{CUDAHOSTCXX}")
+elseif (CMAKE_CXX_COMPILER)
+  set (SuiteSparse_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
+  set (ENV{CUDAHOSTCXX} "${SuiteSparse_CUDA_HOST_COMPILER}")
+endif ()
+check_language (CUDA)
 check_language (Fortran)
 
 cmake_dependent_option (BUILD_SHARED_LIBS "Build shared libraires" OFF "WITH_LICENSE STREQUAL \"GPL\"" ON)
@@ -117,9 +127,40 @@ if (WITH_SUPERNODAL OR WITH_CUDA)
   enable_language (CXX)
 endif (WITH_SUPERNODAL OR WITH_CUDA)
 
+if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
+  add_compile_options (
+    "$<$<COMPILE_LANGUAGE:CUDA>:--compiler-bindir=${SuiteSparse_CUDA_HOST_COMPILER}>")
+endif ()
+
 if (WITH_FORTRAN)
   enable_language (Fortran)
 endif (WITH_FORTRAN)
+
+if (SUITESPARSE_ENABLE_IPO AND NOT WITH_CUDA
+  AND (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL Release))
+  set (_SuiteSparse_IPO_LANGUAGES C)
+  if (CMAKE_CXX_COMPILER_LOADED)
+    list (APPEND _SuiteSparse_IPO_LANGUAGES CXX)
+  endif (CMAKE_CXX_COMPILER_LOADED)
+  if (CMAKE_Fortran_COMPILER_LOADED)
+    list (APPEND _SuiteSparse_IPO_LANGUAGES Fortran)
+  endif (CMAKE_Fortran_COMPILER_LOADED)
+
+  check_ipo_supported (
+    RESULT _SuiteSparse_IPO_SUPPORTED
+    OUTPUT _SuiteSparse_IPO_OUTPUT
+    LANGUAGES ${_SuiteSparse_IPO_LANGUAGES}
+  )
+
+  if (_SuiteSparse_IPO_SUPPORTED)
+    set (CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+  else (_SuiteSparse_IPO_SUPPORTED)
+    message (WARNING
+      "IPO or LTO is not supported for Release builds: "
+      "${_SuiteSparse_IPO_OUTPUT}")
+  endif (_SuiteSparse_IPO_SUPPORTED)
+endif (SUITESPARSE_ENABLE_IPO AND NOT WITH_CUDA
+  AND (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL Release))
 
 check_c_compiler_flag (-Qstd=c99 HAVE_QSTD_C99)
 
@@ -233,13 +274,19 @@ set (AMD_SRCS
   AMD/Source/amd_control.c
   AMD/Source/amd_defaults.c
   AMD/Source/amd_dump.c
-  AMD/Source/amd_global.c
   AMD/Source/amd_info.c
   AMD/Source/amd_order.c
   AMD/Source/amd_post_tree.c
   AMD/Source/amd_postorder.c
   AMD/Source/amd_preprocess.c
   AMD/Source/amd_valid.c
+)
+
+set (AMD_UMFPACK_SRCS
+  AMD/Source/amd_aat.c
+  AMD/Source/amd_dump.c
+  AMD/Source/amd_post_tree.c
+  AMD/Source/amd_postorder.c
 )
 
 set (BTF_HDRS
@@ -265,7 +312,6 @@ set (CAMD_SRCS
   CAMD/Source/camd_control.c
   CAMD/Source/camd_defaults.c
   CAMD/Source/camd_dump.c
-  CAMD/Source/camd_global.c
   CAMD/Source/camd_info.c
   CAMD/Source/camd_order.c
   CAMD/Source/camd_postorder.c
@@ -277,113 +323,53 @@ if (WITH_CHOLMOD)
   set (CHOLMOD_HDRS
     ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD/Include/cholmod_config.h
     CHOLMOD/Include/cholmod.h
-    CHOLMOD/Include/cholmod_blas.h
-    CHOLMOD/Include/cholmod_complexity.h
-    CHOLMOD/Include/cholmod_core.h
-    CHOLMOD/Include/cholmod_function.h
     CHOLMOD/Include/cholmod_internal.h
-    CHOLMOD/Include/cholmod_io64.h
     CHOLMOD/Include/cholmod_template.h
+    CHOLMOD/Include/cholmod_types.h
   )
+
+  file (GLOB _CHOLMOD_TYPED_SRCS
+    CHOLMOD/Check/cholmod_*.c
+    CHOLMOD/Cholesky/cholmod_*.c
+    CHOLMOD/Utility/cholmod_*.c
+    CHOLMOD/MatrixOps/cholmod_*.c
+    CHOLMOD/Modify/cholmod_*.c
+    CHOLMOD/Partition/cholmod_*.c
+    CHOLMOD/Supernodal/cholmod_*.c
+  )
+  list (FILTER _CHOLMOD_TYPED_SRCS EXCLUDE REGEX
+    "/cholmod_(allocate_factor|allocate_work|divcomplex|hypot|memdebug|mult_uint64_t)\\.c$")
+
+  set (CHOLMOD_COMMON_SRCS
+    CHOLMOD/Utility/cholmod_allocate_factor.c
+    CHOLMOD/Utility/cholmod_allocate_work.c
+    CHOLMOD/Utility/cholmod_divcomplex.c
+    CHOLMOD/Utility/cholmod_hypot.c
+    CHOLMOD/Utility/cholmod_memdebug.c
+    CHOLMOD/Utility/cholmod_mult_uint64_t.c
+  )
+
+  file (GLOB _CHOLMOD_TEMPLATE_SRCS
+    CHOLMOD/Utility/t_cholmod_*.c
+  )
+  list (FILTER _CHOLMOD_TEMPLATE_SRCS EXCLUDE REGEX
+    "/t_cholmod_(bound|malloc|.*(_worker|_template|_numkr|_wdim|_(un)?permuted))\\.c$")
 
   set (CHOLMOD_SRCS
-    CHOLMOD/Core/cholmod_aat.c
-    CHOLMOD/Core/cholmod_add.c
-    CHOLMOD/Core/cholmod_band.c
-    CHOLMOD/Core/cholmod_change_factor.c
-    CHOLMOD/Core/cholmod_common.c
-    CHOLMOD/Core/cholmod_complex.c
-    CHOLMOD/Core/cholmod_copy.c
-    CHOLMOD/Core/cholmod_dense.c
-    CHOLMOD/Core/cholmod_error.c
-    CHOLMOD/Core/cholmod_factor.c
-    CHOLMOD/Core/cholmod_memory.c
-    CHOLMOD/Core/cholmod_sparse.c
-    CHOLMOD/Core/cholmod_transpose.c
-    CHOLMOD/Core/cholmod_triplet.c
-    CHOLMOD/Core/cholmod_version.c
+    ${_CHOLMOD_TYPED_SRCS}
+    ${_CHOLMOD_TEMPLATE_SRCS}
+    ${CHOLMOD_COMMON_SRCS}
   )
-
-  if (WITH_CHECK)
-    list (APPEND CHOLMOD_HDRS CHOLMOD/Include/cholmod_check.h)
-    list (APPEND CHOLMOD_SRCS
-      CHOLMOD/Check/cholmod_check.c
-      CHOLMOD/Check/cholmod_read.c
-      CHOLMOD/Check/cholmod_write.c
-    )
-  endif (WITH_CHECK)
-
-  if (WITH_CHOLESKY)
-    list (APPEND CHOLMOD_HDRS CHOLMOD/Include/cholmod_cholesky.h)
-    list (APPEND CHOLMOD_SRCS
-      CHOLMOD/Cholesky/cholmod_amd.c
-      CHOLMOD/Cholesky/cholmod_analyze.c
-      CHOLMOD/Cholesky/cholmod_colamd.c
-      CHOLMOD/Cholesky/cholmod_etree.c
-      CHOLMOD/Cholesky/cholmod_factorize.c
-      CHOLMOD/Cholesky/cholmod_postorder.c
-      CHOLMOD/Cholesky/cholmod_rcond.c
-      CHOLMOD/Cholesky/cholmod_resymbol.c
-      CHOLMOD/Cholesky/cholmod_rowcolcounts.c
-      CHOLMOD/Cholesky/cholmod_rowfac.c
-      CHOLMOD/Cholesky/cholmod_solve.c
-      CHOLMOD/Cholesky/cholmod_spsolve.c
-    )
-  endif (WITH_CHOLESKY)
+  set (CHOLMOD_LONG_SRCS
+    ${_CHOLMOD_TYPED_SRCS}
+    ${_CHOLMOD_TEMPLATE_SRCS}
+  )
 
   if (WITH_CUDA)
     list (APPEND CHOLMOD_HDRS
-      CHOLMOD/Include/cholmod_gpu.h
-      CHOLMOD/Include/cholmod_gpu_kernels.h
+      CHOLMOD/GPU/cholmod_gpu_kernels.h
     )
   endif (WITH_CUDA)
-
-  if (WITH_MATRIXOPS)
-    list (APPEND CHOLMOD_HDRS CHOLMOD/Include/cholmod_matrixops.h)
-    list (APPEND CHOLMOD_SRCS
-      CHOLMOD/MatrixOps/cholmod_drop.c
-      CHOLMOD/MatrixOps/cholmod_horzcat.c
-      CHOLMOD/MatrixOps/cholmod_norm.c
-      CHOLMOD/MatrixOps/cholmod_scale.c
-      CHOLMOD/MatrixOps/cholmod_sdmult.c
-      CHOLMOD/MatrixOps/cholmod_ssmult.c
-      CHOLMOD/MatrixOps/cholmod_submatrix.c
-      CHOLMOD/MatrixOps/cholmod_symmetry.c
-      CHOLMOD/MatrixOps/cholmod_vertcat.c
-    )
-  endif (WITH_MATRIXOPS)
-
-  if (WITH_MODIFY)
-    list (APPEND CHOLMOD_HDRS CHOLMOD/Include/cholmod_modify.h)
-    list (APPEND CHOLMOD_SRCS
-      CHOLMOD/Modify/cholmod_rowadd.c
-      CHOLMOD/Modify/cholmod_rowdel.c
-      CHOLMOD/Modify/cholmod_updown.c
-    )
-  endif (WITH_MODIFY)
-
-  if (WITH_CAMD)
-    list (APPEND CHOLMOD_HDRS
-      CHOLMOD/Include/cholmod_camd.h
-      CHOLMOD/Include/cholmod_partition.h
-    )
-    list (APPEND CHOLMOD_SRCS
-      CHOLMOD/Partition/cholmod_camd.c
-      CHOLMOD/Partition/cholmod_ccolamd.c
-      CHOLMOD/Partition/cholmod_csymamd.c
-      CHOLMOD/Partition/cholmod_metis.c
-      CHOLMOD/Partition/cholmod_nesdis.c
-    )
-  endif (WITH_CAMD)
-
-  if (WITH_SUPERNODAL)
-    list (APPEND CHOLMOD_HDRS CHOLMOD/Include/cholmod_supernodal.h)
-    list (APPEND CHOLMOD_SRCS
-      CHOLMOD/Supernodal/cholmod_super_numeric.c
-      CHOLMOD/Supernodal/cholmod_super_solve.c
-      CHOLMOD/Supernodal/cholmod_super_symbolic.c
-    )
-  endif (WITH_SUPERNODAL)
 
   if (NOT METIS_FOUND)
     set_property (SOURCE
@@ -391,7 +377,6 @@ if (WITH_CHOLMOD)
       CHOLMOD/Partition/cholmod_camd.c
       CHOLMOD/Partition/cholmod_ccolamd.c
       CHOLMOD/Partition/cholmod_csymamd.c
-      CHOLMOD/Partition/cholmod_m.c
       CHOLMOD/Partition/cholmod_metis.c
       CHOLMOD/Partition/cholmod_nesdis.c
       APPEND PROPERTY COMPILE_DEFINITIONS NPARTITION)
@@ -419,38 +404,6 @@ set (COLAMD_SRCS
 
 set (UMFPACK_HDRS
   UMFPACK/Include/umfpack.h
-  UMFPACK/Include/umfpack_col_to_triplet.h
-  UMFPACK/Include/umfpack_defaults.h
-  UMFPACK/Include/umfpack_free_numeric.h
-  UMFPACK/Include/umfpack_free_symbolic.h
-  UMFPACK/Include/umfpack_get_determinant.h
-  UMFPACK/Include/umfpack_get_lunz.h
-  UMFPACK/Include/umfpack_get_numeric.h
-  UMFPACK/Include/umfpack_get_symbolic.h
-  UMFPACK/Include/umfpack_global.h
-  UMFPACK/Include/umfpack_load_numeric.h
-  UMFPACK/Include/umfpack_load_symbolic.h
-  UMFPACK/Include/umfpack_numeric.h
-  UMFPACK/Include/umfpack_qsymbolic.h
-  UMFPACK/Include/umfpack_report_control.h
-  UMFPACK/Include/umfpack_report_info.h
-  UMFPACK/Include/umfpack_report_matrix.h
-  UMFPACK/Include/umfpack_report_numeric.h
-  UMFPACK/Include/umfpack_report_perm.h
-  UMFPACK/Include/umfpack_report_status.h
-  UMFPACK/Include/umfpack_report_symbolic.h
-  UMFPACK/Include/umfpack_report_triplet.h
-  UMFPACK/Include/umfpack_report_vector.h
-  UMFPACK/Include/umfpack_save_numeric.h
-  UMFPACK/Include/umfpack_save_symbolic.h
-  UMFPACK/Include/umfpack_scale.h
-  UMFPACK/Include/umfpack_solve.h
-  UMFPACK/Include/umfpack_symbolic.h
-  UMFPACK/Include/umfpack_tictoc.h
-  UMFPACK/Include/umfpack_timer.h
-  UMFPACK/Include/umfpack_transpose.h
-  UMFPACK/Include/umfpack_triplet_to_col.h
-  UMFPACK/Include/umfpack_wsolve.h
 )
 
 set (UMFPACK_INT_SRCS
@@ -503,7 +456,11 @@ set (UMFPACK_INT_SRCS
   UMFPACK/Source/umf_valid_numeric.c
   UMFPACK/Source/umf_valid_symbolic.c
   UMFPACK/Source/umfpack_col_to_triplet.c
+  UMFPACK/Source/umfpack_copy_numeric.c
+  UMFPACK/Source/umfpack_copy_symbolic.c
   UMFPACK/Source/umfpack_defaults.c
+  UMFPACK/Source/umfpack_deserialize_numeric.c
+  UMFPACK/Source/umfpack_deserialize_symbolic.c
   UMFPACK/Source/umfpack_free_numeric.c
   UMFPACK/Source/umfpack_free_symbolic.c
   UMFPACK/Source/umfpack_get_determinant.c
@@ -526,6 +483,8 @@ set (UMFPACK_INT_SRCS
   UMFPACK/Source/umfpack_save_numeric.c
   UMFPACK/Source/umfpack_save_symbolic.c
   UMFPACK/Source/umfpack_scale.c
+  UMFPACK/Source/umfpack_serialize_numeric.c
+  UMFPACK/Source/umfpack_serialize_symbolic.c
   UMFPACK/Source/umfpack_solve.c
   UMFPACK/Source/umfpack_symbolic.c
   UMFPACK/Source/umfpack_transpose.c
@@ -581,7 +540,11 @@ set (UMFPACK_ZINT_SRCS
   UMFPACK/Source/umf_valid_numeric.c
   UMFPACK/Source/umf_valid_symbolic.c
   UMFPACK/Source/umfpack_col_to_triplet.c
+  UMFPACK/Source/umfpack_copy_numeric.c
+  UMFPACK/Source/umfpack_copy_symbolic.c
   UMFPACK/Source/umfpack_defaults.c
+  UMFPACK/Source/umfpack_deserialize_numeric.c
+  UMFPACK/Source/umfpack_deserialize_symbolic.c
   UMFPACK/Source/umfpack_free_numeric.c
   UMFPACK/Source/umfpack_free_symbolic.c
   UMFPACK/Source/umfpack_get_determinant.c
@@ -604,6 +567,8 @@ set (UMFPACK_ZINT_SRCS
   UMFPACK/Source/umfpack_save_numeric.c
   UMFPACK/Source/umfpack_save_symbolic.c
   UMFPACK/Source/umfpack_scale.c
+  UMFPACK/Source/umfpack_serialize_numeric.c
+  UMFPACK/Source/umfpack_serialize_symbolic.c
   UMFPACK/Source/umfpack_solve.c
   UMFPACK/Source/umfpack_symbolic.c
   UMFPACK/Source/umfpack_transpose.c
@@ -614,6 +579,10 @@ set (KLU_HDRS
   KLU/Include/klu.h
   KLU/Include/klu_internal.h
   KLU/Include/klu_version.h
+)
+
+set (KLU_CHOLMOD_HDRS
+  KLU/User/klu_cholmod.h
 )
 
 set (KLU_SRCS
@@ -645,28 +614,29 @@ set (LDL_SRCS
 )
 
 set (GPURUNTIME_HDRS
-  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Runtime.hpp
-  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_Workspace.hpp
-  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_debug.hpp
-  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_macros.hpp
-  SuiteSparse_GPURuntime/Include/SuiteSparseGPU_workspace_macros.hpp
+  SPQR/GPURuntime/Include/SuiteSparse_GPURuntime.hpp
+  SPQR/GPURuntime/Include/SuiteSparseGPU_Workspace.hpp
+  SPQR/GPURuntime/Include/SuiteSparseGPU_debug.hpp
+  SPQR/GPURuntime/Include/SuiteSparseGPU_internal.hpp
+  SPQR/GPURuntime/Include/SuiteSparseGPU_macros.hpp
+  SPQR/GPURuntime/Include/SuiteSparseGPU_workspace_macros.hpp
 )
 
 set (GPUQRENGINE_HDRS
-  GPUQREngine/Include/GPUQREngine.hpp
-  GPUQREngine/Include/GPUQREngine_BucketList.hpp
-  GPUQREngine/Include/GPUQREngine_Common.hpp
-  GPUQREngine/Include/GPUQREngine_Front.hpp
-  GPUQREngine/Include/GPUQREngine_FrontState.hpp
-  GPUQREngine/Include/GPUQREngine_GraphVizHelper.hpp
-  GPUQREngine/Include/GPUQREngine_Internal.hpp
-  GPUQREngine/Include/GPUQREngine_LLBundle.hpp
-  GPUQREngine/Include/GPUQREngine_Scheduler.hpp
-  GPUQREngine/Include/GPUQREngine_SEntry.hpp
-  GPUQREngine/Include/GPUQREngine_SparseMeta.hpp
-  GPUQREngine/Include/GPUQREngine_Stats.hpp
-  GPUQREngine/Include/GPUQREngine_TaskDescriptor.hpp
-  GPUQREngine/Include/GPUQREngine_Timing.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_BucketList.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_Common.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_Front.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_FrontState.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_GraphVizHelper.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_Internal.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_LLBundle.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_Scheduler.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_SEntry.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_SparseMeta.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_Stats.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_TaskDescriptor.hpp
+  SPQR/GPUQREngine/Include/GPUQREngine_Timing.hpp
 )
 
 if (MSVC)
@@ -693,9 +663,20 @@ target_compile_definitions (amd_long PRIVATE amd_EXPORTS)
 add_library (amd
   $<TARGET_OBJECTS:amd_int>
   $<TARGET_OBJECTS:amd_long>
+  AMD/Source/amd_version.c
   ${AMD_HDRS}
 )
 add_library (SuiteSparse::AMD ALIAS amd)
+
+add_library (amd_umfpack_int OBJECT ${AMD_UMFPACK_SRCS})
+target_include_directories (amd_umfpack_int PRIVATE
+  $<TARGET_PROPERTY:amd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (amd_umfpack_int PRIVATE DINT)
+
+add_library (amd_umfpack_long OBJECT ${AMD_UMFPACK_SRCS})
+target_include_directories (amd_umfpack_long PRIVATE
+  $<TARGET_PROPERTY:amd,INCLUDE_DIRECTORIES>)
+target_compile_definitions (amd_umfpack_long PRIVATE DLONG)
 
 if (WITH_LICENSE MATCHES "GPL")
   add_library (btf_int OBJECT ${BTF_SRCS})
@@ -711,6 +692,7 @@ if (WITH_LICENSE MATCHES "GPL")
   add_library (btf
     $<TARGET_OBJECTS:btf_int>
     $<TARGET_OBJECTS:btf_long>
+    BTF/Source/btf_version.c
     ${BTF_HDRS}
   )
   add_library (SuiteSparse::BTF ALIAS btf)
@@ -733,6 +715,7 @@ target_compile_definitions (camd_long PRIVATE camd_EXPORTS)
 add_library (camd
   $<TARGET_OBJECTS:camd_int>
   $<TARGET_OBJECTS:camd_long>
+  CAMD/Source/camd_version.c
   ${CAMD_HDRS}
 )
 add_library (SuiteSparse::CAMD ALIAS camd)
@@ -740,17 +723,104 @@ add_library (SuiteSparse::CAMD ALIAS camd)
 if (WITH_CHOLMOD)
   add_library (cholmod_int OBJECT ${CHOLMOD_SRCS})
   target_include_directories (cholmod_int PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
-  target_compile_definitions (cholmod_int PRIVATE DINT)
+  target_compile_definitions (cholmod_int PRIVATE CHOLMOD_INT32)
   target_compile_definitions (cholmod_int PRIVATE cholmod_EXPORTS)
 
-  add_library (cholmod_long OBJECT ${CHOLMOD_SRCS})
+  set (CHOLMOD_BOUND_SRC CHOLMOD/Utility/t_cholmod_bound.c)
+  foreach (CHOLMOD_BOUND_VARIANT
+      dbound_int sbound_int dbound_long sbound_long)
+    add_library (cholmod_${CHOLMOD_BOUND_VARIANT} OBJECT
+      ${CHOLMOD_BOUND_SRC})
+    target_include_directories (cholmod_${CHOLMOD_BOUND_VARIANT} PRIVATE
+      $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+    target_compile_definitions (cholmod_${CHOLMOD_BOUND_VARIANT} PRIVATE
+      cholmod_EXPORTS)
+  endforeach ()
+  target_compile_definitions (cholmod_dbound_int PRIVATE CHOLMOD_INT32)
+  target_compile_definitions (cholmod_sbound_int PRIVATE CHOLMOD_INT32)
+  target_compile_definitions (cholmod_dbound_long PRIVATE CHOLMOD_INT64)
+  target_compile_definitions (cholmod_sbound_long PRIVATE CHOLMOD_INT64)
+  target_compile_options (cholmod_dbound_int PRIVATE
+    "-DCHOLMOD_BOUND_FUNCTION=cholmod_dbound"
+    "-DCOMMON_BOUND=(Common->dbound)"
+    "-DCOMMON_BOUNDS_HIT=(Common->ndbounds_hit)" "-DReal=double")
+  target_compile_options (cholmod_sbound_int PRIVATE
+    "-DCHOLMOD_BOUND_FUNCTION=cholmod_sbound"
+    "-DCOMMON_BOUND=(Common->sbound)"
+    "-DCOMMON_BOUNDS_HIT=(Common->nsbounds_hit)" "-DReal=float")
+  target_compile_options (cholmod_dbound_long PRIVATE
+    "-DCHOLMOD_BOUND_FUNCTION=cholmod_l_dbound"
+    "-DCOMMON_BOUND=(Common->dbound)"
+    "-DCOMMON_BOUNDS_HIT=(Common->ndbounds_hit)" "-DReal=double")
+  target_compile_options (cholmod_sbound_long PRIVATE
+    "-DCHOLMOD_BOUND_FUNCTION=cholmod_l_sbound"
+    "-DCOMMON_BOUND=(Common->sbound)"
+    "-DCOMMON_BOUNDS_HIT=(Common->nsbounds_hit)" "-DReal=float")
+
+  set (CHOLMOD_MEMORY_SRC CHOLMOD/Utility/t_cholmod_malloc.c)
+  foreach (CHOLMOD_MEMORY_VARIANT
+      malloc_int calloc_int malloc_long calloc_long)
+    add_library (cholmod_${CHOLMOD_MEMORY_VARIANT} OBJECT
+      ${CHOLMOD_MEMORY_SRC})
+    target_include_directories (cholmod_${CHOLMOD_MEMORY_VARIANT} PRIVATE
+      $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+    target_compile_definitions (cholmod_${CHOLMOD_MEMORY_VARIANT} PRIVATE
+      cholmod_EXPORTS)
+  endforeach ()
+  target_compile_definitions (cholmod_malloc_int PRIVATE CHOLMOD_INT32)
+  target_compile_definitions (cholmod_calloc_int PRIVATE CHOLMOD_INT32)
+  target_compile_definitions (cholmod_malloc_long PRIVATE CHOLMOD_INT64)
+  target_compile_definitions (cholmod_calloc_long PRIVATE CHOLMOD_INT64)
+  target_compile_options (cholmod_malloc_int PRIVATE
+    "-DCHOLMOD_ALLOC_FUNCTION=cholmod_malloc"
+    "-DSUITESPARSE_ALLOC_FUNCTION=SuiteSparse_malloc")
+  target_compile_options (cholmod_calloc_int PRIVATE
+    "-DCHOLMOD_ALLOC_FUNCTION=cholmod_calloc"
+    "-DSUITESPARSE_ALLOC_FUNCTION=SuiteSparse_calloc")
+  target_compile_options (cholmod_malloc_long PRIVATE
+    "-DCHOLMOD_ALLOC_FUNCTION=cholmod_l_malloc"
+    "-DSUITESPARSE_ALLOC_FUNCTION=SuiteSparse_malloc")
+  target_compile_options (cholmod_calloc_long PRIVATE
+    "-DCHOLMOD_ALLOC_FUNCTION=cholmod_l_calloc"
+    "-DSUITESPARSE_ALLOC_FUNCTION=SuiteSparse_calloc")
+
+  add_library (cholmod_allocate_work_long OBJECT
+    CHOLMOD/Utility/cholmod_allocate_work.c)
+  target_include_directories (cholmod_allocate_work_long PRIVATE
+    $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+  target_compile_definitions (cholmod_allocate_work_long PRIVATE
+    CHOLMOD_INT64
+    cholmod_EXPORTS)
+  target_compile_options (cholmod_allocate_work_long PRIVATE
+    "-Dcholmod_alloc_work=cholmod_l_alloc_work"
+    "-Dcholmod_allocate_work=cholmod_l_allocate_work")
+
+  add_library (cholmod_allocate_factor_long OBJECT
+    CHOLMOD/Utility/cholmod_allocate_factor.c)
+  target_include_directories (cholmod_allocate_factor_long PRIVATE
+    $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
+  target_compile_definitions (cholmod_allocate_factor_long PRIVATE
+    CHOLMOD_INT64
+    cholmod_EXPORTS)
+
+  add_library (cholmod_long OBJECT ${CHOLMOD_LONG_SRCS})
   target_include_directories (cholmod_long PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
-  target_compile_definitions (cholmod_long PRIVATE DLONG)
+  target_compile_definitions (cholmod_long PRIVATE CHOLMOD_INT64)
   target_compile_definitions (cholmod_long PRIVATE cholmod_EXPORTS)
 
   add_library (cholmod
     $<TARGET_OBJECTS:cholmod_int>
     $<TARGET_OBJECTS:cholmod_long>
+    $<TARGET_OBJECTS:cholmod_dbound_int>
+    $<TARGET_OBJECTS:cholmod_sbound_int>
+    $<TARGET_OBJECTS:cholmod_dbound_long>
+    $<TARGET_OBJECTS:cholmod_sbound_long>
+    $<TARGET_OBJECTS:cholmod_malloc_int>
+    $<TARGET_OBJECTS:cholmod_calloc_int>
+    $<TARGET_OBJECTS:cholmod_malloc_long>
+    $<TARGET_OBJECTS:cholmod_calloc_long>
+    $<TARGET_OBJECTS:cholmod_allocate_work_long>
+    $<TARGET_OBJECTS:cholmod_allocate_factor_long>
     ${CHOLMOD_HDRS}
   )
 
@@ -798,13 +868,15 @@ if (WITH_CHOLMOD)
   endif (METIS_FOUND)
 
   target_link_libraries (cholmod
-    PRIVATE BLAS::BLAS
-            LAPACK::LAPACK
-            SuiteSparse::AMD
-            SuiteSparse::CAMD
-            SuiteSparse::CCOLAMD
-            SuiteSparse::COLAMD
-    PUBLIC SuiteSparse::Config
+    PRIVATE
+      BLAS::BLAS
+      LAPACK::LAPACK
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::COLAMD
+    PUBLIC
+      SuiteSparse::Config
   )
 endif (WITH_CHOLMOD)
 
@@ -821,6 +893,7 @@ target_compile_definitions (ccolamd_long PRIVATE ccolamd_EXPORTS)
 add_library (ccolamd
   $<TARGET_OBJECTS:ccolamd_int>
   $<TARGET_OBJECTS:ccolamd_long>
+  CCOLAMD/Source/ccolamd_version.c
   ${CCOLAMD_HDRS}
 )
 add_library (SuiteSparse::CCOLAMD ALIAS ccolamd)
@@ -838,6 +911,7 @@ target_compile_definitions (colamd_long PRIVATE colamd_EXPORTS)
 add_library (colamd
   $<TARGET_OBJECTS:colamd_int>
   $<TARGET_OBJECTS:colamd_long>
+  COLAMD/Source/colamd_version.c
   ${COLAMD_HDRS}
 )
 add_library (SuiteSparse::COLAMD ALIAS colamd)
@@ -860,6 +934,7 @@ if (WITH_SUPERNODAL)
     SPQR/Source/spqr_cpack.cpp
     SPQR/Source/spqr_csize.cpp
     SPQR/Source/spqr_cumsum.cpp
+    SPQR/Source/spqr_cholmod_wrappers.cpp
     SPQR/Source/spqr_debug.cpp
     SPQR/Source/spqr_factorize.cpp
     SPQR/Source/spqr_fcsize.cpp
@@ -1084,6 +1159,8 @@ if (WITH_LICENSE STREQUAL "GPL")
   target_compile_definitions (umfpack_zlong_map_x PRIVATE umfpack_EXPORTS)
 
   add_library (umfpack
+    $<TARGET_OBJECTS:amd_umfpack_int>
+    $<TARGET_OBJECTS:amd_umfpack_long>
     $<TARGET_OBJECTS:umfpack_int>
     $<TARGET_OBJECTS:umfpack_int_drop>
     $<TARGET_OBJECTS:umfpack_int_fixq>
@@ -1116,14 +1193,17 @@ if (WITH_LICENSE STREQUAL "GPL")
     $<TARGET_OBJECTS:umfpack_zlong_nomap_x>
     $<TARGET_OBJECTS:umfpack_zlong_solve>
     $<TARGET_OBJECTS:umfpack_zlong_wsolve>
+    UMFPACK/Source/umfpack_version.c
     ${UMFPACK_HDRS}
-    UMFPACK/Source/umfpack_global.c
     UMFPACK/Source/umfpack_tictoc.c
     UMFPACK/Source/umfpack_timer.c
   )
   add_library (SuiteSparse::UMFPACK ALIAS umfpack)
 
-  target_link_libraries (umfpack PRIVATE BLAS::BLAS LAPACK::LAPACK)
+  target_link_libraries (umfpack PRIVATE
+    BLAS::BLAS
+    LAPACK::LAPACK
+  )
 
   if (TARGET cholmod)
     # NOTE cholmod already depends on LAPACK
@@ -1170,6 +1250,7 @@ if (WITH_LICENSE MATCHES "GPL")
     $<TARGET_OBJECTS:klu_long>
     $<TARGET_OBJECTS:klu_zint>
     $<TARGET_OBJECTS:klu_zlong>
+    KLU/Source/klu_version.c
     ${KLU_HDRS}
   )
   add_library (SuiteSparse::KLU ALIAS klu)
@@ -1181,7 +1262,32 @@ if (WITH_LICENSE MATCHES "GPL")
   )
 
   if (TARGET cholmod)
-    target_link_libraries (klu PRIVATE SuiteSparse::CHOLMOD)
+    target_link_libraries (klu PRIVATE
+      SuiteSparse::CHOLMOD
+    )
+
+    add_library (klu_cholmod
+      KLU/User/klu_cholmod.c
+      KLU/User/klu_l_cholmod.c
+      ${KLU_CHOLMOD_HDRS}
+    )
+    add_library (SuiteSparse::KLU_CHOLMOD ALIAS klu_cholmod)
+    set_property (TARGET klu_cholmod PROPERTY NAME_ALIAS klu_cholmod)
+    set_property (TARGET klu_cholmod PROPERTY HEADERS_VARIABLE
+      KLU_CHOLMOD_HDRS)
+    set_property (TARGET klu_cholmod PROPERTY INSTALL_DESTINATION
+      ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/KLU)
+
+    target_include_directories (klu_cholmod PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/Include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/User>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_KLU_INCLUDE_DIR}>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/KLU>
+    )
+    target_link_libraries (klu_cholmod PUBLIC
+      SuiteSparse::CHOLMOD
+      SuiteSparse::KLU
+    )
   endif (TARGET cholmod)
 endif (WITH_LICENSE MATCHES "GPL")
 
@@ -1263,11 +1369,11 @@ if (TARGET cholmod)
   target_include_directories (cholmod PUBLIC
     $<INSTALL_INTERFACE:${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Cholesky>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Core>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/MatrixOps>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Modify>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Supernodal>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Utility>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
   )
 endif (TARGET cholmod)
@@ -1305,7 +1411,10 @@ if (WITH_LICENSE MATCHES "GPL")
 endif (WITH_LICENSE MATCHES "GPL")
 
 if (WITH_LICENSE STREQUAL "GPL")
-  target_link_libraries (umfpack PUBLIC amd SuiteSparse::Config)
+  target_link_libraries (umfpack PUBLIC
+    SuiteSparse::Config
+    amd
+  )
 endif (WITH_LICENSE STREQUAL "GPL")
 
 if (TARGET spqr)
@@ -1316,102 +1425,90 @@ if (TARGET spqr)
   )
 
   target_link_libraries (spqr
-    PUBLIC SuiteSparse::CHOLMOD SuiteSparse::Config
-    PRIVATE BLAS::BLAS LAPACK::LAPACK
+    PUBLIC
+      SuiteSparse::CHOLMOD
+      SuiteSparse::Config
+    PRIVATE
+      BLAS::BLAS
+      LAPACK::LAPACK
   )
 endif (TARGET spqr)
 
 # CUDA support
 if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
   add_library (gpuruntime
-    SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace.cpp
-    SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_cpuAllocators.cpp
-    SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_gpuAllocators.cpp
-    SuiteSparse_GPURuntime/Source/SuiteSparseGPU_Workspace_transfer.cpp
+    SPQR/GPURuntime/Source/SuiteSparseGPU_Workspace.cpp
+    SPQR/GPURuntime/Source/SuiteSparseGPU_Workspace_cpuAllocators.cpp
+    SPQR/GPURuntime/Source/SuiteSparseGPU_Workspace_gpuAllocators.cpp
+    SPQR/GPURuntime/Source/SuiteSparseGPU_Workspace_transfer.cpp
   )
   add_library (SuiteSparse::GPURuntime ALIAS gpuruntime)
 
   target_include_directories (gpuruntime PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/GPURuntime/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_GPURuntime_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_GPURuntime_INCLUDE_DIR}>
   )
 
   target_link_libraries (gpuruntime
     PUBLIC SuiteSparse::Config
-    PRIVATE CUDA::cudart
+    PRIVATE
+      CUDA::cudart
   )
+
+  target_compile_definitions (gpuruntime PUBLIC SPQR_HAS_CUDA)
 
   # GPUQREngine
 
   add_library (gpuqrengine
-    #GPUQREngine/Include/Kernel/Apply/block_apply.cu
-    #GPUQREngine/Include/Kernel/Apply/block_apply_1.cu
-    #GPUQREngine/Include/Kernel/Apply/block_apply_1_by_1.cu
-    #GPUQREngine/Include/Kernel/Apply/block_apply_2.cu
-    #GPUQREngine/Include/Kernel/Apply/block_apply_2_by_1.cu
-    #GPUQREngine/Include/Kernel/Apply/block_apply_3.cu
-    #GPUQREngine/Include/Kernel/Apply/block_apply_3_by_1.cu
-    #GPUQREngine/Include/Kernel/Apply/block_apply_chunk.cu
-    #GPUQREngine/Include/Kernel/Apply/cevta_tile.cu
-    #GPUQREngine/Include/Kernel/Apply/params_apply.hpp
-    #GPUQREngine/Include/Kernel/Apply/pipelined_rearrange.cu
-    #GPUQREngine/Include/Kernel/Assemble/packAssemble.cu
-    #GPUQREngine/Include/Kernel/Assemble/sAssemble.cu
-    #GPUQREngine/Include/Kernel/Factorize/factorize_3_by_1.cu
-    #GPUQREngine/Include/Kernel/Factorize/factorize_vt.cu
-    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_1_by_1.cu
-    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_1_by_1_edge.cu
-    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_2_by_1.cu
-    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_2_by_1_edge.cu
-    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_3_by_1.cu
-    #GPUQREngine/Include/Kernel/Factorize/factorize_vt_3_by_1_edge.cu
-    #GPUQREngine/Include/Kernel/qrKernel.cu
-    GPUQREngine/Include/Kernel/sharedMemory.hpp
-    #GPUQREngine/Include/Kernel/uberKernel.cu
-    GPUQREngine/Source/BucketList/BucketList.cpp
-    GPUQREngine/Source/BucketList/BucketList_AdvanceBundles.cpp
-    GPUQREngine/Source/BucketList/BucketList_CreateBundles.cpp
-    GPUQREngine/Source/BucketList/BucketList_FillWorkQueue.cpp
-    GPUQREngine/Source/BucketList/BucketList_GrowBundles.cpp
-    GPUQREngine/Source/BucketList/BucketList_Manage.cpp
-    GPUQREngine/Source/BucketList/BucketList_PostProcessing.cpp
-    GPUQREngine/Source/GPUQREngine_ExpertDense.cpp
-    GPUQREngine/Source/GPUQREngine_ExpertSparse.cpp
-    GPUQREngine/Source/GPUQREngine_GraphVizHelper.cpp
-    GPUQREngine/Source/GPUQREngine_Internal.cpp
-    GPUQREngine/Source/GPUQREngine_UberKernel.cu
-    GPUQREngine/Source/LLBundle/LLBundle.cpp
-    GPUQREngine/Source/LLBundle/LLBundle_AddTiles.cpp
-    GPUQREngine/Source/LLBundle/LLBundle_Advance.cpp
-    GPUQREngine/Source/LLBundle/LLBundle_GPUPack.cpp
-    GPUQREngine/Source/LLBundle/LLBundle_PipelinedRearrange.cpp
-    GPUQREngine/Source/LLBundle/LLBundle_UpdateSecondMinIndex.cpp
-    GPUQREngine/Source/Scheduler/Scheduler.cpp
-    GPUQREngine/Source/Scheduler/Scheduler_FillWorkQueue.cpp
-    GPUQREngine/Source/Scheduler/Scheduler_Front.cpp
-    GPUQREngine/Source/Scheduler/Scheduler_LaunchKernel.cpp
-    GPUQREngine/Source/Scheduler/Scheduler_PostProcess.cpp
-    GPUQREngine/Source/Scheduler/Scheduler_Render.cpp
-    GPUQREngine/Source/Scheduler/Scheduler_TransferData.cpp
-    GPUQREngine/Source/Scheduler/ssgpu_maxQueueSize.cpp
-    GPUQREngine/Source/TaskDescriptor/TaskDescriptor_flops.cpp
+    SPQR/GPUQREngine/Include/Kernel/sharedMemory.hpp
+    SPQR/GPUQREngine/Source/BucketList/BucketList.cpp
+    SPQR/GPUQREngine/Source/BucketList/BucketList_AdvanceBundles.cpp
+    SPQR/GPUQREngine/Source/BucketList/BucketList_CreateBundles.cpp
+    SPQR/GPUQREngine/Source/BucketList/BucketList_FillWorkQueue.cpp
+    SPQR/GPUQREngine/Source/BucketList/BucketList_GrowBundles.cpp
+    SPQR/GPUQREngine/Source/BucketList/BucketList_Manage.cpp
+    SPQR/GPUQREngine/Source/BucketList/BucketList_PostProcessing.cpp
+    SPQR/GPUQREngine/Source/GPUQREngine_ExpertDense.cpp
+    SPQR/GPUQREngine/Source/GPUQREngine_ExpertSparse.cpp
+    SPQR/GPUQREngine/Source/GPUQREngine_GraphVizHelper.cpp
+    SPQR/GPUQREngine/Source/GPUQREngine_Internal.cpp
+    SPQR/GPUQREngine/Source/GPUQREngine_UberKernel.cu
+    SPQR/GPUQREngine/Source/LLBundle/LLBundle.cpp
+    SPQR/GPUQREngine/Source/LLBundle/LLBundle_AddTiles.cpp
+    SPQR/GPUQREngine/Source/LLBundle/LLBundle_Advance.cpp
+    SPQR/GPUQREngine/Source/LLBundle/LLBundle_GPUPack.cpp
+    SPQR/GPUQREngine/Source/LLBundle/LLBundle_PipelinedRearrange.cpp
+    SPQR/GPUQREngine/Source/LLBundle/LLBundle_UpdateSecondMinIndex.cpp
+    SPQR/GPUQREngine/Source/Scheduler/Scheduler.cpp
+    SPQR/GPUQREngine/Source/Scheduler/Scheduler_FillWorkQueue.cpp
+    SPQR/GPUQREngine/Source/Scheduler/Scheduler_Front.cpp
+    SPQR/GPUQREngine/Source/Scheduler/Scheduler_LaunchKernel.cpp
+    SPQR/GPUQREngine/Source/Scheduler/Scheduler_PostProcess.cpp
+    SPQR/GPUQREngine/Source/Scheduler/Scheduler_Render.cpp
+    SPQR/GPUQREngine/Source/Scheduler/Scheduler_TransferData.cpp
+    SPQR/GPUQREngine/Source/ssgpu_maxQueueSize.cpp
+    SPQR/GPUQREngine/Source/TaskDescriptor/TaskDescriptor_flops.cpp
   )
 
   target_include_directories (gpuqrengine PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/GPUQREngine/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/GPUQREngine/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_GPUQREngine_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_GPUQREngine_INCLUDE_DIR}>
   )
 
   target_include_directories (gpuqrengine PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/GPUQREngine/Include
-    ${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_GPURuntime/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}/SPQR/GPUQREngine/Include
+    ${CMAKE_CURRENT_SOURCE_DIR}/SPQR/GPURuntime/Include
   )
 
+  target_compile_definitions (gpuqrengine PUBLIC SPQR_HAS_CUDA)
+
   target_link_libraries (gpuqrengine
-    PUBLIC CUDA::cublas
-    PRIVATE gpuruntime
+    PUBLIC
+      CUDA::cublas
+    PRIVATE
+      gpuruntime
   )
 
   if (WITH_CHOLMOD)
@@ -1419,12 +1516,16 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
 
     add_library (cholmod_gpu_int OBJECT ${CHOLMOD_GPU_SRCS})
     target_include_directories (cholmod_gpu_int PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
-    target_compile_definitions (cholmod_gpu_int PRIVATE DINT)
+    target_compile_definitions (cholmod_gpu_int PRIVATE
+      CHOLMOD_HAS_CUDA
+      CHOLMOD_INT32)
     target_compile_definitions (cholmod_gpu_int PRIVATE cholmod_EXPORTS)
 
     add_library (cholmod_gpu_long OBJECT ${CHOLMOD_GPU_SRCS})
     target_include_directories (cholmod_gpu_long PRIVATE $<TARGET_PROPERTY:cholmod,INCLUDE_DIRECTORIES>)
-    target_compile_definitions (cholmod_gpu_long PRIVATE DLONG)
+    target_compile_definitions (cholmod_gpu_long PRIVATE
+      CHOLMOD_HAS_CUDA
+      CHOLMOD_INT64)
     target_compile_definitions (cholmod_gpu_long PRIVATE cholmod_EXPORTS)
 
     target_sources (cholmod PRIVATE
@@ -1433,15 +1534,21 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
       CHOLMOD/GPU/cholmod_gpu_kernels.cu
     )
 
-    target_compile_definitions (cholmod PUBLIC GPU_BLAS)
+    target_compile_definitions (cholmod PUBLIC
+      CHOLMOD_HAS_CUDA
+      GPU_BLAS)
     target_link_libraries (cholmod
-      PRIVATE CUDA::cudart gpuruntime
-      PUBLIC CUDA::cublas
+      PRIVATE
+        CUDA::cudart
+        gpuruntime
+      PUBLIC
+        CUDA::cublas
     )
   endif (WITH_CHOLMOD)
 
   # SPQR GPU
   if (TARGET spqr)
+    target_compile_definitions (spqr PUBLIC SPQR_HAS_CUDA)
     target_sources (spqr PRIVATE
       SPQR/SPQRGPU/spqrgpu_buildAssemblyMaps.cpp
       SPQR/SPQRGPU/spqrgpu_computeFrontStaging.cpp
@@ -1456,6 +1563,9 @@ set (_SuiteSparse_TARGETS amd camd ccolamd colamd suitesparseconfig)
 
 if (WITH_LICENSE MATCHES "GPL")
   list (APPEND _SuiteSparse_TARGETS btf klu ldl)
+  if (TARGET klu_cholmod)
+    list (APPEND _SuiteSparse_TARGETS klu_cholmod)
+  endif (TARGET klu_cholmod)
 endif (WITH_LICENSE MATCHES "GPL")
 
 if (WITH_LICENSE STREQUAL "GPL")
@@ -1503,6 +1613,9 @@ if (WITH_LICENSE MATCHES "GPL")
   set_property (TARGET btf PROPERTY SPDX_LICENSE LGPL-2.1-or-later)
   set_property (TARGET klu PROPERTY SPDX_LICENSE LGPL-2.1-or-later)
   set_property (TARGET ldl PROPERTY SPDX_LICENSE LGPL-2.1-or-later)
+  if (TARGET klu_cholmod)
+    set_property (TARGET klu_cholmod PROPERTY SPDX_LICENSE LGPL-2.1-or-later)
+  endif (TARGET klu_cholmod)
 endif (WITH_LICENSE MATCHES "GPL")
 
 if (WITH_LICENSE STREQUAL "GPL")
@@ -1619,29 +1732,32 @@ if (TARGET SuiteSparse::Partition)
     COMPONENT Development)
 endif (TARGET SuiteSparse::Partition)
 
-set_component_version (amd 2.4.6)
-set_component_version (camd 2.4.6)
-set_component_version (ccolamd 2.9.6)
-set_component_version (colamd 2.9.6)
+set_component_version (amd 3.3.4)
+set_component_version (camd 3.3.5)
+set_component_version (ccolamd 3.3.5)
+set_component_version (colamd 3.3.5)
 
 if (WITH_LICENSE MATCHES "GPL")
-  set_component_version (btf 1.2.6)
-  set_component_version (klu 1.3.9)
-  set_component_version (ldl 2.2.6)
+  set_component_version (btf 2.3.3)
+  set_component_version (klu 2.3.6)
+  if (TARGET klu_cholmod)
+    set_component_version (klu_cholmod 2.3.6)
+  endif (TARGET klu_cholmod)
+  set_component_version (ldl 3.3.3)
 endif (WITH_LICENSE MATCHES "GPL")
 
 set_component_version (suitesparseconfig ${SuiteSparse_VERSION})
 
 if (WITH_LICENSE STREQUAL "GPL")
-  set_component_version (umfpack 5.7.9)
+  set_component_version (umfpack 6.3.8)
 endif (WITH_LICENSE STREQUAL "GPL")
 
 if (TARGET cholmod)
-  set_component_version (cholmod 3.0.14)
+  set_component_version (cholmod 5.3.5)
 endif (TARGET cholmod)
 
 if (TARGET spqr)
-  set_component_version (spqr 2.0.9)
+  set_component_version (spqr 4.3.6)
 endif (TARGET spqr)
 
 if (TARGET gpuruntime)
@@ -1656,24 +1772,28 @@ if (HAVE_QSTD_C99)
   target_compile_options (suitesparseconfig PUBLIC $<$<C_COMPILER_ID:Intel>:-Qstd=c99>)
 endif (HAVE_QSTD_C99)
 
-set_target_properties (amd PROPERTIES EXPORT_NAME AMD)
-set_target_properties (camd PROPERTIES EXPORT_NAME CAMD)
-set_target_properties (ccolamd PROPERTIES EXPORT_NAME CCOLAMD)
-set_target_properties (colamd PROPERTIES EXPORT_NAME COLAMD)
+set_target_properties (amd PROPERTIES EXPORT_NAME AMD OUTPUT_NAME amd)
+set_target_properties (camd PROPERTIES EXPORT_NAME CAMD OUTPUT_NAME camd)
+set_target_properties (ccolamd PROPERTIES EXPORT_NAME CCOLAMD OUTPUT_NAME ccolamd)
+set_target_properties (colamd PROPERTIES EXPORT_NAME COLAMD OUTPUT_NAME colamd)
 set_target_properties (suitesparseconfig PROPERTIES EXPORT_NAME Config)
 
 if (WITH_LICENSE MATCHES "GPL")
-  set_target_properties (btf PROPERTIES EXPORT_NAME BTF)
-  set_target_properties (klu PROPERTIES EXPORT_NAME KLU)
-  set_target_properties (ldl PROPERTIES EXPORT_NAME LDL)
+  set_target_properties (btf PROPERTIES EXPORT_NAME BTF OUTPUT_NAME btf)
+  set_target_properties (klu PROPERTIES EXPORT_NAME KLU OUTPUT_NAME klu)
+  if (TARGET klu_cholmod)
+    set_target_properties (klu_cholmod PROPERTIES
+      EXPORT_NAME klu_cholmod OUTPUT_NAME klu_cholmod)
+  endif (TARGET klu_cholmod)
+  set_target_properties (ldl PROPERTIES EXPORT_NAME LDL OUTPUT_NAME ldl)
 endif (WITH_LICENSE MATCHES "GPL")
 
 if (WITH_LICENSE STREQUAL "GPL")
-  set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK)
+  set_target_properties (umfpack PROPERTIES EXPORT_NAME UMFPACK OUTPUT_NAME umfpack)
 endif (WITH_LICENSE STREQUAL "GPL")
 
 if (TARGET cholmod)
-  set_target_properties (cholmod PROPERTIES EXPORT_NAME CHOLMOD)
+  set_target_properties (cholmod PROPERTIES EXPORT_NAME CHOLMOD OUTPUT_NAME cholmod)
 endif (TARGET cholmod)
 
 if (TARGET cholmod_partition)
@@ -1681,7 +1801,7 @@ if (TARGET cholmod_partition)
 endif (TARGET cholmod_partition)
 
 if (TARGET spqr)
-  set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR)
+  set_target_properties (spqr PROPERTIES EXPORT_NAME SPQR OUTPUT_NAME spqr)
 endif (TARGET spqr)
 
 if (WITH_DEMOS)
@@ -1725,19 +1845,136 @@ if (WITH_DEMOS)
   )
   target_link_libraries (camd_simple PRIVATE SuiteSparse::CAMD)
 
-  if (WITH_CHOLESKY AND WITH_CHECK)
-    add_executable (cholmod_demo
-      CHOLMOD/Demo/cholmod_demo.h
-      CHOLMOD/Demo/cholmod_demo.c
+  if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
+    add_library (amd_f77_amd_objects OBJECT
+      AMD/Source/amd.f
     )
-    target_link_libraries (cholmod_demo PRIVATE SuiteSparse::CHOLMOD)
 
-    add_executable (cholmod_l_demo CHOLMOD/Demo/cholmod_l_demo.c)
-    target_link_libraries (cholmod_l_demo PRIVATE SuiteSparse::CHOLMOD)
+    add_library (amd_f77_amdbar_objects OBJECT
+      AMD/Source/amdbar.f
+    )
 
-    add_executable (cholmod_simple CHOLMOD/Demo/cholmod_simple.c)
-    target_link_libraries (cholmod_simple PRIVATE SuiteSparse::CHOLMOD)
+    add_executable (amd_f77cross
+      AMD/Demo/amd_f77wrapper.c
+      AMD/Demo/amd_f77cross.f
+    )
+    target_link_libraries (amd_f77cross PRIVATE SuiteSparse::AMD)
+
+    add_executable (amd_f77demo
+      AMD/Demo/amd_f77demo.f
+      $<TARGET_OBJECTS:amd_f77_amd_objects>
+      $<TARGET_OBJECTS:amd_f77_amdbar_objects>
+    )
+
+    add_executable (amd_f77simple
+      AMD/Demo/amd_f77simple.f
+      $<TARGET_OBJECTS:amd_f77_amd_objects>
+    )
+  endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
+
+  add_executable (ccolamd_example
+    CCOLAMD/Demo/ccolamd_example.c
+  )
+  target_link_libraries (ccolamd_example PRIVATE SuiteSparse::CCOLAMD)
+
+  add_executable (ccolamd_l_example
+    CCOLAMD/Demo/ccolamd_l_example.c
+  )
+  target_link_libraries (ccolamd_l_example PRIVATE SuiteSparse::CCOLAMD)
+
+  if (WITH_CHOLESKY AND WITH_CHECK)
+    add_executable (cholmod_di_demo
+      CHOLMOD/Demo/cholmod_demo.h
+      CHOLMOD/Demo/cholmod_di_demo.c
+    )
+    target_link_libraries (cholmod_di_demo PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::CHOLMOD
+      SuiteSparse::COLAMD
+      SuiteSparse::Config
+    )
+
+    add_executable (cholmod_dl_demo CHOLMOD/Demo/cholmod_dl_demo.c)
+    target_link_libraries (cholmod_dl_demo PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::CHOLMOD
+      SuiteSparse::COLAMD
+      SuiteSparse::Config
+    )
+
+    add_executable (cholmod_si_demo CHOLMOD/Demo/cholmod_si_demo.c)
+    target_link_libraries (cholmod_si_demo PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::CHOLMOD
+      SuiteSparse::COLAMD
+      SuiteSparse::Config
+    )
+
+    add_executable (cholmod_sl_demo CHOLMOD/Demo/cholmod_sl_demo.c)
+    target_link_libraries (cholmod_sl_demo PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::CHOLMOD
+      SuiteSparse::COLAMD
+      SuiteSparse::Config
+    )
+
+    add_executable (cholmod_di_simple CHOLMOD/Demo/cholmod_di_simple.c)
+    target_link_libraries (cholmod_di_simple PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::CHOLMOD
+      SuiteSparse::COLAMD
+      SuiteSparse::Config
+    )
+
+    add_executable (cholmod_dl_simple CHOLMOD/Demo/cholmod_dl_simple.c)
+    target_link_libraries (cholmod_dl_simple PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::CHOLMOD
+      SuiteSparse::COLAMD
+      SuiteSparse::Config
+    )
+
+    add_executable (cholmod_si_simple CHOLMOD/Demo/cholmod_si_simple.c)
+    target_link_libraries (cholmod_si_simple PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::CHOLMOD
+      SuiteSparse::COLAMD
+      SuiteSparse::Config
+    )
+
+    add_executable (cholmod_sl_simple CHOLMOD/Demo/cholmod_sl_simple.c)
+    target_link_libraries (cholmod_sl_simple PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::CAMD
+      SuiteSparse::CCOLAMD
+      SuiteSparse::CHOLMOD
+      SuiteSparse::COLAMD
+      SuiteSparse::Config
+    )
   endif (WITH_CHOLESKY AND WITH_CHECK)
+
+  if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
+    add_executable (cholmod_reade CHOLMOD/Demo/reade.f)
+    add_executable (cholmod_readhb CHOLMOD/Demo/readhb.f)
+    add_executable (cholmod_readhb2 CHOLMOD/Demo/readhb2.f)
+    set_property (TARGET cholmod_reade PROPERTY LINK_WHAT_YOU_USE OFF)
+    set_property (TARGET cholmod_readhb PROPERTY LINK_WHAT_YOU_USE OFF)
+    set_property (TARGET cholmod_readhb2 PROPERTY LINK_WHAT_YOU_USE OFF)
+  endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
 
   add_executable (colamd_example
     COLAMD/Demo/colamd_example.c
@@ -1760,12 +1997,20 @@ if (WITH_DEMOS)
     add_executable (kludemo
       KLU/Demo/kludemo.c
     )
-    target_link_libraries (kludemo PRIVATE SuiteSparse::KLU SuiteSparse::CHOLMOD)
+    target_link_libraries (kludemo PRIVATE
+      SuiteSparse::CHOLMOD
+      SuiteSparse::KLU
+      SuiteSparse::KLU_CHOLMOD
+    )
 
     add_executable (kluldemo
       KLU/Demo/kluldemo.c
     )
-    target_link_libraries (kluldemo PRIVATE SuiteSparse::KLU SuiteSparse::CHOLMOD)
+    target_link_libraries (kluldemo PRIVATE
+      SuiteSparse::CHOLMOD
+      SuiteSparse::KLU
+      SuiteSparse::KLU_CHOLMOD
+    )
 
     install (TARGETS
       kludemo
@@ -1779,7 +2024,10 @@ if (WITH_DEMOS)
       LDL/Demo/ldlmain.c
     )
     target_compile_definitions (ldlamd PRIVATE USE_AMD)
-    target_link_libraries (ldlamd PRIVATE SuiteSparse::AMD SuiteSparse::LDL)
+    target_link_libraries (ldlamd PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::LDL
+    )
 
     add_executable (ldlmain
       LDL/Demo/ldlmain.c
@@ -1796,7 +2044,10 @@ if (WITH_DEMOS)
       LDL/Demo/ldlmain.c
     )
     target_compile_definitions (ldllamd PRIVATE LDL_LONG USE_AMD)
-    target_link_libraries (ldllamd PRIVATE SuiteSparse::AMD SuiteSparse::LDL)
+    target_link_libraries (ldllamd PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::LDL
+    )
 
     add_executable (ldlsimple
       LDL/Demo/ldlsimple.c
@@ -1834,6 +2085,8 @@ if (WITH_DEMOS)
     amd_demo
     amd_demo2
     amd_l_demo
+    ccolamd_example
+    ccolamd_l_example
     camd_demo
     camd_demo2
     camd_l_demo
@@ -1841,6 +2094,31 @@ if (WITH_DEMOS)
     colamd_example
     colamd_l_example
   )
+
+  if (TARGET amd_f77cross)
+    list (APPEND SuiteSparse_BIN_TARGETS
+      amd_f77cross
+      amd_f77demo
+      amd_f77simple
+    )
+  endif (TARGET amd_f77cross)
+
+  if (TARGET cholmod_di_simple)
+    list (APPEND SuiteSparse_BIN_TARGETS
+      cholmod_di_simple
+      cholmod_dl_simple
+      cholmod_si_simple
+      cholmod_sl_simple
+    )
+  endif (TARGET cholmod_di_simple)
+
+  if (TARGET cholmod_reade)
+    list (APPEND SuiteSparse_BIN_TARGETS
+      cholmod_reade
+      cholmod_readhb
+      cholmod_readhb2
+    )
+  endif (TARGET cholmod_reade)
 
   if (TARGET ldl)
     list (APPEND SuiteSparse_BIN_TARGETS
@@ -1863,50 +2141,268 @@ if (WITH_DEMOS)
 
   if (TARGET umfpack)
     if (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
+      add_library (umf4_f77wrapper64_objects OBJECT
+        UMFPACK/Demo/umf4_f77wrapper.c
+      )
+      target_compile_definitions (umf4_f77wrapper64_objects PRIVATE DLONG)
+      target_link_libraries (umf4_f77wrapper64_objects PRIVATE
+        SuiteSparse::UMFPACK
+      )
+
+      add_library (umf4_f77zwrapper64_objects OBJECT
+        UMFPACK/Demo/umf4_f77zwrapper.c
+      )
+      target_compile_definitions (umf4_f77zwrapper64_objects PRIVATE ZLONG)
+      target_link_libraries (umf4_f77zwrapper64_objects PRIVATE
+        SuiteSparse::UMFPACK
+      )
+
       add_executable (umf4hb
         UMFPACK/Demo/umf4_f77wrapper.c
         UMFPACK/Demo/umf4hb.f
       )
       target_link_libraries (umf4hb PRIVATE SuiteSparse::UMFPACK)
 
-      list (APPEND SuiteSparse_BIN_TARGETS umf4hb)
+      add_executable (umfpack_readhb UMFPACK/Demo/readhb.f)
+      add_executable (umfpack_readhb_nozeros
+        UMFPACK/Demo/readhb_nozeros.f)
+      add_executable (umfpack_readhb_size UMFPACK/Demo/readhb_size.f)
+      set_property (TARGET umfpack_readhb PROPERTY LINK_WHAT_YOU_USE OFF)
+      set_property (TARGET umfpack_readhb_nozeros
+        PROPERTY LINK_WHAT_YOU_USE OFF)
+      set_property (TARGET umfpack_readhb_size PROPERTY LINK_WHAT_YOU_USE OFF)
+
+      add_executable (umf4hb64
+        UMFPACK/Demo/umf4hb64.f
+        $<TARGET_OBJECTS:umf4_f77wrapper64_objects>
+      )
+      target_link_libraries (umf4hb64 PRIVATE SuiteSparse::UMFPACK)
+
+      add_executable (umf4zhb
+        UMFPACK/Demo/umf4_f77zwrapper.c
+        UMFPACK/Demo/umf4zhb.f
+      )
+      target_link_libraries (umf4zhb PRIVATE SuiteSparse::UMFPACK)
+
+      add_executable (umf4zhb64
+        UMFPACK/Demo/umf4zhb64.f
+        $<TARGET_OBJECTS:umf4_f77zwrapper64_objects>
+      )
+      target_link_libraries (umf4zhb64 PRIVATE SuiteSparse::UMFPACK)
+
+      list (APPEND SuiteSparse_BIN_TARGETS
+        umf4hb
+        umf4hb64
+        umf4zhb
+        umf4zhb64
+        umfpack_readhb
+        umfpack_readhb_nozeros
+        umfpack_readhb_size
+      )
     endif (WITH_FORTRAN AND CMAKE_Fortran_COMPILER_LOADED)
   endif (TARGET umfpack)
 
   if (TARGET spqr)
     if (WITH_CHECK)
       add_executable (qrdemo SPQR/Demo/qrdemo.cpp)
+      add_executable (qrdemo_int32 SPQR/Demo/qrdemo_int32.cpp)
       add_executable (qrdemoc SPQR/Demo/qrdemoc.c)
+      add_executable (qrdemoc_int32 SPQR/Demo/qrdemoc_int32.c)
       add_executable (qrsimple SPQR/Demo/qrsimple.cpp)
       add_executable (qrsimplec SPQR/Demo/qrsimplec.c)
+      add_executable (qrsimplec_int32 SPQR/Demo/qrsimplec_int32.c)
 
       target_link_libraries (qrdemo PRIVATE SuiteSparse::SPQR)
+      target_link_libraries (qrdemo_int32 PRIVATE SuiteSparse::SPQR)
       target_link_libraries (qrdemoc PRIVATE SuiteSparse::SPQR)
+      target_link_libraries (qrdemoc_int32 PRIVATE SuiteSparse::SPQR)
       target_link_libraries (qrsimple PRIVATE SuiteSparse::SPQR)
       target_link_libraries (qrsimplec PRIVATE SuiteSparse::SPQR)
+      target_link_libraries (qrsimplec_int32 PRIVATE SuiteSparse::SPQR)
 
       list (APPEND SuiteSparse_BIN_TARGETS
         qrdemo
+        qrdemo_int32
         qrdemoc
+        qrdemoc_int32
         qrsimple
         qrsimplec
+        qrsimplec_int32
       )
     endif (WITH_CHECK)
 
     if (TARGET gpuqrengine)
       add_executable (qrdemo_gpu SPQR/Demo/qrdemo_gpu.cpp)
+      add_executable (qrdemo_gpu2 SPQR/Demo/qrdemo_gpu2.cpp)
+      add_executable (qrdemo_gpu3 SPQR/Demo/qrdemo_gpu3.cpp)
+      add_executable (gpuqrengine_demo
+        SPQR/GPUQREngine/Demo/gpuqrengine_demo.cpp)
+      set_property (TARGET gpuqrengine_demo PROPERTY LINK_WHAT_YOU_USE OFF)
+
       target_link_libraries (qrdemo_gpu PRIVATE
         SuiteSparse::CHOLMOD
         SuiteSparse::GPURuntime
         SuiteSparse::SPQR
       )
-
+      target_link_libraries (qrdemo_gpu2 PRIVATE
+        SuiteSparse::CHOLMOD
+        SuiteSparse::GPURuntime
+        SuiteSparse::SPQR
+      )
+      target_link_libraries (qrdemo_gpu3 PRIVATE
+        SuiteSparse::CHOLMOD
+        SuiteSparse::GPURuntime
+        SuiteSparse::SPQR
+      )
       list (APPEND SuiteSparse_BIN_TARGETS
         qrdemo_gpu
+        qrdemo_gpu2
+        qrdemo_gpu3
+        gpuqrengine_demo
       )
     endif (TARGET gpuqrengine)
   endif (TARGET spqr)
 endif (WITH_DEMOS)
+
+if (BUILD_TESTING)
+  if (TARGET cholmod AND WITH_CHOLESKY AND WITH_CHECK)
+    if (TARGET cholmod_di_demo)
+      set (_SuiteSparse_CHOLMOD_DI_TEST_TARGET cholmod_di_demo)
+      set (_SuiteSparse_CHOLMOD_DL_TEST_TARGET cholmod_dl_demo)
+      set (_SuiteSparse_CHOLMOD_SI_TEST_TARGET cholmod_si_demo)
+      set (_SuiteSparse_CHOLMOD_SL_TEST_TARGET cholmod_sl_demo)
+    else ()
+      add_executable (cholmod_di_test CHOLMOD/Demo/cholmod_di_demo.c)
+      add_executable (cholmod_dl_test CHOLMOD/Demo/cholmod_dl_demo.c)
+      add_executable (cholmod_si_test CHOLMOD/Demo/cholmod_si_demo.c)
+      add_executable (cholmod_sl_test CHOLMOD/Demo/cholmod_sl_demo.c)
+
+      foreach (_SuiteSparse_CHOLMOD_TEST_TARGET IN ITEMS
+        cholmod_di_test
+        cholmod_dl_test
+        cholmod_si_test
+        cholmod_sl_test
+      )
+        target_link_libraries (${_SuiteSparse_CHOLMOD_TEST_TARGET} PRIVATE
+          SuiteSparse::AMD
+          SuiteSparse::CAMD
+          SuiteSparse::CCOLAMD
+          SuiteSparse::CHOLMOD
+          SuiteSparse::COLAMD
+          SuiteSparse::Config
+        )
+      endforeach (_SuiteSparse_CHOLMOD_TEST_TARGET)
+
+      set (_SuiteSparse_CHOLMOD_DI_TEST_TARGET cholmod_di_test)
+      set (_SuiteSparse_CHOLMOD_DL_TEST_TARGET cholmod_dl_test)
+      set (_SuiteSparse_CHOLMOD_SI_TEST_TARGET cholmod_si_test)
+      set (_SuiteSparse_CHOLMOD_SL_TEST_TARGET cholmod_sl_test)
+    endif ()
+
+  add_test ( NAME CHOLMOD_int32_double_bcsstk01
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/bcsstk01.tri)
+  add_test ( NAME CHOLMOD_int64_double_bcsstk01
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/bcsstk01.tri)
+  add_test ( NAME CHOLMOD_int32_single_bcsstk01
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/bcsstk01.tri)
+  add_test ( NAME CHOLMOD_int64_single_bcsstk01
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/bcsstk01.tri)
+
+  add_test ( NAME CHOLMOD_int32_double_lp_afiro
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/lp_afiro.tri)
+  add_test ( NAME CHOLMOD_int64_double_lp_afiro
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/lp_afiro.tri)
+  add_test ( NAME CHOLMOD_int32_single_lp_afiro
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/lp_afiro.tri)
+  add_test ( NAME CHOLMOD_int64_single_lp_afiro
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/lp_afiro.tri)
+
+  add_test ( NAME CHOLMOD_int32_double_can24
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/can___24.mtx)
+  add_test ( NAME CHOLMOD_int64_double_can24
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/can___24.mtx)
+  add_test ( NAME CHOLMOD_int32_single_can24
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/can___24.mtx)
+  add_test ( NAME CHOLMOD_int64_single_can24
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/can___24.mtx)
+
+  add_test ( NAME CHOLMOD_int32_double_complex
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/c.tri)
+  add_test ( NAME CHOLMOD_int64_double_complex
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/c.tri)
+  add_test ( NAME CHOLMOD_int32_single_complex
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/c.tri)
+  add_test ( NAME CHOLMOD_int64_single_complex
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/c.tri)
+
+  add_test ( NAME CHOLMOD_int32_double_supernodal
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/bcsstk02.tri)
+  add_test ( NAME CHOLMOD_int64_double_supernodal
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_DL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/bcsstk02.tri)
+  add_test ( NAME CHOLMOD_int32_single_supernodal
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SI_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/bcsstk02.tri)
+  add_test ( NAME CHOLMOD_int64_single_supernodal
+    COMMAND $<TARGET_FILE:${_SuiteSparse_CHOLMOD_SL_TEST_TARGET}>
+      ${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Demo/Matrix/bcsstk02.tri)
+
+    if (WIN32)
+      set (_SuiteSparse_CHOLMOD_TEST_PATH_MODIFICATION)
+      foreach (_SuiteSparse_CHOLMOD_TEST_DEPENDENCY IN ITEMS
+        amd
+        camd
+        ccolamd
+        cholmod
+        colamd
+        suitesparseconfig
+      )
+        list (APPEND _SuiteSparse_CHOLMOD_TEST_PATH_MODIFICATION
+          "PATH=path_list_prepend:$<TARGET_FILE_DIR:${_SuiteSparse_CHOLMOD_TEST_DEPENDENCY}>")
+      endforeach (_SuiteSparse_CHOLMOD_TEST_DEPENDENCY)
+      set_tests_properties (
+      CHOLMOD_int32_double_bcsstk01
+      CHOLMOD_int64_double_bcsstk01
+      CHOLMOD_int32_single_bcsstk01
+      CHOLMOD_int64_single_bcsstk01
+      CHOLMOD_int32_double_lp_afiro
+      CHOLMOD_int64_double_lp_afiro
+      CHOLMOD_int32_single_lp_afiro
+      CHOLMOD_int64_single_lp_afiro
+      CHOLMOD_int32_double_can24
+      CHOLMOD_int64_double_can24
+      CHOLMOD_int32_single_can24
+      CHOLMOD_int64_single_can24
+      CHOLMOD_int32_double_complex
+      CHOLMOD_int64_double_complex
+      CHOLMOD_int32_single_complex
+      CHOLMOD_int64_single_complex
+      CHOLMOD_int32_double_supernodal
+      CHOLMOD_int64_double_supernodal
+      CHOLMOD_int32_single_supernodal
+      CHOLMOD_int64_single_supernodal
+        PROPERTIES ENVIRONMENT_MODIFICATION
+          "${_SuiteSparse_CHOLMOD_TEST_PATH_MODIFICATION}")
+    endif ()
+  endif ()
+endif ()
 
 install (TARGETS ${_SuiteSparse_TARGETS} ${SuiteSparse_BIN_TARGETS}
   EXPORT suitesparse-targets
@@ -1987,55 +2483,6 @@ add_feature_info (Partition WITH_METIS "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
 add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
 add_feature_info (Threading WITH_TBB "Parallelization using Intel Threading Building Blocks")
-
-include (CTest)
-
-if (BUILD_TESTING AND CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
-  AND CMAKE_EXPERIMENTAL_GENERATE_SBOM)
-  set (_sbom_target_licenses)
-
-  foreach (_target IN LISTS _SuiteSparse_TARGETS)
-    string (APPEND _sbom_target_licenses
-      "${_target}=$<TARGET_PROPERTY:${_target},SPDX_LICENSE>\n")
-  endforeach (_target)
-
-  if (TARGET cxsparse)
-    string (APPEND _sbom_target_licenses
-      "cxsparse=$<TARGET_PROPERTY:cxsparse,SPDX_LICENSE>\n")
-  endif (TARGET cxsparse)
-
-  file (GENERATE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sbom-target-licenses.txt
-    CONTENT "${_sbom_target_licenses}")
-
-  add_test (NAME SuiteSparse.SBOM
-    COMMAND ${CMAKE_COMMAND}
-      -DPROJECT_BINARY_DIR=${CMAKE_BINARY_DIR}
-      -DLICENSE_FILE=${CMAKE_CURRENT_BINARY_DIR}/sbom-target-licenses.txt
-      -DBUILD_CXSPARSE=${BUILD_CXSPARSE}
-      -DWITH_LICENSE=${WITH_LICENSE}
-      -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_sbom.cmake
-  )
-endif (BUILD_TESTING AND CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
-  AND CMAKE_EXPERIMENTAL_GENERATE_SBOM)
-
-if (BUILD_TESTING)
-  if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
-    AND CMAKE_EXPERIMENTAL_GENERATE_SBOM)
-    add_test (NAME SuiteSparse.SBOMCommand
-      COMMAND ${CMAKE_COMMAND}
-        -DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_sbom_command.cmake
-    )
-  endif (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
-    AND CMAKE_EXPERIMENTAL_GENERATE_SBOM)
-
-  add_test (NAME SuiteSparse.LicenseOptions
-    COMMAND ${CMAKE_COMMAND}
-      -DPROJECT_SOURCE_DIR=${CMAKE_SOURCE_DIR}
-      -DPROJECT_BINARY_DIR=${CMAKE_BINARY_DIR}
-      -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_license_options.cmake
-  )
-endif (BUILD_TESTING)
 
 set_package_properties (TBB PROPERTIES
   URL "https://www.threadingbuildingblocks.org"

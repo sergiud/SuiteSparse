@@ -22,6 +22,13 @@
 % overloaded by the @GrB class, so that they can be used for GraphBLAS
 % matrices.  See 'help GrB' for more details.
 %
+% To install the GraphBLAS library and its MATLAB interface:
+%
+%   graphblas_install - compile SuiteSparse:GraphBLAS for MATLAB or Octave
+%
 % Tim Davis, Texas A&M University,
 % http://faculty.cse.tamu.edu/davis/GraphBLAS
+%
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 

@@ -39,8 +39,8 @@ function blob = serialize (G, method, level)
 %
 % See also GrB.deserialize, GrB.load, GrB.save, GrB/struct.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 if (isobject (G))
     % extract the contents of a GraphBLAS matrix

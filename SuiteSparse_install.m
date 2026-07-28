@@ -6,7 +6,7 @@ function SuiteSparse_install (do_demo)
 %
 % GraphBLAS      graph algorithms via sparse linear algebra (graphblas.org)
 % Mongoose       graph partitioner
-% SLIP_LU        solve sparse Ax=b exactly
+% SPEX           solve sparse Ax=b exactly
 % UMFPACK        sparse LU factorization (multifrontal)
 % CHOLMOD        sparse Cholesky factorization, and many other operations
 % AMD            sparse symmetric approximate minimum degree ordering
@@ -38,24 +38,23 @@ function SuiteSparse_install (do_demo)
 % See also AMD, COLAMD, CAMD, CCOLAMD, CHOLMOD, UMFPACK, CSPARSE, CXSPARSE,
 %      ssget, RBio, SuiteSparseCollection, KLU, BTF, MESHND, SSMULT, LINFACTOR,
 %      SPOK, SPQR_RANK, SuiteSparse, SPQR, PATHTOOL, PATH, FACTORIZE,
-%      SPARSEINV, Mongoose, GraphBLAS, SLIP_LU.
+%      SPARSEINV, Mongoose, GraphBLAS, SPEX.
 %
 % This script installs the full-featured CXSparse rather than CSparse.
 %
-% If you get errors building or using METIS, just remove the metis-5.1.0
-% folder.  This often occurs on Windows.
+% The CMake build uses a system METIS package when available.  Set METIS_ROOT
+% before running the MATLAB builders when METIS is installed in a non-standard
+% location.
 %
-% Before using SuiteSparse_install, you must compile the GraphBLAS library.
-% In the system shell while in the SuiteSparse folder, type "make gbinstall" if
-% you have MATLAB R2020b or earlier, or type "make gbrenamed" if you have
-% MATLAB 9.10 (R2021a) or later.
+% Copyright (c) 1990-2023, Timothy A. Davis, http://suitesparse.com.
 %
-% Copyright 1990-2022, Timothy A. Davis, http://suitesparse.com.
 % In collaboration with (in alphabetical order): Patrick Amestoy, David
-% Bateman, Jinhao Chen.  Yanqing Chen, Iain Duff, Les Foster, William Hager,
-% Scott Kolodziej, Chris Lourenco, Stefan Larimore, Erick Moreno-Centeno,
-% Ekanathan Palamadai, Sivasankaran Rajamanickam, Sanjay Ranka, Wissam
-% Sid-Lakhdar, Nuri Yeralan.
+% Bateman, Jinhao Chen, Yanqing Chen, Iain Duff, Les Foster, John Gilbert,
+% William Hager, Scott Kolodziej, Chris Lourenco, Stefan Larimore, Erick
+% Moreno-Centeno, Esmond Ng, Ekanathan Palamadai, Sivasankaran Rajamanickam,
+% Sanjay Ranka, Wissam Sid-Lakhdar, Nuri Yeralan.
+%
+% See each package for its license.
 
 %-------------------------------------------------------------------------------
 % initializations
@@ -293,17 +292,6 @@ catch me
     failed {end+1} = 'spok' ;
 end
 
-%{
-% compile and install PIRO_BAND
-try
-    paths = add_to_path (paths, [SuiteSparse '/PIRO_BAND/MATLAB']) ;
-    piro_band_make ;
-catch me
-    disp (me.message) ;
-    fprintf ('PIRO_BAND not installed\n') ;
-end
-%}
-
 % compile and install sparsinv
 try
     paths = add_to_path (paths, [SuiteSparse '/MATLAB_Tools/sparseinv']) ;
@@ -316,36 +304,51 @@ end
 
 % compile and install Mongoose
 try
+    fprintf ('\nCompiling Mongoose\n') ;
     paths = add_to_path (paths, [SuiteSparse '/Mongoose/MATLAB']) ;
     mongoose_make (0) ;
+    fprintf ('\n') ;
 catch me
     disp (me.message) ;
     fprintf ('Mongoose not installed\n') ;
     failed {end+1} = 'mongoose' ;
 end
 
-% compile and install GraphBLAS
+% compile and install SPEX
 try
-    paths = add_to_path (paths, [SuiteSparse '/GraphBLAS/build']) ;
+    fprintf ('\nCompiling SPEX (requires GMP and MPFR)\n') ;
+    paths = add_to_path (paths, [SuiteSparse '/SPEX/MATLAB']) ;
+    spex_mex_install (0) ;
+catch me
+    disp (me.message) ;
+    fprintf ('SPEX not installed\n') ;
+    failed {end+1} = 'SPEX' ;
+end
+
+% compile and install ParU
+try
+    fprintf ('\nCompiling ParU\n') ;
+    paths = add_to_path (paths, [SuiteSparse '/ParU/MATLAB']) ;
+    paru_make ;
+catch me
+    disp (me.message) ;
+    fprintf ('ParU not installed\n') ;
+    failed {end+1} = 'ParU' ;
+end
+
+% compile and install GraphBLAS (this can take a while)
+try
+    fprintf ('\nCompiling GraphBLAS\n') ;
+    paths = add_to_path (paths, [SuiteSparse '/GraphBLAS/GraphBLAS/build']) ;
     paths = add_to_path (paths, [SuiteSparse '/GraphBLAS/GraphBLAS/demo']) ;
     paths = add_to_path (paths, [SuiteSparse '/GraphBLAS/GraphBLAS']) ;
-    cd ('@GrB/private') ;
-    gbmake ;
+    % cd ('@GrB/private') ;
+    % gbmake ;
+    graphblas_install
 catch me
     disp (me.message) ;
     fprintf ('GraphBLAS not installed\n') ;
     failed {end+1} = 'GraphBLAS' ;
-end
-
-% compile and install SLIP_LU
-try
-    fprintf ('try to install SLIP_LU (requires GMP and MPFR)') ;
-    paths = add_to_path (paths, [SuiteSparse '/SLIP_LU/MATLAB']) ;
-    SLIP_install (do_demo) ;
-catch me
-    disp (me.message) ;
-    fprintf ('SLIP_LU not installed\n') ;
-    failed {end+1} = 'SLIP_LU' ;
 end
 
 %-------------------------------------------------------------------------------

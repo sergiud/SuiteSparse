@@ -12,8 +12,8 @@ function C = ne (A, B)
 % A matrix, B matrix:  C is sparse, with the pattern of A+B.
 % Zeroes are then dropped from C after it is computed.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 if (isobject (A))
     A = A.opaque ;

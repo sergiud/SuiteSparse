@@ -21,8 +21,8 @@ function gbtest
 %
 % See also GrB.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 % gbtest3 requires ../demo/dnn_builtin.m and ../demo/dnn_builtin2gb.m.
 demo_folder = fullfile (fileparts (mfilename ('fullpath')), '../demo') ;
@@ -173,6 +173,13 @@ gbtest118 % test GrB.argsort
 gbtest119 % test GrB.eunion
 gbtest120 % test subsref
 gbtest121 % test times with scalars
+gbtest122 % test reshape
+gbtest123 % test reshape
+gbtest124 % test binops
+gbtest125 % test monoids
+gbtest126 % test selectops
+gbtest127 % test semirings
+gbtest128 % test unops
 gbtest96  % test GrB.optype
 
 if (~have_octave)

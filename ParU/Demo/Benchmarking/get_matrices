@@ -1,0 +1,60 @@
+# get_matrices: download all test matrices to benchmark ParU for the ACM TOMS
+# submission on ParU.  Requires Linux; probably also works on the Mac (but this
+# has not been tested).  About 17GB of space is required in your /tmp folder.
+
+mkdir /tmp/matrices
+cd /tmp/matrices
+
+wget https://suitesparse-collection-website.herokuapp.com/MM/TSOPF/TSOPF_RS_b39_c30.tar.gz
+tar zvfx TSOPF_RS_b39_c30.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/ATandT/twotone.tar.gz
+tar zvfx twotone.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/VanVelzen/std1_Jac2.tar.gz
+tar zvfx std1_Jac2.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/Williams/mac_econ_fwd500.tar.gz
+tar zvfx mac_econ_fwd500.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/VanVelzen/std1_Jac3.tar.gz
+tar zvfx std1_Jac3.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/TSOPF/TSOPF_RS_b300_c1.tar.gz
+tar zvfx TSOPF_RS_b300_c1.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/Mallya/lhr71.tar.gz
+tar zvfx lhr71.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/VanVelzen/Zd_Jac2.tar.gz
+tar zvfx Zd_Jac2.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/Vavasis/av41092.tar.gz
+tar zvfx av41092.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/VanVelzen/Zd_Jac6.tar.gz
+tar zvfx Zd_Jac6.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/QLi/crashbasis.tar.gz
+tar zvfx crashbasis.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/Simon/bbmat.tar.gz
+tar zvfx bbmat.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/VanVelzen/Zd_Jac3.tar.gz
+tar zvfx Zd_Jac3.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/Williams/mc2depi.tar.gz
+tar zvfx mc2depi.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/TSOPF/TSOPF_RS_b300_c2.tar.gz
+tar zvfx TSOPF_RS_b300_c2.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/TSOPF/TSOPF_RS_b678_c1.tar.gz
+tar zvfx TSOPF_RS_b678_c1.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/TSOPF/TSOPF_RS_b300_c3.tar.gz
+tar zvfx TSOPF_RS_b300_c3.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/Muite/Chebyshev4.tar.gz
+tar zvfx Chebyshev4.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/Hamrle/Hamrle3.tar.gz
+tar zvfx Hamrle3.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/ATandT/pre2.tar.gz
+tar zvfx pre2.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/TSOPF/TSOPF_RS_b2052_c1.tar.gz
+tar zvfx TSOPF_RS_b2052_c1.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/Norris/torso1.tar.gz
+tar zvfx torso1.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/TSOPF/TSOPF_RS_b678_c2.tar.gz
+tar zvfx TSOPF_RS_b678_c2.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/TSOPF/TSOPF_RS_b2383.tar.gz
+tar zvfx TSOPF_RS_b2383.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/VLSI/vas_stokes_4M.tar.gz
+tar zvfx vas_stokes_4M.tar.gz
+wget https://suitesparse-collection-website.herokuapp.com/MM/VLSI/stokes.tar.gz
+tar zvfx stokes.tar.gz
+

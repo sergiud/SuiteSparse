@@ -1,26 +1,29 @@
+// CXSparse/Source/cs_qr: sparse QR factorization
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* sparse QR factorization [V,beta,pinv,R] = qr (A) */
 csn *cs_qr (const cs *A, const css *S)
 {
     CS_ENTRY *Rx, *Vx, *Ax, *x ;
     double *Beta ;
-    CS_INT i, k, p, m, n, vnz, p1, top, m2, len, col, rnz, *s, *leftmost, *Ap, *Ai,
+    CS_INT i, k, p, n, vnz, p1, top, m2, len, col, rnz, *s, *leftmost, *Ap, *Ai,
         *parent, *Rp, *Ri, *Vp, *Vi, *w, *pinv, *q ;
     cs *R, *V ;
     csn *N ;
     if (!CS_CSC (A) || !S) return (NULL) ;
-    m = A->m ; n = A->n ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
+    n = A->n ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     q = S->q ; parent = S->parent ; pinv = S->pinv ; m2 = S->m2 ;
     vnz = S->lnz ; rnz = S->unz ; leftmost = S->leftmost ;
-    w = (CS_INT *)cs_malloc (m2+n, sizeof (CS_INT)) ;            /* get CS_INT workspace */
-    x = (CS_ENTRY *)cs_malloc (m2, sizeof (CS_ENTRY)) ;           /* get CS_ENTRY workspace */
-    N = (csn *)cs_calloc (1, sizeof (csn)) ;               /* allocate result */
+    w = (CS_INT *) cs_malloc (m2+n, sizeof (CS_INT)) ;            /* get CS_INT workspace */
+    x = (CS_ENTRY *) cs_malloc (m2, sizeof (CS_ENTRY)) ;           /* get CS_ENTRY workspace */
+    N = (csn *) cs_calloc (1, sizeof (csn)) ;               /* allocate result */
     if (!w || !x || !N) return (cs_ndone (N, NULL, w, x, 0)) ;
     s = w + m2 ;                                    /* s is size n */
-    for (k = 0 ; k < m2 ; k++) x [k] = CS_ZERO() ;          /* clear workspace x */
+    for (k = 0 ; k < m2 ; k++) x [k] = CS_ZERO () ;          /* clear workspace x */
     N->L = V = cs_spalloc (m2, n, vnz, 1, 0) ;      /* allocate result V */
     N->U = R = cs_spalloc (m2, n, rnz, 1, 0) ;      /* allocate result R */
-    N->B = Beta = (double *)cs_malloc (n, sizeof (double)) ;  /* allocate result Beta */
+    N->B = Beta = (double *) cs_malloc (n, sizeof (double)) ;  /* allocate result Beta */
     if (!R || !V || !Beta) return (cs_ndone (N, NULL, w, x, 0)) ;
     Rp = R->p ; Ri = R->i ; Rx = R->x ;
     Vp = V->p ; Vi = V->i ; Vx = V->x ;
@@ -57,13 +60,13 @@ csn *cs_qr (const cs *A, const css *S)
             cs_happly (V, i, Beta [i], x) ; /* apply (V(i),Beta(i)) to x */
             Ri [rnz] = i ;                  /* R(i,k) = x(i) */
             Rx [rnz++] = x [i] ;
-            x [i] = CS_ZERO() ;
-            if (parent [i] == k) vnz = cs_scatter (V, i, CS_ZERO(), w, NULL, k, V, vnz);
+            x [i] = CS_ZERO () ;
+            if (parent [i] == k) vnz = cs_scatter (V, i, CS_ZERO (), w, NULL, k, V, vnz);
         }
         for (p = p1 ; p < vnz ; p++)        /* gather V(:,k) = x */
         {
             Vx [p] = x [Vi [p]] ;
-            x [Vi [p]] = CS_ZERO() ;
+            x [Vi [p]] = CS_ZERO () ;
         }
         Ri [rnz] = k ;                     /* R(k,k) = norm (x) */
         Rx [rnz++] = cs_house (Vx+p1, Beta+k, vnz-p1) ; /* [v,beta]=house(x) */

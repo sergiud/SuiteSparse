@@ -41,9 +41,11 @@ function [objfiles, timestamp_out] = cs_make_helper (f, docomplex)
 %
 %   See also MEX.
 
-% Copyright 2006-2012, Timothy A. Davis, http://www.suitesparse.com
+% CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+% SPDX-License-Identifier: LGPL-2.1+
 
-mexcmd = 'mex -DCS_LONG -I../../../SuiteSparse_config' ;
+% mexcmd = 'mex -DCS_LONG -I../../../SuiteSparse_config' ;
+mexcmd = 'mex -I../../../SuiteSparse_config' ;
 if (~isempty (strfind (computer, '64')))
     mexcmd = [mexcmd ' -largeArrayDims'] ;
 end
@@ -113,6 +115,11 @@ catch
 end
 
 if (pc)
+    % disable the SuiteSparse_config timer
+    mexcmd = [mexcmd ' -DNTIMER '] ;
+end
+
+if (pc)
     obj = '.obj' ;
 else
     obj = '.o' ;
@@ -121,43 +128,46 @@ end
 srcdir = '../../Source/' ;
 hfile = '../../Include/cs.h' ;
 
+% compile SuiteSparse_config.c
+[anysrc timestamp kk] = compile_source ('../../../SuiteSparse_config/', ...
+    'SuiteSparse_config', obj, hfile, force, mexcmd, kk, details) ;
+CS = ['SuiteSparse_config' obj] ;
+if (nargout > 0)
+    objfiles = ['../CSparse/SuiteSparse_config' obj] ;
+end
+
 % compile each CSparse source file
 [anysrc timestamp kk] = compile_source ('', 'cs_mex', obj, hfile, force, ...
     mexcmd, kk, details) ;
-CS = ['cs_mex' obj] ;
+CS = [CS ' cs_mex' obj] ;
 if (nargout > 0)
     objfiles = ['../CSparse/cs_mex' obj] ;
 end
 for i = 1:length (cs)
 
-    [s t kk] = compile_source (srcdir, cs{i}, obj, hfile, force, mexcmd, ...
+    csrc = cs {i} ;
+    csrc = [ 'cs_dl_' csrc(4:end) ] ;
+    [s t kk] = compile_source (srcdir, csrc, obj, hfile, force, mexcmd, ...
         kk, details) ;
     timestamp = max (timestamp, t) ;
     anysrc = anysrc | s ;                                                   %#ok
-    CS = [CS ' ' cs{i} obj] ;                                               %#ok
+    CS = [CS ' ' csrc obj] ;                                               %#ok
     if (nargout > 0)
-        objfiles = [objfiles ' ../CSparse/' cs{i} obj] ;   %#ok
+        objfiles = [objfiles ' ../CSparse/' csrc obj] ;   %#ok
     end
 
     % complex version:
     if (docomplex)
         csrc = cs {i} ;
         csrc = [ 'cs_cl_' csrc(4:end) ] ;
+        [s t kk] = compile_source (srcdir, csrc, obj, hfile, force, mexcmd, ...
+            kk, details) ;
+        timestamp = max (timestamp, t) ;
         CS = [CS ' ' csrc obj] ;            %#ok
         if (nargout > 0)
             objfiles = [objfiles ' ../CSparse/' csrc obj] ;%#ok
         end
-        if (s)
-            cpfile (['../../Source/' cs{i} '.c'], [csrc '.c']) ;
-            if (details)
-                fprintf ('%s\n', ['cp -f ../../Source/' cs{i} '.c ' csrc '.c']);
-            end
-            cmd = sprintf ('%s -DCS_COMPLEX -O -c -I../../Include %s.c\n', ...
-                mexcmd, csrc) ;
-            kk = do_cmd (cmd, kk, details) ;
-        end
     end
-
 end
 
 % compile each CSparse mexFunction
@@ -203,28 +213,3 @@ else
 end
 eval (s) ;
 
-%-------------------------------------------------------------------------------
-function rmfile (file)
-% rmfile:  delete a file, but only if it exists
-if (length (dir (file)) > 0)                                                %#ok
-    delete (file) ;
-end
-
-%-------------------------------------------------------------------------------
-function cpfile (src, dst)
-% cpfile:  copy the src file to the filename dst, overwriting dst if it exists
-%% fprintf ('cp %s %s\n', src, dst) ; return ;
-rmfile (dst)
-if (length (dir (src)) == 0)	%#ok
-    fprintf ('File does not exist: %s\n', src) ;
-    error ('File does not exist') ;
-end
-try
-    copyfile (src, dst) ;
-catch ME
-    % ignore errors of the form "cp: preserving permissions: ...
-    % Operation not supported".  rethrow all other errors.
-    if (isempty (strfind (ME.message, 'Operation not supported')))
-        rethrow (ME) ;
-    end
-end

@@ -23,8 +23,8 @@ function C = bitcmp (A, assumedtype)
 % See also GrB/bitor, GrB/bitand, GrB/bitxor, GrB/bitshift, GrB/bitget,
 % GrB/bitset, GrB/bitclr.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 if (nargin < 2)
     assumedtype = 'uint64' ;

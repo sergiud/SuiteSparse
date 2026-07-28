@@ -2,8 +2,8 @@
 // gbmtimes: sparse matrix-matrix multiplication over the standard semiring
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -13,9 +13,9 @@
 
 // The standard rules state that if A or B are full, then C is always full.
 // The rules here are slightly different:  C is full for (sparse or bitmap)
-// times full, or full times (sparse or bitmap), using this full.  C is not
-// full for hypersparse times full or full times hypersparse.  Instead, it is
-// left sparse (or whatever format GraphBLAS decides to use).
+// times full, or full times (sparse or bitmap), using the MATLAB rule.  C is
+// not full for hypersparse times full or full times hypersparse.  Instead, it
+// is left sparse (or whatever format GraphBLAS decides to use).
 
 // This method also allows for the inputs A and/or B to be transposed, but
 // this parameter is not passed by MATLAB to the mtimes method.
@@ -51,7 +51,7 @@ void mexFunction
     mxArray *Matrix [6], *String [2], *Cell [2] ;
     base_enum_t base ;
     kind_enum_t kind ;
-    GxB_Format_Value fmt ;
+    int fmt ;
     int nmatrices, nstrings, ncells, sparsity ;
     GrB_Descriptor desc ;
     gb_get_mxargs (nargin, pargin, USAGE, Matrix, &nmatrices, String, &nstrings,
@@ -64,7 +64,7 @@ void mexFunction
     { 
         OK (GrB_Descriptor_new (&desc)) ;
     }
-    OK (GxB_Desc_set (desc, GxB_SORT, true)) ;
+    OK (GrB_Descriptor_set_INT32 (desc, true, GxB_SORT)) ;
 
     //--------------------------------------------------------------------------
     // get the matrices
@@ -87,26 +87,28 @@ void mexFunction
     char semiring_string [8] ;
     strcpy (semiring_string, "+.*") ;
     plus_times = gb_string_to_semiring (semiring_string, atype, btype) ;
-    OK (GxB_Semiring_add (&plus_monoid, plus_times)) ;
-    OK (GxB_Semiring_multiply (&times, plus_times)) ;
-    OK (GxB_Monoid_operator (&plus, plus_monoid)) ;
-    OK (GxB_BinaryOp_ztype (&ctype, plus)) ;
+    OK (GrB_Semiring_get_VOID (plus_times, (void *) &plus_monoid,
+        GxB_SEMIRING_MONOID)) ;
+    OK (GrB_Semiring_get_VOID (plus_times, (void *) &times,
+        GxB_SEMIRING_MULTIPLY)) ;
+    OK (GrB_Monoid_get_VOID (plus_monoid, (void *) &plus, GxB_MONOID_OPERATOR));
+    ctype = gb_binaryop_ztype (plus) ;
 
     //--------------------------------------------------------------------------
     // construct C
     //--------------------------------------------------------------------------
 
     // get the size of A and B
-    GrB_Index anrows, ancols, bnrows, bncols, cnrows, cncols ;
+    uint64_t anrows, ancols, bnrows, bncols, cnrows, cncols ;
     OK (GrB_Matrix_nrows (&anrows, A)) ;
     OK (GrB_Matrix_ncols (&ancols, A)) ;
     OK (GrB_Matrix_nrows (&bnrows, B)) ;
     OK (GrB_Matrix_ncols (&bncols, B)) ;
 
     // get the descriptor contents to determine if A and B are transposed
-    GrB_Desc_Value in0, in1 ;
-    OK (GxB_Desc_get (desc, GrB_INP0, &in0)) ;
-    OK (GxB_Desc_get (desc, GrB_INP1, &in1)) ;
+    int in0, in1 ;
+    OK (GrB_Descriptor_get_INT32 (desc, &in0, GrB_INP0)) ;
+    OK (GrB_Descriptor_get_INT32 (desc, &in1, GrB_INP1)) ;
     bool A_transpose = (in0 == GrB_TRAN) ;
     bool B_transpose = (in1 == GrB_TRAN) ;
 
@@ -141,11 +143,6 @@ void mexFunction
     sparsity = gb_get_sparsity (A, B, sparsity) ;
     C = gb_new (ctype, cnrows, cncols, fmt, sparsity) ;
 
-    // zero = (ctype) 0
-    OK (GrB_Scalar_new (&zero, ctype)) ;
-    OK (GrB_Scalar_setElement_FP64 (zero, 0)) ;
-    OK (GrB_Scalar_wait (zero, GrB_MATERIALIZE)) ;
-
     //--------------------------------------------------------------------------
     // compute C = A*B
     //--------------------------------------------------------------------------
@@ -157,10 +154,13 @@ void mexFunction
         // C = alpha * B or C = A * beta
         //----------------------------------------------------------------------
 
-        GrB_Index nvals ;
+        uint64_t nvals ;
         OK (GrB_Scalar_nvals (&nvals, scalar)) ;
         if (nvals == 0)
         {
+            // zero = (ctype) 0
+            OK (GrB_Scalar_new (&zero, ctype)) ;
+            OK (GrB_Scalar_setElement_FP64 (zero, 0)) ;
             scalar = zero ;
         }
         if (binop_bind1st)
@@ -185,8 +185,8 @@ void mexFunction
         //----------------------------------------------------------------------
 
         int A_sparsity, B_sparsity ;
-        OK (GxB_Matrix_Option_get (A, GxB_SPARSITY_STATUS, &A_sparsity)) ;
-        OK (GxB_Matrix_Option_get (B, GxB_SPARSITY_STATUS, &B_sparsity)) ;
+        OK (GrB_Matrix_get_INT32 (A, &A_sparsity, GxB_SPARSITY_STATUS)) ;
+        OK (GrB_Matrix_get_INT32 (B, &B_sparsity, GxB_SPARSITY_STATUS)) ;
 
         bool A_full = (A_sparsity == GxB_FULL) ;
         bool A_sparse = (A_sparsity == GxB_BITMAP || A_sparsity == GxB_SPARSE) ;
@@ -202,8 +202,11 @@ void mexFunction
 
             // ensure C can be held as a full matrix
             sparsity = sparsity | GxB_FULL ;
-            OK (GxB_Matrix_Option_set (C, GxB_SPARSITY_CONTROL, sparsity)) ;
+            OK (GrB_Matrix_set_INT32 (C, sparsity, GxB_SPARSITY_CONTROL)) ;
             // C = 0
+            // zero = (ctype) 0
+            OK (GrB_Scalar_new (&zero, ctype)) ;
+            OK (GrB_Scalar_setElement_FP64 (zero, 0)) ;
             OK (GrB_Matrix_assign_Scalar (C, NULL, NULL, zero, GrB_ALL, cnrows,
                 GrB_ALL, cncols, NULL)) ;
             // C += A*B
@@ -240,6 +243,6 @@ void mexFunction
 
     pargout [0] = gb_export (&C, kind) ;
     pargout [1] = mxCreateDoubleScalar (kind) ;
-    GB_WRAPUP ;
+    gb_wrapup ( ) ;
 }
 

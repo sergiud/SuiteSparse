@@ -6,7 +6,9 @@ function amd_make
 %
 % See also amd, amd2.
 
-% Copyright 1994-2007, Tim Davis, Patrick R. Amestoy, and Iain S. Duff. 
+% AMD, Copyright (c) 1996-2022, Timothy A. Davis, Patrick R. Amestoy, and
+% Iain S. Duff.  All Rights Reserved.
+% SPDX-License-Identifier: BSD-3-clause
 
 details = 0 ;	    % 1 if details of each command are to be printed
 
@@ -20,8 +22,13 @@ if (~verLessThan ('matlab', '8.3.0'))
     d = ['-silent ' d] ;
 end
 
+if (ispc)
+    % disable the SuiteSparse_config timer
+    d = ['-DNTIMER ' d] ;
+end
+
 i = sprintf ('-I../Include -I../../SuiteSparse_config') ;
-cmd = sprintf ('mex -O %s -DDLONG -output amd2 %s amd_mex.c %s', d, i, ...
+cmd = sprintf ('mex -O %s -output amd2 %s amd_mex.c %s', d, i, ...
     '../../SuiteSparse_config/SuiteSparse_config.c') ;
 files = {'amd_order', 'amd_dump', 'amd_postorder', 'amd_post_tree', ...
     'amd_aat', 'amd_2', 'amd_1', 'amd_defaults', 'amd_control', ...

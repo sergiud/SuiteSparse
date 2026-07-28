@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_transpose: transpose a sparse matrix
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* C = A' */
 cs *cs_transpose (const cs *A, CS_INT values)
@@ -8,7 +11,7 @@ cs *cs_transpose (const cs *A, CS_INT values)
     if (!CS_CSC (A)) return (NULL) ;    /* check inputs */
     m = A->m ; n = A->n ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     C = cs_spalloc (n, m, Ap [n], values && Ax, 0) ;       /* allocate result */
-    w = (CS_INT *)cs_calloc (m, sizeof (CS_INT)) ;                      /* get workspace */
+    w = (CS_INT *) cs_calloc (m, sizeof (CS_INT)) ;                      /* get workspace */
     if (!C || !w) return (cs_done (C, w, NULL, 0)) ;       /* out of memory */
     Cp = C->p ; Ci = C->i ; Cx = C->x ;
     for (p = 0 ; p < Ap [n] ; p++) w [Ai [p]]++ ;          /* row counts */

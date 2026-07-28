@@ -25,10 +25,14 @@ function C = vreduce (arg1, arg2, arg3, arg4, arg5, arg6)
 % reduced to a column vector; C (j) = reduce (A (:,j)).  In this case, Cin
 % and C are column vectors of size n-by-1, if A is m-by-n.
 %
-% See also GrB.reduce, GrB/sum, GrB/prod, GrB/max, GrB/min.
+% accum: an optional binary operator.
+%       See 'help GrB.binopinfo' for available binary operators.
+%
+% See also GrB.reduce, GrB/sum, GrB/prod, GrB/max, GrB/min, GrB.monoidinfo,
+% GrB.binopinfo.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 if (isobject (arg1))
     arg1 = arg1.opaque ;

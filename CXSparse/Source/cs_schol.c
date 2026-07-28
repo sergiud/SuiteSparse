@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_schol: ordering and symbolic analysis for sparse Cholesky
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* ordering and symbolic analysis for a Cholesky factorization */
 css *cs_schol (CS_INT order, const cs *A)
@@ -7,7 +10,7 @@ css *cs_schol (CS_INT order, const cs *A)
     css *S ;
     if (!CS_CSC (A)) return (NULL) ;        /* check inputs */
     n = A->n ;
-    S = (css *)cs_calloc (1, sizeof (css)) ;       /* allocate result S */
+    S = (css *) cs_calloc (1, sizeof (css)) ;       /* allocate result S */
     if (!S) return (NULL) ;                 /* out of memory */
     P = cs_amd (order, A) ;                 /* P = amd(A+A'), or natural */
     S->pinv = cs_pinv (P, n) ;              /* find inverse permutation */
@@ -19,7 +22,7 @@ css *cs_schol (CS_INT order, const cs *A)
     c = cs_counts (C, S->parent, post, 0) ; /* find column counts of chol(C) */
     cs_free (post) ;
     cs_spfree (C) ;
-    S->cp = (CS_INT *)cs_malloc (n+1, sizeof (CS_INT)) ; /* allocate result S->cp */
+    S->cp = (CS_INT *) cs_malloc (n+1, sizeof (CS_INT)) ; /* allocate result S->cp */
     S->unz = S->lnz = cs_cumsum (S->cp, c, n) ; /* find column pointers for L */
     cs_free (c) ;
     return ((S->lnz >= 0) ? S : cs_sfree (S)) ;

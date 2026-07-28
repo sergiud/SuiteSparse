@@ -1,7 +1,7 @@
 function test128
 %TEST128 test eWiseMult, eWiseAdd, eWiseUnion, special cases
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
 fprintf ('\ntest128: test eWiseMult, eWiseAdd, eWiseUnion, special cases\n') ;
@@ -42,6 +42,30 @@ B.class = 'double' ;
 
 S = sparse (m,n) ;
 X = sparse (rand (m,n)) ;
+
+% test the workaround for the GB_COMPILER_MSC_2019_OR_NEWER bug in the
+% Microsoft C compiler
+A.class = 'single complex' ;
+B.class = 'single complex' ;
+T.matrix = sparse (m,n) ;
+T.class = 'single complex' ;
+% GB_mex_burble (1) ;
+for B_hyper = 0:1
+    for A_hyper = 0:1
+        A.is_hyper = A_hyper ;
+        B.is_hyper = B_hyper ;
+        C1 = GB_spec_Matrix_eWiseUnion(T, [ ], [ ], 'first', A, 1, B, 2, [ ]) ;
+        C4 = GB_mex_Matrix_eWiseUnion (T, [ ], [ ], 'first', A, 1, B, 2, [ ]) ;
+        GB_spec_compare (C1, C4) ;
+        C1 = GB_spec_Matrix_eWiseUnion(T, [ ], [ ], 'second', A, 1, B, 2, [ ]) ;
+        C4 = GB_mex_Matrix_eWiseUnion (T, [ ], [ ], 'second', A, 1, B, 2, [ ]) ;
+        GB_spec_compare (C1, C4) ;
+    end
+end
+% GB_mex_burble (0) ;
+
+A.class = 'double' ;
+B.class = 'double' ;
 
 for B_hyper = 0:1
     for A_hyper = 0:1

@@ -1,9 +1,12 @@
+// CSparse/Demo/cs_dl_demo: demo utilities for CXSparse (double int64_t)
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs_dl_demo.h"
 #include <time.h>
 /* 1 if A is square & upper tri., -1 if square & lower tri., 0 otherwise */
-static cs_long_t is_sym (cs_dl *A)
+static int64_t is_sym (cs_dl *A)
 {
-    cs_long_t is_upper, is_lower, j, p, n = A->n, m = A->m, *Ap = A->p, *Ai = A->i ;
+    int64_t is_upper, is_lower, j, p, n = A->n, m = A->m, *Ap = A->p, *Ai = A->i ;
     if (m != n) return (0) ;
     is_upper = 1 ;
     is_lower = 1 ;
@@ -19,7 +22,7 @@ static cs_long_t is_sym (cs_dl *A)
 }
 
 /* true for off-diagonal entries */
-static cs_long_t dropdiag (cs_long_t i, cs_long_t j, double aij, void *other) { return (i != j) ;}
+static int64_t dropdiag (int64_t i, int64_t j, double aij, void *other) { return (i != j) ;}
 
 /* C = A + triu(A,1)' */
 static cs_dl *make_sym (cs_dl *A)
@@ -33,26 +36,26 @@ static cs_dl *make_sym (cs_dl *A)
 }
 
 /* create a right-hand side */
-static void rhs (double *x, double *b, cs_long_t m)
+static void rhs (double *x, double *b, int64_t m)
 {
-    cs_long_t i ;
+    int64_t i ;
     for (i = 0 ; i < m ; i++) b [i] = 1 + ((double) i) / m ;
     for (i = 0 ; i < m ; i++) x [i] = b [i] ;
 }
 
 /* infinity-norm of x */
-static double norm_d (double *x, cs_long_t n)
+static double norm_d (double *x, int64_t n)
 {
-    cs_long_t i ;
+    int64_t i ;
     double normx = 0 ;
     for (i = 0 ; i < n ; i++) normx = CS_MAX (normx, fabs (x [i])) ;
     return (normx) ;
 }
 
 /* compute residual, norm(A*x-b,inf) / (norm(A,1)*norm(x,inf) + norm(b,inf)) */
-static void print_resid (cs_long_t ok, cs_dl *A, double *x, double *b, double *resid)
+static void print_resid (int64_t ok, cs_dl *A, double *x, double *b, double *resid)
 {
-    cs_long_t i, m, n ;
+    int64_t i, m, n ;
     if (!ok) { printf ("    (failed)\n") ; return ; }
     m = A->m ; n = A->n ;
     for (i = 0 ; i < m ; i++) resid [i] = -b [i] ;  /* resid = -b */
@@ -64,7 +67,7 @@ static void print_resid (cs_long_t ok, cs_dl *A, double *x, double *b, double *r
 static double tic (void) { return (clock () / (double) CLOCKS_PER_SEC) ; }
 static double toc (double t) { double s = tic () ; return (CS_MAX (0, s-t)) ; }
 
-static void print_order (cs_long_t order)
+static void print_order (int64_t order)
 {
     switch (order)
     {
@@ -75,13 +78,13 @@ static void print_order (cs_long_t order)
     }
 }
 
-/* read a problem from a file; use %g for integers to avoid cs_long_t conflicts */
+/* read a problem from a file; use %g for integers to avoid int64_t conflicts */
 problem *get_problem (FILE *f, double tol)
 {
     cs_dl *T, *A, *C ;
-    cs_long_t sym, m, n, mn, nz1, nz2 ;
+    int64_t sym, m, n, mn, nz1, nz2 ;
     problem *Prob ;
-    Prob = (problem*)cs_dl_calloc (1, sizeof (problem)) ;
+    Prob = cs_dl_calloc (1, sizeof (problem)) ;
     if (!Prob) return (NULL) ;
     T = cs_dl_load (f) ;                   /* load triplet matrix T from a file */
     Prob->A = A = cs_dl_compress (T) ;     /* A = compressed-column form of T */
@@ -102,9 +105,9 @@ problem *get_problem (FILE *f, double tol)
     if (nz1 != nz2) printf ("zero entries dropped: %g\n", (double) (nz1 - nz2));
     if (nz2 != A->p [n]) printf ("tiny entries dropped: %g\n",
             (double) (nz2 - A->p [n])) ;
-    Prob->b = (CS_ENTRY*)cs_dl_malloc (mn, sizeof (double)) ;
-    Prob->x = (CS_ENTRY*)cs_dl_malloc (mn, sizeof (double)) ;
-    Prob->resid = (CS_ENTRY*)cs_dl_malloc (mn, sizeof (double)) ;
+    Prob->b = cs_dl_malloc (mn, sizeof (double)) ;
+    Prob->x = cs_dl_malloc (mn, sizeof (double)) ;
+    Prob->resid = cs_dl_malloc (mn, sizeof (double)) ;
     return ((!Prob->b || !Prob->x || !Prob->resid) ? free_problem (Prob) : Prob) ;
 }
 
@@ -117,15 +120,15 @@ problem *free_problem (problem *Prob)
     cs_dl_free (Prob->b) ;
     cs_dl_free (Prob->x) ;
     cs_dl_free (Prob->resid) ;
-    return (problem*)(cs_dl_free (Prob)) ;
+    return (cs_dl_free (Prob)) ;
 }
 
 /* solve a linear system using Cholesky, LU, and QR, with various orderings */
-cs_long_t demo2 (problem *Prob)
+int64_t demo2 (problem *Prob)
 {
     cs_dl *A, *C ;
     double *b, *x, *resid,  t, tol ;
-    cs_long_t k, m, n, ok, order, nb, ns, *r, *s, *rr, sprank ;
+    int64_t k, m, n, ok, order, nb, ns, *r, *s, *rr, sprank ;
     cs_dld *D ;
     if (!Prob) return (0) ;
     A = Prob->A ; C = Prob->C ; b = Prob->b ; x = Prob->x ; resid = Prob->resid;
@@ -181,7 +184,7 @@ cs_long_t demo2 (problem *Prob)
 } 
 
 /* free workspace for demo3 */
-static cs_long_t done3 (cs_long_t ok, cs_dls *S, cs_dln *N, double *y, cs_dl *W, cs_dl *E, cs_long_t *p)
+static int64_t done3 (int64_t ok, cs_dls *S, cs_dln *N, double *y, cs_dl *W, cs_dl *E, int64_t *p)
 {
     cs_dl_sfree (S) ;
     cs_dl_nfree (N) ;
@@ -193,21 +196,22 @@ static cs_long_t done3 (cs_long_t ok, cs_dls *S, cs_dln *N, double *y, cs_dl *W,
 }
 
 /* Cholesky update/downdate */
-cs_long_t demo3 (problem *Prob)
+int64_t demo3 (problem *Prob)
 {
     cs_dl *A, *C, *W = NULL, *WW, *WT, *E = NULL, *W2 ;
-    cs_long_t n, k, *Li, *Lp, *Wi, *Wp, p1, p2, *p = NULL, ok ;
+    int64_t n, k, *Li, *Lp, *Wi, *Wp, p1, p2, *p = NULL, ok ;
     double *b, *x, *resid, *y = NULL, *Lx, *Wx, s,  t, t1 ;
     cs_dls *S = NULL ;
     cs_dln *N = NULL ;
-    if (!Prob || !Prob->sym || Prob->A->n == 0) return (0) ;
+    if (!Prob) return (0) ;
+    if (!Prob->sym || Prob->A->n == 0) return (1) ;
     A = Prob->A ; C = Prob->C ; b = Prob->b ; x = Prob->x ; resid = Prob->resid;
     n = A->n ;
     if (!Prob->sym || n == 0) return (1) ;
     rhs (x, b, n) ;                             /* compute right-hand side */
     printf ("\nchol then update/downdate ") ;
     print_order (1) ;
-    y = (CS_ENTRY*)cs_dl_malloc (n, sizeof (double)) ;
+    y = cs_dl_malloc (n, sizeof (double)) ;
     t = tic () ;
     S = cs_dl_schol (1, C) ;                       /* symbolic Chol, amd(A+A') */
     printf ("\nsymbolic chol time %8.2f\n", toc (t)) ;

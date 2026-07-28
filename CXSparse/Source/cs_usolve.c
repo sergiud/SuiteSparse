@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_usolve: x=U\b where x and b are dense
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* solve Ux=b where x and b are dense.  x=b on input, solution on output. */
 CS_INT cs_usolve (const cs *U, CS_ENTRY *x)
@@ -8,10 +11,10 @@ CS_INT cs_usolve (const cs *U, CS_ENTRY *x)
     n = U->n ; Up = U->p ; Ui = U->i ; Ux = U->x ;
     for (j = n-1 ; j >= 0 ; j--)
     {
-        x [j] = CS_DIV(x [j], Ux [Up [j+1]-1]) ;
+        x [j] = CS_DIV (x [j], Ux [Up [j+1]-1]) ;
         for (p = Up [j] ; p < Up [j+1]-1 ; p++)
         {
-            x [Ui [p]] = CS_SUB(x[Ui[p]], CS_MUL(Ux [p], x [j])) ;
+            x [Ui [p]] = CS_SUB (x [Ui [p]], CS_MUL (Ux [p], x [j])) ;
         }
     }
     return (1) ;

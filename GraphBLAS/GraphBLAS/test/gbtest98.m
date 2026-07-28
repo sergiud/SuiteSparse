@@ -1,8 +1,8 @@
 function gbtest98
 %GBTEST98 test row/col degree for hypersparse matrices
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 rng ('default') ;
 
@@ -40,8 +40,8 @@ assert (isequal (x1, x2)) ;
 [~ ,~ ,x2] = GrB.extracttuples (A) ;
 assert (isequal (x1, x2)) ;
 
-assert (isequal (class (i1), 'int64')) ;
-assert (isequal (class (j1), 'int64')) ;
+assert (isequal (class (i1), 'int32') || isequal (class (i1), 'int64')) ;
+assert (isequal (class (j1), 'int32') || isequal (class (j1), 'int64')) ;
 
 G = GrB.random (8, 8, 0.5) ;
 A = double (G) ;

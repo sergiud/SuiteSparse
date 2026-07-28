@@ -1,3 +1,6 @@
+// CSparse/Demo/cs_idemo: demo program for CXSparse (int32_t)
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* test real/complex conversion routines (int version) */
 int main (void)
@@ -39,7 +42,8 @@ int main (void)
     printf ("\nA2:\n") ;
     cs_ci_print (A2, 0) ;
 
-    B = cs_ci_add (A1, A2, CS_COMPLEX_ONE(), CS_COMPLEX_MINUS_ONE()) ;   /* B = A1 - A2 */
+    B = cs_ci_add (A1, A2, CS_COMPLEX_ONE (),
+        CS_COMPLEX_MINUS_ONE ()) ;   /* B = A1 - A2 */
     printf ("\nB = conj(A):\n") ;
     cs_ci_print (B, 0) ;
 

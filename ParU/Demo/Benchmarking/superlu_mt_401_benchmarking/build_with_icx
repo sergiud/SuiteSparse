@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Fresh build of SuperLU_MT 4.0.1 with icx and OpenMP
+
+rm -rf build/*
+cd build
+CC=icx cmake -DPLAT=_OPENMP ..
+cmake -LA . | grep -v NOTFOUND
+cmake --build . --config Release

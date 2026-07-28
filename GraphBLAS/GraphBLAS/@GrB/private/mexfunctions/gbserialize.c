@@ -2,8 +2,8 @@
 // gbserialize: serialize a matrix into a blob
 //------------------------------------------------------------------------------
 
-// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 //------------------------------------------------------------------------------
 
@@ -68,49 +68,6 @@ void mexFunction
             // for testing
             debug = true ;
         }
-        #if 0
-        // these methods are not yet supported:
-        else if (MATCH (method_name, "zlib"))
-        {
-            method = GxB_COMPRESSION_ZLIB ;
-        }
-        else if (MATCH (method_name, "lzo"))
-        {
-            method = GxB_COMPRESSION_LZO ;
-        }
-        else if (MATCH (method_name, "bzip2"))
-        {
-            method = GxB_COMPRESSION_BZIP2 ;
-        }
-        else if (MATCH (method_name, "lzss"))
-        {
-            method = GxB_COMPRESSION_LZSS ;
-        }
-        else if (MATCH (method_name, "intel:lz4"))
-        {
-            method = GxB_COMPRESSION_INTEL + GxB_COMPRESSION_LZ4 ;
-        }
-        else if (MATCH (method_name, "intel:lz4hc"))
-        {
-            method = GxB_COMPRESSION_INTEL + GxB_COMPRESSION_LZ4HC ;
-        }
-        else if (MATCH (method_name, "intel:zlib"))
-        {
-            method = GxB_COMPRESSION_INTEL + GxB_COMPRESSION_ZLIB ;
-        }
-        else if (MATCH (method_name, "intel:lzo"))
-        {
-            method = GxB_COMPRESSION_INTEL + GxB_COMPRESSION_LZO ;
-        }
-        else if (MATCH (method_name, "intel:bzip2"))
-        {
-            method = GxB_COMPRESSION_INTEL + GxB_COMPRESSION_BZIP2 ;
-        }
-        else if (MATCH (method_name, "intel:lzss"))
-        {
-            method = GxB_COMPRESSION_INTEL + GxB_COMPRESSION_LZSS ;
-        }
-        #endif
         else
         { 
             ERROR ("unknown method") ;
@@ -122,7 +79,7 @@ void mexFunction
         }
         if (level < 0 || level > 999) level = 0 ;
         // set the descriptor
-        OK (GxB_Desc_set (desc, GxB_COMPRESSION, method + level)) ;
+        OK (GrB_Descriptor_set_INT32 (desc, method + level, GxB_COMPRESSION)) ;
     }
 
     //--------------------------------------------------------------------------
@@ -130,7 +87,7 @@ void mexFunction
     //--------------------------------------------------------------------------
 
     void *blob = NULL ;
-    GrB_Index blob_size ;
+    uint64_t blob_size ;
 
     if (debug)
     { 
@@ -163,6 +120,6 @@ void mexFunction
     mxFree (mxGetData (pargout [0])) ;
     mxSetData (pargout [0], blob) ;
     mxSetM (pargout [0], blob_size) ;
-    GB_WRAPUP ;
+    gb_wrapup ( ) ;
 }
 

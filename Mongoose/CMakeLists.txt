@@ -27,11 +27,11 @@ if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif (POLICY CMP0048)
 
-set(Mongoose_DATE "May 25, 2019")
-set(Mongoose_NUMERIC_DATE "2019-05-25")
-set(Mongoose_VERSION_MAJOR 2)
-set(Mongoose_VERSION_MINOR 0)
-set(Mongoose_VERSION_PATCH 4)
+set(Mongoose_DATE "Nov 1, 2025")
+set(Mongoose_NUMERIC_DATE "2025-11-01")
+set(Mongoose_VERSION_MAJOR 3)
+set(Mongoose_VERSION_MINOR 3)
+set(Mongoose_VERSION_PATCH 6)
 
 if(CMAKE_MAJOR_VERSION GREATER 2)
 project(Mongoose
@@ -43,7 +43,7 @@ endif()
 
 # Configure files to pass CMake information
 configure_file (
-        "Version/Mongoose_Version.hpp.in"
+        "Version/Mongoose.hpp.in"
         "${PROJECT_SOURCE_DIR}/Include/Mongoose_Version.hpp"
 )
 configure_file (
@@ -402,4 +402,3 @@ add_custom_target(userguide
         COMMAND make
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/Doc
         )
-

@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_scc: strongly connected components
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* find the strongly connected components of a square matrix */
 csd *cs_scc (cs *A)     /* matrix A temporarily modified, then restored */
@@ -9,7 +12,7 @@ csd *cs_scc (cs *A)     /* matrix A temporarily modified, then restored */
     n = A->n ; Ap = A->p ;
     D = cs_dalloc (n, 0) ;                          /* allocate result */
     AT = cs_transpose (A, 0) ;                      /* AT = A' */
-    xi = (CS_INT *)cs_malloc (2*n+1, sizeof (CS_INT)) ;          /* get workspace */
+    xi = (CS_INT *) cs_malloc (2*n+1, sizeof (CS_INT)) ;          /* get workspace */
     if (!D || !AT || !xi) return (cs_ddone (D, AT, xi, 0)) ;
     Blk = xi ; rcopy = pstack = xi + n ;
     p = D->p ; r = D->r ; ATp = AT->p ;

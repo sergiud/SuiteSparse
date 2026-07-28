@@ -26,10 +26,10 @@ endif ( )
 set ( CMAKE_MACOSX_RPATH TRUE )
 
 # version of SuiteSparse:GraphBLAS
-set ( GraphBLAS_DATE "Aug 8, 2022" )
-set ( GraphBLAS_VERSION_MAJOR 7 )
-set ( GraphBLAS_VERSION_MINOR 2 )
-set ( GraphBLAS_VERSION_SUB   0 )
+set ( GraphBLAS_DATE "July 21, 2026" )
+set ( GraphBLAS_VERSION_MAJOR 10 )
+set ( GraphBLAS_VERSION_MINOR 3 )
+set ( GraphBLAS_VERSION_SUB   2 )
 
 message ( STATUS "Building SuiteSparse:GraphBLAS version: v" ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}  " date: " ${GraphBLAS_DATE} )
 
@@ -566,4 +566,3 @@ if ( DUMP )
         message ( STATUS "${_variableName}=${${_variableName}}" )
     endforeach ( )
 endif ( )
-

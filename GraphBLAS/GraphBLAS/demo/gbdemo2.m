@@ -35,8 +35,8 @@ function gbdemo2 (bnz)
 %
 % See also GrB.assign, subsasgn.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 % reset to the default number of threads
 ncores = demo_nproc ;

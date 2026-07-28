@@ -30,11 +30,11 @@ function semiringinfo (s, type)
 %   % invalid semiring (generates an error; since '<' is not a monoid)
 %   GrB.semiringinfo ('<.*.double') ;
 %
-% See also GrB.binopinfo, GrB.descriptorinfo, GrB.monoidinfo,
-% GrB.selectopinfo, GrB.unopinfo.
+% See also GrB.semirings, GrB.binopinfo, GrB.descriptorinfo,
+% GrB.monoidinfo, GrB.selectopinfo, GrB.unopinfo.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 if (nargin == 0)
     help GrB.semiringinfo

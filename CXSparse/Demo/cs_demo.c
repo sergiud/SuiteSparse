@@ -1,3 +1,6 @@
+// CSparse/Demo/cs_demo: demo utilities for CXSparse (double int32_t)
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs_demo.h"
 #include <time.h>
 /* 1 if A is square & upper tri., -1 if square & lower tri., 0 otherwise */
@@ -81,7 +84,7 @@ problem *get_problem (FILE *f, double tol)
     cs *T, *A, *C ;
     int sym, m, n, mn, nz1, nz2 ;
     problem *Prob ;
-    Prob = (problem*)cs_calloc (1, sizeof (problem)) ;
+    Prob = (problem *) cs_calloc (1, sizeof (problem)) ;
     if (!Prob) return (NULL) ;
     T = cs_load (f) ;                   /* load triplet matrix T from a file */
     Prob->A = A = cs_compress (T) ;     /* A = compressed-column form of T */
@@ -102,9 +105,9 @@ problem *get_problem (FILE *f, double tol)
     if (nz1 != nz2) printf ("zero entries dropped: %g\n", (double) (nz1 - nz2));
     if (nz2 != A->p [n]) printf ("tiny entries dropped: %g\n",
             (double) (nz2 - A->p [n])) ;
-    Prob->b = (CS_ENTRY*)cs_malloc (mn, sizeof (double)) ;
-    Prob->x = (CS_ENTRY*)cs_malloc (mn, sizeof (double)) ;
-    Prob->resid = (CS_ENTRY*)cs_malloc (mn, sizeof (double)) ;
+    Prob->b = (CS_ENTRY *) cs_malloc (mn, sizeof (double)) ;
+    Prob->x = (CS_ENTRY *) cs_malloc (mn, sizeof (double)) ;
+    Prob->resid = (CS_ENTRY *) cs_malloc (mn, sizeof (double)) ;
     return ((!Prob->b || !Prob->x || !Prob->resid) ? free_problem (Prob) : Prob) ;
 }
 
@@ -117,7 +120,7 @@ problem *free_problem (problem *Prob)
     cs_free (Prob->b) ;
     cs_free (Prob->x) ;
     cs_free (Prob->resid) ;
-    return (problem*)(cs_free (Prob)) ;
+    return ((problem *) cs_free (Prob)) ;
 }
 
 /* solve a linear system using Cholesky, LU, and QR, with various orderings */
@@ -200,14 +203,15 @@ int demo3 (problem *Prob)
     double *b, *x, *resid, *y = NULL, *Lx, *Wx, s,  t, t1 ;
     css *S = NULL ;
     csn *N = NULL ;
-    if (!Prob || !Prob->sym || Prob->A->n == 0) return (0) ;
+    if (!Prob) return (0) ;
+    if (!Prob->sym || Prob->A->n == 0) return (1) ;
     A = Prob->A ; C = Prob->C ; b = Prob->b ; x = Prob->x ; resid = Prob->resid;
     n = A->n ;
     if (!Prob->sym || n == 0) return (1) ;
     rhs (x, b, n) ;                             /* compute right-hand side */
     printf ("\nchol then update/downdate ") ;
     print_order (1) ;
-    y = (CS_ENTRY*)cs_malloc (n, sizeof (double)) ;
+    y = (CS_ENTRY *) cs_malloc (n, sizeof (double)) ;
     t = tic () ;
     S = cs_schol (1, C) ;                       /* symbolic Chol, amd(A+A') */
     printf ("\nsymbolic chol time %8.2f\n", toc (t)) ;

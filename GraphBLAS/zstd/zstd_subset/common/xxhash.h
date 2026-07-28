@@ -1,9 +1,9 @@
 /*
  *  xxHash - Fast Hash algorithm
- *  Copyright (c) Yann Collet, Facebook, Inc.
+ *  Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  *  You can contact the author at :
- *  - xxHash homepage: http://www.xxhash.com
+ *  - xxHash homepage: https://cyan4973.github.io/xxHash/
  *  - xxHash source repository : https://github.com/Cyan4973/xxHash
  *
  * This source code is licensed under both the BSD-style license (found in the
@@ -1314,7 +1314,7 @@ XXH3_128bits_reset_withSecretandSeed(XXH3_state_t* statePtr,
  *   care, as what works on one compiler/platform/optimization level may cause
  *   another to read garbage data or even crash.
  *
- * See http://fastcompression.blogspot.com/2015/08/accessing-unaligned-memory.html for details.
+ * See https://fastcompression.blogspot.com/2015/08/accessing-unaligned-memory.html for details.
  *
  * Prefer these methods in priority order (0 > 3 > 1 > 2)
  */
@@ -1655,7 +1655,7 @@ static xxh_u32 XXH_read32(const void* ptr)
 
 /*
  * Portable and safe solution. Generally efficient.
- * see: http://fastcompression.blogspot.com/2015/08/accessing-unaligned-memory.html
+ * see: https://fastcompression.blogspot.com/2015/08/accessing-unaligned-memory.html
  */
 static xxh_u32 XXH_read32(const void* memPtr)
 {
@@ -2296,7 +2296,7 @@ static xxh_u64 XXH_read64(const void* ptr)
 
 /*
  * Portable and safe solution. Generally efficient.
- * see: http://fastcompression.blogspot.com/2015/08/accessing-unaligned-memory.html
+ * see: https://fastcompression.blogspot.com/2015/08/accessing-unaligned-memory.html
  */
 static xxh_u64 XXH_read64(const void* memPtr)
 {
@@ -3567,7 +3567,7 @@ XXH_FORCE_INLINE xxh_u64 XXH3_mix16B(const xxh_u8* XXH_RESTRICT input,
      * By forcing seed64 into a register, we disrupt the cost model and
      * cause it to scalarize. See `XXH32_round()`
      *
-     * FIXME: Clang's output is still _much_ faster -- On an AMD Ryzen 3600,
+     * fixme: Clang's output is still _much_ faster -- On an AMD Ryzen 3600,
      * XXH3_64bits @ len=240 runs at 4.6 GB/s with Clang 9, but 3.3 GB/s on
      * GCC 9.2, despite both emitting scalar code.
      *

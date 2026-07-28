@@ -1,3 +1,6 @@
+// CXSparse/Source/cs_ltsolve: x=L'\b, back substitution where x and b are dense
+// CXSparse, Copyright (c) 2006-2022, Timothy A. Davis. All Rights Reserved.
+// SPDX-License-Identifier: LGPL-2.1+
 #include "cs.h"
 /* solve L'x=b where x and b are dense.  x=b on input, solution on output. */
 CS_INT cs_ltsolve (const cs *L, CS_ENTRY *x)
@@ -10,9 +13,9 @@ CS_INT cs_ltsolve (const cs *L, CS_ENTRY *x)
     {
         for (p = Lp [j]+1 ; p < Lp [j+1] ; p++)
         {
-            x [j] = CS_SUB(x[j], CS_MUL(CS_CONJ (Lx [p]), x [Li [p]])) ;
+            x [j] = CS_SUB (x [j], CS_MUL (CS_CONJ (Lx [p]), x [Li [p]])) ;
         }
-        x [j] = CS_DIV(x [j], CS_CONJ (Lx [Lp [j]])) ;
+        x [j] = CS_DIV (x [j], CS_CONJ (Lx [Lp [j]])) ;
     }
     return (1) ;
 }

@@ -1,11 +1,11 @@
-/* ========================================================================== */
-/* === UMF_scale_column ===================================================== */
-/* ========================================================================== */
+//------------------------------------------------------------------------------
+// UMFPACK/Source/umf_scale_column: scale current pivot column and move pivot
+//------------------------------------------------------------------------------
 
-/* -------------------------------------------------------------------------- */
-/* Copyright (c) 2005-2012 by Timothy A. Davis, http://www.suitesparse.com.   */
-/* All Rights Reserved.  See ../Doc/License.txt for License.                  */
-/* -------------------------------------------------------------------------- */
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
+// SPDX-License-Identifier: GPL-2.0+
+
+//------------------------------------------------------------------------------
 
 /*
     Scale the current pivot column, move the pivot row and column into place,
@@ -30,7 +30,6 @@
 PRIVATE void shift_pivot_row (Entry *Fd, Entry *Fs, Entry *Fe, Int len, Int d)
 {
     Int j ;
-SUITESPARSE_VECTORIZE
     for (j = 0 ; j < len ; j++)
     {
 	Fd [j]   = Fs [j*d] ;
@@ -42,7 +41,7 @@ SUITESPARSE_VECTORIZE
 /* === UMF_scale_column ===================================================== */
 /* ========================================================================== */
 
-GLOBAL void UMF_scale_column
+void UMF_scale_column
 (
     NumericType *Numeric,
     WorkType *Work
@@ -157,7 +156,7 @@ GLOBAL void UMF_scale_column
 	    Entry *Fs, *Fe ;
 	    Fs = Fcblock + fspos ;
 	    Fe = Fcblock + fncols * fnr_curr ;
-SUITESPARSE_VECTORIZE
+UMFPACK_IVDEP
 	    for (i = 0 ; i < fnrows ; i++)
 	    {
 		Fs [i] = Fe [i] ;
@@ -172,7 +171,7 @@ SUITESPARSE_VECTORIZE
 	    Entry *Fs, *Fe ;
 	    Fs = Fublock + fs ;
 	    Fe = Fublock + fncols ;
-SUITESPARSE_VECTORIZE
+UMFPACK_IVDEP
 	    for (i = 0 ; i < fnpiv ; i++)
 	    {
 		Fs [i * fnc_curr] = Fe [i * fnc_curr] ;
@@ -232,7 +231,7 @@ SUITESPARSE_VECTORIZE
 	    Entry *Fd, *Fs ;
 	    Fd = Fublock + fnpiv * fnc_curr ;
 	    Fs = Fcblock + fspos ;
-SUITESPARSE_VECTORIZE
+UMFPACK_IVDEP
 	    for (j = 0 ; j < fncols ; j++)
 	    {
 		Fd [j] = Fs [j * fnr_curr] ;
@@ -246,7 +245,7 @@ SUITESPARSE_VECTORIZE
 	    Entry *Fd, *Fs ;
 	    Fd = Flublock + fnpiv ;
 	    Fs = Flblock  + fspos ;
-SUITESPARSE_VECTORIZE
+UMFPACK_IVDEP
 	    for (j = 0 ; j <= fnpiv ; j++)
 	    {
 		Fd [j * nb] = Fs [j * fnr_curr] ;
@@ -258,7 +257,7 @@ SUITESPARSE_VECTORIZE
 	    Entry *Fd, *Fs ;
 	    Fd = Flublock + fnpiv ;
 	    Fs = Flblock  + fspos ;
-SUITESPARSE_VECTORIZE
+UMFPACK_IVDEP
 	    for (j = 0 ; j < fnpiv ; j++)
 	    {
 		ASSERT (IS_ZERO (Fs [j * fnr_curr])) ;
@@ -301,7 +300,7 @@ SUITESPARSE_VECTORIZE
 	    Fd = Flublock + fnpiv ;
 	    Fs = Flblock  + fspos ;
 	    Fe = Flblock  + fnrows ;
-SUITESPARSE_VECTORIZE
+UMFPACK_IVDEP
 	    for (j = 0 ; j <= fnpiv ; j++)
 	    {
 		Fd [j * nb]       = Fs [j * fnr_curr] ;
@@ -315,7 +314,7 @@ SUITESPARSE_VECTORIZE
 	    Fd = Flublock + fnpiv ;
 	    Fs = Flblock  + fspos ;
 	    Fe = Flblock  + fnrows ;
-SUITESPARSE_VECTORIZE
+UMFPACK_IVDEP
 	    for (j = 0 ; j < fnpiv ; j++)
 	    {
 		ASSERT (IS_ZERO (Fs [j * fnr_curr])) ;

@@ -1,10 +1,8 @@
 function gbtest3
 %GBTEST3 test dnn
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
-% SPDX-License-Identifier: GPL-3.0-or-later
-
-help GrB.dnn
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
+% SPDX-License-Identifier: Apache-2.0
 
 rng ('default') ;
 levels = 4 ;
@@ -30,5 +28,6 @@ toc
 err = norm (Y1-Y2,1) ;
 assert (err < 1e-5) ;
 
+help GrB.dnn
 fprintf ('gbtest3: all tests passed\n') ;
 

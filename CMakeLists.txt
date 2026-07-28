@@ -66,7 +66,7 @@ option (WITH_DEMOS "Build demos" ON)
 option (WITH_METIS "Enables METIS support" ON)
 option (WITH_OPENMP "Enable OpenMP support" ON)
 option (WITH_PRINT "Print diagnostic messages" OFF)
-option (WITH_TBB "Enables Intel Threading Building Blocks support" ON)
+option (WITH_TBB "Enables oneTBB support" ON)
 option (SUITESPARSE_ENABLE_IPO
   "Enable IPO or LTO for Release builds when supported" ON)
 
@@ -181,7 +181,7 @@ find_package (CUDAToolkit)
 find_package (LAPACK REQUIRED)
 find_package (METIS 5.0)
 find_package (OpenMP)
-find_package (TBB 4.2...<2021.4 NO_MODULE)
+find_package (TBB 2021.4 NO_MODULE)
 
 function (check_options)
   foreach (_OPT ${ARGV})
@@ -982,6 +982,7 @@ if (WITH_SUPERNODAL)
   if (TBB_FOUND)
     target_link_libraries (spqr PRIVATE TBB::tbb)
     target_compile_definitions (spqr PRIVATE HAVE_TBB)
+    target_compile_features (spqr PRIVATE cxx_std_11)
 
     set (TBB_DEPENDENCY "find_dependency (TBB ${TBB_VERSION})")
   endif (TBB_FOUND)
@@ -2482,7 +2483,7 @@ add_feature_info (MatrixOps WITH_MATRIXOPS "MatrixOps module")
 add_feature_info (Partition WITH_METIS "Partition module")
 add_feature_info (Print WITH_PRINT "Additional diagnostic messages")
 add_feature_info (Supernodal WITH_SUPERNODAL "Supernodal module")
-add_feature_info (Threading WITH_TBB "Parallelization using Intel Threading Building Blocks")
+add_feature_info (Threading WITH_TBB "Parallelization using oneTBB")
 
 set_package_properties (TBB PROPERTIES
   URL "https://www.threadingbuildingblocks.org"

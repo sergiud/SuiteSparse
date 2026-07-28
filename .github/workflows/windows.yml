@@ -30,7 +30,7 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Setup Dependencies
+    - name: Setup Dependencies including oneTBB
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{matrix.sys}}
@@ -216,11 +216,6 @@ jobs:
               --config ${{matrix.build_type}} \
               --target install
 
-    - name: Setup MSYS2 Environment
-      shell: msys2 {0}
-      run: |
-        echo "$(cygpath -m /${{matrix.sys}}/bin)" >> $GITHUB_PATH
-
     - name: Setup Environment
       run: |
         echo "${{github.workspace}}/install/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -251,6 +246,7 @@ jobs:
 
     - name: Test
       run: |
+        $env:Path = "${{runner.temp}}\msys64\${{matrix.sys}}\bin;$env:Path"
         ctest --test-dir build_${{matrix.build_type}}/ `
               --build-config ${{matrix.build_type}} `
               --output-on-failure

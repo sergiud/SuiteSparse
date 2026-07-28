@@ -309,7 +309,7 @@ template <typename Entry, typename Int = int64_t> void spqr_kernel
     spqr_blob <Entry, Int> *Blob
 ) ;
 
-template <typename Entry, typename Int = int64_t> void spqr_parallel
+template <typename Entry, typename Int = int64_t> SPQR_NO_EXPORT void spqr_parallel
 (
     Int ntasks,
     int nthreads,

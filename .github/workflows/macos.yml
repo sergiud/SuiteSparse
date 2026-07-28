@@ -29,11 +29,12 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Setup Dependencies
+    - name: Setup Dependencies including oneTBB
       run: >-
         brew install
         ccache
         ninja
+        tbb
 
     - name: Setup METIS Dependencies
       if: ${{matrix.metis == 'metis'}}

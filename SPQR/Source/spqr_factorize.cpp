@@ -501,7 +501,7 @@ template <typename Entry, typename Int> spqr_numeric <Entry, Int> *spqr_factoriz
     }
     else
     {
-#if 0 /* ifdef HAVE_TBB (TBB removed) */
+#ifdef HAVE_TBB
         // parallel case: TBB is installed, and there is more than one task
         int nthreads = MAX (0, cc->SPQR_nthreads) ;
         spqr_parallel (ntasks, nthreads, &Blob) ;

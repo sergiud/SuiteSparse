@@ -65,7 +65,7 @@ The CMake layer also provides:
     - CUDA compiler and toolkit
     - Fortran compiler
     - METIS
-    - TBB before version 2021.4
+    - oneTBB 2021.4 or newer
 
 ## Getting Started
 

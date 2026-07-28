@@ -54,21 +54,22 @@ CF = -pg -g --coverage -fprofile-abs-path -O0 \
 CUDA_LIB = $(CUDART_LIB) $(CUBLAS_LIB)
 
 NVCC = /usr/local/cuda/bin/nvcc -g --profile --generate-line-info $(NV20) \
-	-Xcompiler -fprofile-arcs -Xcompiler -ftest-coverage
+	-Xcompiler -fprofile-arcs -Xcompiler -ftest-coverage -DSPQR_HAS_CUDA
 
 #-------------------------------------------------------------------------------
 
 CLIB = -lsuitesparseconfig -lcholmod -lamd -lcolamd -lccolamd -lcamd
 
-all: qrtest gpudemo qrdemo_gpu
+all: qrtest qrtest32 gpudemo qrdemo_gpu
 
-library: qrtest gpudemo
+library: qrtest qrtest32 gpudemo
 
 purge: distclean
 
 distclean: clean
-	- $(RM) qrtest qrtest_out.txt pfile tfile cov.out qrtest_out1.txt
+	- $(RM) qrtest qrtest32 qrtest_out.txt pfile tfile cov.out 
 	- $(RM) gpuqrengine_demo troll.m qrdemo_gpu gpu_results.txt X.mtx
+	- $(RM) qrtest_out32.txt qrtest_out1.txt
 	- $(RM) -r $(PURGE)
 
 clean:
@@ -76,8 +77,7 @@ clean:
 
 INC = ../Include/spqr.hpp ../Include/SuiteSparseQR_C.h \
 	../Include/SuiteSparseQR_definitions.h \
-	../Include/SuiteSparseQR.hpp
-# Makefile
+	../Include/SuiteSparseQR.hpp qrtest_template.hpp
 
 OBJ = \
     spqr_rmap.o                              \
@@ -120,6 +120,7 @@ OBJ = \
     spqr_append.o                            \
     spqr_type.o                              \
     spqr_tol.o                               \
+    spqr_cholmod_wrappers.o                  \
     qrtestc.o
 
 ifneq ($(GPU_CONFIG),)
@@ -162,11 +163,12 @@ endif
 
 $(OBJ): $(INC)
 
-I = -I../../CHOLMOD/Include -I../../SuiteSparse_config -I../Include \
+I = -I../../CHOLMOD/Include -I../../SuiteSparse_config -I../Include -I../../include/suitesparse 
 
 ifneq ($(GPU_CONFIG),)
-    I += -I../../SuiteSparse_GPURuntime/Include \
-        -I../../GPUQREngine/Include $(CUDA_INC)
+    I += -I../GPURuntime/Include \
+        -I../GPUQREngine/Include $(CUDA_INC) \
+        -isystem /usr/local/cuda/include
 endif
 
 C = $(CXX) $(CF) $(I) $(GPU_CONFIG)
@@ -174,11 +176,14 @@ C = $(CXX) $(CF) $(I) $(GPU_CONFIG)
 LIBS = -L../../lib $(FLIB) $(CLIB) $(CUDA_LIB) \
     -Wl,--rpath=$(SUITESPARSE)/lib -lm -lrt
 
-qrtestc.o: qrtestc.c $(INC)
+qrtestc.o: qrtestc.c $(INC) qrtestc_template.c
 	$(CC) $(CF) -std=c11 $(I) -c $<
 
 qrtest: qrtest.cpp $(INC) $(OBJ)
 	$(C) qrtest.cpp -o qrtest $(OBJ) $(LIBS) -lm
+
+qrtest32: qrtest.cpp $(INC) $(OBJ)
+	$(C) -DINT32=1 qrtest.cpp -o qrtest32 $(OBJ) $(LIBS) -lm
 
 ifneq ($(GPU_CONFIG),)
 gpu: gpuqrengine_demo qrdemo_gpu
@@ -202,21 +207,27 @@ ifneq ($(GPU_CONFIG),)
 	$(C) ../Demo/qrdemo_gpu.cpp -o qrdemo_gpu $(OBJ) $(LIBS)
 endif
 
-go: qrtest gpu qrdemo_gpu
+go0: qrtest qrtest32 gpu qrdemo_gpu
 	- ./qrtest matrixlist.txt > qrtest_out.txt
+
+go: qrtest qrtest32 gpu qrdemo_gpu
+	- ./qrtest matrixlist.txt > qrtest_out.txt
+	- ./qrtest32 matrixlist.txt > qrtest_out32.txt
 	- ./cov
 
-go1: qrtest
+go1: qrtest qrtest32
 	- ./qrtest matrix1.txt > qrtest_out1.txt
+	- ./qrtest32 matrix1.txt > qrtest_out1.txt
 	- ./cov
 
-vgo1: qrtest
+vgo1: qrtest qrtest32
 	- valgrind ./qrtest matrix1.txt > qrtest_out1.txt
-	# - valgrind --leak-check=full --show-reachable=yes ./qrtest matrix1.txt > qrtest_out1.txt
+	- valgrind ./qrtest32 matrix1.txt > qrtest_out1.txt
 	- ./cov
 
-vgo: qrtest
-	- valgrind --leak-check=full --show-reachable=yes ./qrtest matrixlist.txt > qrtest_out.txt
+vgo: qrtest qrtest32
+	- valgrind --leak-check=full --show-reachable=yes ./qrtest matrixlist.txt > qrtest_out32.txt
+	- valgrind --leak-check=full --show-reachable=yes ./qrtest32 matrixlist.txt > qrtest_out.txt
 	- ./cov
 
 spqr_1colamd.o: ../Source/spqr_1colamd.cpp
@@ -315,6 +326,9 @@ spqr_trapezoidal.o: ../Source/spqr_trapezoidal.cpp
 spqr_type.o: ../Source/spqr_type.cpp
 	$(C) -c $<
 
+spqr_cholmod_wrappers.o: ../Source/spqr_cholmod_wrappers.cpp
+	$(C) -c $<
+
 spqr_front.o: ../Source/spqr_front.cpp
 	$(C) -c $<
 
@@ -352,15 +366,15 @@ spqrgpu_computeFrontStaging.o: ../SPQRGPU/spqrgpu_computeFrontStaging.cpp
 # SuiteSparse_GPURuntime
 #-------------------------------------------------------------------------------
 
-GPURUNTIME = ../../SuiteSparse_GPURuntime
+GPURUNTIME = ../GPURuntime
 GPURUNSRC = $(GPURUNTIME)/Source
 GPURUNINC = -I$(GPURUNTIME)/Include -I../../SuiteSparse_config
 
 RUNH = \
         $(GPURUNTIME)/Include/SuiteSparseGPU_debug.hpp \
         $(GPURUNTIME)/Include/SuiteSparseGPU_workspace_macros.hpp \
-        $(GPURUNTIME)/Include/SuiteSparseGPU_Runtime.hpp
-#        Makefile
+        $(GPURUNTIME)/Include/SuiteSparseGPU_internal.hpp \
+        $(GPURUNTIME)/Include/SuiteSparse_GPURuntime.hpp
 
 SuiteSparseGPU_Workspace.o: $(GPURUNSRC)/SuiteSparseGPU_Workspace.cpp $(RUNH)
 	$(NVCC) -c $(GPURUNINC) $<
@@ -385,7 +399,7 @@ SuiteSparseGPU_Workspace_transfer.o: \
 # GPUQREngine
 #-------------------------------------------------------------------------------
 
-GPUQR = ../../GPUQREngine
+GPUQR = ../GPUQREngine
 GPUQRSRC = $(GPUQR)/Source
 GPUQRDEMO = $(GPUQR)/Demo
 GPUQRINC = $(GPURUNINC) -I$(GPUQR)/Include
@@ -395,6 +409,7 @@ KERNELH = \
     $(GPUQR)/Include/GPUQREngine_BucketList.hpp \
     $(GPUQR)/Include/GPUQREngine_Front.hpp \
     $(GPUQR)/Include/GPUQREngine_FrontState.hpp \
+    $(GPUQR)/Include/GPUQREngine_SuiteSparse.hpp \
     $(GPUQR)/Include/GPUQREngine.hpp \
     $(GPUQR)/Include/GPUQREngine_Internal.hpp \
     $(GPUQR)/Include/GPUQREngine_GraphVizHelper.hpp \
@@ -428,7 +443,6 @@ KERNELH = \
     $(GPUQR)/Include/GPUQREngine_SparseMeta.hpp \
     $(GPUQR)/Include/GPUQREngine_TaskDescriptor.hpp \
     $(GPUQR)/Include/GPUQREngine_Timing.hpp
-#   Makefile
 
 GPUQREngine_GraphVizHelper.o: \
         $(GPUQRSRC)/GPUQREngine_GraphVizHelper.cpp $(KERNELH)

@@ -1,0 +1,331 @@
+name: cross-compile
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - '**/dev2'
+      - '**/*dev2'
+  pull_request:
+
+concurrency: ci-cross-compile-${{ github.ref }}
+
+env:
+  # string with name of libraries to be built
+  BUILD_LIBS: "SuiteSparse_config:Mongoose:AMD:BTF:CAMD:CCOLAMD:COLAMD:CHOLMOD:CSparse:CXSparse:LDL:KLU:UMFPACK:ParU:RBio:SPQR:SPEX:GraphBLAS:LAGraph"
+  # string with name of libraries to be checked
+  CHECK_LIBS: "SuiteSparse_config:Mongoose:AMD:BTF:CAMD:CCOLAMD:COLAMD:CHOLMOD:CSparse:CXSparse:LDL:KLU:UMFPACK:ParU:RBio:SPQR:SPEX:GraphBLAS:LAGraph"
+  # string with name of libraries that are installed
+  INSTALLED_LIBS: "SuiteSparse_config:Mongoose:AMD:BTF:CAMD:CCOLAMD:COLAMD:CHOLMOD:CXSparse:LDL:KLU:UMFPACK:ParU:RBio:SPQR:SPEX:GraphBLAS:LAGraph"
+
+
+jobs:
+
+  cross-compile:
+    runs-on: ${{ matrix.arch == 'armhf' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+
+    defaults:
+      run:
+        # Use bash shell as default
+        shell: bash
+
+    strategy:
+      # Allow other runners in the matrix to continue if some fail
+      fail-fast: false
+
+      matrix:
+        # List of architectures that are supported by Ubuntu:
+        # https://canonical-ubuntu-packaging-guide.readthedocs-hosted.com/en/latest/reference/architectures/
+        arch: [armhf, ppc64el, s390x, riscv64]
+        include:
+          - arch: armhf
+            target-triple: arm-linux-gnueabihf
+            cc: arm-linux-gnueabihf-gcc
+            cxx: arm-linux-gnueabihf-g++
+            ccache-max: 64M
+          - arch: ppc64el
+            target-triple: powerpc64le-linux-gnu
+            flags: --target=powerpc64le-linux-gnu
+            add-libs: libquadmath0:ppc64el
+            cc: clang
+            cxx: clang++
+            ccache-max: 64M
+          - arch: s390x
+            target-triple: s390x-linux-gnu
+            # flags: --target=s390x-linux-gnu
+            # cc: clang
+            # cxx: clang++
+            cc: s390x-linux-gnu-gcc
+            cxx: s390x-linux-gnu-g++
+            ccache-max: 64M
+          - arch: riscv64
+            target-triple: riscv64-linux-gnu
+            cc: riscv64-linux-gnu-gcc
+            cxx: riscv64-linux-gnu-g++
+            ccache-max: 64M
+
+    name: cross-compile (${{ matrix.arch }})
+
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+      CFLAGS: ${{ matrix.flags }}
+      CXXFLAGS: ${{ matrix.flags }}
+      FC: ${{ matrix.target-triple }}-gfortran
+
+    steps:
+      - name: get CPU information
+        run: lscpu
+
+      - name: install some aux utilities
+        run: |
+          echo "::group::Update package indexes"
+          sudo apt update
+          echo "::endgroup::"
+          echo "::group::Install cmake make ccache automake libtool qemu-user-binfmt"
+          sudo apt -y install \
+            cmake \
+            make \
+            ccache \
+            automake \
+            libtool \
+            qemu-user-binfmt
+          echo "::endgroup::"
+
+      - name: checkout repository
+        uses: actions/checkout@v7
+
+      - name: install cross-toolchain
+        run: |
+          echo "::group::Install cross-toolchain for ${{ matrix.arch }}"
+          sudo apt -y install clang g++-${{ matrix.target-triple }} gfortran-${{ matrix.target-triple }}
+          echo "::endgroup::"
+
+      - name: configure Multiarch
+        # deb822-style format is a new format supported by apt itself since version 1.1:
+        # https://manpages.ubuntu.com/manpages/noble/man5/sources.list.5.html
+        run: |
+          sudo dpkg --add-architecture ${{ matrix.arch }}
+          UBUNTU_CODENAME=$(cat /etc/os-release | grep ^UBUNTU_CODENAME | cut -d= -f2)
+          case ${{ matrix.arch }} in
+            "armhf")
+              sudo bash -c 'cat - >/etc/apt/sources.list.d/ubuntu.sources' <<EOF
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports/
+          Suites: $UBUNTU_CODENAME $UBUNTU_CODENAME-updates $UBUNTU_CODENAME-backports
+          Components: main restricted universe multiverse
+          Architectures: arm64 ${{ matrix.arch }}
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          
+          Types: deb
+          URIs: http://security.ports.ubuntu.com/ubuntu-ports/
+          Suites: $UBUNTU_CODENAME-security
+          Components: main restricted universe multiverse
+          Architectures: arm64 ${{ matrix.arch }}
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          
+          EOF
+              ;;
+                  *)
+              sudo bash -c 'cat - >/etc/apt/sources.list.d/ubuntu.sources' <<EOF
+          Types: deb
+          URIs: http://archive.ubuntu.com/ubuntu/
+          Suites: $UBUNTU_CODENAME $UBUNTU_CODENAME-updates $UBUNTU_CODENAME-backports
+          Components: main restricted universe multiverse
+          Architectures: amd64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          
+          Types: deb
+          URIs: http://security.ubuntu.com/ubuntu/
+          Suites: $UBUNTU_CODENAME-security
+          Components: main restricted universe multiverse
+          Architectures: amd64
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          
+          Types: deb
+          URIs: http://ports.ubuntu.com/ubuntu-ports/
+          Suites: $UBUNTU_CODENAME $UBUNTU_CODENAME-updates $UBUNTU_CODENAME-backports
+          Components: main restricted universe multiverse
+          Architectures: ${{ matrix.arch }}
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          
+          Types: deb
+          URIs: http://security.ports.ubuntu.com/ubuntu-ports/
+          Suites: $UBUNTU_CODENAME-security
+          Components: main restricted universe multiverse
+          Architectures: ${{ matrix.arch }}
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          
+          EOF
+              ;;
+          esac
+          echo "::group::Updating package indexes with new indexes for ${{ matrix.arch }} packages"
+          sudo apt update
+          echo "::endgroup::"
+
+      - name: install cross-dependencies (using Multiarch)
+        run: |
+          echo "::group::Installing dependencies for target arch ${{ matrix.arch }}"
+          sudo apt -y install \
+            libopenblas-openmp-dev:${{ matrix.arch }} \
+            libmpfr-dev:${{ matrix.arch }} \
+            ${{ matrix.add-libs }}
+          echo "::endgroup::"
+
+      - name: prepare ccache
+        # create key with human readable timestamp
+        # used in action/cache/restore and action/cache/save steps
+        id: ccache-prepare
+        run: |
+          echo "key=ccache:cross-compile:${{ matrix.arch }}:${{ github.ref }}:$(date +"%Y-%m-%d_%H-%M-%S"):${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: restore ccache
+        # setup the GitHub cache used to maintain the ccache from one job to the next
+        uses: actions/cache/restore@v6
+        with:
+          # location of the ccache of the chroot in the root file system
+          path: /home/runner/.ccache
+          key: ${{ steps.ccache-prepare.outputs.key }}
+          # Prefer caches from the same branch. Fall back to caches from the dev branch.
+          restore-keys: |
+            ccache:cross-compile:${{ matrix.arch }}:${{ github.ref }}
+            ccache:cross-compile:${{ matrix.arch }}
+
+      - name: configure ccache
+        env:
+          CCACHE_MAX: ${{ matrix.ccache-max }}
+        run: |
+          test -d ~/.ccache || mkdir ~/.ccache
+          echo "max_size = $CCACHE_MAX" >> ~/.ccache/ccache.conf
+          echo "compression = true" >> ~/.ccache/ccache.conf
+          ccache -s
+
+          which ccache
+          # echo "/usr/lib/ccache" >> $GITHUB_PATH
+
+      - name: build
+        run: |
+          echo "${CC} --version"
+          ${CC} --version
+          IFS=:
+          for lib in ${BUILD_LIBS}; do
+            printf "   \033[0;32m==>\033[0m Building library \033[0;32m${lib}\033[0m\n"
+            echo "::group::Configure $lib"
+            cd ${GITHUB_WORKSPACE}/${lib}/build
+            PKG_CONFIG_PATH=/usr/lib/${{ matrix.target-triple }}/pkgconfig/ \
+            cmake -DCMAKE_BUILD_TYPE="Release" \
+                  -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}" \
+                  -DCMAKE_C_COMPILER_LAUNCHER="ccache" \
+                  -DCMAKE_CXX_COMPILER_LAUNCHER="ccache" \
+                  -DCMAKE_Fortran_COMPILER_LAUNCHER="ccache" \
+                  -DBUILD_SHARED_LIBS=ON \
+                  -DBUILD_STATIC_LIBS=OFF \
+                  -DBLA_VENDOR="Generic" \
+                  -DGRAPHBLAS_COMPACT=ON \
+                  -DSUITESPARSE_DEMOS=OFF \
+                  -DSUITESPARSE_USE_FORTRAN=ON \
+                  -DBUILD_TESTING=OFF \
+                  ..
+            echo "::endgroup::"
+            echo "::group::Build $lib"
+            cmake --build . --config Release
+            echo "::endgroup::"
+          done
+
+      - name: check
+        timeout-minutes: 60
+        run: |
+          IFS=':'
+          for lib in ${CHECK_LIBS}; do
+            printf "::group::   \033[0;32m==>\033[0m Checking library \033[0;32m${lib}\033[0m\n"
+            cd ${GITHUB_WORKSPACE}/${lib}
+            make demos CMAKE_OPTIONS="-DSUITESPARSE_DEMOS=ON -DBUILD_TESTING=ON"
+            echo "::endgroup::"
+          done
+
+      - name: ccache status
+        continue-on-error: true
+        run: ccache -s
+
+      - name: save ccache
+        # Save the cache after we are done (successfully) building
+        # This helps to retain the ccache even if the subsequent steps are failing
+        uses: actions/cache/save@v6
+        with:
+          path: /home/runner/.ccache
+          key: ${{ steps.ccache-prepare.outputs.key }}
+
+      - name: install
+        run: |
+          IFS=':'
+          for lib in ${BUILD_LIBS}; do
+            printf "::group::\033[0;32m==>\033[0m Installing library \033[0;32m${lib}\033[0m\n"
+            cd ${GITHUB_WORKSPACE}/${lib}/build
+            cmake --install .
+            echo "::endgroup::"
+          done
+
+      - name: build example using CMake
+        run: |
+          # function fmax (from libm) needs linker flags
+          export LDFLAGS="-Wl,--copy-dt-needed-entries"
+          cd ${GITHUB_WORKSPACE}/Example/build
+          printf "::group::\033[0;32m==>\033[0m Configuring example\n"
+          cmake \
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/lib/cmake" \
+            -DBLA_VENDOR="Generic" \
+            ..
+          echo "::endgroup::"
+          printf "::group::\033[0;32m==>\033[0m Building example\n"
+          cmake --build .
+          echo "::endgroup::"
+          printf "::group::\033[0;32m==>\033[0m Executing example\n"
+          printf "\033[1;35m  C binary with shared libraries\033[0m\n"
+          ./my_demo
+          printf "\033[1;35m  C++ binary with shared libraries\033[0m\n"
+          ./my_cxx_demo
+          echo "::endgroup::"
+
+      - name: test Config
+        run: |
+          IFS=:
+          for lib in ${INSTALLED_LIBS}; do
+            printf "::group::   \033[0;32m==>\033[0m Building with Config.cmake with library \033[0;32m${lib}\033[0m\n"
+            cd ${GITHUB_WORKSPACE}/TestConfig/test_${lib}
+            cd build
+            cmake \
+              -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/lib/cmake" \
+              ..
+            cmake --build . --config Release
+            echo "::endgroup::"
+          done
+
+      - name: build example using autotools
+        run: |
+          cd ${GITHUB_WORKSPACE}/Example
+          printf "::group::\033[0;32m==>\033[0m Configuring example\n"
+          autoreconf -fi
+          mkdir build-autotools
+          cd build-autotools
+          PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/lib/pkgconfig/ \
+            ../configure --enable-shared --disable-static
+          echo "::endgroup::"
+          printf "::group::\033[0;32m==>\033[0m Building example\n"
+          make all
+          echo "::endgroup::"
+          printf "::group::\033[0;32m==>\033[0m Executing example\n"
+          printf "\033[1;35m  C binary\033[0m\n"
+          LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GITHUB_WORKSPACE}/lib" ./my_demo
+          printf "\033[1;35m  C++ binary\033[0m\n"
+          LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GITHUB_WORKSPACE}/lib" ./my_cxx_demo
+          echo "::endgroup::"
+          IFS=:
+          for lib in ${INSTALLED_LIBS}; do
+            printf "::group::   \033[0;32m==>\033[0m Building test with library \033[0;32m${lib}\033[0m\n"
+            cd ${GITHUB_WORKSPACE}/TestConfig/test_${lib}
+            autoreconf -fi
+            mkdir build-autotools && cd build-autotools
+            PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/lib/pkgconfig/ \
+              ../configure --enable-shared --disable-static
+            make all
+            echo "::endgroup::"
+          done

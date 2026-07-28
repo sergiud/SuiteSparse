@@ -2,7 +2,7 @@
 // UMFPACK/Source/umf_local_search: find pivot row and column for current front
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -106,7 +106,7 @@ PRIVATE void remove_candidate (Int jj, WorkType *Work, SymbolicType *Symbolic)
 /* === UMF_local_search ===================================================== */
 /* ========================================================================== */
 
-GLOBAL Int UMF_local_search
+Int UMF_local_search
 (
     NumericType *Numeric,
     WorkType *Work,
@@ -482,7 +482,7 @@ GLOBAL Int UMF_local_search
 		for (j = 0 ; j < fnpiv ; j++)
 		{
 		    Entry Fuj = Flu [j] ;
-#pragma ivdep
+UMFPACK_IVDEP
 		    for (i = j+1 ; i < fnpiv ; i++)
 		    {
 			/* Flu [i] -= Flublock [i + j*nb] * Flu [j] ; */
@@ -523,7 +523,7 @@ GLOBAL Int UMF_local_search
                 Fuj = Flu [j] ;
                 if (IS_NONZERO (Fuj))
                 {
-                    #pragma ivdep
+                    UMFPACK_IVDEP
                     for (i = 0 ; i < fnrows ; i++)
                     {
                         /* Wy [i] -= Flblock [i+j*fnr_curr] * Fuj ; */

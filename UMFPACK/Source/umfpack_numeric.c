@@ -2,7 +2,7 @@
 // UMFPACK/Source/umfpack_numeric: numeric factorization
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ PRIVATE void error
 /* === UMFPACK_numeric ====================================================== */
 /* ========================================================================== */
 
-GLOBAL int UMFPACK_numeric
+int UMFPACK_numeric
 (
     const Int Ap [ ],
     const Int Ai [ ],
@@ -393,7 +393,7 @@ GLOBAL int UMFPACK_numeric
      * from size n_col+1 to size ulen + 1.  If ulen is zero, the object does
      * not exist. */
 
-    DEBUG4 (("ulen: "ID" Upattern "ID"\n", ulen, (Int) Numeric->Upattern)) ;
+    DEBUG4 (("ulen: "ID" Upattern %p\n", ulen, Numeric->Upattern)) ;
     ASSERT (IMPLIES (ulen == 0, Numeric->Upattern == (Int *) NULL)) ;
     if (ulen > 0 && ulen < n_col)
     {

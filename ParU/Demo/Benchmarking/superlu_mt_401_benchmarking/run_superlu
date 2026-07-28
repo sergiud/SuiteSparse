@@ -1,0 +1,82 @@
+# A generic script for running SuperLU_MT on the test RB_matrices used
+# for the ParU ACM TOMS submission.  First use ../get_RB_matrices
+# to download the test matrices to your /tmp/RB_matrices folder.
+
+echo "Matrix: TSOPF_RS_b39_c30.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/TSOPF_RS_b39_c30/TSOPF_RS_b39_c30.rb
+
+echo "Matrix: twotone.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/twotone/twotone.rb
+
+echo "Matrix: std1_Jac2.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/std1_Jac2/std1_Jac2.rb
+
+echo "Matrix: mac_econ_fwd500.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/mac_econ_fwd500/mac_econ_fwd500.rb
+
+echo "Matrix: std1_Jac3.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/std1_Jac3/std1_Jac3.rb
+
+echo "Matrix: TSOPF_RS_b300_c1.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/TSOPF_RS_b300_c1/TSOPF_RS_b300_c1.rb
+
+echo "Matrix: lhr71.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/lhr71/lhr71.rb
+
+echo "Matrix: Zd_Jac2.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/Zd_Jac2/Zd_Jac2.rb
+
+echo "Matrix: av41092.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/av41092/av41092.rb
+
+echo "Matrix: Zd_Jac6.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/Zd_Jac6/Zd_Jac6.rb
+
+echo "Matrix: crashbasis.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/crashbasis/crashbasis.rb
+
+echo "Matrix: bbmat.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/bbmat/bbmat.rb
+
+echo "Matrix: Zd_Jac3.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/Zd_Jac3/Zd_Jac3.rb
+
+echo "Matrix: mc2depi.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/mc2depi/mc2depi.rb
+
+echo "Matrix: TSOPF_RS_b300_c2.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/TSOPF_RS_b300_c2/TSOPF_RS_b300_c2.rb
+
+echo "Matrix: TSOPF_RS_b678_c1.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/TSOPF_RS_b678_c1/TSOPF_RS_b678_c1.rb
+
+echo "Matrix: TSOPF_RS_b300_c3.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/TSOPF_RS_b300_c3/TSOPF_RS_b300_c3.rb
+
+echo "Matrix: Chebyshev4.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/Chebyshev4/Chebyshev4.rb
+
+echo "Matrix: Hamrle3.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/Hamrle3/Hamrle3.rb
+
+echo "Matrix: pre2.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/pre2/pre2.rb
+
+echo "Matrix: TSOPF_RS_b2052_c1.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/TSOPF_RS_b2052_c1/TSOPF_RS_b2052_c1.rb
+
+echo "Matrix: torso1.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/torso1/torso1.rb
+
+echo "Matrix: TSOPF_RS_b678_c2.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/TSOPF_RS_b678_c2/TSOPF_RS_b678_c2.rb
+
+echo "Matrix: TSOPF_RS_b2383.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/TSOPF_RS_b2383/TSOPF_RS_b2383.rb
+
+echo "Matrix: vas_stokes_4M.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/vas_stokes_4M/vas_stokes_4M.rb
+
+echo "Matrix: stokes.rb,"
+~/superlu_mt/build/EXAMPLE/pdlinsolx_paru < /tmp/RB_matrices/stokes/stokes.rb
+

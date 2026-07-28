@@ -2,7 +2,7 @@
 // UMFPACK/Source/umf_internal.h: internal definitions for UMFPACK
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -80,19 +80,258 @@
 #endif
 
 
-/* -------------------------------------------------------------------------- */
-/* basic definitions (see also amd_internal.h) */
-/* -------------------------------------------------------------------------- */
+//------------------------------------------------------------------------------
+// debug
+//------------------------------------------------------------------------------
+
+// force debugging off
+#ifndef NDEBUG
+#define NDEBUG
+#endif
+
+// To enable debugging, uncomment the following line:
+// #undef NDEBUG
+
+//------------------------------------------------------------------------------
+// AMD and SuiteSparse_config
+//------------------------------------------------------------------------------
+
+#define SUITESPARSE_BLAS_DEFINITIONS
+#include "amd.h"
+#include "SuiteSparse_config.h"
+
+/* ------------------------------------------------------------------------- */
+/* basic definitions */
+/* ------------------------------------------------------------------------- */
 
 #define ONES_COMPLEMENT(r) (-(r)-1)
 
-/* -------------------------------------------------------------------------- */
-/* AMD include file */
-/* -------------------------------------------------------------------------- */
+#ifdef FLIP
+#undef FLIP
+#endif
 
-/* stdio.h, stdlib.h, limits.h, and math.h, NDEBUG definition, assert.h */
-#define SUITESPARSE_BLAS_DEFINITIONS
-#include "amd_internal.h"
+#ifdef MAX
+#undef MAX
+#endif
+
+#ifdef MIN
+#undef MIN
+#endif
+
+#ifdef EMPTY
+#undef EMPTY
+#endif
+
+#define PRIVATE static
+
+/* FLIP is a "negation about -1", and is used to mark an integer i that is
+ * normally non-negative.  FLIP (EMPTY) is EMPTY.  FLIP of a number > EMPTY
+ * is negative, and FLIP of a number < EMTPY is positive.  FLIP (FLIP (i)) = i
+ * for all integers i.  UNFLIP (i) is >= EMPTY. */
+#define EMPTY (-1)
+#define FLIP(i) (-(i)-2)
+#define UNFLIP(i) ((i < EMPTY) ? FLIP (i) : (i))
+
+/* for integer MAX/MIN, or for doubles when we don't care how NaN's behave: */
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+
+/* logical expression of p implies q: */
+#define IMPLIES(p,q) (!(p) || (q))
+
+/* Note that the IBM RS 6000 xlc predefines TRUE and FALSE in <types.h>. */
+/* The Compaq Alpha also predefines TRUE and FALSE. */
+#ifdef TRUE
+#undef TRUE
+#endif
+#ifdef FALSE
+#undef FALSE
+#endif
+
+#define TRUE (1)
+#define FALSE (0)
+#define EMPTY (-1)
+
+/* largest value of size_t */
+#ifndef SIZE_T_MAX
+#ifdef SIZE_MAX
+/* C99 only */
+#define SIZE_T_MAX SIZE_MAX
+#else
+#define SIZE_T_MAX ((size_t) (-1))
+#endif
+#endif
+
+#if defined (HAVE_PRAGMA_GCC_IVDEP)
+#  define UMFPACK_IVDEP _Pragma("GCC ivdep")
+#elif defined (HAVE_PRAGMA_CLANG_LOOP_VECTORIZE)
+#  define UMFPACK_IVDEP _Pragma("clang loop vectorize(enable)")
+#elif defined (HAVE_PRAGMA_IVDEP)
+#  define UMFPACK_IVDEP _Pragma("ivdep")
+#elif defined (HAVE_PRAGMA_LOOP_IVDEP)
+#if defined ( _MSC_VER )
+#  define UMFPACK_IVDEP __pragma(loop(ivdep))
+#else 
+#  define UMFPACK_IVDEP _Pragma("loop( ivdep )")
+#endif 
+#else
+#  define UMFPACK_IVDEP
+#endif
+
+#if defined (HAVE_PRAGMA_GCC_NOVECTOR)
+#  define UMFPACK_NOVECTOR _Pragma("GCC novector")
+#elif defined (HAVE_PRAGMA_CLANG_LOOP_VECTORIZE)
+#  define UMFPACK_NOVECTOR _Pragma("clang loop vectorize(disable)")
+#elif defined (HAVE_PRAGMA_NOVECTOR)
+#  define UMFPACK_NOVECTOR _Pragma("novector")
+#elif defined (HAVE_PRAGMA_LOOP_NO_VECTOR)
+#if defined ( _MSC_VER )
+#  define UMFPACK_NOVECTOR __pragma(loop(no_vector))
+#else 
+#  define UMFPACK_NOVECTOR _Pragma("loop( no_vector )")
+#endif 
+#else
+#  define UMFPACK_NOVECTOR
+#endif
+
+/* ------------------------------------------------------------------------- */
+/* integer type for AMD: int32_t or int64_t */
+/* ------------------------------------------------------------------------- */
+
+#if defined (DLONG) || defined (ZLONG)
+
+    #define Int int64_t
+    #define UInt uint64_t
+    #define ID  "%" PRId64
+    #define Int_MAX INT64_MAX
+
+    #define AMD_order amd_l_order
+    #define AMD_defaults amd_l_defaults
+    #define AMD_control amd_l_control
+    #define AMD_info amd_l_info
+    #define AMD_1 amd_l1
+    #define AMD_2 amd_l2
+    #define AMD_valid amd_l_valid
+    #define AMD_aat amd_l_aat
+    #define AMD_postorder amd_l_postorder
+    #define AMD_post_tree amd_l_post_tree
+    #define AMD_debug_init amd_l_debug_init
+    #define AMD_preprocess amd_l_preprocess
+
+#else
+
+    #define Int int32_t
+    #define UInt uint32_t
+    #define ID "%d"
+    #define Int_MAX INT32_MAX
+
+    #define AMD_order amd_order
+    #define AMD_defaults amd_defaults
+    #define AMD_control amd_control
+    #define AMD_info amd_info
+    #define AMD_1 amd_1
+    #define AMD_2 amd_2
+    #define AMD_valid amd_valid
+    #define AMD_aat amd_aat
+    #define AMD_postorder amd_postorder
+    #define AMD_post_tree amd_post_tree
+    #define AMD_debug_init amd_debug_init
+    #define AMD_preprocess amd_preprocess
+
+#endif
+
+/* ------------------------------------------------------------------------- */
+/* AMD routine definitions (not user-callable) */
+/* ------------------------------------------------------------------------- */
+
+size_t AMD_aat
+(
+    Int n,
+    const Int Ap [ ],
+    const Int Ai [ ],
+    Int Len [ ],
+    Int Tp [ ],
+    double Info [ ]
+) ;
+
+void AMD_1
+(
+    Int n,
+    const Int Ap [ ],
+    const Int Ai [ ],
+    Int P [ ],
+    Int Pinv [ ],
+    Int Len [ ],
+    Int slen,
+    Int S [ ],
+    double Control [ ],
+    double Info [ ]
+) ;
+
+void AMD_postorder
+(
+    Int nn,
+    Int Parent [ ],
+    Int Npiv [ ],
+    Int Fsize [ ],
+    Int Order [ ],
+    Int Child [ ],
+    Int Sibling [ ],
+    Int Stack [ ]
+) ;
+
+Int AMD_post_tree
+(
+    Int root,
+    Int k,
+    Int Child [ ],
+    const Int Sibling [ ],
+    Int Order [ ],
+    Int Stack [ ]
+#ifndef NDEBUG
+    , Int nn
+#endif
+) ;
+
+void AMD_preprocess
+(
+    Int n,
+    const Int Ap [ ],
+    const Int Ai [ ],
+    Int Rp [ ],
+    Int Ri [ ],
+    Int W [ ],
+    Int Flag [ ]
+) ;
+
+/* ------------------------------------------------------------------------- */
+/* debugging definitions */
+/* ------------------------------------------------------------------------- */
+
+#ifndef NDEBUG
+
+/* from assert.h:  assert macro */
+#include <assert.h>
+
+void AMD_debug_init ( char *s ) ;
+
+#ifdef ASSERT
+#undef ASSERT
+#endif
+
+/* Use mxAssert if AMD is compiled into a mexFunction */
+#ifdef MATLAB_MEX_FILE
+#define ASSERT(expression) (mxAssert ((expression), ""))
+#else
+#define ASSERT(expression) (assert (expression))
+#endif
+
+#else
+
+/* no debugging */
+#define ASSERT(expression)
+
+#endif
 
 /* -------------------------------------------------------------------------- */
 /* MATLAB include files */
@@ -258,7 +497,7 @@ typedef union Unit_union Unit ;
     same version that created them (umfpack_di_*, umfpack_dl_*, umfpack_zi_*,
     or umfpack_zl_*).  The values have also been changed since prior releases of
     the code to ensure that all routines that operate on the objects are of the
-    same release.  The values themselves are purely arbitrary.  The are less
+    same release.  The values themselves are purely arbitrary.  They are less
     than the ANSI C required minimums of INT_MAX and LONG_MAX, respectively.
 */
 
@@ -291,7 +530,7 @@ typedef struct	/* NumericType */
 	rsmin,		/* smallest row sum */
 	rsmax,		/* largest row sum  */
 	min_udiag,	/* smallest abs value on diagonal of D */
-	max_udiag,	/* smallest abs value on diagonal of D */
+	max_udiag,	/* maximum abs value on diagonal of D */
 	rcond ;		/* min (D) / max (D) */
 
     Int
@@ -736,8 +975,8 @@ typedef struct	/* SWType */
 /* for testing out-of-memory conditions: */
 #define UMF_TCOV_TEST
 
-GLOBAL int umf_fail, umf_fail_lo, umf_fail_hi ;
-GLOBAL int umf_realloc_fail, umf_realloc_lo, umf_realloc_hi ;
+extern int umf_fail, umf_fail_lo, umf_fail_hi ;
+extern int umf_realloc_fail, umf_realloc_lo, umf_realloc_hi ;
 
 /* for testing malloc count: */
 #define UMF_MALLOC_COUNT

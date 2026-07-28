@@ -7,7 +7,7 @@
  * \version\verbatim $Id: graph.c 13328 2012-12-31 14:57:40Z karypis $ \endverbatim
  */
 
-#include <GKlib.h>
+#include "GKlib.h"
 
 #define OMPMINOPS       50000
 
@@ -82,7 +82,6 @@ void gk_graph_FreeContents(gk_graph_t *graph)
     \returns the graph that was read.
 */
 /**************************************************************************/
-#if 0
 gk_graph_t *gk_graph_Read(char *filename, int format, int isfewgts, 
                 int isfvwgts, int isfvsizes)
 {
@@ -330,7 +329,6 @@ void gk_graph_Write(gk_graph_t *graph, char *filename, int format)
   if (filename)
     gk_fclose(fpout);
 }
-#endif
 
 
 /*************************************************************************/

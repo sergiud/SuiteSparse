@@ -2,7 +2,7 @@
 // SuiteSparse_config/SuiteSparse_config.c: common utilites for SuiteSparse
 //------------------------------------------------------------------------------
 
-// SuiteSparse_config, Copyright (c) 2012-2022, Timothy A. Davis.
+// SuiteSparse_config, Copyright (c) 2012-2023, Timothy A. Davis.
 // All Rights Reserved.
 // SPDX-License-Identifier: BSD-3-clause
 
@@ -11,21 +11,27 @@
 /* SuiteSparse configuration : memory manager and printf functions.
  */
 
-#define SUITESPARSE_LIBRARY
 #include "SuiteSparse_config.h"
 
+#if defined ( MATLAB_MEX_FILE )
+#include "mex.h"
+#endif
+
 /* -------------------------------------------------------------------------- */
-/* SuiteSparse_config : a global extern struct */
+/* SuiteSparse_config : a static struct */
 /* -------------------------------------------------------------------------- */
 
-/* The SuiteSparse_config struct is available to all SuiteSparse functions and
-    to all applications that use those functions.  It must be modified with
-    care, particularly in a multithreaded context.  Normally, the application
-    will initialize this object once, via SuiteSparse_start, possibily followed
-    by application-specific modifications if the applications wants to use
-    alternative memory manager functions.
+/* The SuiteSparse_config struct is indirectly available to all SuiteSparse
+    functions and to all applications that use those functions.  In v6.x and
+    earlier, it was globally visible, but it is now hidden and accessible only
+    by functions in this file (SuiteSparse v7.0.0 and later).
 
-    The user can redefine these global pointers at run-time to change the
+    It must be modified with care, particularly in a multithreaded context.
+    Normally, the application will initialize this object once, via
+    SuiteSparse_start, possibily followed by application-specific modifications
+    if the applications wants to use alternative memory manager functions.
+
+    The user can redefine these pointers at run-time to change the
     memory manager and printf function used by SuiteSparse.
 
     If -DNMALLOC is defined at compile-time, then no memory-manager is
@@ -36,7 +42,18 @@
     SuiteSparse will not use printf.
  */
 
-struct SuiteSparse_config_struct SuiteSparse_config =
+struct SuiteSparse_config_struct
+{
+    void *(*malloc_func) (size_t) ;             // pointer to malloc
+    void *(*calloc_func) (size_t, size_t) ;     // pointer to calloc
+    void *(*realloc_func) (void *, size_t) ;    // pointer to realloc
+    void (*free_func) (void *) ;                // pointer to free
+    int (*printf_func) (const char *, ...) ;    // pointer to printf
+    double (*hypot_func) (double, double) ;     // pointer to hypot
+    int (*divcomplex_func) (double, double, double, double, double *, double *);
+} ;
+
+static struct SuiteSparse_config_struct SuiteSparse_config =
 {
 
     /* memory management functions */
@@ -72,6 +89,128 @@ struct SuiteSparse_config_struct SuiteSparse_config =
 
 } ;
 
+//------------------------------------------------------------------------------
+// SuiteSparse_config_*_get methods
+//------------------------------------------------------------------------------
+
+// Methods that return the contents of the SuiteSparse_config struct.
+
+void *(*SuiteSparse_config_malloc_func_get (void)) (size_t)
+{
+    return (SuiteSparse_config.malloc_func) ;
+}
+
+void *(*SuiteSparse_config_calloc_func_get (void)) (size_t, size_t)
+{
+    return (SuiteSparse_config.calloc_func) ;
+}
+
+void *(*SuiteSparse_config_realloc_func_get (void)) (void *, size_t)
+{
+    return (SuiteSparse_config.realloc_func) ;
+}
+
+void (*SuiteSparse_config_free_func_get (void)) (void *)
+{
+    return (SuiteSparse_config.free_func) ;
+}
+
+int (*SuiteSparse_config_printf_func_get (void)) (const char *, ...)
+{
+    return (SuiteSparse_config.printf_func) ;
+}
+
+double (*SuiteSparse_config_hypot_func_get (void)) (double, double)
+{
+    return (SuiteSparse_config.hypot_func) ;
+}
+
+int (*SuiteSparse_config_divcomplex_func_get (void)) (double, double, double, double, double *, double *)
+{
+    return (SuiteSparse_config.divcomplex_func) ;
+}
+
+//------------------------------------------------------------------------------
+// SuiteSparse_config_*_set methods
+//------------------------------------------------------------------------------
+
+// Methods that set the contents of the SuiteSparse_config struct.
+
+void SuiteSparse_config_malloc_func_set (void *(*malloc_func) (size_t))
+{
+    SuiteSparse_config.malloc_func = malloc_func ;
+}
+
+void SuiteSparse_config_calloc_func_set (void *(*calloc_func) (size_t, size_t))
+{
+    SuiteSparse_config.calloc_func = calloc_func ;
+}
+
+void SuiteSparse_config_realloc_func_set (void *(*realloc_func) (void *, size_t))
+{
+    SuiteSparse_config.realloc_func = realloc_func ;
+}
+
+void SuiteSparse_config_free_func_set (void (*free_func) (void *))
+{
+    SuiteSparse_config.free_func = free_func ;
+}
+
+void SuiteSparse_config_printf_func_set (int (*printf_func) (const char *, ...))
+{
+    SuiteSparse_config.printf_func = printf_func ;
+}
+
+void SuiteSparse_config_hypot_func_set (double (*hypot_func) (double, double))
+{
+    SuiteSparse_config.hypot_func = hypot_func ;
+}
+
+void SuiteSparse_config_divcomplex_func_set (int (*divcomplex_func) (double, double, double, double, double *, double *))
+{
+    SuiteSparse_config.divcomplex_func = divcomplex_func ;
+}
+
+//------------------------------------------------------------------------------
+// SuiteSparse_config_*_call methods
+//------------------------------------------------------------------------------
+
+// Methods that directly call the functions in the SuiteSparse_config struct.
+// Note that there is no wrapper for the printf_func.
+
+void *SuiteSparse_config_malloc (size_t s)
+{
+    return (SuiteSparse_config.malloc_func (s)) ;
+}
+
+void *SuiteSparse_config_calloc (size_t n, size_t s)
+{
+    return (SuiteSparse_config.calloc_func (n, s)) ;
+}
+
+void *SuiteSparse_config_realloc (void *p, size_t s)
+{
+    return (SuiteSparse_config.realloc_func (p, s)) ;
+}
+
+void SuiteSparse_config_free (void *p)
+{
+    SuiteSparse_config.free_func (p) ;
+}
+
+double SuiteSparse_config_hypot (double x, double y)
+{
+    return (SuiteSparse_config.hypot_func (x, y)) ;
+}
+
+int SuiteSparse_config_divcomplex
+(
+    double xr, double xi, double yr, double yi, double *zr, double *zi
+)
+{
+    return (SuiteSparse_config.divcomplex_func (xr, xi, yr, yi, zr, zi)) ;
+}
+
 /* -------------------------------------------------------------------------- */
 /* SuiteSparse_start */
 /* -------------------------------------------------------------------------- */
@@ -88,7 +227,6 @@ struct SuiteSparse_config_struct SuiteSparse_config =
    SuiteSparse_start be called prior to calling any SuiteSparse function.
  */
 
-SUITESPARSE_PUBLIC
 void SuiteSparse_start ( void )
 {
 
@@ -149,7 +287,6 @@ void SuiteSparse_start ( void )
    SuiteSparse-wide cleanup operations or finalization of statistics.
  */
 
-SUITESPARSE_PUBLIC
 void SuiteSparse_finish ( void )
 {
     /* do nothing */ ;
@@ -159,7 +296,6 @@ void SuiteSparse_finish ( void )
 /* SuiteSparse_malloc: malloc wrapper */
 /* -------------------------------------------------------------------------- */
 
-SUITESPARSE_PUBLIC
 void *SuiteSparse_malloc    /* pointer to allocated block of memory */
 (
     size_t nitems,          /* number of items to malloc */
@@ -188,7 +324,6 @@ void *SuiteSparse_malloc    /* pointer to allocated block of memory */
 /* SuiteSparse_calloc: calloc wrapper */
 /* -------------------------------------------------------------------------- */
 
-SUITESPARSE_PUBLIC
 void *SuiteSparse_calloc    /* pointer to allocated block of memory */
 (
     size_t nitems,          /* number of items to calloc */
@@ -225,7 +360,6 @@ void *SuiteSparse_calloc    /* pointer to allocated block of memory */
    pointer to the old (unmodified) object is returned.
  */
 
-SUITESPARSE_PUBLIC
 void *SuiteSparse_realloc   /* pointer to reallocated block of memory, or
                                to original block if the realloc failed. */
 (
@@ -291,7 +425,6 @@ void *SuiteSparse_realloc   /* pointer to reallocated block of memory, or
 /* SuiteSparse_free: free wrapper */
 /* -------------------------------------------------------------------------- */
 
-SUITESPARSE_PUBLIC
 void *SuiteSparse_free      /* always returns NULL */
 (
     void *p                 /* block to free */
@@ -341,7 +474,6 @@ void *SuiteSparse_free      /* always returns NULL */
     /* no timer */
     /* ---------------------------------------------------------------------- */
 
-    SUITESPARSE_PUBLIC
     void SuiteSparse_tic
     (
         double tic [2]      /* output, contents undefined on input */
@@ -358,7 +490,6 @@ void *SuiteSparse_free      /* always returns NULL */
     /* OpenMP timer */
     /* ---------------------------------------------------------------------- */
 
-    SUITESPARSE_PUBLIC
     void SuiteSparse_tic
     (
         double tic [2]      /* output, contents undefined on input */
@@ -368,14 +499,13 @@ void *SuiteSparse_free      /* always returns NULL */
         tic [1] = 0 ;
     }
 
-#else 
+#else
 
     /* ---------------------------------------------------------------------- */
     /* POSIX timer */
     /* ---------------------------------------------------------------------- */
 
     #include <time.h>
-    SUITESPARSE_PUBLIC
     void SuiteSparse_tic
     (
         double tic [2]      /* output, contents undefined on input */
@@ -401,7 +531,6 @@ void *SuiteSparse_free      /* always returns NULL */
  * SuiteSparse_tic and do the calculations differently.
  */
 
-SUITESPARSE_PUBLIC
 double SuiteSparse_toc  /* returns time in seconds since last tic */
 (
     double tic [2]  /* input, not modified from last call to SuiteSparse_tic */
@@ -418,7 +547,6 @@ double SuiteSparse_toc  /* returns time in seconds since last tic */
 
 /* This function might not be accurate down to the nanosecond. */
 
-SUITESPARSE_PUBLIC
 double SuiteSparse_time  /* returns current wall clock time in seconds */
 (
     void
@@ -433,7 +561,6 @@ double SuiteSparse_time  /* returns current wall clock time in seconds */
 /* SuiteSparse_version: return the current version of SuiteSparse */
 /* -------------------------------------------------------------------------- */
 
-SUITESPARSE_PUBLIC
 int SuiteSparse_version
 (
     int version [3]
@@ -465,7 +592,6 @@ int SuiteSparse_version
 
 // This method below is kept for historical purposes.
 
-SUITESPARSE_PUBLIC
 double SuiteSparse_hypot (double x, double y)
 {
     double s, r ;
@@ -494,7 +620,7 @@ double SuiteSparse_hypot (double x, double y)
             r = x / y ;
             s = y * sqrt (1.0 + r*r) ;
         }
-    } 
+    }
     return (s) ;
 }
 
@@ -518,7 +644,7 @@ double SuiteSparse_hypot (double x, double y)
 // This function is identical to GB_divcomplex in GraphBLAS/Source/GB_math.h.
 // The only difference is the name of the function.
 
-SUITESPARSE_PUBLIC int SuiteSparse_divcomplex
+int SuiteSparse_divcomplex
 (
     double xr, double xi,       // real and imaginary parts of x
     double yr, double yi,       // real and imaginary parts of y
@@ -620,31 +746,66 @@ SUITESPARSE_PUBLIC int SuiteSparse_divcomplex
 const char *SuiteSparse_BLAS_library ( void )
 {
     #if defined ( BLAS_Intel10_64ilp )
-        return ("Intel MKL 64ilp BLAS (64-bit integers)") ;
+        return ("Intel MKL 64ilp BLAS (64-bit integers, threaded)") ;
+    #elif defined ( BLAS_Intel10_64ilp_seq )
+        return ("Intel MKL 64ilp_seq BLAS (64-bit integers, sequential)") ;
     #elif defined ( BLAS_Intel10_64lp )
-        return ("Intel MKL 64lp BLAS (32-bit integers)") ;
+        return ("Intel MKL 64lp BLAS (32-bit integers, threaded)") ;
+    #elif defined ( BLAS_Intel10_64lp_seq )
+        return ("Intel MKL 64lp_seq BLAS (32-bit integers, sequential)") ;
+    #elif defined ( BLAS_Intel10_64_dyn )
+        return ("Intel MKL 64_dyn BLAS (64-bit integers, dynamic)") ;
+
     #elif defined ( BLAS_Apple )
         return ("Apple Accelerate Framework BLAS (32-bit integers)") ;
+
     #elif defined ( BLAS_Arm_ilp64_mp )
-        return ("ARM MP BLAS (64-bit integers)") ;
+        return ("ARM BLAS (64-bit integers, threaded)") ;
+    #elif defined ( BLAS_Arm_ilp64 )
+        return ("ARM BLAS (64-bit integers, sequential)") ;
     #elif defined ( BLAS_Arm_mp )
-        return ("ARM MP BLAS (32-bit integers)") ;
+        return ("ARM BLAS (32-bit integers, threaded)") ;
+    #elif defined ( BLAS_Arm )
+        return ("ARM BLAS (32-bit integers, sequential)") ;
+
+    #elif defined ( BLAS_ACML_MP )
+        return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
+            "AMD BLAS (64-bit integers, threaded)" :
+            "AMD BLAS (32-bit integers, threaded)") ;
+    #elif defined ( BLAS_ACML )
+        return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
+            "AMD BLAS (64-bit integers, sequential)" :
+            "AMD BLAS (32-bit integers, sequential)") ;
+
     #elif defined ( BLAS_IBMESSL_SMP )
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
-            "IBMESSL_SMP BLAS (64-bit integers)" :
-            "IBMESSL_SMP BLAS (32-bit integers)") ;
+            "IBMESSL BLAS (64-bit integers, threaded)" :
+            "IBMESSL BLAS (32-bit integers, threaded)") ;
+    #elif defined ( BLAS_IBMESSL )
+        return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
+            "IBMESSL BLAS (64-bit integers, sequential)" :
+            "IBMESSL BLAS (32-bit integers, sequential)") ;
+
     #elif defined ( BLAS_OpenBLAS )
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
             "OpenBLAS (64-bit integers)" :
             "OpenBLAS (32-bit integers)") ;
+
+    #elif defined ( BLAS_FLAME )
+        return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
+            "FLAME (64-bit integers)" :
+            "FLAME (32-bit integers)") ;
+
     #elif defined ( BLAS_Generic )
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
             "Reference BLAS (64-bit integers)" :
             "Reference BLAS (32-bit integers)") ;
+
     #else
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
             "Other BLAS (64-bit integers)" :
             "Other BLAS (32-bit integers)") ;
+
     #endif
 }
 

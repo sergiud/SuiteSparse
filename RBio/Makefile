@@ -35,39 +35,35 @@ default: library
 
 # default is to install only in /usr/local
 library:
-	( cd build && cmake $(CMAKE_OPTIONS) .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) .. && cmake --build . --config Release -j${JOBS} )
 
 # install only in SuiteSparse/lib and SuiteSparse/include
 local:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=0 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -USUITESPARSE_PKGFILEDIR -DSUITESPARSE_LOCAL_INSTALL=1 .. && cmake --build . --config Release -j${JOBS} )
 
 # install only in /usr/local (default)
 global:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=0 .. && $(MAKE) --jobs=${JOBS} )
-
-# install in SuiteSparse/lib both and SuiteSparse/include and /usr/local
-both:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -USUITESPARSE_PKGFILEDIR -DSUITESPARSE_LOCAL_INSTALL=0 .. && cmake --build . --config Release -j${JOBS} )
 
 debug:
-	( cd build && cmake $(CMAKE_OPTIONS) -DCMAKE_BUILD_TYPE=Debug .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . --config Debug -j${JOBS} )
 
 all: library
 
 demos: library
-	( cd build && cmake $(CMAKE_OPTIONS) -DDEMO=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -DSUITESPARSE_DEMOS=1 .. && cmake --build . --config Release -j${JOBS} )
 	./build/RBdemo < ./RBio/private/west0479.rua
 
 # just compile after running cmake; do not run cmake again
 remake:
-	( cd build && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake --build . -j${JOBS} )
 
 # just run cmake to set things up
 setup:
 	( cd build && cmake $(CMAKE_OPTIONS) .. )
 
 install:
-	( cd build && $(MAKE) install )
+	( cd build && cmake --install . )
 
 # remove any installed libraries and #include files
 uninstall:
@@ -75,7 +71,7 @@ uninstall:
 
 # remove all files not in the distribution
 clean:
-	- $(RM) -rf build/* Config/*.tmp RBio/*.o RBio/*.mex* timelog.m
+	- $(RM) -rf build/* Config/*.tmp RBio/*.o RBio/*.mex* timelog.m temp.rb
 	( cd Tcov ; $(MAKE) clean )
 
 purge: clean

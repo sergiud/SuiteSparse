@@ -78,6 +78,7 @@
         author={Bulu\c{c}, A. and Mattson, T. and McMillan, S. and Moreira, J. and Yang, C.},
         title={The {GraphBLAS} {C} {API} Specification},
         year={2017},
+        institution={GraphBLAS.org},
         note={\href{http://graphblas.org/}{http://graphblas.org/}},
 }
 
@@ -85,6 +86,7 @@
         author={Brock, B. and Bulu\c{c}, A. and Mattson, T. and McMillan, S. and Moreira, J.},
         title={The {GraphBLAS} {C} {API} Specification (v2.0)},
         year={2021},
+        institution={GraphBLAS.org},
         note={\href{http://graphblas.org/}{http://graphblas.org/}},
 }
 
@@ -92,6 +94,7 @@
         author={Kepner, J.},
         title={{GraphBLAS} Mathematics},
         year={2017},
+        institution={MIT},
         note={
         \href{http://www.mit.edu/~kepner/GraphBLAS/GraphBLAS-Math-release.pdf}{http://www.mit.edu/$\sim$kepner/GraphBLAS/GraphBLAS-Math-release.pdf}
         }
@@ -162,12 +165,24 @@ numpages = {25},
 keywords = {sparse matrices, GraphBLAS, Graph algorithms}
 }
 
-@article{Davis22,
+@article{Davis23,
 author = {Davis, Timothy A.},
-title = {Algorithm 10xx: {SuiteSparse:GraphBLAS}: Parallel Graph Algorithms in the Language of Sparse Linear Algebra},
+title = {Algorithm 1037: SuiteSparse:GraphBLAS: Parallel Graph Algorithms in the Language of Sparse Linear Algebra},
+year = {2023},
+issue_date = {September 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {49},
+number = {3},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/3577195},
+doi = {10.1145/3577195},
+abstract = {SuiteSparse:GraphBLAS is a full parallel implementation of the GraphBLAS standard, which defines a set of sparse matrix operations on an extended algebra of semirings using an almost unlimited variety of operators and types. When applied to sparse adjacency matrices, these algebraic operations are equivalent to computations on graphs. A description of the parallel implementation of SuiteSparse:GraphBLAS is given, including its novel parallel algorithms for sparse matrix multiply, addition, element-wise multiply, submatrix extraction and assignment, and the GraphBLAS mask/accumulator operation. Its performance is illustrated by solving the graph problems in the GAP Benchmark and by comparing it with other sparse matrix libraries.},
 journal = {ACM Trans. Math. Softw.},
-year = {2022},
-note = {(submitted, revised Apr 3, 2022)}
+month = {sep},
+articleno = {28},
+numpages = {30},
+keywords = {Graph algorithms, GraphBLAS, sparse matrices}
 }
 
 
@@ -196,6 +211,14 @@ note = {(submitted, revised Apr 3, 2022)}
         booktitle={IEEE HPEC'18},
         note={Grand Challenge Innovation Award.
             See \href{http://www.ieee-hpec.org/}{http://www.ieee-hpec.org/}.},
+        publisher={IEEE},
+}
+
+@inproceedings{idxbinop,
+        author={Mattson, T. G. and Bezbaruah, M. and Maier, M. and McMillan, S. and Peletier, M. and Welch, E. and Davis, T. A.},
+        title={Indexed Binary operations in the GraphBLAS},
+        year={2024},
+        booktitle={IEEE HPEC'24},
         publisher={IEEE},
 }
 

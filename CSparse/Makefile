@@ -39,39 +39,37 @@ JOBS ?= 8
 default: library
 
 library:
-	( cd build && cmake $(CMAKE_OPTIONS) .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) .. && cmake --build . --config Release -j${JOBS} )
 
 local: library
 
 global: library
 
-both: library
-
 debug:
-	( cd build && cmake $(CMAKE_OPTIONS) -DCMAKE_BUILD_TYPE=Debug .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . --config Debug -j${JOBS} )
 
 all: library
 
 demos: library
-	( cd build && cmake $(CMAKE_OPTIONS) -DDEMO=1 .. && $(MAKE) --jobs=${JOBS} )
-	- ./build/cs_demo1 < ./Matrix/t1
-	- ./build/cs_demo2 < ./Matrix/t1
-	- ./build/cs_demo2 < ./Matrix/ash219
-	- ./build/cs_demo2 < ./Matrix/bcsstk01
-	- ./build/cs_demo2 < ./Matrix/fs_183_1
-	- ./build/cs_demo2 < ./Matrix/mbeacxc
-	- ./build/cs_demo2 < ./Matrix/west0067
-	- ./build/cs_demo2 < ./Matrix/lp_afiro
-	- ./build/cs_demo2 < ./Matrix/bcsstk16
-	- ./build/cs_demo3 < ./Matrix/bcsstk01
-	- ./build/cs_demo3 < ./Matrix/bcsstk16
+	( cd build && cmake $(CMAKE_OPTIONS) -DSUITESPARSE_DEMOS=1 .. && cmake --build . --config Release -j${JOBS} )
+	- ./build/csparse_demo1 < ./Matrix/t1
+	- ./build/csparse_demo2 < ./Matrix/t1
+	- ./build/csparse_demo2 < ./Matrix/ash219
+	- ./build/csparse_demo2 < ./Matrix/bcsstk01
+	- ./build/csparse_demo2 < ./Matrix/fs_183_1
+	- ./build/csparse_demo2 < ./Matrix/mbeacxc
+	- ./build/csparse_demo2 < ./Matrix/west0067
+	- ./build/csparse_demo2 < ./Matrix/lp_afiro
+	- ./build/csparse_demo2 < ./Matrix/bcsstk16
+	- ./build/csparse_demo3 < ./Matrix/bcsstk01
+	- ./build/csparse_demo3 < ./Matrix/bcsstk16
 
 install:
 	- echo 'CSparse is not installed; use CXSparse instead'
 
 # just compile after running cmake; do not run cmake again
 remake:
-	( cd build && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake --build . -j${JOBS} )
 
 # just run cmake to set things up
 setup:

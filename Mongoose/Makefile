@@ -35,23 +35,20 @@ default: library
 
 # default is to install only in /usr/local
 library:
-	( cd build && cmake $(CMAKE_OPTIONS) .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) .. && cmake --build . --config Release -j${JOBS} )
 
 # install only in SuiteSparse/lib and SuiteSparse/include
 local:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=0 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -USUITESPARSE_PKGFILEDIR -DSUITESPARSE_LOCAL_INSTALL=1 .. && cmake --build . --config Release -j${JOBS} )
 
 # install only in /usr/local (default)
 global:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=0 .. && $(MAKE) --jobs=${JOBS} )
-
-# install in SuiteSparse/lib both and SuiteSparse/include and /usr/local
-both:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -USUITESPARSE_PKGFILEDIR -DSUITESPARSE_LOCAL_INSTALL=0 .. && cmake --build . --config Release -j${JOBS} )
 
 # build the Mongoose library (static and dynamic) and run a quick test
 demos: library
-	( cd build ; ./bin/demo )
+	( cd build && ./demo )
+	( cd build && ctest . || ctest . --rerun-failed --output-on-failure )
 
 # the same as "make library"
 static: library
@@ -59,21 +56,19 @@ static: library
 # installs Mongoose to the install location defined by cmake, usually
 # /usr/local/lib and /usr/local/include
 install:
-	( cd build && $(MAKE) install )
+	( cd build && cmake --install . )
 
 # create the Doc/Mongoose_UserGuide.pdf
 docs:
-	( cd build ; cmake $(CMAKE_OPTIONS) .. ; $(MAKE) userguide )
+	( cd build && cmake $(CMAKE_OPTIONS) .. ; cmake --build . --target userguide )
 
 # remove any installed libraries and #include files
 uninstall:
 	- xargs rm < build/install_manifest.txt
 
 # run the extensive tests
-# FIXME: Mongoose 'make test' fails: unable to download test files
-# because of a change in python.
 test:
-	( cd build ; cmake $(CMAKE_OPTIONS) .. ; $(MAKE) test )
+	( cd build && cmake $(CMAKE_OPTIONS) .. ; ctest . )
 
 clean: distclean
 
@@ -82,4 +77,5 @@ purge: distclean
 # remove all files not in the distribution
 distclean:
 	- $(RM) -rf build/* Version/*.tmp MATLAB/*.o MATLAB/*.mex*
+	- $(RM) -r Doc/*.out Doc/*.aux Doc/*.log Doc/*.bbl Doc/*.blg Doc/*.toc Doc/*.idx
 

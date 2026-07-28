@@ -2,7 +2,7 @@
 # GraphBLAS/GraphBLAS/CMakeLists.txt:  build GraphBLAS for use in MATLAB
 #-------------------------------------------------------------------------------
 
-# SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+# SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0.
 
 # CMakeLists.txt: instructions for cmake to build GraphBLAS for use in MATLAB.
@@ -13,67 +13,77 @@
 # get the version
 #-------------------------------------------------------------------------------
 
-cmake_minimum_required ( VERSION 3.19 )
-
-# date version must match ../CMakeLists.txt:
-# version of SuiteSparse:GraphBLAS
-set ( GraphBLAS_DATE "Nov 12, 2022" )
-set ( GraphBLAS_VERSION_MAJOR 7 )
-set ( GraphBLAS_VERSION_MINOR 3 )
-set ( GraphBLAS_VERSION_SUB   2 )
-
-message ( STATUS "Building SuiteSparse:GraphBLAS version: v"
-    ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}
-    " date: " ${GraphBLAS_DATE} )
-
-# SuiteSparse:GraphBLAS v6.0.0 and later fully implement the v2 spec
-set ( GraphBLAS_API_DATE "Nov 15, 2021" )
-set ( GraphBLAS_API_VERSION_MAJOR 2 )
-set ( GraphBLAS_API_VERSION_MINOR 0 )
-set ( GraphBLAS_API_VERSION_SUB   0 )
-
-#-------------------------------------------------------------------------------
-# SuiteSparse policies
-#-------------------------------------------------------------------------------
+cmake_minimum_required ( VERSION 3.20 ) # GraphBLAS can be built stand-alone
 
 set ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-    ${CMAKE_SOURCE_DIR}/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../cmake_modules
-    ${CMAKE_SOURCE_DIR}/../../SuiteSparse_config/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../../SuiteSparse/SuiteSparse_config/cmake_modules
-    )
+    ${CMAKE_SOURCE_DIR}/../cmake_modules )
 
-set ( SUITESPARSE_SECOND_LEVEL true )
-include ( SuiteSparsePolicy )
-
-# CUDA is under development for now, and not deployed in production:
-set ( SUITESPARSE_CUDA off )
+include ( GraphBLAS_version )
 
 #-------------------------------------------------------------------------------
 # define the project
 #-------------------------------------------------------------------------------
 
 project ( graphblas_matlab
-    VERSION "${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}" LANGUAGES C )
+    VERSION "${GraphBLAS_VER_MAJOR}.${GraphBLAS_VER_MINOR}.${GraphBLAS_VER_SUB}" LANGUAGES C )
 
-# enable this only for development
-set ( CMAKE_CUDA_DEV off )
-if ( CMAKE_CUDA_DEV )
-    # for CUDA development only; not for production use
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBCUDA_DEV=1 " )
+#-------------------------------------------------------------------------------
+# SuiteSparse policies
+#-------------------------------------------------------------------------------
+
+set ( SUITESPARSE_SECOND_LEVEL true )
+
+# CUDA is under development for now, and not deployed in production:
+set ( GRAPHBLAS_USE_CUDA OFF )
+
+set ( GBMATLAB on )
+set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBMATLAB=1 " )
+
+include ( SuiteSparsePolicy )
+
+#-------------------------------------------------------------------------------
+# find CUDA
+#-------------------------------------------------------------------------------
+
+# in the future, when GraphBLAS can use CUDA in production:
+# option ( GRAPHBLAS_USE_CUDA "ON (default): enable CUDA acceleration for GraphBLAS, OFF: do not use CUDA" ${SUITESPARSE_USE_CUDA} )
+
+set ( GRAPHBLAS_HAS_CUDA OFF )
+message ( STATUS "GraphBLAS CUDA JIT: disabled for MATLAB" )
+
+# check for strict usage
+if ( SUITESPARSE_USE_STRICT AND GRAPHBLAS_USE_CUDA AND NOT GRAPHBLAS_HAS_CUDA )
+    message ( FATAL_ERROR "CUDA required for GraphBLAS but not found" )
 endif ( )
 
+include ( GraphBLAS_JIT_paths )
+
 #-------------------------------------------------------------------------------
-# find OpenMP and cpu_features
+# find OpenMP
 #-------------------------------------------------------------------------------
 
-option ( NOPENMP "ON: do not use OpenMP.  OFF (default): use OpenMP" off )
-if ( NOPENMP )
-    # OpenMP has been disabled
-    set ( OPENMP_FOUND false )
+option ( GRAPHBLAS_USE_OPENMP "ON: Use OpenMP in GraphBLAS if available.  OFF: Do not use OpenMP.  (Default: SUITESPARSE_USE_OPENMP)" ${SUITESPARSE_USE_OPENMP} )
+if ( GRAPHBLAS_USE_OPENMP )
+    find_package ( OpenMP COMPONENTS C )
 else ( )
-    find_package ( OpenMP )
+    # OpenMP has been disabled
+    set ( OpenMP_C_FOUND OFF )
 endif ( )
+
+if ( OpenMP_C_FOUND )
+    set ( GRAPHBLAS_HAS_OPENMP ON )
+else ( )
+    set ( GRAPHBLAS_HAS_OPENMP OFF )
+endif ( )
+
+# check for strict usage
+if ( SUITESPARSE_USE_STRICT AND GRAPHBLAS_USE_OPENMP AND NOT GRAPHBLAS_HAS_OPENMP )
+    message ( FATAL_ERROR "OpenMP required for GraphBLAS but not found" )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# find cpu_features
+#-------------------------------------------------------------------------------
 
 if ( NOT GBNCPUFEAT )
     # default: enable Google's cpu_features package
@@ -113,10 +123,30 @@ if ( DEFINED GBAVX512F )
 endif ( )
 
 #-------------------------------------------------------------------------------
-# determine build type
+# RISC-V
 #-------------------------------------------------------------------------------
 
-set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRENAME=1 " )
+if ( DEFINED GBRISCV64 )
+    if ( GBRISCV64 )
+    # default: this is detected automatically, but can be set here also
+        set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRISCV64=1 " )
+    else ( )
+        set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRISCV64=0 " )
+    endif ( )
+endif ( )
+
+if ( DEFINED GBRVV )
+    if ( GBRVV )
+    # default: this is detected automatically, but can be set here also
+        set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRVV=1 " )
+    else ( )
+        set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRVV=0 " )
+    endif ( )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# determine build type
+#-------------------------------------------------------------------------------
 
 message ( STATUS "CMAKE build type:          " ${CMAKE_BUILD_TYPE} )
 
@@ -126,8 +156,8 @@ else ( )
     message ( STATUS "CMAKE C Flags release:     " ${CMAKE_C_FLAGS_RELEASE} )
 endif ( )
 
-message ( STATUS "CMAKE compiler ID:         " ${CMAKE_C_COMPILER_ID} )
-message ( STATUS "CMAKE have OpenMP:         " ${OPENMP_FOUND} )
+message ( STATUS "C compiler:                 ${CMAKE_C_COMPILER} ")
+message ( STATUS "CMAKE have OpenMP:          ${OpenMP_C_FOUND}" )
 
 #-------------------------------------------------------------------------------
 # include directories
@@ -135,122 +165,128 @@ message ( STATUS "CMAKE have OpenMP:         " ${OPENMP_FOUND} )
 
 set ( CMAKE_INCLUDE_CURRENT_DIR ON )
 
-if ( CMAKE_CUDA_DEV )
-    # for CUDA development only; not for production use
-    include_directories ( ../Source/Template ../Source ../Include rename
-        ../Source/Generated1 ../lz4 ../zstd ../zstd/zstd_subset ../rmm_wrap )
-else ( )
-    include_directories ( ../Source/Template ../Source ../Include rename
-        ../Source/Generated1 ../lz4 ../zstd ../zstd/zstd_subset ../rmm_wrap
-        ../Source/Generated2 )
-endif ( )
+include_directories ( ${PROJECT_SOURCE_DIR}/../ ../Source ../Include Config
+    ../xxHash ../lz4 ../zstd ../zstd/zstd_subset ../JITpackage
+    rename
+    # include all Source/* folders that have include/ or template/ subfolders:
+    ../Source/add
+    ../Source/apply
+    ../Source/assign
+    ../Source/builder
+    ../Source/builtin
+    ../Source/callback
+    ../Source/concat
+    ../Source/convert
+    ../Source/cumsum
+    ../Source/emult
+    ../Source/ewise
+    ../Source/extract
+    ../Source/hyper
+    ../Source/ij
+    ../Source/jit_kernels
+    ../Source/kronecker
+    ../Source/mask
+    ../Source/math
+    ../Source/matrix
+    ../Source/memory
+    ../Source/monoid
+    ../Source/mxm
+    ../Source/ok
+    ../Source/omp
+    ../Source/print
+    ../Source/reduce
+    ../Source/select
+    ../Source/split
+    ../Source/slice
+    ../Source/sort
+    ../Source/transpose
+    ../Source/type
+    ../Source/wait
+    ../Source/werk
+    )
 
 #-------------------------------------------------------------------------------
 # compiler options:
 #-------------------------------------------------------------------------------
 
-# check which compiler is being used.  If you need to make
-# compiler-specific modifications, here is the place to do it.
-if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -std=c11 -lm -Wno-pragmas " )
-    # operations may be carried out in higher precision
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fexcess-precision=fast " )
-    # faster single complex multiplication and division
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fcx-limited-range " )
-    # math functions do not need to report errno
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fno-math-errno " )
-    # integer operations wrap
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fwrapv " )
-    # check all warnings (uncomment for development only)
-#   set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic " )
-    if ( CMAKE_C_COMPILER_VERSION VERSION_LESS 4.9 )
-        message ( FATAL_ERROR "gcc version must be at least 4.9" )
-    endif ( )
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "Intel" )
-    # options for icc: also needs -std=c11
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -diag-disable 10397,15552 " )
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -qopt-report=5 -qopt-report-phase=vec" )
-    # the -mp1 option is important for predictable floating-point results with
-    # the icc compiler.  Without, ((float) 1.)/((float) 0.) produces NaN,
-    # instead of the correct result, Inf.
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -std=c11 -mp1" )
-    # The -g option is useful for the Intel VTune tool, but it should be
-    # removed in production.  Comment this line out if not in use:
-    # set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -g" )
-#   set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -qopt-malloc-options=3" )
-    # check all warnings and remarks (uncomment for development only):
-#   set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -w3 -Wremarks -Werror " )
-    if ( CMAKE_C_COMPILER_VERSION VERSION_LESS 19.0 )
-        message ( FATAL_ERROR "icc version must be at least 19.0" )
-    endif ( )
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM" )
-    # options for icx
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" )
-    # options for clang
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wno-pointer-sign " )
-    if ( CMAKE_C_COMPILER_VERSION VERSION_LESS 3.3 )
-        message ( FATAL_ERROR "clang version must be at least 3.3" )
-    endif ( )
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
-    # options for MicroSoft Visual Studio
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /O2 -wd\"4244\" -wd\"4146\" -wd\"4018\" -wd\"4996\" -wd\"4047\" -wd\"4554\"")
-endif ( )
-
-if ( ${CMAKE_BUILD_TYPE} STREQUAL "Debug" )
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}" )
-else ( )
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}" )
-endif ( )
+include ( GraphBLAS_compiler_options )
 
 #-------------------------------------------------------------------------------
 # dynamic graphblas_matlab library properties
 #-------------------------------------------------------------------------------
 
-if ( CMAKE_CUDA_DEV )
-    # for CUDA development only; not for production use
-    file ( GLOB GRAPHBLAS_SOURCES "../Source/*.c" "../Source/Generated1/*.c" )
+file ( GLOB GRAPHBLAS_SOURCES "../PreJIT/*.c" "../Config/*.c"
+    "../Source/*/*.c" )
+
+if ( NOT GRAPHBLAS_COMPACT )
+    # compile the FactoryKernels
+    file ( GLOB GRAPHBLAS_FACTORYKERNELS "../FactoryKernels/*.c" )
+    list ( APPEND GRAPHBLAS_SOURCES ${GRAPHBLAS_FACTORYKERNELS} )
+endif ( )
+
+if ( GRAPHBLAS_USE_JIT )
+    # generate compressed JIT sources to create GB_JITpackage.c
+    message ( STATUS "Creating the GraphBLAS/JITpackage:" )
+    add_subdirectory ( ../JITpackage build )
+    # GLOB does not include files that do not yet exist, so prepend
+    # the GB_JITpackage.c file here:
+    list ( PREPEND GRAPHBLAS_SOURCES
+        $<TARGET_PROPERTY:GB_JITpackage,GENERATED_FILE> )
 else ( )
-    file ( GLOB GRAPHBLAS_SOURCES "../Source/*.c" "../Source/Generated1/*.c" "../Source/Generated2/*.c" )
+    # create an empty GB_JITpackage.c file:
+    message ( STATUS "Creating an empty GraphBLAS/JITpackage (JIT disabled):" )
+    configure_file ( "../Config/GB_JITpackage_NJIT.c.in"
+        "../JITpackage/GB_JITpackage.c"
+        NEWLINE_STYLE LF )
+    list ( PREPEND GRAPHBLAS_SOURCES "../JITpackage/GB_JITpackage.c")
 endif ( )
 
 add_library ( graphblas_matlab SHARED ${GRAPHBLAS_SOURCES} )
 set_target_properties ( graphblas_matlab PROPERTIES
-    VERSION ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}
-    SOVERSION ${GraphBLAS_VERSION_MAJOR}
-    C_STANDARD_REQUIRED 11
+    VERSION ${GraphBLAS_VER_MAJOR}.${GraphBLAS_VER_MINOR}.${GraphBLAS_VER_SUB}
+    SOVERSION ${GraphBLAS_VER_MAJOR}
+    C_STANDARD 11
+    C_STANDARD_REQUIRED ON
     PUBLIC_HEADER "../Include/GraphBLAS.h" )
-set_property ( TARGET graphblas_matlab PROPERTY C_STANDARD 11 )
 
-#-------------------------------------------------------------------------------
-# select the threading library
-#-------------------------------------------------------------------------------
-
-if ( OPENMP_FOUND )
-    set ( USE_OPENMP true )
+if ( GRAPHBLAS_USE_JIT )
+    # Make sure compressed sources are built before library
+    add_dependencies ( graphblas_matlab GB_JITpackage )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # select the math library (not required for Microsoft Visual Studio)
 #-------------------------------------------------------------------------------
 
-if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
-    set ( M_LIB "" )
-else ( )
-    set ( M_LIB "m" )
+# libm:
+if ( NOT WIN32 )
+    target_link_libraries ( graphblas_matlab PUBLIC m )
 endif ( )
 
-target_link_libraries ( graphblas_matlab PUBLIC ${M_LIB} )
+# libdl
+if ( NOT WIN32 )
+    target_link_libraries ( graphblas_matlab PUBLIC dl )
+endif ( )
+
+# include ( SuiteSparseAtomic )
+# if ( LIBATOMIC_REQUIRED )
+#     target_link_libraries ( graphblas_matlab PUBLIC atomic )
+# endif ( )
 
 #-------------------------------------------------------------------------------
 # add library dependencies
 #-------------------------------------------------------------------------------
 
-if ( USE_OPENMP )
+if ( GRAPHBLAS_HAS_OPENMP )
     message ( STATUS "CMAKE OpenMP libraries:    " ${OpenMP_C_LIBRARIES} )
     message ( STATUS "CMAKE OpenMP include:      " ${OpenMP_C_INCLUDE_DIRS} )
-    target_link_libraries ( graphblas_matlab PUBLIC ${OpenMP_C_LIBRARIES} )
+#   target_link_libraries ( graphblas_matlab PUBLIC ${OpenMP_C_LIBRARIES} )
+    include ( GraphBLAS_MATLAB_OpenMP.cmake )
     set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} " )
     include_directories ( ${OpenMP_C_INCLUDE_DIRS} )
+else ( )
+    # check for __thread, __declspec(thread), and _Thread_local keywords
+    include ( SuiteSparse__thread )
 endif ( )
 
 #-------------------------------------------------------------------------------
@@ -273,6 +309,24 @@ if ( NOT GBNCPUFEAT )
     endif ( )
 endif ( )
 
+# get the current library list
+get_target_property ( GB_CMAKE_LIBRARIES graphblas_matlab LINK_LIBRARIES )
+if ( NOT GB_CMAKE_LIBRARIES )
+    set ( GB_CMAKE_LIBRARIES "" )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# determine complex type
+#-------------------------------------------------------------------------------
+
+include ( GraphBLAS_complex )
+if ( GxB_HAVE_COMPLEX_C99 )
+    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGxB_HAVE_COMPLEX_C99=1 " )
+endif ( )
+if ( GxB_HAVE_COMPLEX_MSVC )
+    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGxB_HAVE_COMPLEX_MSVC=1 " )
+endif ( )
+
 #-------------------------------------------------------------------------------
 # print final C flags
 #-------------------------------------------------------------------------------
@@ -283,26 +337,19 @@ message ( STATUS "CMAKE C flags: " ${CMAKE_C_FLAGS} )
 # installation location
 #-------------------------------------------------------------------------------
 
-if ( GLOBAL_INSTALL )
-    # install in /usr/local/lib and /usr/local/include.
-    # requires "sudo make install"
-    message ( STATUS "Installation will be system-wide (requires 'sudo make install')" )
-    message ( STATUS "System install libdir: ${CMAKE_INSTALL_LIBDIR}" )
-    message ( STATUS "System install incdir: ${CMAKE_INSTALL_INCLUDEDIR}" )
-    install ( TARGETS graphblas_matlab
-        LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} )
-endif ( )
+install ( TARGETS graphblas_matlab
+    LIBRARY DESTINATION ${SUITESPARSE_LIBDIR}
+    ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
+    RUNTIME DESTINATION ${SUITESPARSE_BINDIR}
+    PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
 
-if ( INSIDE_SUITESPARSE )
-    # also install in SuiteSparse/lib and SuiteSparse/include;
-    # does not require "sudo make install", just "make install"
-    message ( STATUS "Installation in ../../lib and ../../include," )
-    message ( STATUS "  with 'make local ; make install'. No 'sudo' required." )
-    message ( STATUS "Local  install libdir: ${SUITESPARSE_LIBDIR}" )
-    message ( STATUS "Local  install incdir: ${SUITESPARSE_INCLUDEDIR}" )
-    install ( TARGETS graphblas_matlab
-        LIBRARY       DESTINATION ${SUITESPARSE_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
-endif ( )
+#-------------------------------------------------------------------------------
+# configure the JITs
+#-------------------------------------------------------------------------------
+
+include ( GraphBLAS_JIT_configure )
+
+configure_file ( "../Config/GB_config.h.in"
+    "${PROJECT_SOURCE_DIR}/Config/GB_config.h"
+    NEWLINE_STYLE LF )
 

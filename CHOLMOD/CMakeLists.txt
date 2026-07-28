@@ -2,20 +2,19 @@
 # SuiteSparse/CHOLMOD/CMakeLists.txt:  cmake for CHOLMOD
 #-------------------------------------------------------------------------------
 
-# CHOLMOD: Copyright (c) 2005-2022, Timothy A. Davis.
+# CHOLMOD: Copyright (c) 2005-2026, Timothy A. Davis.
 # Copyright and license varies by module.
 
 #-------------------------------------------------------------------------------
 # get the version
 #-------------------------------------------------------------------------------
 
-# cmake 3.22 is required to find the BLAS/LAPACK
-cmake_minimum_required ( VERSION 3.22 )
+cmake_minimum_required ( VERSION 3.23 )
 
-set ( CHOLMOD_DATE "Nov 12, 2022" )
-set ( CHOLMOD_VERSION_MAJOR 4 )
-set ( CHOLMOD_VERSION_MINOR 0 )
-set ( CHOLMOD_VERSION_SUB   1 )
+set ( CHOLMOD_DATE "July 31, 2026" )
+set ( CHOLMOD_VERSION_MAJOR 5 CACHE STRING "" FORCE )
+set ( CHOLMOD_VERSION_MINOR 3 CACHE STRING "" FORCE )
+set ( CHOLMOD_VERSION_SUB   5 CACHE STRING "" FORCE )
 
 message ( STATUS "Building CHOLMOD version: v"
     ${CHOLMOD_VERSION_MAJOR}.
@@ -23,63 +22,113 @@ message ( STATUS "Building CHOLMOD version: v"
     ${CHOLMOD_VERSION_SUB} " (" ${CHOLMOD_DATE} ")" )
 
 #-------------------------------------------------------------------------------
+# define the project
+#-------------------------------------------------------------------------------
+
+project ( CHOLMOD
+        VERSION "${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}"
+        LANGUAGES C )
+
+#-------------------------------------------------------------------------------
 # SuiteSparse policies
 #-------------------------------------------------------------------------------
 
 set ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-    ${CMAKE_SOURCE_DIR}/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../COLAMD/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../AMD/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../CAMD/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../CCOLAMD/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/cmake_modules )
-
-option ( ENABLE_CUDA "Enable CUDA acceleration" on )
-
-if ( NGPL )
-    # NGPL: if true, do not include any GPL-licensed module
-    set ( NMATRIXOPS true )
-    set ( NMODIFY true )
-    set ( NSUPERNODAL true )
-    set ( ENABLE_CUDA false )
-    add_compile_definitions ( NGPL )
-endif ( )
+    ${PROJECT_SOURCE_DIR}/cmake_modules
+    ${PROJECT_SOURCE_DIR}/../SuiteSparse_config/cmake_modules )
 
 include ( SuiteSparsePolicy )
 
+option ( CHOLMOD_USE_CUDA "ON (default): enable CUDA acceleration for CHOLMOD, OFF: do not use CUDA" ${SUITESPARSE_USE_CUDA} )
+if ( NOT SUITESPARSE_USE_CUDA )
+    set ( CHOLMOD_USE_CUDA "OFF" CACHE STRING "" FORCE )
+endif ( )
+
+option ( CHOLMOD_GPL "ON (default): enable GPL-licensed modules, OFF: do not use any CHOLMOD GPL-licensed modules" ON )
+if ( NOT CHOLMOD_GPL )
+    # CHOLMOD_GPL: if OFF, do not include any GPL-licensed module
+    set ( CHOLMOD_MATRIXOPS OFF )
+    set ( CHOLMOD_MODIFY OFF )
+    set ( CHOLMOD_SUPERNODAL OFF )
+    set ( CHOLMOD_USE_CUDA "OFF" CACHE STRING "" FORCE ) # OK: disabled by user-setting of CHOLMOD_GPL
+    add_compile_definitions ( NGPL )
+endif ( )
+
+include ( CheckTypeSize )
+check_type_size ( "ssize_t" SSIZE_T )
+if ( NOT HAVE_SSIZE_T )
+    # #include <sys/types.h> and ssize_t not defined (typically on Windows)
+    add_compile_definitions ( NO_SSIZE_T )
+endif ( )
+
 #-------------------------------------------------------------------------------
-# define the project
+# find CUDA
 #-------------------------------------------------------------------------------
 
-if ( SUITESPARSE_CUDA )
+if ( SUITESPARSE_HAS_CUDA AND CHOLMOD_USE_CUDA )
     # CHOLMOD with CUDA
-    project ( cholmod
-            VERSION "${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}"
-            LANGUAGES CUDA C CXX )
+    enable_language ( CUDA CXX )
+    set ( CHOLMOD_HAS_CUDA ON )
 else ( )
-    # CHOLMOD without CUDA
-    project ( cholmod
-            VERSION "${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}"
-            LANGUAGES C )
+    set ( CHOLMOD_HAS_CUDA OFF )
+endif ( )
+
+# check for strict usage
+if ( SUITESPARSE_USE_STRICT AND CHOLMOD_USE_CUDA AND NOT CHOLMOD_HAS_CUDA )
+    message ( FATAL_ERROR "CUDA required for CHOLMOD but not found" )
 endif ( )
 
 #-------------------------------------------------------------------------------
-# find library dependencies
+# find OpenMP
 #-------------------------------------------------------------------------------
 
-enable_language ( C Fortran )
-
-option ( NOPENMP "ON: do not use OpenMP.  OFF (default): use OpenMP" off )
-if ( NOPENMP )
+option ( CHOLMOD_USE_OPENMP "ON: Use OpenMP in CHOLMOD if available.  OFF: Do not use OpenMP.  (Default: SUITESPARSE_USE_OPENMP)" ${SUITESPARSE_USE_OPENMP} )
+if ( CHOLMOD_USE_OPENMP )
+    if ( CMAKE_VERSION VERSION_LESS 3.24 )
+        find_package ( OpenMP COMPONENTS C )
+    else ( )
+        find_package ( OpenMP COMPONENTS C GLOBAL )
+    endif ( )
+else ( )
     # OpenMP has been disabled
-    set ( OPENMP_FOUND false )
-else ( )
-    find_package ( OpenMP )
+    set ( OpenMP_C_FOUND OFF )
 endif ( )
 
-find_package ( SuiteSparse_config 6.0.0 REQUIRED )
-find_package ( COLAMD 3.0.0 REQUIRED )
-find_package ( AMD 3.0.0 REQUIRED )
+if ( CHOLMOD_USE_OPENMP AND OpenMP_C_FOUND )
+    set ( CHOLMOD_HAS_OPENMP ON )
+else ( )
+    set ( CHOLMOD_HAS_OPENMP OFF )
+endif ( )
+message ( STATUS "CHOLMOD has OpenMP: ${CHOLMOD_HAS_OPENMP}" )
+
+# check for strict usage
+if ( SUITESPARSE_USE_STRICT AND CHOLMOD_USE_OPENMP AND NOT CHOLMOD_HAS_OPENMP )
+    message ( FATAL_ERROR "OpenMP required for CHOLMOD but not found" )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# find other library dependencies
+#-------------------------------------------------------------------------------
+
+if ( NOT SUITESPARSE_ROOT_CMAKELISTS )
+    find_package ( SuiteSparse_config 7.12.3
+        PATHS ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/build NO_DEFAULT_PATH )
+    if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
+        find_package ( SuiteSparse_config 7.12.3 REQUIRED )
+    endif ( )
+
+    find_package ( AMD 3.3.4
+        PATHS ${CMAKE_SOURCE_DIR}/../AMD/build NO_DEFAULT_PATH )
+    if ( NOT TARGET SuiteSparse::AMD )
+        find_package ( AMD 3.3.4 REQUIRED )
+    endif ( )
+
+    find_package ( COLAMD 3.3.5
+        PATHS ${CMAKE_SOURCE_DIR}/../COLAMD/build NO_DEFAULT_PATH )
+    if ( NOT TARGET SuiteSparse::COLAMD )
+        find_package ( COLAMD 3.3.5 REQUIRED )
+    endif ( )
+endif ( )
 
 #-------------------------------------------------------------------------------
 # find CHOLMOD modules
@@ -89,34 +138,32 @@ find_package ( AMD 3.0.0 REQUIRED )
 # not build a module, simply delete or rename the entire folder before building
 # CHOLMOD, or pass the corresponding flag when using cmake:
 
-#   -DNGL=1         if true: do not build any GPL-licensed module (MatrixOps,
-#                   Modify, Supernodal, and GPU modules). See above.
-#
-#   -DNCHECK=1      if true: do not build the Check module.
-#
-#   -DNMATRIXOPS=1  if true: do not build the MatrixOps module.
-#   -DNCHOLESKY=1   if true: do not build the Cholesky module.
-#                   This also disables the Supernodal and Modify modules.
-#   -DNMODIFY=1     if true: do not build the Modify module.
-#   -DNCAMD=1       if true: do not link against CAMD and CCOLAMD.
-#                   This also disables the Partition module.
-#   -DNPARTITION=1  if true: do not build the Partition module.
-#   -DNSUPERNODAL=1 if true: do not build the Supernodal module.
+#   -DCHOLMOD_GPL=0        if OFF: do not build any GPL-licensed module
+#                          (MatrixOps, Modify, Supernodal, and GPU modules).
+#   -DCHOLMOD_CHECK=0      if OFF: do not build the Check module.
+#   -DCHOLMOD_MATRIXOPS=0  if OFF: do not build the MatrixOps module.
+#   -DCHOLMOD_CHOLESKY=0   if OFF: do not build the Cholesky module.
+#                          This also disables the Supernodal and Modify modules.
+#   -DCHOLMOD_MODIFY=0     if OFF: do not build the Modify module.
+#   -DCHOLMOD_CAMD=0       if OFF: do not link against CAMD and CCOLAMD.
+#                          This also disables the Partition module.
+#   -DCHOLMOD_PARTITION=0  if OFF: do not build the Partition module.
+#   -DCHOLMOD_SUPERNODAL=0 if OFF: do not build the Supernodal module.
 
-# By default, all "N..." flags are false, if not defined explicitly.
+# By default, all the above flags are ON, if not defined explicitly.
 
     #---------------------------------------------------------------------------
     # Check module
     #---------------------------------------------------------------------------
 
-    option ( NCHECK "ON: do not use Check Module.  OFF (default): use Check Module" off )
+    option ( CHOLMOD_CHECK "ON (default): use Check Module.  OFF: do not use Check Module" ON )
 
-    if ( NOT EXISTS ${CMAKE_SOURCE_DIR}/Check )
+    if ( NOT EXISTS ${PROJECT_SOURCE_DIR}/Check )
         # Check module does not appear so don't use it
-        set ( NCHECK true )
+        set ( CHOLMOD_CHECK OFF )
     endif ( )
-    if ( NCHECK )
-        # if NCHECK is true: do not build the Check module
+    if ( NOT CHOLMOD_CHECK )
+        # if CHOLMOD_CHECK is OFF: do not build the Check module
         add_compile_definitions ( NCHECK )
     endif ( )
 
@@ -124,14 +171,14 @@ find_package ( AMD 3.0.0 REQUIRED )
     # MatrixOps module
     #---------------------------------------------------------------------------
 
-    option ( NMATRIXOPS "ON: do not use MatrixOps Module.  OFF (default): use MatrixOps Module" off )
+    option ( CHOLMOD_MATRIXOPS "ON (default): use MatrixOps Module.  OFF: do not use MatrixOps Module" ON )
 
-    if ( NOT EXISTS ${CMAKE_SOURCE_DIR}/MatrixOps )
+    if ( NOT EXISTS ${PROJECT_SOURCE_DIR}/MatrixOps )
         # MatrixOps module does not appear so don't use it
-        set ( NMATRIXOPS true )
+        set ( CHOLMOD_MATRIXOPS OFF )
     endif ( )
-    if ( NMATRIXOPS )
-        # if NMATRIXOPS is true: do not build the Check module
+    if ( NOT CHOLMOD_MATRIXOPS )
+        # if CHOLMOD_MATRIXOPS is OFF: do not build the Check module
         add_compile_definitions ( NMATRIXOPS )
     endif ( )
 
@@ -139,17 +186,17 @@ find_package ( AMD 3.0.0 REQUIRED )
     # Cholesky module: requires AMD, COLAMD
     #---------------------------------------------------------------------------
 
-    option ( NCHOLESKY "ON: do not use Cholesky Module.  OFF (default): use Cholesky Module" off )
+    option ( CHOLMOD_CHOLESKY "ON (default): use Cholesky Module.  OFF: do not use Cholesky Module" ON )
 
-    if ( NOT EXISTS ${CMAKE_SOURCE_DIR}/Cholesky )
+    if ( NOT EXISTS ${PROJECT_SOURCE_DIR}/Cholesky )
         # Cholesky module does not appear so don't use it
-        set ( NCHOLESKY true )
+        set ( CHOLMOD_CHOLESKY OFF )
     endif ( )
-    if ( NCHOLESKY )
-        # if NCHOLESKY is true: do not build the Cholesky module, and do not
+    if ( NOT CHOLMOD_CHOLESKY )
+        # if CHOLMOD_CHOLESKY is OFF: do not build the Cholesky module, and do not
         # build the Supernodal or Modify modules that depend on it.
-        set ( NSUPERNODAL true )
-        set ( NMODIFY true )
+        set ( CHOLMOD_SUPERNODAL OFF )
+        set ( CHOLMOD_MODIFY OFF )
         add_compile_definitions ( NCHOLESKY )
     endif ( )
 
@@ -157,14 +204,14 @@ find_package ( AMD 3.0.0 REQUIRED )
     # Modify module: requires Cholesky
     #---------------------------------------------------------------------------
 
-    option ( NMODIFY "ON: do not use Modify Module.  OFF (default): use Modify Module" off )
+    option ( CHOLMOD_MODIFY "ON (default): use Modify Module.  OFF: do not use Modify Module" ON )
 
-    if ( NOT EXISTS ${CMAKE_SOURCE_DIR}/Modify )
+    if ( NOT EXISTS ${PROJECT_SOURCE_DIR}/Modify )
         # Modify module does not appear so don't use it
-        set ( NMODIFY true )
+        set ( CHOLMOD_MODIFY OFF )
     endif ( )
-    if ( NMODIFY )
-        # if NMODIFY is true: do not build the Modify module
+    if ( NOT CHOLMOD_MODIFY )
+        # if CHOLMOD_MODIFY is OFF: do not build the Modify module
         add_compile_definitions ( NMODIFY )
     endif ( )
 
@@ -172,7 +219,7 @@ find_package ( AMD 3.0.0 REQUIRED )
     # interfaces to CAMD and CCOLAMD
     #---------------------------------------------------------------------------
 
-    option ( NCAMD "ON: do not use CAMD/CCOLAMD.  OFF (default): use CAMD/CCOLAMD" off )
+    option ( CHOLMOD_CAMD "ON (default): use CAMD/CCOLAMD.  OFF: do not use CAMD/CCOLAMD" ON )
 
     # The CHOLMOD interfaces to CAMD and CCOLAMD are in the Partition module
     # (cholmod_camd, cholmod_ccolamd, cholmod_csymamd).  The Partition module
@@ -181,42 +228,52 @@ find_package ( AMD 3.0.0 REQUIRED )
     # future, the CAMD and CCOLAMD interfaces will be split into their own
     # module to make this dependency more clear.
 
-    if ( NOT NCAMD )
+    if ( CHOLMOD_CAMD AND NOT SUITESPARSE_ROOT_CMAKELISTS )
         # find CAMD and CCOLAMD
-        find_package ( CAMD 3.0.0 )
-        find_package ( CCOLAMD 3.0.0 )
+        find_package ( CAMD 3.3.5
+            PATHS ${CMAKE_SOURCE_DIR}/../CAMD/build NO_DEFAULT_PATH )
+        if ( NOT TARGET SuiteSparse::CAMD )
+            find_package ( CAMD 3.3.5 )
+        endif ( )
+
+        find_package ( CCOLAMD 3.3.5
+            PATHS ${CMAKE_SOURCE_DIR}/../CCOLAMD/build NO_DEFAULT_PATH )
+        if ( NOT TARGET SuiteSparse::CCOLAMD )
+            find_package ( CCOLAMD 3.3.5 )
+        endif ( )
+
         if ( NOT CAMD_FOUND OR NOT CCOLAMD_FOUND )
             # CAMD and/or CCOLAMD not found
-            set ( NCAMD true )
+            set ( CHOLMOD_CAMD OFF )
         endif ( )
     endif ( )
 
-    if ( NCAMD )
+    if ( NOT CHOLMOD_CAMD )
         # Partition module requires CAMD and CCOLAMD, so if CAMD and CCOLAMD
         # are disabled, then do not build the Partition module
-        set ( NPARTITION true )
+        set ( CHOLMOD_PARTITION OFF )
     endif ( )
 
     #---------------------------------------------------------------------------
     # Partition module: requires Cholesky, CAMD, CCOLAMD, and METIS
     #---------------------------------------------------------------------------
 
-    option ( NPARTITION "ON: do not use METIS.  OFF (default): use METIS" off )
+    option ( CHOLMOD_PARTITION "ON (default): use METIS.  OFF: do not use METIS" ON )
 
-    if ( NOT EXISTS ${CMAKE_SOURCE_DIR}/Partition )
-        # Partition module does not appear so don't use it.  Since this
-        # folder also includes the CAMD and CCOLAMD interfaces, NCAMD must
-        # be set true here as well.
-        set ( NPARTITION true )
-        set ( NCAMD true )
+    if ( NOT EXISTS ${PROJECT_SOURCE_DIR}/Partition )
+        # Partition module does not appear so don't use it.  Since this folder
+        # also includes the CAMD and CCOLAMD interfaces, CHOLMOD_CAMD must be
+        # set OFF here as well.
+        set ( CHOLMOD_PARTITION OFF )
+        set ( CHOLMOD_CAMD OFF )
     endif ( )
-    if ( NPARTITION )
-        # if NPARTITION is true: do not build the Partition module
+    if ( NOT CHOLMOD_PARTITION )
+        # if CHOLMOD_PARTITION is OFF: do not build the Partition module
         add_compile_definitions ( NPARTITION )
     endif ( )
 
-    if ( NCAMD )
-        # if NCAMD is true: do not build the CAMD and CCOLAMD interfaces
+    if ( NOT CHOLMOD_CAMD )
+        # if CHOLMOD_CAMD is OFF: do not build the CAMD and CCOLAMD interfaces
         add_compile_definitions ( NCAMD )
     endif ( )
 
@@ -224,256 +281,644 @@ find_package ( AMD 3.0.0 REQUIRED )
     # Supernodal module: requires Cholesky, BLAS, and LAPACK
     #---------------------------------------------------------------------------
 
-    option ( NSUPERNODAL "ON: do not use Supernodal Module.  OFF (default): use Supernodal Module" off )
+    option ( CHOLMOD_SUPERNODAL "ON (default): use Supernodal Module.  OFF: do not use Supernodal Module" ON )
 
-    if ( NOT EXISTS ${CMAKE_SOURCE_DIR}/Supernodal )
+    if ( NOT EXISTS ${PROJECT_SOURCE_DIR}/Supernodal )
         # Supernodal module does not appear so don't use it
-        set ( NSUPERNODAL true )
+        set ( CHOLMOD_SUPERNODAL OFF )
     endif ( )
 
-    if ( NSUPERNODAL )
-        # if NSUPERNODAL is true: do not link against CAMD and CCOLAMD
+    if ( NOT CHOLMOD_SUPERNODAL )
+        # if CHOLMOD_SUPERNODAL is OFF: do not build Supernodal module
         add_compile_definitions ( NSUPERNODAL )
     else ( )
-        # if NSUPERNODAL is false: build Supernodal, which needs the BLAS
+        # if CHOLMOD_SUPERNODAL is ON: build Supernodal, needs BLAS and LAPACK
         include ( SuiteSparseBLAS )     # requires cmake 3.22
+        include ( SuiteSparseLAPACK )   # requires cmake 3.22
     endif ( )
-
-#-------------------------------------------------------------------------------
-# find CUDA
-#-------------------------------------------------------------------------------
-
-if ( SUITESPARSE_CUDA )
-    # with CUDA
-    set ( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -DSUITESPARSE_CUDA " )
-    add_subdirectory ( GPU )
-    set ( CHOLMOD_CUDA cholmod_cuda ${CUDA_LIBRARIES} )
-    include_directories ( GPU ${CUDAToolkit_INCLUDE_DIRS} )
-    link_directories ( "GPU" "${CUDA_LIBRARIES}" "/usr/local/cuda/lib64/stubs" "/usr/local/cuda/lib64" )
-else ( )
-    # without CUDA and RMM
-    set ( CHOLMOD_CUDA )
-endif ( )
 
 #-------------------------------------------------------------------------------
 # configure files
 #-------------------------------------------------------------------------------
 
-configure_file ( "Config/cholmod.h.in" "${PROJECT_SOURCE_DIR}/Include/cholmod.h")
-configure_file ( "Config/cholmod_version.tex.in" "${PROJECT_SOURCE_DIR}/Doc/cholmod_version.tex")
+if ( CHOLMOD_CHECK )
+    set ( CHOLMOD_HAS_CHECK ON )
+else ( )
+    set ( CHOLMOD_HAS_CHECK OFF )
+endif ( )
+
+if ( CHOLMOD_CHOLESKY )
+    set ( CHOLMOD_HAS_CHOLESKY ON )
+else ( )
+    set ( CHOLMOD_HAS_CHOLESKY OFF )
+endif ( )
+
+if ( CHOLMOD_PARTITION )
+    set ( CHOLMOD_HAS_PARTITION ON )
+else ( )
+    set ( CHOLMOD_HAS_PARTITION OFF )
+endif ( )
+
+if ( CHOLMOD_CAMD )
+    # CHOLMOD has both CAMD and CCOLAMD
+    set ( CHOLMOD_HAS_CAMD ON )
+else ( )
+    set ( CHOLMOD_HAS_CAMD OFF )
+endif ( )
+
+if ( CHOLMOD_MATRIXOPS )
+    set ( CHOLMOD_HAS_MATRIXOPS ON )
+else ( )
+    set ( CHOLMOD_HAS_MATRIXOPS OFF )
+endif ( )
+
+if ( CHOLMOD_MODIFY )
+    set ( CHOLMOD_HAS_MODIFY ON )
+else ( )
+    set ( CHOLMOD_HAS_MODIFY OFF )
+endif ( )
+
+if ( CHOLMOD_SUPERNODAL )
+    set ( CHOLMOD_HAS_SUPERNODAL ON )
+else ( )
+    set ( CHOLMOD_HAS_SUPERNODAL OFF )
+endif ( )
+
+if ( CHOLMOD_GPL )
+    set ( CHOLMOD_HAS_GPL ON )
+else ( )
+    set ( CHOLMOD_HAS_GPL OFF )
+endif ( )
+
+configure_file ( "Config/cholmod.h.in"
+    "${PROJECT_SOURCE_DIR}/Include/cholmod.h"
+    NEWLINE_STYLE LF )
+configure_file ( "Config/cholmod_version.tex.in"
+    "${PROJECT_SOURCE_DIR}/Doc/cholmod_version.tex"
+    NEWLINE_STYLE LF )
 
 #-------------------------------------------------------------------------------
 # include directories
 #-------------------------------------------------------------------------------
 
-include_directories ( Check Cholesky Core MatrixOps Modify Partition
-    Supernodal Include ${CMAKE_SOURCE_DIR} ${SUITESPARSE_CONFIG_INCLUDE_DIR}
-    ${AMD_INCLUDE_DIR} ${COLAMD_INCLUDE_DIR} )
+include_directories ( Check Cholesky Utility MatrixOps Modify Partition
+    Supernodal Include ${PROJECT_SOURCE_DIR} )
 
 #-------------------------------------------------------------------------------
 # dynamic cholmod library properties
 #-------------------------------------------------------------------------------
 
 file ( GLOB CHOLMOD_SOURCES "Check/cholmod_*.c" "Cholesky/cholmod_*.c"
-    "Core/cholmod_*.c" "MatrixOps/cholmod_*.c" "Modify/cholmod_*.c"
+    "Utility/cholmod_*.c" "MatrixOps/cholmod_*.c" "Modify/cholmod_*.c"
     "Partition/cholmod_*.c" "Supernodal/cholmod_*.c" )
 
-add_library ( cholmod SHARED ${CHOLMOD_SOURCES} )
+if ( BUILD_SHARED_LIBS )
+    add_library ( CHOLMOD SHARED ${CHOLMOD_SOURCES} )
 
-set_target_properties ( cholmod PROPERTIES
-    VERSION ${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}
-    C_STANDARD_REQUIRED 11
-    SOVERSION ${CHOLMOD_VERSION_MAJOR}
-    PUBLIC_HEADER "Include/cholmod.h" )
+    set_target_properties ( CHOLMOD PROPERTIES
+        VERSION ${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        OUTPUT_NAME cholmod
+        SOVERSION ${CHOLMOD_VERSION_MAJOR}
+        PUBLIC_HEADER "Include/cholmod.h"
+        WINDOWS_EXPORT_ALL_SYMBOLS ON )
 
-if ( SUITESPARSE_CUDA )
-    set_target_properties ( cholmod PROPERTIES CUDA_SEPARABLE_COMPILATION on )
-    set_target_properties ( cholmod PROPERTIES POSITION_INDEPENDENT_CODE on )
+    if ( CHOLMOD_HAS_CUDA )
+        set_target_properties ( CHOLMOD PROPERTIES
+            POSITION_INDEPENDENT_CODE ON
+            CUDA_SEPARABLE_COMPILATION ON
+            LINKER_LANGUAGE CUDA )
+    else ( )
+        set_target_properties ( CHOLMOD PROPERTIES
+            LINKER_LANGUAGE C )
+    endif ( )
+
+    if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.25" )
+        set_target_properties ( CHOLMOD PROPERTIES EXPORT_NO_SYSTEM ON )
+    endif ( )
+
+    target_include_directories ( CHOLMOD
+        INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+                  $<INSTALL_INTERFACE:${SUITESPARSE_INCLUDEDIR}> )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # static cholmod library properties
 #-------------------------------------------------------------------------------
 
-if ( NOT NSTATIC )
-add_library ( cholmod_static STATIC ${CHOLMOD_SOURCES} )
+if ( BUILD_STATIC_LIBS )
+    add_library ( CHOLMOD_static STATIC ${CHOLMOD_SOURCES} )
 
-set_target_properties ( cholmod_static PROPERTIES
-    VERSION ${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}
-    C_STANDARD_REQUIRED 11
-    OUTPUT_NAME cholmod
-    SOVERSION ${CHOLMOD_VERSION_MAJOR} )
+    set_target_properties ( CHOLMOD_static PROPERTIES
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        OUTPUT_NAME cholmod
+        PUBLIC_HEADER "Include/cholmod.h" )
 
-if ( SUITESPARSE_CUDA )
-    set_target_properties ( cholmod_static PROPERTIES CUDA_SEPARABLE_COMPILATION on )
-    set_target_properties ( cholmod_static PROPERTIES POSITION_INDEPENDENT_CODE on )
-endif ( )
+    if ( MSVC OR ("${CMAKE_C_SIMULATE_ID}" STREQUAL "MSVC") )
+        set_target_properties ( CHOLMOD_static PROPERTIES
+            OUTPUT_NAME cholmod_static )
+    endif ( )
+
+    if ( CHOLMOD_HAS_CUDA )
+        # Dependencies that are linking to this static library would need to
+        # use the CUDA compiler as the linker driver. Ideally, CMake would do
+        # that automatically. Until that is fixed in CMake, set the
+        # CUDA_RESOLVE_DEVICE_SYMBOLS property ON.
+        set_target_properties ( CHOLMOD_static PROPERTIES
+            POSITION_INDEPENDENT_CODE ON
+            CUDA_SEPARABLE_COMPILATION ON
+            CUDA_RESOLVE_DEVICE_SYMBOLS ON
+            CUDA_RUNTIME_LIBRARY Static
+            LINKER_LANGUAGE CUDA )
+    else ( )
+        set_target_properties ( CHOLMOD_static PROPERTIES
+            LINKER_LANGUAGE C )
+    endif ( )
+
+    if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.25" )
+        set_target_properties ( CHOLMOD_static PROPERTIES EXPORT_NO_SYSTEM ON )
+    endif ( )
+
+    target_include_directories ( CHOLMOD_static
+        INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+                  $<INSTALL_INTERFACE:${SUITESPARSE_INCLUDEDIR}> )
+
 endif ( )
 
 #-------------------------------------------------------------------------------
 # add the library dependencies
 #-------------------------------------------------------------------------------
 
-# suitesparseconfig:
-target_link_libraries ( cholmod PUBLIC ${SUITESPARSE_CONFIG_LIBRARIES} )
-if ( NOT NSTATIC )
-target_link_libraries ( cholmod_static PUBLIC ${SUITESPARSE_CONFIG_LIBRARIES} )
+# SuiteSparseConfig:
+if ( BUILD_SHARED_LIBS )
+    target_link_libraries ( CHOLMOD PRIVATE SuiteSparse::SuiteSparseConfig )
+    target_include_directories ( CHOLMOD PUBLIC
+        "$<TARGET_PROPERTY:SuiteSparse::SuiteSparseConfig,INTERFACE_INCLUDE_DIRECTORIES>" )
+endif ( )
+if ( BUILD_STATIC_LIBS )
+    if ( TARGET SuiteSparse::SuiteSparseConfig_static )
+        target_link_libraries ( CHOLMOD_static PUBLIC SuiteSparse::SuiteSparseConfig_static )
+    else ( )
+        target_link_libraries ( CHOLMOD_static PUBLIC SuiteSparse::SuiteSparseConfig )
+    endif ( )
+endif ( )
+
+# AMD:
+if ( BUILD_SHARED_LIBS )
+    target_link_libraries ( CHOLMOD PRIVATE SuiteSparse::AMD )
+endif ( )
+if ( BUILD_STATIC_LIBS )
+    if ( TARGET SuiteSparse::AMD_static )
+        target_link_libraries ( CHOLMOD_static PRIVATE SuiteSparse::AMD_static )
+    else ( )
+        target_link_libraries ( CHOLMOD_static PRIVATE SuiteSparse::AMD )
+    endif ( )
+endif ( )
+
+# COLAMD:
+if ( BUILD_SHARED_LIBS )
+    target_link_libraries ( CHOLMOD PRIVATE SuiteSparse::COLAMD )
+endif ( )
+if ( BUILD_STATIC_LIBS )
+    if ( TARGET SuiteSparse::COLAMD_static )
+        target_link_libraries ( CHOLMOD_static PRIVATE SuiteSparse::COLAMD_static )
+    else ( )
+        target_link_libraries ( CHOLMOD_static PRIVATE SuiteSparse::COLAMD )
+    endif ( )
+endif ( )
+
+# CAMD and CCOLAMD:
+if ( CHOLMOD_CAMD )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( CHOLMOD PRIVATE SuiteSparse::CAMD )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        set ( CHOLMOD_STATIC_MODULES "${CHOLMOD_STATIC_MODULES} CAMD" )
+        if ( TARGET SuiteSparse::CAMD_static )
+            target_link_libraries ( CHOLMOD_static PRIVATE SuiteSparse::CAMD_static )
+        else ( )
+            target_link_libraries ( CHOLMOD_static PRIVATE SuiteSparse::CAMD )
+        endif ( )
+    endif ( )
+
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( CHOLMOD PRIVATE SuiteSparse::CCOLAMD )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        set ( CHOLMOD_STATIC_MODULES "${CHOLMOD_STATIC_MODULES} CCOLAMD" )
+        if ( TARGET SuiteSparse::CCOLAMD_static )
+            target_link_libraries ( CHOLMOD_static PRIVATE SuiteSparse::CCOLAMD_static )
+        else ( )
+            target_link_libraries ( CHOLMOD_static PRIVATE SuiteSparse::CCOLAMD )
+        endif ( )
+    endif ( )
 endif ( )
 
 # OpenMP:
-if ( OPENMP_FOUND )
-    message ( STATUS "OpenMP C libraries:      ${OpenMP_C_LIBRARIES} ")
-    message ( STATUS "OpenMP C include:        ${OpenMP_C_INCLUDE_DIRS} ")
-    message ( STATUS "OpenMP C flags:          ${OpenMP_C_FLAGS} ")
-    target_link_libraries ( cholmod PUBLIC ${OpenMP_C_LIBRARIES} )
-    if ( NOT NSTATIC )
-    target_link_libraries ( cholmod_static PUBLIC ${OpenMP_C_LIBRARIES} )
+if ( CHOLMOD_HAS_OPENMP )
+    message ( STATUS "OpenMP C libraries:      ${OpenMP_C_LIBRARIES}" )
+    message ( STATUS "OpenMP C include:        ${OpenMP_C_INCLUDE_DIRS}" )
+    message ( STATUS "OpenMP C flags:          ${OpenMP_C_FLAGS}" )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( CHOLMOD PRIVATE OpenMP::OpenMP_C )
     endif ( )
-    set ( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   ${OpenMP_C_FLAGS} " )
-    set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_C_FLAGS} " )
-    include_directories ( ${OpenMP_C_INCLUDE_DIRS} )
+    if ( BUILD_STATIC_LIBS )
+        target_link_libraries ( CHOLMOD_static PRIVATE OpenMP::OpenMP_C )
+        list ( APPEND CHOLMOD_STATIC_LIBS ${OpenMP_C_LIBRARIES} )
+    endif ( )
+else ( )
+    # to fix METIS: use threadprivate variables for GKRAND instead globals,
+    # so multiple user threads can call cholmod_analyze in parallel on
+    # different matrices, and avoid global locking of the system rand.
+    include ( SuiteSparse__thread )
 endif ( )
 
 # libm:
-if ( NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
-    target_link_libraries ( cholmod PUBLIC m )
-    if ( NOT NSTATIC )
-    target_link_libraries ( cholmod_static PUBLIC m )
+include ( CheckSymbolExists )
+check_symbol_exists ( fmax "math.h" NO_LIBM )
+if ( NOT NO_LIBM )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( CHOLMOD PRIVATE m )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        list ( APPEND CHOLMOD_STATIC_LIBS "m" )
+        target_link_libraries ( CHOLMOD_static PRIVATE m )
     endif ( )
 endif ( )
 
-# amd:
-target_link_libraries ( cholmod PUBLIC ${AMD_LIBRARIES} )
-if ( NOT NSTATIC )
-target_link_libraries ( cholmod_static PUBLIC ${AMD_LIBRARIES} )
-endif ( )
+# BLAS and LAPACK: for the Supernodal Module
+if ( CHOLMOD_SUPERNODAL )
+    # LAPACK:
+    message ( STATUS "LAPACK libraries:    ${LAPACK_LIBRARIES}" )
+    message ( STATUS "LAPACK include:      ${LAPACK_INCLUDE_DIRS}" )
+    message ( STATUS "LAPACK linker flags: ${LAPACK_LINKER_FLAGS}" )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( CHOLMOD PRIVATE ${LAPACK_LIBRARIES} )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        list ( APPEND CHOLMOD_STATIC_LIBS ${LAPACK_LIBRARIES} )
+        target_link_libraries ( CHOLMOD_static PRIVATE ${LAPACK_LIBRARIES} )
+    endif ( )
+    include_directories ( ${LAPACK_INCLUDE_DIR} )
 
-# colamd:
-target_link_libraries ( cholmod PUBLIC ${COLAMD_LIBRARIES} )
-if ( NOT NSTATIC )
-target_link_libraries ( cholmod_static PUBLIC ${COLAMD_LIBRARIES} )
-endif ( )
-
-# BLAS and LAPACK:
-if ( NOT NSUPERNODAL )
-    message ( STATUS "BLAS libraries:      ${BLAS_LIBRARIES} ")
-    message ( STATUS "BLAS linker flags:   ${BLAS_LINKER_FLAGS} ")
-    target_link_libraries ( cholmod PUBLIC ${BLAS_LIBRARIES} )
-    if ( NOT NSTATIC )
-    target_link_libraries ( cholmod_static PUBLIC ${BLAS_LIBRARIES} )
+    # BLAS:
+    message ( STATUS "BLAS libraries:      ${BLAS_LIBRARIES}" )
+    message ( STATUS "BLAS include:        ${BLAS_INCLUDE_DIRS}" )
+    message ( STATUS "BLAS linker flags:   ${BLAS_LINKER_FLAGS}" )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( CHOLMOD PRIVATE ${BLAS_LIBRARIES} )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        list ( APPEND CHOLMOD_STATIC_LIBS ${BLAS_LIBRARIES} )
+        target_link_libraries ( CHOLMOD_static PRIVATE ${BLAS_LIBRARIES} )
     endif ( )
     include_directories ( ${BLAS_INCLUDE_DIRS} )
-    message ( STATUS "LAPACK libraries:    ${LAPACK_LIBRARIES} ")
-    message ( STATUS "LAPACK linker flags: ${LAPACK_LINKER_FLAGS} ")
-    target_link_libraries ( cholmod PUBLIC ${LAPACK_LIBRARIES} )
-    if ( NOT NSTATIC )
-    target_link_libraries ( cholmod_static PUBLIC ${LAPACK_LIBRARIES} )
-    endif ( )
-endif ( )
-
-# camd and ccolamd:
-if ( NOT NCAMD )
-    include_directories ( ${CAMD_INCLUDE_DIR} )
-    target_link_libraries ( cholmod PUBLIC ${CAMD_LIBRARIES} )
-    if ( NOT NSTATIC )
-    target_link_libraries ( cholmod_static PUBLIC ${CAMD_LIBRARIES} )
-    endif ( )
-    include_directories ( ${CCOLAMD_INCLUDE_DIR} )
-    target_link_libraries ( cholmod PUBLIC ${CCOLAMD_LIBRARIES} )
-    if ( NOT NSTATIC )
-    target_link_libraries ( cholmod_static PUBLIC ${CCOLAMD_LIBRARIES} )
-    endif ( )
 endif ( )
 
 # METIS and the Partition module:
-if ( NOT NPARTITION )
-      include_directories ( ${SUITESPARSE_METIS_INCLUDE_DIR} )
-      include_directories ( SuiteSparse_metis/GKlib )
-      include_directories ( SuiteSparse_metis/libmetis )
-      include_directories ( SuiteSparse_metis/include )
+if ( CHOLMOD_PARTITION )
+    include_directories ( SuiteSparse_metis/GKlib )
+    include_directories ( SuiteSparse_metis/libmetis )
+    include_directories ( SuiteSparse_metis/include )
 endif ( )
 
-# CUDA
-if ( SUITESPARSE_CUDA )
-    message ( STATUS "CHOLMOD cuda: " ${CHOLMOD_CUDA} )
-    target_link_libraries ( cholmod PUBLIC ${CHOLMOD_CUDA} ${CUDA_LIBRARIES} )
-    target_link_libraries ( cholmod_static PUBLIC ${CHOLMOD_CUDA} ${CUDA_LIBRARIES} )
+# CHOLMOD_CUDA
+if ( CHOLMOD_HAS_CUDA )
+    if ( NOT CHOLMOD_HAS_OPENMP )
+      message ( FATAL_ERROR "CHOLMOD_CUDA requires OpenMP. But it has been disabled, or no working OpenMP could be found." )
+    endif ()
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( CHOLMOD PRIVATE CUDA::nvrtc CUDA::cudart_static CUDA::cublas )
+        target_include_directories ( CHOLMOD INTERFACE
+            $<TARGET_PROPERTY:CUDA::cublas,INTERFACE_INCLUDE_DIRECTORIES> )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        target_link_libraries ( CHOLMOD_static PRIVATE CUDA::nvrtc CUDA::cudart_static )
+        # Fixme: Ok to hardcode CUDA library names like this?
+        list ( APPEND CHOLMOD_STATIC_LIBS "-L${CUDAToolkit_LIBRARY_DIR};-lcuda;-lcudart_static" )
+        if ( TARGET CUDA::cublas_static )
+            target_link_libraries ( CHOLMOD_static PRIVATE CUDA::cublas_static )
+            target_include_directories ( CHOLMOD_static INTERFACE
+                $<TARGET_PROPERTY:CUDA::cublas_static,INTERFACE_INCLUDE_DIRECTORIES> )
+            list ( APPEND CHOLMOD_STATIC_LIBS "-lcublas_static;-lcublasLt_static;-lculibos" )
+        else ( )
+            target_link_libraries ( CHOLMOD_static PRIVATE CUDA::cublas )
+            target_include_directories ( CHOLMOD_static INTERFACE
+                $<TARGET_PROPERTY:CUDA::cublas,INTERFACE_INCLUDE_DIRECTORIES> )
+            list ( APPEND CHOLMOD_STATIC_LIBS "-lcublas" )
+        endif ( )
+    endif ( )
+
+    set ( _orig_CMAKE_EXTRA_INCLUDE_FILES ${CMAKE_EXTRA_INCLUDE_FILES} )
+    list ( APPEND CMAKE_EXTRA_INCLUDE_FILES "stdlib.h" )
+    check_type_size ( "__compar_fn_t" COMPAR_FN_T )
+    set ( CMAKE_EXTRA_INCLUDE_FILES ${_orig_CMAKE_EXTRA_INCLUDE_FILES} )
+
+    if ( NOT HAVE_COMPAR_FN_T )
+        if ( BUILD_SHARED_LIBS )
+            target_compile_definitions ( CHOLMOD PRIVATE NCOMPAR_FN_T )
+        endif ( )
+        if ( BUILD_STATIC_LIBS )
+            target_compile_definitions ( CHOLMOD_static PRIVATE NCOMPAR_FN_T )
+        endif ( )
+    endif ( )
+
+endif ( )
+
+#-------------------------------------------------------------------------------
+# find CUDA
+#-------------------------------------------------------------------------------
+
+if ( CHOLMOD_HAS_CUDA )
+    # with CUDA
+    add_subdirectory ( GPU )
+    message ( STATUS "CUDA libraries: " ${CUDA_LIBRARIES} )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # CHOLMOD installation location
 #-------------------------------------------------------------------------------
 
-if ( GLOBAL_INSTALL )
-    # install in /usr/local/lib and /usr/local/include.
-    # requires "sudo make install"
-    message ( STATUS "Installation will be system-wide (requires 'sudo make install')" )
-    install ( TARGETS cholmod
-        LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} )
-    file ( GLOB ${CMAKE_MODULES} "cmake_modules/FindCHOLMOD*.cmake" )
-    install ( FILES 
-        cmake_modules/FindCHOLMOD.cmake
-        cmake_modules/FindCHOLMOD_CUDA.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SuiteSparse 
-        COMPONENT Development )
-    if ( NOT NSTATIC )
-    install ( TARGETS cholmod_static
-        ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR} )
-    endif ( )
+include ( CMakePackageConfigHelpers )
+
+if ( BUILD_SHARED_LIBS )
+    install ( TARGETS CHOLMOD
+        EXPORT CHOLMODTargets
+        LIBRARY DESTINATION ${SUITESPARSE_LIBDIR}
+        ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
+        RUNTIME DESTINATION ${SUITESPARSE_BINDIR}
+        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT CHOLMODTargets
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/CHOLMODTargets.cmake )
+
+    # install export target, config and version files for find_package
+    install ( EXPORT CHOLMODTargets
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/CHOLMOD )
+endif ( )
+if ( BUILD_STATIC_LIBS )
+    install ( TARGETS CHOLMOD_static
+        EXPORT CHOLMODTargets_static
+        ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT CHOLMODTargets_static
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/CHOLMODTargets_static.cmake )
+
+    # install export target, config and version files for find_package
+    install ( EXPORT CHOLMODTargets_static
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/CHOLMOD )
 endif ( )
 
-if ( INSIDE_SUITESPARSE )
-    # also install in SuiteSparse/lib and SuiteSparse/include;
-    # does not require "sudo make install", just "make install"
-    message ( STATUS "Installation in ../lib and ../include only," )
-    message ( STATUS "  with 'make install'. No 'sudo' required." )
-    install ( TARGETS cholmod
-        LIBRARY       DESTINATION ${SUITESPARSE_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
-    install ( FILES 
-        cmake_modules/FindCHOLMOD.cmake
-        cmake_modules/FindCHOLMOD_CUDA.cmake
-        DESTINATION ${SUITESPARSE_LIBDIR}/cmake/SuiteSparse 
-        COMPONENT Development )
-    if ( NOT NSTATIC )
-    install ( TARGETS cholmod_static
-        ARCHIVE       DESTINATION ${SUITESPARSE_LIBDIR} )
+# generate config file to be used in common build tree
+set ( SUITESPARSE_IN_BUILD_TREE on )
+configure_package_config_file (
+    Config/CHOLMODConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/CHOLMODConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/CHOLMODConfig.cmake )
+
+# generate config file to be installed
+set ( SUITESPARSE_IN_BUILD_TREE off )
+configure_package_config_file (
+    Config/CHOLMODConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/target/CHOLMODConfig.cmake
+    INSTALL_DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/CHOLMOD )
+
+write_basic_package_version_file (
+    ${CMAKE_CURRENT_BINARY_DIR}/CHOLMODConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion )
+
+install ( FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/target/CHOLMODConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/CHOLMODConfigVersion.cmake
+    DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/CHOLMOD )
+
+#-------------------------------------------------------------------------------
+# create pkg-config file
+#-------------------------------------------------------------------------------
+
+if ( NOT MSVC )
+    # This might be something like:
+    #   /usr/lib/libgomp.so;/usr/lib/libpthread.a;m
+    # convert to -l flags for pkg-config, i.e.: "-lgomp -lpthread -lm"
+    set ( CHOLMOD_STATIC_LIBS_LIST ${CHOLMOD_STATIC_LIBS} )
+    set ( CHOLMOD_STATIC_LIBS "" )
+    foreach ( _lib ${CHOLMOD_STATIC_LIBS_LIST} )
+        if ( ${_lib} MATCHES "-[lL].*" )
+            # take -L or -l flags as is
+            set ( CHOLMOD_STATIC_LIBS "${CHOLMOD_STATIC_LIBS} ${_lib}" )
+            continue ()
+        endif ( )
+        string ( FIND ${_lib} "." _pos REVERSE )
+        if ( ${_pos} EQUAL "-1" )
+            set ( CHOLMOD_STATIC_LIBS "${CHOLMOD_STATIC_LIBS} -l${_lib}" )
+            continue ()
+        endif ( )
+        set ( _kinds "SHARED" "STATIC" )
+        if ( WIN32 )
+            list ( PREPEND _kinds "IMPORT" )
+        endif ( )
+        foreach ( _kind IN LISTS _kinds )
+            set ( _regex ".*\\/(lib)?([^\\.]*)(${CMAKE_${_kind}_LIBRARY_SUFFIX})" )
+            if ( ${_lib} MATCHES ${_regex} )
+                string ( REGEX REPLACE ${_regex} "\\2" _libname ${_lib} )
+                if ( NOT "${_libname}" STREQUAL "" )
+                    set ( CHOLMOD_STATIC_LIBS "${CHOLMOD_STATIC_LIBS} -l${_libname}" )
+                    break ()
+                endif ( )
+            endif ( )
+        endforeach ( )
+    endforeach ( )
+
+    set ( prefix "${CMAKE_INSTALL_PREFIX}" )
+    set ( exec_prefix "\${prefix}" )
+    cmake_path ( IS_ABSOLUTE SUITESPARSE_LIBDIR SUITESPARSE_LIBDIR_IS_ABSOLUTE )
+    if (SUITESPARSE_LIBDIR_IS_ABSOLUTE)
+        set ( libdir "${SUITESPARSE_LIBDIR}")
+    else ( )
+        set ( libdir "\${exec_prefix}/${SUITESPARSE_LIBDIR}")
     endif ( )
+    cmake_path ( IS_ABSOLUTE SUITESPARSE_INCLUDEDIR SUITESPARSE_INCLUDEDIR_IS_ABSOLUTE )
+    if (SUITESPARSE_INCLUDEDIR_IS_ABSOLUTE)
+        set ( includedir "${SUITESPARSE_INCLUDEDIR}")
+    else ( )
+        set ( includedir "\${prefix}/${SUITESPARSE_INCLUDEDIR}")
+    endif ( )
+    if ( BUILD_SHARED_LIBS )
+        set ( SUITESPARSE_LIB_BASE_NAME $<TARGET_FILE_BASE_NAME:CHOLMOD> )
+    else ( )
+        set ( SUITESPARSE_LIB_BASE_NAME $<TARGET_FILE_BASE_NAME:CHOLMOD_static> )
+    endif ( )
+    configure_file (
+        Config/CHOLMOD.pc.in
+        CHOLMOD.pc.out
+        @ONLY
+        NEWLINE_STYLE LF )
+    file ( GENERATE
+        OUTPUT CHOLMOD.pc
+        INPUT ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD.pc.out
+        NEWLINE_STYLE LF )
+    install ( FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/CHOLMOD.pc
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/pkgconfig )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # Demo library and programs
 #-------------------------------------------------------------------------------
 
-option ( DEMO "ON: Build the demo programs.  OFF (default): do not build the demo programs." off )
-if ( DEMO )
+if ( SUITESPARSE_DEMOS )
 
-    #---------------------------------------------------------------------------
-    # demo library
-    #---------------------------------------------------------------------------
+    add_executable ( cholmod_di_simple "Demo/cholmod_di_simple.c" )
+    add_executable ( cholmod_dl_simple "Demo/cholmod_dl_simple.c" )
+    add_executable ( cholmod_si_simple "Demo/cholmod_si_simple.c" )
+    add_executable ( cholmod_sl_simple "Demo/cholmod_sl_simple.c" )
 
-    message ( STATUS "Also compiling the demos in CHOLMOD/Demo" )
+    if ( SUITESPARSE_HAS_FORTRAN )
+        add_executable ( readhb     "Demo/readhb.f" )
+        add_executable ( readhb2    "Demo/readhb2.f" )
+        add_executable ( reade      "Demo/reade.f" )
+    endif ( )
 
-    #---------------------------------------------------------------------------
-    # Demo programs
-    #---------------------------------------------------------------------------
+    if ( BUILD_SHARED_LIBS )
 
-    add_executable ( cholmod_demo   "Demo/cholmod_demo.c" )
-    add_executable ( cholmod_l_demo "Demo/cholmod_l_demo.c" )
-    add_executable ( cholmod_simple "Demo/cholmod_simple.c" )
-    add_executable ( readhb         "Demo/readhb.f" )
-    add_executable ( readhb2        "Demo/readhb2.f" )
-    add_executable ( reade          "Demo/reade.f" )
+        # link the demos with shared libraries
+        target_link_libraries ( cholmod_di_simple PUBLIC CHOLMOD SuiteSparse::SuiteSparseConfig )
+        target_link_libraries ( cholmod_si_simple PUBLIC CHOLMOD SuiteSparse::SuiteSparseConfig )
+        target_link_libraries ( cholmod_dl_simple PUBLIC CHOLMOD SuiteSparse::SuiteSparseConfig )
+        target_link_libraries ( cholmod_sl_simple PUBLIC CHOLMOD SuiteSparse::SuiteSparseConfig )
 
-    # Libraries required for Demo programs
-    target_link_libraries ( cholmod_demo   PUBLIC cholmod ${CHOLMOD_CUDA} )
-    target_link_libraries ( cholmod_l_demo PUBLIC cholmod ${CHOLMOD_CUDA} )
-    target_link_libraries ( cholmod_simple PUBLIC cholmod ${CHOLMOD_CUDA} )
+    else ( )
 
-else ( )
+        # link the demos with static libraries
+        target_link_libraries ( cholmod_di_simple PUBLIC CHOLMOD_static SuiteSparse::SuiteSparseConfig )
+        target_link_libraries ( cholmod_si_simple PUBLIC CHOLMOD_static SuiteSparse::SuiteSparseConfig )
+        target_link_libraries ( cholmod_dl_simple PUBLIC CHOLMOD_static SuiteSparse::SuiteSparseConfig )
+        target_link_libraries ( cholmod_sl_simple PUBLIC CHOLMOD_static SuiteSparse::SuiteSparseConfig )
 
-    message ( STATUS "Skipping the demos in CHOLMOD/Demo" )
+    endif ( )
+
+endif ( )
+
+#-------------------------------------------------------------------------------
+# testing
+#-------------------------------------------------------------------------------
+
+include ( CTest )
+
+if ( SUITESPARSE_DEMOS OR BUILD_TESTING )
+
+    add_executable ( cholmod_di_demo "Demo/cholmod_di_demo.c" )
+    add_executable ( cholmod_dl_demo "Demo/cholmod_dl_demo.c" )
+    add_executable ( cholmod_si_demo "Demo/cholmod_si_demo.c" )
+    add_executable ( cholmod_sl_demo "Demo/cholmod_sl_demo.c" )
+
+    # Libraries required for tests
+    if ( BUILD_SHARED_LIBS )
+
+        # link the tests with shared libraries
+        target_link_libraries ( cholmod_di_demo PUBLIC CHOLMOD SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+        target_link_libraries ( cholmod_si_demo PUBLIC CHOLMOD SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+        target_link_libraries ( cholmod_dl_demo PUBLIC CHOLMOD SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+        target_link_libraries ( cholmod_sl_demo PUBLIC CHOLMOD SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+
+    else ( )
+
+        # link the tests with static libraries
+        target_link_libraries ( cholmod_di_demo PUBLIC CHOLMOD_static SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+        target_link_libraries ( cholmod_si_demo PUBLIC CHOLMOD_static SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+        target_link_libraries ( cholmod_dl_demo PUBLIC CHOLMOD_static SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+        target_link_libraries ( cholmod_sl_demo PUBLIC CHOLMOD_static SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+
+    endif ( )
+
+    if ( CHOLMOD_CAMD )
+
+        target_link_libraries ( cholmod_di_demo PUBLIC SuiteSparse::CAMD SuiteSparse::CCOLAMD )
+        target_link_libraries ( cholmod_si_demo PUBLIC SuiteSparse::CAMD SuiteSparse::CCOLAMD )
+        target_link_libraries ( cholmod_dl_demo PUBLIC SuiteSparse::CAMD SuiteSparse::CCOLAMD )
+        target_link_libraries ( cholmod_sl_demo PUBLIC SuiteSparse::CAMD SuiteSparse::CCOLAMD )
+
+    endif ( )
+
+    add_test ( NAME CHOLMOD_int32_double_bcsstk01
+        COMMAND cholmod_di_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/bcsstk01.tri )
+    add_test ( NAME CHOLMOD_int64_double_bcsstk01
+        COMMAND cholmod_dl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/bcsstk01.tri )
+    add_test ( NAME CHOLMOD_int32_single_bcsstk01
+        COMMAND cholmod_si_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/bcsstk01.tri )
+    add_test ( NAME CHOLMOD_int64_single_bcsstk01
+        COMMAND cholmod_sl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/bcsstk01.tri )
+
+    add_test ( NAME CHOLMOD_int32_double_lp_afiro
+        COMMAND cholmod_di_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/lp_afiro.tri )
+    add_test ( NAME CHOLMOD_int64_double_lp_afiro
+        COMMAND cholmod_dl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/lp_afiro.tri )
+    add_test ( NAME CHOLMOD_int32_single_lp_afiro
+        COMMAND cholmod_si_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/lp_afiro.tri )
+    add_test ( NAME CHOLMOD_int64_single_lp_afiro
+        COMMAND cholmod_sl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/lp_afiro.tri )
+
+    add_test ( NAME CHOLMOD_int32_double_can24
+        COMMAND cholmod_di_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/can___24.mtx )
+    add_test ( NAME CHOLMOD_int64_double_can24
+        COMMAND cholmod_dl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/can___24.mtx )
+    add_test ( NAME CHOLMOD_int32_single_can24
+        COMMAND cholmod_si_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/can___24.mtx )
+    add_test ( NAME CHOLMOD_int64_single_can24
+        COMMAND cholmod_sl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/can___24.mtx )
+
+    add_test ( NAME CHOLMOD_int32_double_complex
+        COMMAND cholmod_di_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/c.tri )
+    add_test ( NAME CHOLMOD_int64_double_complex
+        COMMAND cholmod_dl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/c.tri )
+    add_test ( NAME CHOLMOD_int32_single_complex
+        COMMAND cholmod_si_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/c.tri )
+    add_test ( NAME CHOLMOD_int64_single_complex
+        COMMAND cholmod_sl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/c.tri )
+
+    add_test ( NAME CHOLMOD_int32_double_supernodal
+        COMMAND cholmod_di_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/bcsstk02.tri )
+    add_test ( NAME CHOLMOD_int64_double_supernodal
+        COMMAND cholmod_dl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/bcsstk02.tri )
+    add_test ( NAME CHOLMOD_int32_single_supernodal
+        COMMAND cholmod_si_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/bcsstk02.tri )
+    add_test ( NAME CHOLMOD_int64_single_supernodal
+        COMMAND cholmod_sl_demo ${PROJECT_SOURCE_DIR}/Demo/Matrix/bcsstk02.tri )
+
+    if ( WIN32 AND BUILD_SHARED_LIBS )
+        # Set PATH to pick up the necessary libraries for all tests
+
+        set ( CHOLMOD_CTEST_NAMES
+            CHOLMOD_int32_double_bcsstk01 CHOLMOD_int64_double_bcsstk01 CHOLMOD_int32_single_bcsstk01 CHOLMOD_int64_single_bcsstk01
+            CHOLMOD_int32_double_lp_afiro CHOLMOD_int64_double_lp_afiro CHOLMOD_int32_single_lp_afiro CHOLMOD_int64_single_lp_afiro
+            CHOLMOD_int32_double_can24 CHOLMOD_int64_double_can24 CHOLMOD_int32_single_can24 CHOLMOD_int64_single_can24
+            CHOLMOD_int32_double_complex CHOLMOD_int64_double_complex CHOLMOD_int32_single_complex CHOLMOD_int64_single_complex
+            CHOLMOD_int32_double_supernodal CHOLMOD_int64_double_supernodal CHOLMOD_int32_single_supernodal CHOLMOD_int64_single_supernodal )
+
+        set ( CHOLMOD_DEPENDENCIES
+            CHOLMOD SuiteSparse::SuiteSparseConfig SuiteSparse::AMD SuiteSparse::COLAMD )
+        if ( CHOLMOD_CAMD )
+            list ( APPEND CHOLMOD_DEPENDENCIES SuiteSparse::CAMD SuiteSparse::CCOLAMD )
+        endif ( )
+        set ( CHOLMOD_CTEST_PATH_MODIFICATION "" )
+        foreach ( cholmod_dependency ${CHOLMOD_DEPENDENCIES} )
+            list ( APPEND CHOLMOD_CTEST_PATH_MODIFICATION PATH=path_list_prepend:$<TARGET_FILE_DIR:${cholmod_dependency}> )
+        endforeach ( )
+        foreach( cholmod_ctest ${CHOLMOD_CTEST_NAMES} )
+            set_tests_properties ( ${cholmod_ctest} PROPERTIES
+                ENVIRONMENT_MODIFICATION "${CHOLMOD_CTEST_PATH_MODIFICATION}" )
+        endforeach ( )
+
+    endif ( )
 
 endif ( )
 
@@ -482,5 +927,3 @@ endif ( )
 #-------------------------------------------------------------------------------
 
 include ( SuiteSparseReport )
-
-

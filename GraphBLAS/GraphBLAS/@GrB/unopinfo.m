@@ -71,8 +71,8 @@ function unopinfo (op, type)
 %   erf         z = erf (x)     error function
 %   erfc        z = erfc (x)    complementary error function
 %   cbrt        z = cbrt (x)    cube root
-%   frexpx      z = frexpx (x)  mantissa from ANSI C11 frexp function
-%   frexpe      z = frexpe (x)  exponent from ANSI C11 frexp function;
+%   frexpx      z = frexpx (x)  mantissa from C11 frexp function
+%   frexpe      z = frexpe (x)  exponent from C11 frexp function;
 %                               the built-in [f,e]=log2(x) returns
 %                               f = frexpx (x) and e = frexpe (x).
 %
@@ -97,10 +97,10 @@ function unopinfo (op, type)
 %   % invalid unary operator (generates an error; this is a binary op):
 %   GrB.unopinfo ('*.double') ;
 %
-% See also GrB.binopinfo, GrB.descriptorinfo, GrB.monoidinfo,
-% GrB.selectopinfo, GrB.semiringinfo.
+% See also GrB.unops, GrB.binopinfo, GrB.descriptorinfo,
+% GrB.monoidinfo, GrB.selectopinfo, GrB.semiringinfo.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
 if (nargin == 0)

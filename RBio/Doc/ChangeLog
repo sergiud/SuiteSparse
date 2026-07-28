@@ -1,3 +1,52 @@
+July 25, 2025: version 4.3.5
+
+    * minor updates to build system
+
+Oct 10, 2024: version 4.3.4
+
+    * revised MATLAB mexFunctions to handle change in SuiteSparse_config.h
+
+June 20, 2024: version 4.3.3
+
+    * minor update for MATLAB on Windows
+
+Mar 22, 2024: version 4.3.2
+
+    * minor updates to build system
+
+Jan 10, 2024: version 4.3.1
+
+    * minor update to build system
+
+Dec 30, 2023: version 4.3.0
+
+    * major change to build system: by Markus Mützel
+    * RBio_version: added to return version of RBio
+
+Sept 18, 2023: version 4.2.1
+
+    * cmake update: add "None" build type, from Antonio Rojas, for Arch Linux
+
+Sept 8, 2023: version 4.2.0
+
+    * cmake updates: SuiteSparse:: namespace by Markus Muetzel
+
+June 16, 2023: version 4.0.0
+
+    * revised API: declaring many input parameters as const.  This is a minor
+        change that might be both API and ABI compatible with v3.x, but is
+        user-visible so the major version number is increased from 3.x to 4.x.
+        update by Markus Muetzel
+    * cmake build system updates: update by Markus Muetzel
+
+Jan 17, 2023: version 3.0.3
+
+    * SuiteSparse_config: now v7.0.0
+
+Dec 9, 2022: version 3.0.2
+
+    * minor change to build system
+
 Nov 12, 2022: version 3.0.0
 
     * using CMake build system

@@ -2,19 +2,19 @@
 # SuiteSparse/CAMD/CMakeLists.txt:  cmake for CAMD
 #-------------------------------------------------------------------------------
 
-# Copyright (c) 2022, Timothy A. Davis.  All Rights Reserved.
+# Copyright (c) 2007-2024, Timothy A. Davis.  All Rights Reserved.
 # SPDX-License-Identifier: BSD-3-clause
 
 #-------------------------------------------------------------------------------
 # get the version
 #-------------------------------------------------------------------------------
 
-cmake_minimum_required ( VERSION 3.19 )
+cmake_minimum_required ( VERSION 3.22 )
 
-set ( CAMD_DATE "Nov 12, 2022" )
-set ( CAMD_VERSION_MAJOR 3 )
-set ( CAMD_VERSION_MINOR 0 )
-set ( CAMD_VERSION_SUB   0 )
+set ( CAMD_DATE "July 25, 2025" )
+set ( CAMD_VERSION_MAJOR 3 CACHE STRING "" FORCE )
+set ( CAMD_VERSION_MINOR 3 CACHE STRING "" FORCE )
+set ( CAMD_VERSION_SUB   5 CACHE STRING "" FORCE )
 
 message ( STATUS "Building CAMD version: v"
     ${CAMD_VERSION_MAJOR}.
@@ -22,41 +22,50 @@ message ( STATUS "Building CAMD version: v"
     ${CAMD_VERSION_SUB} " (" ${CAMD_DATE} ")" )
 
 #-------------------------------------------------------------------------------
+# define the project
+#-------------------------------------------------------------------------------
+
+project ( CAMD
+    VERSION "${CAMD_VERSION_MAJOR}.${CAMD_VERSION_MINOR}.${CAMD_VERSION_SUB}"
+    LANGUAGES C )
+
+#-------------------------------------------------------------------------------
 # SuiteSparse policies
 #-------------------------------------------------------------------------------
 
 set ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-    ${CMAKE_SOURCE_DIR}/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/cmake_modules )
+    ${PROJECT_SOURCE_DIR}/../SuiteSparse_config/cmake_modules )
 
 include ( SuiteSparsePolicy )
-
-#-------------------------------------------------------------------------------
-# define the project
-#-------------------------------------------------------------------------------
-
-project ( camd
-    VERSION "${CAMD_VERSION_MAJOR}.${CAMD_VERSION_MINOR}.${CAMD_VERSION_SUB}"
-    LANGUAGES C )
 
 #-------------------------------------------------------------------------------
 # find library dependencies
 #-------------------------------------------------------------------------------
 
-find_package ( SuiteSparse_config 6.0.0 REQUIRED )
+if ( NOT SUITESPARSE_ROOT_CMAKELISTS )
+    find_package ( SuiteSparse_config 7.11.0
+        PATHS ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/build NO_DEFAULT_PATH )
+    if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
+        find_package ( SuiteSparse_config 7.11.0 REQUIRED )
+    endif ( )
+endif ( )
 
 #-------------------------------------------------------------------------------
 # configure files
 #-------------------------------------------------------------------------------
 
-configure_file ( "Config/camd.h.in" "${PROJECT_SOURCE_DIR}/Include/camd.h" )
-configure_file ( "Config/camd_version.tex.in" "${PROJECT_SOURCE_DIR}/Doc/camd_version.tex" )
+configure_file ( "Config/camd.h.in"
+    "${PROJECT_SOURCE_DIR}/Include/camd.h"
+    NEWLINE_STYLE LF )
+configure_file ( "Config/camd_version.tex.in"
+    "${PROJECT_SOURCE_DIR}/Doc/camd_version.tex"
+    NEWLINE_STYLE LF )
 
 #-------------------------------------------------------------------------------
 # include directories
 #-------------------------------------------------------------------------------
 
-include_directories ( Source Include ${SUITESPARSE_CONFIG_INCLUDE_DIR} )
+include_directories ( Source Include )
 
 #-------------------------------------------------------------------------------
 # dynamic camd library properties
@@ -64,42 +73,79 @@ include_directories ( Source Include ${SUITESPARSE_CONFIG_INCLUDE_DIR} )
 
 file ( GLOB CAMD_SOURCES "Source/*.c" )
 
-add_library ( camd SHARED ${CAMD_SOURCES} )
+if ( BUILD_SHARED_LIBS )
+    add_library ( CAMD SHARED ${CAMD_SOURCES} )
 
-set_target_properties ( camd PROPERTIES
-    VERSION ${CAMD_VERSION_MAJOR}.${CAMD_VERSION_MINOR}.${CAMD_VERSION_SUB}
-    C_STANDARD_REQUIRED 11
-    SOVERSION ${CAMD_VERSION_MAJOR}
-    PUBLIC_HEADER "Include/camd.h" )
+    set_target_properties ( CAMD PROPERTIES
+        VERSION ${CAMD_VERSION_MAJOR}.${CAMD_VERSION_MINOR}.${CAMD_VERSION_SUB}
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        OUTPUT_NAME camd
+        SOVERSION ${CAMD_VERSION_MAJOR}
+        PUBLIC_HEADER "Include/camd.h"
+        WINDOWS_EXPORT_ALL_SYMBOLS ON )
+
+    if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.25" )
+        set_target_properties ( CAMD PROPERTIES EXPORT_NO_SYSTEM ON )
+    endif ( )
+
+    target_include_directories ( CAMD
+        INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+                  $<INSTALL_INTERFACE:${SUITESPARSE_INCLUDEDIR}> )
+endif ( )
 
 #-------------------------------------------------------------------------------
 # static camd library properties
 #-------------------------------------------------------------------------------
 
-if ( NOT NSTATIC )
-add_library ( camd_static STATIC ${CAMD_SOURCES} )
+if ( BUILD_STATIC_LIBS )
+    add_library ( CAMD_static STATIC ${CAMD_SOURCES} )
 
-set_target_properties ( camd_static PROPERTIES
-    VERSION ${CAMD_VERSION_MAJOR}.${CAMD_VERSION_MINOR}.${CAMD_VERSION_SUB}
-    C_STANDARD_REQUIRED 11
-    OUTPUT_NAME camd
-    SOVERSION ${CAMD_VERSION_MAJOR} )
+    set_target_properties ( CAMD_static PROPERTIES
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        OUTPUT_NAME camd
+        PUBLIC_HEADER "Include/camd.h" )
+
+    if ( MSVC OR ("${CMAKE_C_SIMULATE_ID}" STREQUAL "MSVC") )
+        set_target_properties ( CAMD_static PROPERTIES
+            OUTPUT_NAME camd_static )
+    endif ( )
+
+    if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.25" )
+        set_target_properties ( CAMD_static PROPERTIES EXPORT_NO_SYSTEM ON )
+    endif ( )
+
+    target_include_directories ( CAMD_static
+        INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+                  $<INSTALL_INTERFACE:${SUITESPARSE_INCLUDEDIR}> )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # add the library dependencies
 #-------------------------------------------------------------------------------
 
-target_link_libraries ( camd PUBLIC ${SUITESPARSE_CONFIG_LIBRARY} )
-if ( NOT NSTATIC )
-target_link_libraries ( camd_static PUBLIC ${SUITESPARSE_CONFIG_LIBRARY} )
+if ( BUILD_SHARED_LIBS )
+    target_link_libraries ( CAMD PRIVATE SuiteSparse::SuiteSparseConfig )
+    target_include_directories ( CAMD PUBLIC
+        "$<TARGET_PROPERTY:SuiteSparse::SuiteSparseConfig,INTERFACE_INCLUDE_DIRECTORIES>" )
+endif ( )
+if ( BUILD_STATIC_LIBS )
+    if ( TARGET SuiteSparse::SuiteSparseConfig_static )
+        target_link_libraries ( CAMD_static PUBLIC SuiteSparse::SuiteSparseConfig_static )
+    else ( )
+        target_link_libraries ( CAMD_static PUBLIC SuiteSparse::SuiteSparseConfig )
+    endif ( )
 endif ( )
 
 # libm:
-if ( NOT "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
-    target_link_libraries ( camd PUBLIC m )
-    if ( NOT NSTATIC )
-    target_link_libraries ( camd_static PUBLIC m )
+if ( NOT WIN32 )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( CAMD PRIVATE m )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        set ( CAMD_STATIC_LIBS "${CAMD_STATIC_LIBS} -lm" )
+        target_link_libraries ( CAMD_static PUBLIC m )
     endif ( )
 endif ( )
 
@@ -107,45 +153,109 @@ endif ( )
 # CAMD installation location
 #-------------------------------------------------------------------------------
 
-if ( GLOBAL_INSTALL )
-    # install in /usr/local/lib and /usr/local/include.
-    # requires "sudo make install"
-    message ( STATUS "Installation will be system-wide (requires 'sudo make install')" )
-    install ( TARGETS camd
-        LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} )
-    install ( FILES ${CMAKE_SOURCE_DIR}/cmake_modules/FindCAMD.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SuiteSparse 
-        COMPONENT Development )
-    if ( NOT NSTATIC )
-    install ( TARGETS camd_static
-        ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR} )
-    endif ( )
+include ( CMakePackageConfigHelpers )
+
+if ( BUILD_SHARED_LIBS )
+    install ( TARGETS CAMD
+        EXPORT CAMDTargets
+        LIBRARY DESTINATION ${SUITESPARSE_LIBDIR}
+        ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
+        RUNTIME DESTINATION ${SUITESPARSE_BINDIR}
+        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT CAMDTargets
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/CAMDTargets.cmake )
+
+    # install export target, config and version files for find_package
+    install ( EXPORT CAMDTargets
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/CAMD )
+endif ( )
+if ( BUILD_STATIC_LIBS )
+    install ( TARGETS CAMD_static
+        EXPORT CAMDTargets_static
+        ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT CAMDTargets_static
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/CAMDTargets_static.cmake )
+
+    # install export target, config and version files for find_package
+    install ( EXPORT CAMDTargets_static
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/CAMD )
 endif ( )
 
-if ( INSIDE_SUITESPARSE )
-    # also install in SuiteSparse/lib and SuiteSparse/include;
-    # does not require "sudo make install", just "make install"
-    message ( STATUS "Installation in ../lib and ../include," )
-    message ( STATUS "  with 'make local ; make install'. No 'sudo' required." )
-    install ( TARGETS camd
-        LIBRARY       DESTINATION ${SUITESPARSE_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
-    install ( FILES ${CMAKE_SOURCE_DIR}/cmake_modules/FindCAMD.cmake
-        DESTINATION ${SUITESPARSE_LIBDIR}/cmake/SuiteSparse 
-        COMPONENT Development )
-    if ( NOT NSTATIC )
-    install ( TARGETS camd_static
-        ARCHIVE       DESTINATION ${SUITESPARSE_LIBDIR} )
+# generate config file to be used in common build tree
+set ( SUITESPARSE_IN_BUILD_TREE ON )
+configure_package_config_file (
+    Config/CAMDConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/CAMDConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/CAMDConfig.cmake )
+
+# generate config file to be installed
+set ( SUITESPARSE_IN_BUILD_TREE OFF )
+configure_package_config_file (
+    Config/CAMDConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/target/CAMDConfig.cmake
+    INSTALL_DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/CAMD )
+
+write_basic_package_version_file (
+    ${CMAKE_CURRENT_BINARY_DIR}/CAMDConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion )
+
+install ( FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/target/CAMDConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/CAMDConfigVersion.cmake
+    DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/CAMD )
+
+#-------------------------------------------------------------------------------
+# create pkg-config file
+#-------------------------------------------------------------------------------
+
+if ( NOT MSVC )
+    set ( prefix "${CMAKE_INSTALL_PREFIX}" )
+    set ( exec_prefix "\${prefix}" )
+    cmake_path ( IS_ABSOLUTE SUITESPARSE_LIBDIR SUITESPARSE_LIBDIR_IS_ABSOLUTE )
+    if (SUITESPARSE_LIBDIR_IS_ABSOLUTE)
+        set ( libdir "${SUITESPARSE_LIBDIR}")
+    else ( )
+        set ( libdir "\${exec_prefix}/${SUITESPARSE_LIBDIR}")
     endif ( )
+    cmake_path ( IS_ABSOLUTE SUITESPARSE_INCLUDEDIR SUITESPARSE_INCLUDEDIR_IS_ABSOLUTE )
+    if (SUITESPARSE_INCLUDEDIR_IS_ABSOLUTE)
+        set ( includedir "${SUITESPARSE_INCLUDEDIR}")
+    else ( )
+        set ( includedir "\${prefix}/${SUITESPARSE_INCLUDEDIR}")
+    endif ( )
+    if ( BUILD_SHARED_LIBS )
+        set ( SUITESPARSE_LIB_BASE_NAME $<TARGET_FILE_BASE_NAME:CAMD> )
+    else ( )
+        set ( SUITESPARSE_LIB_BASE_NAME $<TARGET_FILE_BASE_NAME:CAMD_static> )
+    endif ( )
+    configure_file (
+        Config/CAMD.pc.in
+        CAMD.pc.out
+        @ONLY
+        NEWLINE_STYLE LF )
+    file ( GENERATE
+        OUTPUT CAMD.pc
+        INPUT ${CMAKE_CURRENT_BINARY_DIR}/CAMD.pc.out
+        NEWLINE_STYLE LF )
+    install ( FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/CAMD.pc
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/pkgconfig )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # Demo library and programs
 #-------------------------------------------------------------------------------
 
-option ( DEMO "ON: Build the demo programs.  OFF (default): do not build the demo programs." off )
-if ( DEMO )
+if ( SUITESPARSE_DEMOS )
 
     #---------------------------------------------------------------------------
     # demo library
@@ -163,10 +273,17 @@ if ( DEMO )
     add_executable ( camd_simple "Demo/camd_simple.c" )
 
     # Libraries required for Demo programs
-    target_link_libraries ( camd_demo   PUBLIC camd )
-    target_link_libraries ( camd_l_demo PUBLIC camd )
-    target_link_libraries ( camd_demo2  PUBLIC camd )
-    target_link_libraries ( camd_simple PUBLIC camd )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( camd_demo   PUBLIC CAMD )
+        target_link_libraries ( camd_l_demo PUBLIC CAMD )
+        target_link_libraries ( camd_demo2  PUBLIC CAMD )
+        target_link_libraries ( camd_simple PUBLIC CAMD )
+    else ( )
+        target_link_libraries ( camd_demo   PUBLIC CAMD_static )
+        target_link_libraries ( camd_l_demo PUBLIC CAMD_static )
+        target_link_libraries ( camd_demo2  PUBLIC CAMD_static )
+        target_link_libraries ( camd_simple PUBLIC CAMD_static )
+    endif ( )
 
 else ( )
 
@@ -179,4 +296,3 @@ endif ( )
 #-------------------------------------------------------------------------------
 
 include ( SuiteSparseReport )
-

@@ -1,7 +1,7 @@
 function gbtest50
 %GBTEST50 test GrB.ktruss and GrB.tricount
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
 rng ('default') ;
@@ -10,9 +10,8 @@ rng ('default') ;
 % by reducing the precision of its entries, and dropping one entry.
 % The correct version is in the HB/west0479 matrix at sparse.tamu.edu.
 
-% load west0479 ; %#ok<*LOAD>
-load west0479_correct ; %#ok<*LOAD>
-west0479 = Problem.A ;
+load west0479_correct.txt
+west0479 = spconvert (west0479_correct) ;
 
 A = GrB.offdiag (west0479) ;
 A = A+A' ;

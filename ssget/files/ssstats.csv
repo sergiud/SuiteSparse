@@ -1,5 +1,5 @@
-2893
-08-Oct-2020 17:09:58
+2904
+31-Oct-2023 18:12:37
 HB,1138_bus,1138,1138,4054,1,0,0,1,1,1,power network problem,4054
 HB,494_bus,494,494,1666,1,0,0,1,1,1,power network problem,1666
 HB,662_bus,662,662,2474,1,0,0,1,1,1,power network problem,2474
@@ -2893,3 +2893,14 @@ ML_Graph,YaleA_10NN,165,165,2268,1,0,0,0,1,1,undirected weighted graph,2268
 ML_Graph,YaleB_10NN,2414,2414,34808,1,0,0,0,1,1,undirected weighted graph,34808
 ML_Graph,yeast_30NN,1484,1484,62350,1,0,0,0,1,1,undirected weighted graph,62350
 Sybrandt,AGATHA_2015,183964077,183964077,11588725964,1,1,0,0,1,1,undirected graph,11588725964
+FlowIPM22,Spielman_k100,338402,338402,1025404,1,0,0,1,1,1,undirected weighted graph,1025404
+FlowIPM22,Spielman_k200,2686802,2686802,8100804,1,0,0,0,1,1,undirected weighted graph,8100804
+FlowIPM22,Spielman_k300,9045202,9045202,27226204,1,0,0,0,1,1,undirected weighted graph,27226204
+FlowIPM22,Spielman_k400,21413602,21413602,64401604,1,0,0,0,1,1,undirected weighted graph,64401604
+FlowIPM22,Spielman_k500,41792002,41792002,125627004,1,0,0,0,1,1,undirected weighted graph,125627004
+FlowIPM22,Spielman_k600,72180402,72180402,216902404,1,0,0,0,1,1,undirected weighted graph,216902404
+FlowIPM22,uni_chimera_i1,100000,100000,1100592,1,0,0,1,1,1,undirected weighted graph,1100592
+FlowIPM22,uni_chimera_i2,100000,100000,797974,1,0,0,1,1,1,undirected weighted graph,797974
+FlowIPM22,uni_chimera_i3,100000,100000,499696,1,0,0,0,1,1,undirected weighted graph,499696
+FlowIPM22,uni_chimera_i4,100000,100000,814436,1,0,0,0,1,1,undirected weighted graph,814436
+FlowIPM22,uni_chimera_i5,100000,100000,499982,1,0,0,1,1,1,undirected weighted graph,499982

@@ -283,7 +283,7 @@ static void klu_l_demo (int64_t n, int64_t *Ap, int64_t *Ai, double *Ax,
     }
     else
     {
-        printf ("n %ld nnz(A) %ld nnz(L+U+F) %ld resid %g\n"
+        printf ("n %"PRId64" nnz(A) %"PRId64" nnz(L+U+F) %"PRId64" resid %g\n"
             "recip growth %g condest %g rcond %g flops %g\n",
             n, Ap [n], lunz, rnorm, Common.rgrowth, Common.condest,
             Common.rcond, Common.flops) ;
@@ -320,6 +320,26 @@ static void klu_l_demo (int64_t n, int64_t *Ap, int64_t *Ai, double *Ax,
 
 int main (void)
 {
+
+    //--------------------------------------------------------------------------
+    // klu version
+    //--------------------------------------------------------------------------
+
+    int version [3] ;
+    klu_version (version) ;
+    printf ("KLU v%d.%d.%d\n", version [0], version [1], version [2]) ;
+    if ((version [0] != KLU_MAIN_VERSION) ||
+        (version [1] != KLU_SUB_VERSION) ||
+        (version [2] != KLU_SUBSUB_VERSION))
+    {
+        fprintf (stderr, "version in header does not match library\n") ;
+        abort ( ) ;
+    }
+
+    //--------------------------------------------------------------------------
+    // read in a matrix and solve Ax=b
+    //--------------------------------------------------------------------------
+
     cholmod_sparse *A ;
     cholmod_common ch ;
     cholmod_l_start (&ch) ;

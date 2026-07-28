@@ -12,8 +12,8 @@
 // qrdemo_gpu3 matrixfile orderingoption
 
 #include "SuiteSparseQR.hpp"
-#include "SuiteSparseGPU_Runtime.hpp"
 #include <complex>
+#include <stdio.h>
 
 int main (int argc, char **argv)
 {
@@ -37,10 +37,10 @@ int main (int argc, char **argv)
     // warmup the GPU.  This can take some time, but only needs
     // to be done once
     cc->useGPU = false ;
-    t = SuiteSparse_time ( ) ;
+    t = SUITESPARSE_TIME ;
     cholmod_l_gpu_memorysize (&total_mem, &available_mem, cc) ;
     cc->gpuMemorySize = available_mem ;
-    t = SuiteSparse_time ( ) - t ;
+    t = SUITESPARSE_TIME - t ;
     if (cc->gpuMemorySize <= 1)
     {
         printf ("no GPU available\n") ;
@@ -63,16 +63,16 @@ int main (int argc, char **argv)
     m = A->nrow ;
     n = A->ncol ;
 
-    long ordering = (argc < 3 ? SPQR_ORDERING_DEFAULT : atoi(argv[2]));
+    int ordering = (argc < 3 ? SPQR_ORDERING_DEFAULT : atoi(argv[2]));
 
-    printf ("Matrix %6ld-by-%-6ld nnz: %6ld\n",
-        m, n, cholmod_l_nnz (A, cc)) ;
+    printf ("Matrix %6" PRId64 "-by-%-6" PRId64 " nnz: %6" PRId64 "\n",
+        (int64_t) m, (int64_t) n, cholmod_l_nnz (A, cc)) ;
 
     // B = ones (m,1), a dense right-hand-side of the same type as A
     B = cholmod_l_ones (m, 1, A->xtype, cc) ;
 
     double tol = SPQR_NO_TOL ;
-    long econ = 0 ;
+    int64_t econ = 0 ;
 
     // [Q,R,E] = qr (A), but discard Q
     // SuiteSparseQR <double> (ordering, tol, econ, A, &R, &E, cc) ;
@@ -98,7 +98,7 @@ int main (int argc, char **argv)
     f = fopen ("E.txt", "w") ;
     for (long i = 0 ; i < n ; i++)
     {
-        fprintf (f, "%ld\n", 1 + E [i]) ;
+        fprintf (f, "%" PRId64 "\n", 1 + E [i]) ;
     }
     fclose (f) ;
 

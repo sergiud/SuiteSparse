@@ -2,7 +2,7 @@
 // UMFPACK/Source/umf_config.h: compile-time configuration of UMFPACK
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -51,7 +51,7 @@
 	    If the pivot is zero, and this flag is set, then no divide-by-zero
 	    occurs.
 
-    The following options are controlled by amd_internal.h:
+    The following options are controlled by umf_internal.h:
 
 	-DMATLAB_MEX_FILE
 

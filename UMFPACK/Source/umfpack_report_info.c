@@ -2,7 +2,7 @@
 // UMFPACK/Source/umfpack_report_info: print Info array
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -21,6 +21,9 @@
 	PRINTF ((format, x)) ; \
     } \
 }
+
+#define xstr(s) str(s)
+#define str(s) #s
 
 /* RATIO macro uses a double relop, but ignore NaN case: */
 #define RATIO(a,b,c) (((b) == 0) ? (c) : (((double) a)/((double) b)))
@@ -72,7 +75,7 @@ PRIVATE void print_ratio
 /* === UMFPACK_report_info ================================================== */
 /* ========================================================================== */
 
-GLOBAL void UMFPACK_report_info
+void UMFPACK_report_info
 (
     const double Control [UMFPACK_CONTROL],
     const double Info [UMFPACK_INFO]
@@ -147,7 +150,7 @@ GLOBAL void UMFPACK_report_info
 	(Int) (sizeof (SUITESPARSE_BLAS_INT)))) ;
 #endif
 
-    PRINTF (("    MATLAB:                           ")) ;
+    PRINTF (("    MATLAB: ")) ;
 #ifdef MATLAB_MEX_FILE
     PRINTF (("yes.\n")) ;
 #else
@@ -158,11 +161,11 @@ GLOBAL void UMFPACK_report_info
 #endif
 #endif
 
-    PRINTF (("    CPU timer:                        ")) ;
+    PRINTF (("    CPU timer: ")) ;
 #ifdef SUITESPARSE_TIMER_ENABLED
-    PRINTF (("POSIX C clock_getttime ( ) routine.\n")) ;
+    PRINTF (( xstr( SUITESPARSE_CONFIG_TIMER ) "\n")) ;
 #else
-    PRINTF (("none.\n")) ;
+    PRINTF (("no timer used.\n")) ;
 #endif
 
     /* ---------------------------------------------------------------------- */

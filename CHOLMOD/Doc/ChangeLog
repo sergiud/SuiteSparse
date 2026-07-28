@@ -1,3 +1,115 @@
+July 31, 2026: version 5.3.5
+
+    * typo in user guide: cholmod_solve2 with Bset *non*-NULL causes L to
+        be converted from supernodal to simplicial, not when NULL.
+    * double [2] inputs:  cholmod_add and others use "double beta [2]"
+        while cholmod_l_add used "double *"; latter changed to 'double[2]'
+        in cholmod.h for consistency.  Not really a change to the API since
+        the user application code remains unchanged, the major/minor version
+        of CHOLMOD remains 5.3.x.
+
+July 25, 2025: version 5.3.4
+
+    * minor updates to build system
+
+May 5, 2025: version 5.3.3
+
+    * cholmod_analyze: restore Common->try_catch after trying ordering methods.
+
+Apr 10, 2025: version 5.3.2
+
+    * build system: use CUDA as linker if applicable
+
+Feb 20, 2025: version 5.3.1
+
+    * minor changes: removing compiler warnings
+
+June 20, 2024: version 5.3.0
+
+    * added cholmod_query: to deterimine at run time which modules
+        of CHOLMOD have been compiled into the libcholmod.so.
+        Also added CHOLMOD_HAS_* #defines in cholmod.h, configured
+        by cmake when CHOLMOD is compiled.
+
+Mar 22, 2024: version 5.2.1
+
+    * minor updates to build system
+
+Jan 20, 2024: version 5.2.0
+
+    * bug fix:  CHOLMOD 5.1.0 added a new variable in the CHOLMOD Common
+        struct for development only but this change broke ABI compatibility
+        since the SOVERSION was not bumped at the same time.  v5.2.0 reverts
+        this change so the new variable does not appear in production, thus
+        restoring ABI compatibility with v5.0.x.
+
+Jan 10, 2024: version 5.1.1
+
+    * MATLAB interface:  add -DNO_SSIZE_T for Windows
+    * minor updates to build system
+
+Dec 30, 2023: version 5.1.0
+
+    * major change to build system: by Markus Mützel
+    * support for single precision matrices:  for all Modules, except for the
+        GPU kernels (which are only supported for double and complex double
+        matrices).
+    * GPU: various bug fixes
+
+Oct 31, 2023, version 5.0.1
+
+    * cholmod.h: remove use of "I" which conflicts with
+        #include <complex.h>.
+
+Oct 23, 2023, version 5.0.0
+
+    * CHOLMOD v5.0.0: introduces the first part of support for single
+        precision sparse matrices, with the introduction of the new
+        CHOLMOD:Utility Module.  The CHOLMOD:Utility Module replaces
+        CHOLMOD:Core in prior versions. Single precision is not yet
+        incorporated into the remaining Modules, however.
+
+Oct 18, 2023: version 4.2.2
+
+    * CHOLMOD 4.2.2: bug fix to CHOLMOD/Supernodal (heuristic to determine
+        # threads to use for last supernode was incorrect)
+
+Sept 18, 2023: version 4.2.1
+
+    * cmake update: add "None" build type, from Antonio Rojas, for Arch Linux
+
+Sept 8, 2023: version 4.2.0
+
+    * cmake updates: SuiteSparse:: namespace by Markus Muetzel
+    * bug fix: typecast was broken in cholmod_postorder.c
+    * minor fixes to debug scaffolding and test code: cholmod_internal.h,
+        cholmod_metis_wrapper.c, Tcov/memory.c.
+    * support for SPQR: minor changes to support SPQR v4.2.0 with 32-bit
+        integers; no change to user-visible API.
+    * METIS now using GKRAND: with threadprivate state variables, to
+        avoid global system lock when using CHOLMON on many user threads
+
+June 16, 2023: version 4.0.4
+
+    * cmake build system updates: update by Markus Muetzel
+    * METIS: fixed non-standard prototypes in gk_proto.h and gk_mkrandom.h
+
+Jan 17, 2022: version 4.0.3
+
+    * NFORTRAN: option added to disable Fortran entirely
+    * SuiteSparse_config: now v7.0.0
+
+Dec 9, 2022: version 4.0.2
+
+    * minor change to build system
+    * Fortran: no longer required to build CHOLMOD
+    * NPARTITION: if CHOLMOD is compiled with -DNPARTITION, then
+        METIS is not compiled.  However, the CHOLMOD interface to METIS is
+        still present; they simply return CHOLMOD_NOT_INSTALLED.  This
+        allows methods that depend on CHOLMOD's METIS interface to use
+        a run-time test, instead of requiring them to be compiled with
+        -DNPARTITION (SPQR in particular).
+
 Nov 12, 2022: version 4.0.1
 
     * BLAS definitions: no longer exposed to the user application

@@ -13,7 +13,7 @@ This file contains functions dealing with error reporting and termination
 #define _GK_ERROR_C_  /* this is needed to properly declare the gk_jub* variables
                          as an extern function in GKlib.h */
 
-#include <GKlib.h>
+#include "GKlib.h"
 
 
 /* These are the jmp_buf for the graceful exit in case of severe errors.
@@ -172,6 +172,8 @@ void gk_NonLocalExit_Handler(int signum)
 /*************************************************************************/
 /*! \brief Thread-safe implementation of strerror() */
 /**************************************************************************/
+#if 0
+// gk_strerror disabled for SuiteSparse, Jan 2023
 char *gk_strerror(int errnum)
 {
 #if defined(WIN32) || defined(__MINGW32__)
@@ -189,6 +191,7 @@ char *gk_strerror(int errnum)
 #endif
 #endif
 }
+#endif
 
 
 

@@ -1,8 +1,8 @@
 //------------------------------------------------------------------------------
-// COLAMD/Source/colamd.h: include file for COLAMD
+// COLAMD/Include/colamd.h: include file for COLAMD
 //------------------------------------------------------------------------------
 
-// COLAMD, Copyright (c) 1998-2022, Timothy A. Davis and Stefan Larimore,
+// COLAMD, Copyright (c) 1998-2024, Timothy A. Davis and Stefan Larimore,
 // All Rights Reserved.
 // SPDX-License-Identifier: BSD-3-clause
 
@@ -37,11 +37,6 @@
 #ifndef COLAMD_H
 #define COLAMD_H
 
-/* make it easy for C++ programs to include COLAMD */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* ========================================================================== */
 /* === Include files ======================================================== */
 /* ========================================================================== */
@@ -70,14 +65,19 @@ extern "C" {
  * Versions 2.3 and earlier of COLAMD do not include a #define'd version number.
  */
 
-#define COLAMD_DATE "Nov 12, 2022"
+#define COLAMD_DATE "July 25, 2025"
 #define COLAMD_MAIN_VERSION   3
-#define COLAMD_SUB_VERSION    0
-#define COLAMD_SUBSUB_VERSION 0
+#define COLAMD_SUB_VERSION    3
+#define COLAMD_SUBSUB_VERSION 5
 
-#define COLAMD_VERSION_CODE(main,sub) ((main) * 1000 + (sub))
-#define COLAMD_VERSION \
-        COLAMD_VERSION_CODE(COLAMD_MAIN_VERSION,COLAMD_SUB_VERSION)
+#define COLAMD_VERSION_CODE(main,sub) SUITESPARSE_VER_CODE(main,sub)
+#define COLAMD_VERSION COLAMD_VERSION_CODE(3,3)
+
+#define COLAMD__VERSION SUITESPARSE__VERCODE(3,3,5)
+#if !defined (SUITESPARSE__VERSION) || \
+    (SUITESPARSE__VERSION < SUITESPARSE__VERCODE(7,11,0))
+#error "COLAMD 3.3.5 requires SuiteSparse_config 7.11.0 or later"
+#endif
 
 /* ========================================================================== */
 /* === Knob and statistics definitions ====================================== */
@@ -129,7 +129,11 @@ extern "C" {
 /* === Prototypes of user-callable routines ================================= */
 /* ========================================================================== */
 
-SUITESPARSE_PUBLIC 
+/* make it easy for C++ programs to include COLAMD */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 size_t colamd_recommended       /* returns recommended value of Alen, */
                                 /* or 0 if input arguments are erroneous */
 (
@@ -138,7 +142,6 @@ size_t colamd_recommended       /* returns recommended value of Alen, */
     int32_t n_col               /* number of columns in A */
 ) ;
 
-SUITESPARSE_PUBLIC 
 size_t colamd_l_recommended     /* returns recommended value of Alen, */
                                 /* or 0 if input arguments are erroneous */
 (
@@ -147,19 +150,16 @@ size_t colamd_l_recommended     /* returns recommended value of Alen, */
     int64_t n_col               /* number of columns in A */
 ) ;
 
-SUITESPARSE_PUBLIC 
 void colamd_set_defaults        /* sets default parameters */
 (                               /* knobs argument is modified on output */
     double knobs [COLAMD_KNOBS] /* parameter settings for colamd */
 ) ;
 
-SUITESPARSE_PUBLIC 
 void colamd_l_set_defaults      /* sets default parameters */
 (                               /* knobs argument is modified on output */
     double knobs [COLAMD_KNOBS] /* parameter settings for colamd */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int colamd                      /* returns (1) if successful, (0) otherwise*/
 (                               /* A and p arguments are modified on output */
     int32_t n_row,              /* number of rows in A */
@@ -171,7 +171,6 @@ int colamd                      /* returns (1) if successful, (0) otherwise*/
     int32_t stats [COLAMD_STATS]    /* colamd output stats and error codes */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int colamd_l                    /* returns (1) if successful, (0) otherwise*/
 (                               /* A and p arguments are modified on output */
     int64_t n_row,              /* number of rows in A */
@@ -183,7 +182,6 @@ int colamd_l                    /* returns (1) if successful, (0) otherwise*/
     int64_t stats [COLAMD_STATS]    /* colamd output stats and error codes */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int symamd                              /* return (1) if OK, (0) otherwise */
 (
     int32_t n,                          /* number of rows and columns of A */
@@ -200,7 +198,6 @@ int symamd                              /* return (1) if OK, (0) otherwise */
                                         /* mxFree (for MATLAB mexFunction) */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int symamd_l                            /* return (1) if OK, (0) otherwise */
 (
     int64_t n,                          /* number of rows and columns of A */
@@ -217,29 +214,27 @@ int symamd_l                            /* return (1) if OK, (0) otherwise */
                                         /* mxFree (for MATLAB mexFunction) */
 ) ;
 
-SUITESPARSE_PUBLIC 
 void colamd_report
 (
     int32_t stats [COLAMD_STATS]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void colamd_l_report
 (
     int64_t stats [COLAMD_STATS]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void symamd_report
 (
     int32_t stats [COLAMD_STATS]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void symamd_l_report
 (
     int64_t stats [COLAMD_STATS]
 ) ;
+
+void colamd_version (int version [3]) ;
 
 #ifdef __cplusplus
 }

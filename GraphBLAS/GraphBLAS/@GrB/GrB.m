@@ -339,14 +339,20 @@ classdef GrB
 %   t = GrB.threads (t)          set/get # of threads to use in GraphBLAS
 %   c = GrB.chunk (c)            set/get chunk size to use in GraphBLAS
 %   b = GrB.burble (b)           set/get burble (diagnostic output)
+%   [s,path] = GrB.jit (s,path)  control the GraphBLAS JIT
 %
 %   info:
 %   GrB.binopinfo (op, type)     list properties of a binary operator
+%   list = GrB.binops            list all binary ops
 %   GrB.descriptorinfo (d)       list properties of a descriptor
 %   GrB.monoidinfo (op, type)    list properties of a monoid
+%   list = GrB.monoids           list all monoids
 %   GrB.selectopinfo (op, type)  list properties of a select operator
+%   list = GrB.selectops         list all selectops
 %   GrB.semiringinfo (s, type)   list properties of a semiring
+%   list = GrB.semirings         list all semirings
 %   GrB.unopinfo (op, type)      list properties of a unary operator
+%   list = GrB.unops             list all unary ops
 %
 %   basic matrices:
 %   C = GrB.false (...)          all-false logical matrix
@@ -357,7 +363,7 @@ classdef GrB
 %   operations:
 %   C = GrB.build (I,J,X,m,n,dup,type,desc) build a GrB matrix from
 %                                list of entries (like C=sparse(I,J,X...))
-%   [C,I,J] = GrB.compact (A,id) remove empty rows and columns
+%   [C,I,J] = GrB.compact (A,id,s) remove empty rows and columns
 %   c = GrB.entries (A,...)      count or query entries in a matrix
 %   C = GrB.expand (scalar, A)   expand a scalar (C = scalar*spones(A))
 %   [I,J,X] = GrB.extracttuples (A,desc) extract all entries (like 'find')
@@ -568,7 +574,7 @@ classdef GrB
 %
 % See also sparse.
 %
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
 properties (SetAccess = private, GetAccess = private)
@@ -744,7 +750,7 @@ methods
     %       condensation inedges isdag predecessors successors toposort
     %       transclosure transreduction
 
-    % methods in LAGraph: (see the LAGraph/Source folder)
+    % methods in LAGraph: (see the LAGraph/src folder)
 
     %---------------------------------------------------------------------
     % operator overloading
@@ -984,12 +990,13 @@ methods (Static)
     C = assign (Cin, M, accum, A, I, J, desc) ;
     [v, parent] = bfs (A, s, varargin) ;        % uses GrB matrices
     binopinfo (op, type) ;
+    list = binops ;
     C = build (I, J, X, m, n, dup, type, desc) ;
     b = burble (b) ;
     C = cell2mat (A) ;
     c = chunk (c) ;
     clear ;
-    [C, I, J] = compact (A, id) ;
+    [C, I, J] = compact (A, id, symmetric) ;
     descriptorinfo (d) ;
     C = deserialize (blob, mode, arg3) ;        % arg3 for testing only
     Y = dnn (W, bias, Y0) ;                     % uses GrB matrices
@@ -1016,6 +1023,7 @@ methods (Static)
     C = load (filename) ;
     iset = mis (A, check) ;                     % uses GrB matrices
     monoidinfo (monoid, type) ;
+    list = monoids ;
     C = mxm (Cin, M, accum, semiring, A, B, desc) ;
     result = nonz (A, varargin) ;
     s = normdiff (A, B, kind) ;
@@ -1028,20 +1036,22 @@ methods (Static)
     filename_used = save (C, filename) ;
     C = select (Cin, M, accum, selectop, A, b, desc) ;
     selectopinfo (op, type) ;
+    list = selectops ;
     semiringinfo (s, type) ;
+    list = semirings ;
     blob = serialize (A, method, level) ;
     C = speye (m, n, type) ;
     C = subassign (Cin, M, accum, A, I, J, desc) ;
     nthreads = threads (nthreads) ;
+    [s,path] = jit (s,path) ;
     C = trans (Cin, M, accum, A, desc) ;
     s = tricount (A, check, d) ;                % uses GrB matrices
     s = type (A) ;
     unopinfo (op, type) ;
+    list = unops ;
     v = version ;
     v = ver ;
     C = vreduce (Cin, M, accum, monoid, A, desc) ;
-
-    t = timing (c) ; % timing for diagnositics only, requires -DGB_TIMING
 
     % these were formerly overloaded methods, now Static methods
     C = false (varargin) ;

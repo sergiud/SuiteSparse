@@ -8,7 +8,7 @@
 \version\verbatim $Id: random.c 11793 2012-04-04 21:03:02Z karypis $ \endverbatim
 */
 
-#include <GKlib.h>
+#include "GKlib.h"
 
 
 /*************************************************************************/
@@ -60,11 +60,41 @@ GK_MKRANDOM(gk_z,   size_t, ssize_t)
 #define UM 0xFFFFFFFF80000000ULL /* Most significant 33 bits */
 #define LM 0x7FFFFFFFULL /* Least significant 31 bits */
 
+// added by Tim Davis for CHOLMOD: mt and mti state variables threadprivate
+#if defined ( _OPENMP )
 
+    // OpenMP threadprivate is preferred
+    static uint64_t mt[NN];
+    static int mti=NN+1;
+    #pragma omp threadprivate (mt,mti)
+
+#elif defined ( HAVE_KEYWORD__THREAD )
+
+    // gcc and many other compilers support the __thread keyword
+    static __thread uint64_t mt[NN];
+    static __thread int mti=NN+1;
+
+#elif defined ( HAVE_KEYWORD__DECLSPEC_THREAD )
+
+    // Windows: __declspec (thread)
+    __declspec ( thread ) static uint64_t mt[NN];
+    __declspec ( thread ) static int mti=NN+1;
+
+#elif defined ( HAVE_KEYWORD__THREAD_LOCAL )
+
+    // ANSI C11 threads
+    #include <threads.h>
+    _Thread_local static uint64_t mt[NN];
+    _Thread_local static int mti=NN+1;
+
+#else
+// original METIS uses global state: this is not thread-safe:
 /* The array for the state vector */
 static uint64_t mt[NN]; 
 /* mti==NN+1 means mt[NN] is not initialized */
 static int mti=NN+1; 
+#endif
+
 #endif /* USE_GKRAND */
 
 /* initializes mt[NN] with a seed */

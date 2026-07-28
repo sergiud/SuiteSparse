@@ -1,9 +1,10 @@
 #-------------------------------------------------------------------------------
-# SuiteSparse/SPEX/Makefile
+# SuiteSparse/SPEX/Makefile: Makefile for SPEX
 #-------------------------------------------------------------------------------
 
-# SPEX_Left_LU: (c) 2019-2022, Chris Lourenco (US Naval Academy), Jinhao Chen,
-# Erick Moreno-Centeno, Timothy A. Davis, Texas A&M.  All Rights Reserved.
+# SPEX: (c) 2019-2024, Christopher Lourenco, Jinhao Chen,
+# Lorena Mejia Domenzain, Erick Moreno-Centeno, and Timothy A. Davis.
+# All Rights Reserved.
 # SPDX-License-Identifier: GPL-2.0-or-later or LGPL-3.0-or-later
 
 #-------------------------------------------------------------------------------
@@ -36,44 +37,48 @@ default: library
 
 # default is to install only in /usr/local
 library:
-	( cd build && cmake $(CMAKE_OPTIONS) .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) .. && cmake --build . --config Release -j${JOBS} )
 
 # install only in SuiteSparse/lib and SuiteSparse/include
 local:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=0 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -USUITESPARSE_PKGFILEDIR -DSUITESPARSE_LOCAL_INSTALL=1 .. && cmake --build . --config Release -j${JOBS} )
 
 # install only in /usr/local (default)
 global:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=0 .. && $(MAKE) --jobs=${JOBS} )
-
-# install in SuiteSparse/lib both and SuiteSparse/include and /usr/local
-both:
-	( cd build && cmake $(CMAKE_OPTIONS) -DGLOBAL_INSTALL=1 -DLOCAL_INSTALL=1 .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -USUITESPARSE_PKGFILEDIR -DSUITESPARSE_LOCAL_INSTALL=0 .. && cmake --build . --config Release -j${JOBS} )
 
 debug:
-	( cd build && cmake $(CMAKE_OPTIONS) -DCMAKE_BUILD_TYPE=Debug .. && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake $(CMAKE_OPTIONS) -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . --config Debug -j${JOBS} )
 
 all: library
 
-demos: library
-	( cd build && cmake $(CMAKE_OPTIONS) -DDEMO=1 .. && $(MAKE) --jobs=${JOBS} )
-	( cd SPEX_Left_LU/Demo && ../../build/example  )
-	( cd SPEX_Left_LU/Demo && ../../build/example2 )
-	( cd SPEX_Left_LU/Demo && ../../build/spexlu_demo )
+demos:
+	( cd build && cmake $(CMAKE_OPTIONS) -DSUITESPARSE_DEMOS=1 .. && cmake --build . --config Release -j${JOBS} )
+	./build/spex_demo_lu_simple1
+	./build/spex_demo_lu_simple2          ExampleMats/10teams.mat.txt   ExampleMats/10teams.rhs.txt
+	./build/spex_demo_lu_extended       f ExampleMats/10teams.mat.txt   ExampleMats/10teams.rhs.txt
+	./build/spex_demo_lu_doub           f ExampleMats/10teams.mat.txt   ExampleMats/10teams.rhs.txt
+	./build/spex_demo_backslash         f ExampleMats/10teams.mat.txt   ExampleMats/10teams.rhs.txt
+	./build/spex_demo_cholesky_simple   f ExampleMats/494_bus.mat.txt   ExampleMats/494_bus.rhs.txt
+	./build/spex_demo_cholesky_extended f ExampleMats/494_bus.mat.txt   ExampleMats/494_bus.rhs.txt
+	./build/spex_demo_ldl_simple        f ExampleMats/494_bus.mat.txt   ExampleMats/494_bus.rhs.txt
+	./build/spex_demo_ldl_extended      f ExampleMats/494_bus.mat.txt   ExampleMats/494_bus.rhs.txt
+	./build/spex_demo_threaded          f ExampleMats/10teams.mat.txt   ExampleMats/10teams.rhs.txt
+	./build/spex_demo_backslash         f ExampleMats/Trefethen_500.mat.txt ExampleMats/Trefethen_500.rhs.txt
 
 cov:
-	( cd SPEX_Left_LU/Tcov && $(MAKE) )
+	( cd Tcov && $(MAKE) )
 
 # just compile after running cmake; do not run cmake again
 remake:
-	( cd build && $(MAKE) --jobs=${JOBS} )
+	( cd build && cmake --build . -j${JOBS} )
 
 # just run cmake to set things up
 setup:
 	( cd build && cmake $(CMAKE_OPTIONS) .. )
 
 install:
-	( cd build && $(MAKE) install )
+	( cd build && cmake --install . )
 
 # remove any installed libraries and #include files
 uninstall:
@@ -82,7 +87,11 @@ uninstall:
 # remove all files not in the distribution
 clean:
 	- $(RM) -rf build/* Config/*.tmp MATLAB/*.o MATLAB/*.mex*
-	( cd SPEX_Left_LU/Tcov && $(MAKE) clean )
+	- $(RM) Tcov/*.o Tcov/*.bbg Tcov/*.da Tcov/*.gcov Tcov/*.gcda Tcov/*gcno
+	- $(RM) Tcov/tcov_for_lu  Tcov/spex_demo_lu_extended Tcov/*.out Tcov/*.a Tcov/out Tcov/tcov_for_lu2 Tcov/tcov_for_other
+	- $(RM) Tcov/tcov_for_update Tcov/out Tcov/Mats4Tcov/SPEX_Update/mat.txt
+	- $(RM) -r Tcov/SPEX_*.c Tcov/spex_*.c Tcov/*.dSYM
+	- $(RM) -r Tcov/tcov_for_cholesky
 
 purge: clean
 

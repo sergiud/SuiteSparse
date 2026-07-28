@@ -2,7 +2,7 @@
 // UMFPACK/Source/umf_garbage_collection: compress elements in Numeric->Memory
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -47,7 +47,7 @@
 #include "umf_internal.h"
 #include "umf_garbage_collection.h"
 
-GLOBAL void UMF_garbage_collection
+void UMF_garbage_collection
 (
     NumericType *Numeric,
     WorkType *Work,
@@ -386,7 +386,7 @@ GLOBAL void UMF_garbage_collection
 	    pdest -= (size + 1) ;
 	    F2 = (Entry *) (pdest + 1) ;
 
-	    ASSERT ((UInt) psrc + 1 + size <= (UInt) pnext) ;
+	    ASSERT ((uintptr_t) psrc + 1 + size <= (uintptr_t) pnext) ;
 	    ASSERT (psrc <= pdest) ;
 	    ASSERT (F1 <= F2) ;
 
@@ -538,7 +538,7 @@ GLOBAL void UMF_garbage_collection
 	    pdest -= (size2 + 1) ;
 
 	    ASSERT (size2 <= size) ;
-	    ASSERT ((UInt) psrc + 1 + size <= (UInt) pnext) ;
+	    ASSERT ((intptr_t) psrc + 1 + size <= (intptr_t) pnext) ;
 	    ASSERT (psrc <= pdest) ;
 
 	    p = pdest + 1 ;

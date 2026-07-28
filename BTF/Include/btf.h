@@ -2,7 +2,7 @@
 // BTF/Include/btf.h: include file for BTF
 //------------------------------------------------------------------------------
 
-// BTF, Copyright (c) 2004-2022, University of Florida.  All Rights Reserved.
+// BTF, Copyright (c) 2004-2024, University of Florida.  All Rights Reserved.
 // Author: Timothy A. Davis.
 // SPDX-License-Identifier: LGPL-2.1+
 
@@ -90,14 +90,13 @@
 #ifndef _BTF_H
 #define _BTF_H
 
+#include "SuiteSparse_config.h"
+
 /* make it easy for C++ programs to include BTF */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "SuiteSparse_config.h"
-
-SUITESPARSE_PUBLIC
 int32_t btf_maxtrans    /* returns # of columns matched */
 (
     /* --- input, not modified: --- */
@@ -121,7 +120,6 @@ int32_t btf_maxtrans    /* returns # of columns matched */
 ) ;
 
 /* int64_t integer version */
-SUITESPARSE_PUBLIC 
 int64_t btf_l_maxtrans (int64_t, int64_t,
     int64_t *, int64_t *, double, double *,
     int64_t *, int64_t *) ;
@@ -149,7 +147,6 @@ int64_t btf_l_maxtrans (int64_t, int64_t,
  * number of strongly connected components found.
  */
 
-SUITESPARSE_PUBLIC 
 int32_t btf_strongcomp  /* return # of strongly connected components */
 (
     /* input, not modified: */
@@ -170,7 +167,6 @@ int32_t btf_strongcomp  /* return # of strongly connected components */
     int32_t Work [ ]    /* size 4n */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int64_t btf_l_strongcomp (int64_t, int64_t *,
     int64_t *, int64_t *, int64_t *,
     int64_t *, int64_t *) ;
@@ -199,7 +195,6 @@ int64_t btf_l_strongcomp (int64_t, int64_t *,
  * number of strongly connected components found.
  */
 
-SUITESPARSE_PUBLIC 
 int32_t btf_order       /* returns number of blocks found */
 (
     /* --- input, not modified: --- */
@@ -220,9 +215,18 @@ int32_t btf_order       /* returns number of blocks found */
     int32_t Work [ ] /* size 5n */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int64_t btf_l_order (int64_t, int64_t *, int64_t *, double , double *,
     int64_t *, int64_t *, int64_t *, int64_t *, int64_t *) ;
+
+//------------------------------------------------------------------------------
+// btf_version: return BTF version
+//------------------------------------------------------------------------------
+
+void btf_version (int version [3]) ;
+
+#ifdef __cplusplus
+}
+#endif
 
 
 /* ========================================================================== */
@@ -253,22 +257,25 @@ int64_t btf_l_order (int64_t, int64_t *, int64_t *, double , double *,
  *
  * This also works during compile-time:
  *
- *      #if (BTF >= BTF_VERSION_CODE (1,2))
+ *      #if (BTF_VERSION >= BTF_VERSION_CODE (1,2))
  *          printf ("This is version 1.2 or later\n") ;
  *      #else
  *          printf ("This is an early version\n") ;
  *      #endif
  */
 
-#define BTF_DATE "Nov 12, 2022"
+#define BTF_DATE "July 25, 2025"
 #define BTF_MAIN_VERSION   2
-#define BTF_SUB_VERSION    0
-#define BTF_SUBSUB_VERSION 0
+#define BTF_SUB_VERSION    3
+#define BTF_SUBSUB_VERSION 3
 
-#define BTF_VERSION_CODE(main,sub) ((main) * 1000 + (sub))
-#define BTF_VERSION BTF_VERSION_CODE(BTF_MAIN_VERSION,BTF_SUB_VERSION)
+#define BTF_VERSION_CODE(main,sub) SUITESPARSE_VER_CODE(main,sub)
+#define BTF_VERSION BTF_VERSION_CODE(2,3)
 
-#ifdef __cplusplus
-}
+#define BTF__VERSION SUITESPARSE__VERCODE(2,3,3)
+#if !defined (SUITESPARSE__VERSION) || \
+    (SUITESPARSE__VERSION < SUITESPARSE__VERCODE(7,11,0))
+#error "BTF 2.3.3 requires SuiteSparse_config 7.11.0 or later"
 #endif
+
 #endif

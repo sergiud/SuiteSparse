@@ -2,7 +2,7 @@
 // UMFPACK/Source/umfpack_report_control: print control settings
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -14,7 +14,10 @@
 
 #include "umf_internal.h"
 
-GLOBAL void UMFPACK_report_control
+#define xstr(s) str(s)
+#define str(s) #s
+
+void UMFPACK_report_control
 (
     const double Control [UMFPACK_CONTROL]
 )
@@ -379,10 +382,11 @@ GLOBAL void UMFPACK_report_control
     PRINTF (("    compiled for ANSI C\n")) ;
 #endif
 
+    PRINTF (("    CPU timer: ")) ;
 #ifdef SUITESPARSE_TIMER_ENABLED
-    PRINTF (("    POSIX C clock_getttime.\n")) ;
+    PRINTF (( xstr( SUITESPARSE_CONFIG_TIMER ) "\n")) ;
 #else
-    PRINTF (("    no timer used.\n")) ;
+    PRINTF (("no timer used.\n")) ;
 #endif
 
 #ifdef NCHOLMOD

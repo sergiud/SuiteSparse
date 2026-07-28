@@ -2,7 +2,7 @@
 // CCOLAMD/Include/ccolamd.h:  constrained column approx. min. degree ordering
 //------------------------------------------------------------------------------
 
-// CCOLAMD, Copyright (c) 1996-2022, Timothy A. Davis, Sivasankaran
+// CCOLAMD, Copyright (c) 1996-2024, Timothy A. Davis, Sivasankaran
 // Rajamanickam, and Stefan Larimore.  All Rights Reserved.
 // SPDX-License-Identifier: BSD-3-clause
 
@@ -15,11 +15,6 @@
 
 #ifndef CCOLAMD_H
 #define CCOLAMD_H
-
-/* make it easy for C++ programs to include CCOLAMD */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "SuiteSparse_config.h"
 
@@ -46,9 +41,14 @@ extern "C" {
 #define CCOLAMD_SUB_VERSION    @CCOLAMD_VERSION_MINOR@
 #define CCOLAMD_SUBSUB_VERSION @CCOLAMD_VERSION_SUB@
 
-#define CCOLAMD_VERSION_CODE(main,sub) ((main) * 1000 + (sub))
-#define CCOLAMD_VERSION \
-	CCOLAMD_VERSION_CODE(CCOLAMD_MAIN_VERSION,CCOLAMD_SUB_VERSION)
+#define CCOLAMD_VERSION_CODE(main,sub) SUITESPARSE_VER_CODE(main,sub)
+#define CCOLAMD_VERSION CCOLAMD_VERSION_CODE(@CCOLAMD_VERSION_MAJOR@,@CCOLAMD_VERSION_MINOR@)
+
+#define CCOLAMD__VERSION SUITESPARSE__VERCODE(@CCOLAMD_VERSION_MAJOR@,@CCOLAMD_VERSION_MINOR@,@CCOLAMD_VERSION_SUB@)
+#if !defined (SUITESPARSE__VERSION) || \
+    (SUITESPARSE__VERSION < SUITESPARSE__VERCODE(7,11,0))
+#error "CCOLAMD @CCOLAMD_VERSION_MAJOR@.@CCOLAMD_VERSION_MINOR@.@CCOLAMD_VERSION_SUB@ requires SuiteSparse_config 7.11.0 or later"
+#endif
 
 /* ========================================================================== */
 /* === Knob and statistics definitions ====================================== */
@@ -112,7 +112,11 @@ extern "C" {
 /* === Prototypes of user-callable routines ================================= */
 /* ========================================================================== */
 
-SUITESPARSE_PUBLIC 
+/* make it easy for C++ programs to include CCOLAMD */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 size_t ccolamd_recommended	/* returns recommended value of Alen, */
 				/* or 0 if input arguments are erroneous */
 (
@@ -121,7 +125,6 @@ size_t ccolamd_recommended	/* returns recommended value of Alen, */
     int n_col			/* number of columns in A */
 ) ;
 
-SUITESPARSE_PUBLIC 
 size_t ccolamd_l_recommended	/* returns recommended value of Alen, */
 				/* or 0 if input arguments are erroneous */
 (
@@ -130,19 +133,16 @@ size_t ccolamd_l_recommended	/* returns recommended value of Alen, */
     int64_t n_col		/* number of columns in A */
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_set_defaults	/* sets default parameters */
 (				/* knobs argument is modified on output */
     double knobs [CCOLAMD_KNOBS]	/* parameter settings for ccolamd */
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_l_set_defaults	/* sets default parameters */
 (				/* knobs argument is modified on output */
     double knobs [CCOLAMD_KNOBS]	/* parameter settings for ccolamd */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int ccolamd			/* returns (1) if successful, (0) otherwise*/
 (				/* A and p arguments are modified on output */
     int n_row,			/* number of rows in A */
@@ -155,7 +155,6 @@ int ccolamd			/* returns (1) if successful, (0) otherwise*/
     int cmember [ ]		/* Constraint set of A, of size n_col */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int ccolamd_l      /* as ccolamd w/ int64_t integers */
 (
     int64_t n_row,
@@ -168,7 +167,6 @@ int ccolamd_l      /* as ccolamd w/ int64_t integers */
     int64_t cmember [ ]
 ) ;
 
-SUITESPARSE_PUBLIC 
 int csymamd			/* return (1) if OK, (0) otherwise */
 (
     int n,			/* number of rows and columns of A */
@@ -185,7 +183,6 @@ int csymamd			/* return (1) if OK, (0) otherwise */
     int stype			/* 0: use both parts, >0: upper, <0: lower */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int csymamd_l      /* as csymamd, w/ int64_t integers */
 (
     int64_t n,
@@ -200,30 +197,27 @@ int csymamd_l      /* as csymamd, w/ int64_t integers */
     int64_t stype
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_report
 (
     int stats [CCOLAMD_STATS]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_l_report
 (
     int64_t stats [CCOLAMD_STATS]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void csymamd_report
 (
     int stats [CCOLAMD_STATS]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void csymamd_l_report
 (
     int64_t stats [CCOLAMD_STATS]
 ) ;
 
+void ccolamd_version (int version [3]) ;
 
 /* ========================================================================== */
 /* === Prototypes of "expert" routines ====================================== */
@@ -234,7 +228,6 @@ void csymamd_l_report
  * be called directly by the user.
  */
 
-SUITESPARSE_PUBLIC 
 int ccolamd2
 (				/* A and p arguments are modified on output */
     int n_row,			/* number of rows in A */
@@ -255,7 +248,6 @@ int ccolamd2
     int cmember [ ]		/* Constraint set of A */
 ) ;
 
-SUITESPARSE_PUBLIC 
 int ccolamd2_l     /* as ccolamd2, w/ int64_t integers */
 (
     int64_t n_row,
@@ -275,7 +267,6 @@ int ccolamd2_l     /* as ccolamd2, w/ int64_t integers */
     int64_t cmember [ ]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_apply_order
 (
     int Front [ ],
@@ -285,7 +276,6 @@ void ccolamd_apply_order
     int nfr
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_l_apply_order
 (
     int64_t Front [ ],
@@ -295,7 +285,6 @@ void ccolamd_l_apply_order
     int64_t nfr
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_fsize
 (
     int nn,
@@ -306,7 +295,6 @@ void ccolamd_fsize
     int Npiv [ ]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_l_fsize
 (
     int64_t nn,
@@ -317,7 +305,6 @@ void ccolamd_l_fsize
     int64_t Npiv [ ]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_postorder
 (
     int nn,
@@ -332,7 +319,6 @@ void ccolamd_postorder
     int cmember [ ]
 ) ;
 
-SUITESPARSE_PUBLIC 
 void ccolamd_l_postorder
 (
     int64_t nn,
@@ -347,7 +333,6 @@ void ccolamd_l_postorder
     int64_t cmember [ ]
 ) ;
 
-SUITESPARSE_PUBLIC 
 int ccolamd_post_tree
 (
     int root,
@@ -358,7 +343,6 @@ int ccolamd_post_tree
     int Stack [ ]
 ) ;
 
-SUITESPARSE_PUBLIC 
 int64_t ccolamd_l_post_tree
 (
     int64_t root,

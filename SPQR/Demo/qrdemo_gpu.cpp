@@ -9,8 +9,8 @@
 // statements.  See also qrdemo.m
 
 #include "SuiteSparseQR.hpp"
-#include "SuiteSparseGPU_Runtime.hpp"
 #include <complex>
+#include <stdio.h>
 
 int main (int argc, char **argv)
 {
@@ -33,10 +33,10 @@ int main (int argc, char **argv)
     // warmup the GPU.  This can take some time, but only needs
     // to be done once
     cc->useGPU = true ;
-    t = SuiteSparse_time ( ) ;
+    t = SUITESPARSE_TIME ;
     cholmod_l_gpu_memorysize (&total_mem, &available_mem, cc) ;
     cc->gpuMemorySize = available_mem ;
-    t = SuiteSparse_time ( ) - t ;
+    t = SUITESPARSE_TIME - t ;
     if (cc->gpuMemorySize <= 1)
     {
         printf ("no GPU available\n") ;
@@ -62,8 +62,8 @@ int main (int argc, char **argv)
     long ordering = (argc < 3 ? SPQR_ORDERING_DEFAULT : atoi(argv[2]));
 
 #if 1
-    printf ("Matrix %6ld-by-%-6ld nnz: %6ld\n",
-        m, n, cholmod_l_nnz (A, cc)) ;
+    printf ("Matrix %6" PRId64 "-by-%-6" PRId64 " nnz: %6" PRId64 "\n",
+        (int64_t) m, (int64_t) n, cholmod_l_nnz (A, cc)) ;
     cholmod_l_print_sparse (A, "A", cc) ;
 #endif
 
@@ -117,25 +117,25 @@ int main (int argc, char **argv)
         rnorm /= (anorm * xnorm) ;
     }
     printf ("\nnorm(Ax-b): %8.1e\n", rnorm) ;
-    printf ("norm(A'(Ax-b))         %8.1e rank: %ld of %ld\n", 
-        atrnorm, rnk, (m < n) ? m:n) ;
+    printf ("norm(A'(Ax-b))         %8.1e rank: %" PRId64 " of %" PRId64 "\n", 
+        atrnorm, (int64_t) rnk, (int64_t) ((m < n) ? m:n)) ;
 
     /* Write an info file. */
     FILE *info = fopen("gpu_results.txt", "w");
-    fprintf(info, "%ld\n", cc->SPQR_istat[7]);        // ordering method
-    fprintf(info, "%ld\n", cc->memory_usage);         // memory usage (bytes)
+    fprintf(info, "%" PRId64 "\n", cc->SPQR_istat[7]);// ordering method
+    fprintf(info, "%" PRId64 "\n", cc->memory_usage); // memory usage (bytes)
     fprintf(info, "%30.16e\n", cc->SPQR_flopcount);   // flop count
     fprintf(info, "%lf\n", cc->SPQR_analyze_time);    // analyze time
     fprintf(info, "%lf\n", cc->SPQR_factorize_time);  // factorize time
     fprintf(info, "-1\n") ;                           // cpu memory (bytes)
     fprintf(info, "-1\n") ;                           // gpu memory (bytes)
     fprintf(info, "%32.16e\n", rnorm);                // residual
-    fprintf(info, "%ld\n", cholmod_l_nnz (A, cc));    // nnz(A)
-    fprintf(info, "%ld\n", cc->SPQR_istat [0]);       // nnz(R)
-    fprintf(info, "%ld\n", cc->SPQR_istat [2]);       // # of frontal matrices
-    fprintf(info, "%ld\n", cc->SPQR_istat [3]);       // ntasks, for now
+    fprintf(info, "%" PRId64 "\n", cholmod_l_nnz (A, cc));  // nnz(A)
+    fprintf(info, "%" PRId64 "\n", cc->SPQR_istat [0]); // nnz(R)
+    fprintf(info, "%" PRId64 "\n", cc->SPQR_istat [2]); // # of frontal matrices
+    fprintf(info, "%" PRId64 "\n", cc->SPQR_istat [3]); // ntasks, for now
     fprintf(info, "%lf\n", cc->gpuKernelTime);        // kernel time (ms)
-    fprintf(info, "%ld\n", cc->gpuFlops);             // "actual" gpu flops
+    fprintf(info, "%" PRId64 "\n", cc->gpuFlops);     // "actual" gpu flops
     fprintf(info, "%d\n", cc->gpuNumKernelLaunches);  // # of kernel launches
     fprintf(info, "%32.16e\n", atrnorm) ;             // norm (A'*(Ax-b))
 

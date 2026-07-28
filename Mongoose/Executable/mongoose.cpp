@@ -10,11 +10,11 @@
 
 //------------------------------------------------------------------------------
 
-#include "Mongoose_Internal.hpp"
-#include "Mongoose_EdgeCut.hpp"
-#include "Mongoose_IO.hpp"
+#include "Mongoose.hpp"
+// #include "Mongoose_Internal.hpp"
+// #include "Mongoose_EdgeCut.hpp"
+// #include "Mongoose_IO.hpp"
 #include "Mongoose_Logger.hpp"
-#include "Mongoose_Version.hpp"
 
 #include <fstream>
 
@@ -24,7 +24,7 @@ int main(int argn, const char **argv)
 {
     SuiteSparse_start();
 
-    clock_t t;
+    double t;
     
     // Set Logger to report only Error messages
     Logger::setDebugLevel(Error);
@@ -83,9 +83,9 @@ int main(int argn, const char **argv)
     std::cout << "********************************************************************************" << std::endl;
 
     // An edge separator should be computed with default options
-    t = clock();
+    t = SUITESPARSE_TIME;
     EdgeCut *result = edge_cut(graph, options);
-    t = clock() - t;
+    t = SUITESPARSE_TIME - t;
 
     if (!result)
     {
@@ -93,12 +93,12 @@ int main(int argn, const char **argv)
         LogError("Error computing edge separator");
         options->~EdgeCut_Options();
         graph->~Graph();
-        result->~EdgeCut();
+        // result->~EdgeCut();
         return EXIT_FAILURE;
     }
     else
     {
-        double test_time = ((double) t)/CLOCKS_PER_SEC;
+        double test_time = t ;
         std::cout << "Total Edge Separator Time: " << test_time << "s\n";
         Logger::printTimingInfo();
         std::cout << "Cut Properties:\n";

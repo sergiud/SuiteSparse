@@ -2,7 +2,7 @@
 // UMFPACK/Source/umf_blas3_update: apply updates via BLAS3
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 #include "umf_internal.h"
 #include "umf_blas3_update.h"
 
-GLOBAL void UMF_blas3_update
+void UMF_blas3_update
 (
     WorkType *Work
 )
@@ -74,7 +74,7 @@ GLOBAL void UMF_blas3_update
 		    Entry *c_ij, *l_is ;
 		    c_ij = & C [j*d] ;
 		    l_is = & L [0] ;
-                    #pragma ivdep
+                    UMFPACK_IVDEP
 		    for (i = 0 ; i < m ; i++)
 		    {
 			/* C [i+j*d]-= L [i] * U [j] */
@@ -109,7 +109,7 @@ GLOBAL void UMF_blas3_update
 			Entry *u_ij, *u_sj ;
 			u_ij = & U [i*dc] ;
 			u_sj = & U [s*dc] ;
-                        #pragma ivdep
+                        UMFPACK_IVDEP
 			for (j = 0 ; j < n ; j++)
 			{
 			    /* U [i*dc+j] -= LU [i+s*nb] * U [s*dc+j] ; */
@@ -142,7 +142,7 @@ GLOBAL void UMF_blas3_update
 			Entry *c_ij, *l_is ;
 			c_ij = & C [j*d] ;
 			l_is = & L [s*d] ;
-                        #pragma ivdep
+                        UMFPACK_IVDEP
 			for (i = 0 ; i < m ; i++)
 			{
 			    /* C [i+j*d]-= L [i+s*d] * U [s*dc+j] */

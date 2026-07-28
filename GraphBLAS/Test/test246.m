@@ -1,8 +1,15 @@
 function test246 (dohack)
-%TEST246 test GrB_mxm with different kinds of parallelism
+%TEST246 test GrB_mxm (for GB_AxB_saxpy3_fineHash_phase2.c)
+%
+% This tests the "if (hf == i_unlocked) // f == 2" case in the last block of
+% code in GB_AxB_saxpy3_fineHash_phase2.c.  The test is nondeterministic so
+% it the test coverage might vary, or even be zero.  See also test247.m.
+% It is thus run for many trials below.
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
+
+fprintf ('test246: testing of GB_AxB_saxpy3_fineHash_phase2.c\n') ;
 
 rng ('default') ;
 
@@ -19,9 +26,7 @@ hack = save ;
 if (nargin < 1)
     dohack = 2 ;        % use 0 for default, 2 for prior setting in v7.2.0
 end
-hack (1) = dohack ;     % modify "very_costly" in GxB_AxB_saxpy3_slice_balanced
-GB_mex_hack (hack) ;
-GrB.burble (0) ;
+hack (1) = dohack ; GB_mex_hack (hack) ; % "very_costly" in saxpy3
 
 semiring.multiply = 'times' ;
 semiring.add = 'plus' ;
@@ -59,6 +64,9 @@ for k = [1 2 4 16 128]
 
                 for threads = [1 4 16]
                     nthreads_set (threads, 1) ;
+                    fprintf ('.') ;
+
+                    for trial = 1:5
 
                     % no mask
                     C1 = A*B ;
@@ -77,6 +85,7 @@ for k = [1 2 4 16 128]
                     err = norm (C1 - C2.matrix, 1) / max (1, norm (C1, 1)) ;
                     assert (err < 1e-12)
 
+                    end
                 end
             end
         end
@@ -84,7 +93,6 @@ for k = [1 2 4 16 128]
 end
 
 % restore global settings
-GrB.burble (0) ;
 nthreads_set (nthreads_save, chunk_save) ;
 GB_mex_hack (save) ;
 

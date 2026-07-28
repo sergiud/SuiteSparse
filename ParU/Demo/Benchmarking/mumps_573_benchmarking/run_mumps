@@ -1,0 +1,82 @@
+# A generic script for running MUMPS on the test matrices used
+# for the ParU ACM TOMS submission.  First use ../get_matrices
+# to download the test matrices to your /tmp/matrices folder.
+
+echo "Matrix: TSOPF_RS_b39_c30.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/TSOPF_RS_b39_c30/TSOPF_RS_b39_c30.mtx
+
+echo "Matrix: twotone.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/twotone/twotone.mtx
+
+echo "Matrix: std1_Jac2.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/std1_Jac2/std1_Jac2.mtx
+
+echo "Matrix: mac_econ_fwd500.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/mac_econ_fwd500/mac_econ_fwd500.mtx
+
+echo "Matrix: std1_Jac3.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/std1_Jac3/std1_Jac3.mtx
+
+echo "Matrix: TSOPF_RS_b300_c1.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/TSOPF_RS_b300_c1/TSOPF_RS_b300_c1.mtx
+
+echo "Matrix: lhr71.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/lhr71/lhr71.mtx
+
+echo "Matrix: Zd_Jac2.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/Zd_Jac2/Zd_Jac2.mtx
+
+echo "Matrix: av41092.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/av41092/av41092.mtx
+
+echo "Matrix: Zd_Jac6.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/Zd_Jac6/Zd_Jac6.mtx
+
+echo "Matrix: crashbasis.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/crashbasis/crashbasis.mtx
+
+echo "Matrix: bbmat.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/bbmat/bbmat.mtx
+
+echo "Matrix: Zd_Jac3.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/Zd_Jac3/Zd_Jac3.mtx
+
+echo "Matrix: mc2depi.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/mc2depi/mc2depi.mtx
+
+echo "Matrix: TSOPF_RS_b300_c2.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/TSOPF_RS_b300_c2/TSOPF_RS_b300_c2.mtx
+
+echo "Matrix: TSOPF_RS_b678_c1.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/TSOPF_RS_b678_c1/TSOPF_RS_b678_c1.mtx
+
+echo "Matrix: TSOPF_RS_b300_c3.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/TSOPF_RS_b300_c3/TSOPF_RS_b300_c3.mtx
+
+echo "Matrix: Chebyshev4.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/Chebyshev4/Chebyshev4.mtx
+
+echo "Matrix: Hamrle3.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/Hamrle3/Hamrle3.mtx
+
+echo "Matrix: pre2.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/pre2/pre2.mtx
+
+echo "Matrix: TSOPF_RS_b2052_c1.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/TSOPF_RS_b2052_c1/TSOPF_RS_b2052_c1.mtx
+
+echo "Matrix: torso1.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/torso1/torso1.mtx
+
+echo "Matrix: TSOPF_RS_b678_c2.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/TSOPF_RS_b678_c2/TSOPF_RS_b678_c2.mtx
+
+echo "Matrix: TSOPF_RS_b2383.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/TSOPF_RS_b2383/TSOPF_RS_b2383.mtx
+
+echo "Matrix: vas_stokes_4M.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/vas_stokes_4M/vas_stokes_4M.mtx
+
+echo "Matrix: stokes.mtx"
+~/MUMPS/examples/c_mumps_paru /tmp/matrices/stokes/stokes.mtx
+

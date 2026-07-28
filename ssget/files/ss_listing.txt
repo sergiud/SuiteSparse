@@ -2891,3 +2891,14 @@ ML_Graph/YaleA_10NN
 ML_Graph/YaleB_10NN
 ML_Graph/yeast_30NN
 Sybrandt/AGATHA_2015
+FlowIPM22/Spielman_k100
+FlowIPM22/Spielman_k200
+FlowIPM22/Spielman_k300
+FlowIPM22/Spielman_k400
+FlowIPM22/Spielman_k500
+FlowIPM22/Spielman_k600
+FlowIPM22/uni_chimera_i1
+FlowIPM22/uni_chimera_i2
+FlowIPM22/uni_chimera_i3
+FlowIPM22/uni_chimera_i4
+FlowIPM22/uni_chimera_i5

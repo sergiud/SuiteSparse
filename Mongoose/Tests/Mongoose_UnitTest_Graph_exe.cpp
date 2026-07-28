@@ -85,10 +85,10 @@ int main(int argn, char** argv)
 
     // Tests to increase coverage
     /* Override SuiteSparse memory management with custom testers. */
-    SuiteSparse_config.malloc_func = myMalloc;
-    SuiteSparse_config.calloc_func = myCalloc;
-    SuiteSparse_config.realloc_func = myRealloc;
-    SuiteSparse_config.free_func = myFree;
+    SuiteSparse_config_malloc_func_set (myMalloc) ;
+    SuiteSparse_config_calloc_func_set (myCalloc) ;
+    SuiteSparse_config_realloc_func_set (myRealloc) ;
+    SuiteSparse_config_free_func_set (myFree) ;
 
     // Simulate failure to allocate return arrays
     AllowedMallocs = 0;

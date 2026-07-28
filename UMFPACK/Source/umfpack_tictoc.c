@@ -2,7 +2,7 @@
 // UMFPACK/Source/umfpack_tictoc: timing routines
 //------------------------------------------------------------------------------
 
-// UMFPACK, Copyright (c) 2005-2022, Timothy A. Davis, All Rights Reserved.
+// UMFPACK, Copyright (c) 2005-2023, Timothy A. Davis, All Rights Reserved.
 // SPDX-License-Identifier: GPL-2.0+
 
 //------------------------------------------------------------------------------
@@ -17,12 +17,12 @@
 
 void umfpack_tic (double stats [2])
 {
-    stats [0] = SuiteSparse_time ( ) ;
+    stats [0] = SUITESPARSE_TIME ;
     stats [1] = stats [0] ;
 }
 
 void umfpack_toc (double stats [2])
 {
-    stats [0] = SuiteSparse_time ( ) - stats [0] ;
+    stats [0] = SUITESPARSE_TIME - stats [0] ;
     stats [1] = stats [0] ;
 }

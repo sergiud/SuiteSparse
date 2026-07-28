@@ -1,0 +1,251 @@
+name: build-mingw
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - '**/dev2'
+      - '**/*dev2'
+  pull_request:
+
+concurrency: ci-mingw-${{ github.ref }}
+
+env:
+  # string with name of libraries to be built
+  BUILD_LIBS: "SuiteSparse_config:Mongoose:AMD:BTF:CAMD:CCOLAMD:COLAMD:CHOLMOD:CSparse:CXSparse:LDL:KLU:UMFPACK:ParU:RBio:SPQR:SPEX:GraphBLAS:LAGraph"
+  # string with name of libraries to be checked
+  CHECK_LIBS: "SuiteSparse_config:Mongoose:AMD:BTF:CAMD:CCOLAMD:COLAMD:CHOLMOD:CSparse:CXSparse:LDL:KLU:UMFPACK:ParU:RBio:SPQR:SPEX:GraphBLAS:LAGraph"
+  # string with name of libraries that are installed
+  INSTALLED_LIBS: "SuiteSparse_config:Mongoose:AMD:BTF:CAMD:CCOLAMD:COLAMD:CHOLMOD:CXSparse:LDL:KLU:UMFPACK:ParU:RBio:SPQR:SPEX:GraphBLAS:LAGraph"
+
+
+jobs:
+
+  mingw:
+    # For available GitHub-hosted runners, see:
+    # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        # Use MSYS2 as default shell
+        shell: msys2 {0}
+
+    strategy:
+      # Allow other runners in the matrix to continue if some fail
+      fail-fast: false
+
+      matrix:
+        msystem: [MINGW64, UCRT64, CLANG64, CLANGARM64]
+        include:
+          - msystem: MINGW64
+            os: windows-latest
+            f77-package: fc
+          - msystem: UCRT64
+            os: windows-latest
+            # Purposefully don't install a Fortran compiler to test that configuration
+            f77-package: cc
+          - msystem: CLANG64
+            os: windows-latest
+            f77-package: fc
+          - msystem: CLANGARM64
+            os: windows-11-arm
+            f77-package: fc
+
+    env:
+      CHERE_INVOKING: 1
+
+    steps:
+      - name: get runner hardware information
+        shell: pwsh
+        run : |
+          Get-PSDrive -PSProvider FileSystem
+          Get-CIMInstance -Class Win32_Processor | Select-Object -Property Name
+
+      - name: install MSYS2 build environment
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+
+          update: true
+
+          # Use pre-installed version if possible to save disc space on
+          # partition with source.  MSYS2 is not pre-installed on the
+          # windows-11-arm runners currently.
+          release: ${{ matrix.msystem == 'CLANGARM64' }}
+
+          install: >-
+            base-devel
+
+          pacboy: >-
+            autotools:p
+            cmake:p
+            cc:p
+            ${{ matrix.f77-package }}:p
+            ccache:p
+            openblas:p
+            omp:p
+            python:p
+            gmp:p
+            mpfr:p
+
+      - name: checkout repository
+        uses: actions/checkout@v7
+
+      - name: prepare ccache
+        # create key with human readable timestamp
+        # used in action/cache/restore and action/cache/save steps
+        id: ccache-prepare
+        run: |
+          echo "ccachedir=$(cygpath -m $(ccache -k cache_dir))" >> $GITHUB_OUTPUT
+          echo "key=ccache:mingw:${{ matrix.msystem }}:${{ github.ref }}:$(date +"%Y-%m-%d_%H-%M-%S"):${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: restore ccache
+        # Setup the GitHub cache used to maintain the ccache from one job to the next
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ steps.ccache-prepare.outputs.ccachedir }}
+          key: ${{ steps.ccache-prepare.outputs.key }}
+          # Prefer caches from the same branch. Fall back to caches from the dev branch.
+          restore-keys: |
+            ccache:mingw:${{ matrix.msystem }}:${{ github.ref }}
+            ccache:mingw:${{ matrix.msystem }}
+
+      - name: configure ccache
+        # Limit the maximum size and switch on compression to avoid exceeding the total disk or cache quota.
+        run: |
+          which ccache
+          test -d ${{ steps.ccache-prepare.outputs.ccachedir }} || mkdir -p ${{ steps.ccache-prepare.outputs.ccachedir }}
+          echo "max_size = 250M" > ${{ steps.ccache-prepare.outputs.ccachedir }}/ccache.conf
+          echo "compression = true" >> ${{ steps.ccache-prepare.outputs.ccachedir }}/ccache.conf
+          ccache -p
+          ccache -s
+
+      - name: build
+        id: build
+        run: |
+          IFS=':' read -r -a libs <<< "${BUILD_LIBS}"
+          for lib in "${libs[@]}"; do
+            printf "   \033[0;32m==>\033[0m Building library \033[0;32m${lib}\033[0m\n"
+            echo "::group::Configure $lib"
+            cd ${GITHUB_WORKSPACE}/${lib}/build
+            cmake -DCMAKE_BUILD_TYPE="Release" \
+                  -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}" \
+                  -DCMAKE_C_COMPILER_LAUNCHER="ccache" \
+                  -DCMAKE_CXX_COMPILER_LAUNCHER="ccache" \
+                  -DCMAKE_Fortran_COMPILER_LAUNCHER="ccache" \
+                  -DBLA_VENDOR="OpenBLAS" \
+                  -DPython_EXECUTABLE="$(which python)" \
+                  -DSUITESPARSE_DEMOS=OFF \
+                  -DSUITESPARSE_USE_FORTRAN=ON \
+                  -DBUILD_TESTING=OFF \
+                  ..
+            echo "::endgroup::"
+            echo "::group::Build $lib"
+            cmake --build . --config Release
+            echo "::endgroup::"
+          done
+
+      - name: check
+        timeout-minutes: 40
+        # Need to install the libraries for the tests
+        run: |
+          echo "::group::Install libraries"
+          make install
+          echo "::endgroup::"
+          IFS=':' read -r -a libs <<< "${CHECK_LIBS}"
+          for lib in "${libs[@]}"; do
+            printf "::group::   \033[0;32m==>\033[0m Checking library \033[0;32m${lib}\033[0m\n"
+            cd ${GITHUB_WORKSPACE}/${lib}
+            PATH="${GITHUB_WORKSPACE}/bin:${PATH}" \
+              make demos CMAKE_OPTIONS="-DSUITESPARSE_DEMOS=ON -DBUILD_TESTING=ON"
+            echo "::endgroup::"
+          done
+
+      - name: ccache status
+        if: always() && (steps.build.outcome != 'skipped')
+        continue-on-error: true
+        run: ccache -s
+
+      - name: save ccache
+        # Save the cache after we are done building
+        # This helps to retain the ccache even if the subsequent steps are failing.
+        if: always() && (steps.build.outcome != 'skipped')
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ steps.ccache-prepare.outputs.ccachedir }}
+          key: ${{ steps.ccache-prepare.outputs.key }}
+
+      - name: build example using CMake
+        run: |
+          cd ${GITHUB_WORKSPACE}/Example/build
+          printf "::group::\033[0;32m==>\033[0m Configuring example\n"
+          cmake \
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/lib/cmake" \
+            ..
+          echo "::endgroup::"
+          printf "::group::\033[0;32m==>\033[0m Building example\n"
+          cmake --build .
+          echo "::endgroup::"
+          printf "::group::\033[0;32m==>\033[0m Executing example\n"
+          printf "\033[1;35m  C binary with shared libraries\033[0m\n"
+          PATH="${GITHUB_WORKSPACE}/bin:${PATH}" \
+            ./my_demo
+          printf "\033[1;35m  C++ binary with shared libraries\033[0m\n"
+          PATH="${GITHUB_WORKSPACE}/bin:${PATH}" \
+            ./my_cxx_demo
+          # We don't build a static version of GraphBLAS in CI.
+          # So we need to prepare the environment also for the following tests.
+          printf "\033[1;35m  C binary with statically linked libraries\033[0m\n"
+          PATH="${GITHUB_WORKSPACE}/bin:${PATH}" \
+            ./my_demo_static
+          printf "\033[1;35m  C++ binary with statically linked libraries\033[0m\n"
+          PATH="${GITHUB_WORKSPACE}/bin:${PATH}" \
+            ./my_cxx_demo_static
+          echo "::endgroup::"
+
+      - name: test Config
+        run: |
+          IFS=':' read -r -a libs <<< "${INSTALLED_LIBS}"
+          for lib in "${libs[@]}"; do
+            printf "::group::   \033[0;32m==>\033[0m Building with Config.cmake with library \033[0;32m${lib}\033[0m\n"
+            cd ${GITHUB_WORKSPACE}/TestConfig/test_${lib}
+            cd build
+            cmake \
+              -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/lib/cmake" \
+              ..
+            cmake --build . --config Release
+            echo "::endgroup::"
+          done
+
+      - name: build example using autotools
+        run: |
+          cd ${GITHUB_WORKSPACE}/Example
+          printf "::group::\033[0;32m==>\033[0m Configuring example\n"
+          autoreconf -fi
+          mkdir build-autotools
+          cd build-autotools
+          PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/lib/pkgconfig/ \
+            ../configure --enable-shared --disable-static
+          echo "::endgroup::"
+          printf "::group::\033[0;32m==>\033[0m Building example\n"
+          make all
+          echo "::endgroup::"
+          printf "::group::\033[0;32m==>\033[0m Executing example\n"
+          printf "\033[1;35m  C binary\033[0m\n"
+          PATH="${GITHUB_WORKSPACE}/bin:${PATH}" \
+            ./my_demo
+          printf "\033[1;35m  C++ binary\033[0m\n"
+          PATH="${GITHUB_WORKSPACE}/bin:${PATH}" \
+            ./my_cxx_demo
+          echo "::endgroup::"
+          IFS=':' read -r -a libs <<< "${INSTALLED_LIBS}"
+          for lib in "${libs[@]}"; do
+            printf "::group::   \033[0;32m==>\033[0m Building test with library \033[0;32m${lib}\033[0m\n"
+            cd ${GITHUB_WORKSPACE}/TestConfig/test_${lib}
+            autoreconf -fi
+            mkdir build-autotools && cd build-autotools
+            PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/lib/pkgconfig/ \
+              ../configure --enable-shared --disable-static
+            make all
+            echo "::endgroup::"
+          done

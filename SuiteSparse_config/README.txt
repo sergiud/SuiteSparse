@@ -1,12 +1,20 @@
-SuiteSparse_config, Copyright (c) 2012-2022, Timothy A. Davis.
+SuiteSparse_config, Copyright (c) 2012-2024, Timothy A. Davis.
 All Rights Reserved.
 SPDX-License-Identifier: BSD-3-clause
+
+The version of SuiteSparse_config always matches the version of the SuiteSparse
+meta-package.  See the top-level SuiteSparse/ChangeLog for changes to this
+package.
 
 --------------------------------------------------------------------------------
 
 SuiteSparse_config contains configuration settings for all many of the software
 packages that I develop or co-author.  Note that older versions of some of
 these packages do not require SuiteSparse_config.
+
+For details on what cmake variables can be set to control the building of
+SuiteSparse packages, please see this file:
+SuiteSparse_config/cmake_modules/SuiteSparsePolicy.cmake.
 
 Files in SuiteSparse_config:
 
@@ -17,12 +25,25 @@ Files in SuiteSparse_config:
     SuiteSparse_config.h        SuiteSparse-wide include file
                                 (created from Config/SuiteSparse_config.h)
 
-    build/      where SuiteSparse_config is compiled
+    build/                      where SuiteSparse_config is compiled
+
     Config/SuiteSparse_config.h.in      source for SuiteSparse_config.h
+    Config/README.md.in                 README.md for all of SuiteSparse
+    Config/SuiteSparse_configConfig.cmake.in    for package config file
+    Config/SuiteSparse_config.pc.in             pkg-config file
 
-For packages that use cmake and require SuiteSparse_config, see:
-
-    ../SuiteSparse_config/cmake_modules/FindSuiteSparse_config.cmake
+    cmake_modules/FindSuiteSparse_config.cmake  how to find SuiteSparse_config
+    cmake_modules/SuiteSparseBLAS.cmake         find BLAS for SuiteSparse
+    cmake_modules/SuiteSparseBLAS32.cmake       when a 32-bit BLAS is found
+    cmake_modules/SuiteSparseBLAS64.cmake       when a 64-bit BLAS is found
+    cmake_modules/SuiteSparseLAPACK.cmake       find LAPACK for SuiteSparse
+    cmake_modules/SuiteSparsePolicy.cmake       SuiteSparse-wide policies
+    cmake_modules/SuiteSparseReport.cmake       SuiteSparse-wide reporting
+    cmake_modules/SuiteSparse__thread.cmake     thread-local keyword
+    cmake_modules/SuiteSparse__blas_threading.cmake  BLAS thread control
+    cmake_modules/check_mkl.c                           "
+    cmake_modules/check_openblas_Apr2024.c              "
+    cmake_modules/check_openblas_Mar2015.c              "
 
 To compile/install SuiteSparse_config on Linux/MacOS, in this directory do:
 
@@ -63,16 +84,17 @@ SuiteSparse packages:
   KLU      sparse LU factorization, BLAS-free
   BTF      permutation to block triangular form
   LDL      concise sparse LDL'
-  LPDASA   LP Dual Active Set Algorithm
   RBio     read/write files in Rutherford/Boeing format
   SPQR     sparse QR factorization (full name: SuiteSparseQR)
   SPEX     sparse left-looking integer-preserving LU factorization
+  ParU     parallel unsymmetric-pattern multifrontal method
 
 SuiteSparse_config is not required by these packages:
 
   CSparse       a Concise Sparse matrix package
   MATLAB_Tools  toolboxes for use in MATLAB
-  GraphBLAS     graph algorithms in the language of linear algebra
+  GraphBLAS     for graph algorithms in the language of linear algebra
+  LAGraph       graph algorithms based on GraphBLAS
 
 If you edit this directory then you should do "make purge ; make" in the parent
 directory to recompile all of SuiteSparse.  Otherwise, the changes will not

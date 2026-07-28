@@ -11,7 +11,7 @@
 #-------------------------------------------------------------------------------
 
 # cmake 3.22 is required to find the BLAS/LAPACK
-cmake_minimum_required ( VERSION 3.19 )
+cmake_minimum_required ( VERSION 3.22 )
 
 message ( STATUS "Building CHOLMOD_CUDA version: v"
     ${CHOLMOD_VERSION_MAJOR}.
@@ -20,93 +20,56 @@ message ( STATUS "Building CHOLMOD_CUDA version: v"
 
 include ( SuiteSparsePolicy )
 
-project ( cholmod_cuda 
-    VERSION "${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}"
-    LANGUAGES C CXX CUDA )
-
-set ( CMAKE_CUDA_FLAGS "-cudart=static -lineinfo -DSUITESPARSE_CUDA" )
-set ( CMAKE_CXX_STANDARD 17 )
-# set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++17 -fPIC -DSUITESPARSE_CUDA" )
-set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSUITESPARSE_CUDA" )
-set ( CMAKE_C_STANDARD 11 )
-
+enable_language ( CUDA )
+set ( CMAKE_CUDA_FLAGS "-cudart=static -lineinfo -DCHOLMOD_HAS_CUDA" )
+set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCHOLMOD_HAS_CUDA" )
 message ( STATUS "C++ flags for CUDA:  ${CMAKE_CXX_FLAGS}" )
 message ( STATUS "nvcc flags for CUDA: ${CMAKE_CUDA_FLAGS}" )
+file ( GLOB CHOLMOD_CUDA_SOURCES "cholmod_gpu.c" "cholmod_l_gpu.c"
+    "cholmod_gpu_kernels.cu" )
 
-file ( GLOB CHOLMOD_CUDA_SOURCES "cholmod_gpu.c" "cholmod_gpu_kernels.cu" "cholmod_l_gpu.c" )
+if ( BUILD_SHARED_LIBS )
+    target_sources ( CHOLMOD PRIVATE ${CHOLMOD_CUDA_SOURCES} )
+endif ( )
 
-# include: "cholmod_gpu_kernels.h"
-
-add_library ( cholmod_cuda SHARED ${CHOLMOD_CUDA_SOURCES} )
-
-set_target_properties ( cholmod_cuda PROPERTIES
-    VERSION ${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}
-    CXX_STANDARD_REQUIRED 17
-    SOVERSION ${CHOLMOD_VERSION_MAJOR} )
-
-add_library ( cholmod_cuda_static STATIC ${CHOLMOD_CUDA_SOURCES} )
-
-set_target_properties ( cholmod_cuda_static PROPERTIES
-    VERSION ${CHOLMOD_VERSION_MAJOR}.${CHOLMOD_VERSION_MINOR}.${CHOLMOD_VERSION_SUB}
-    CXX_STANDARD_REQUIRED 17
-    SOVERSION ${CHOLMOD_VERSION_MAJOR} )
+if ( BUILD_STATIC_LIBS )
+    target_sources ( CHOLMOD_static PRIVATE ${CHOLMOD_CUDA_SOURCES} )
+endif ( )
 
 set ( CHOLMOD_CUDA_INCLUDES
         ../Check
         ../../SuiteSparse_config
         ../Cholesky
-        ../Core
+        ../Utility
         ../Supernodal
         ../Include
         ../GPU )
 
 include_directories ( ${CHOLMOD_CUDA_INCLUDES} ${CUDAToolkit_INCLUDE_DIRS} )
 
-# message ( STATUS "CHOLMOD CUDA includes: ${CHOLMOD_CUDA_INCLUDES}" )
-# message ( STATUS "CUDA Toolkit includes: ${CUDAToolkit_INCLUDE_DIRS}" )
-
-target_include_directories ( cholmod_cuda PUBLIC
+if ( BUILD_SHARED_LIBS )
+    target_include_directories ( CHOLMOD PRIVATE
         ${CUDAToolkit_INCLUDE_DIRS}
         ${CHOLMOD_CUDA_INCLUDES} )
-set_target_properties ( cholmod_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON )
-set_target_properties ( cholmod_cuda PROPERTIES CUDA_SEPARABLE_COMPILATION ON )
+    set_target_properties ( CHOLMOD PROPERTIES POSITION_INDEPENDENT_CODE ON )
+    set_target_properties ( CHOLMOD PROPERTIES CUDA_SEPARABLE_COMPILATION ON )
+#   target_compile_definitions ( CHOLMOD PUBLIC "CHOLMOD_HAS_CUDA" )
+endif ( )
 
-target_include_directories ( cholmod_cuda_static PUBLIC
+if ( BUILD_STATIC_LIBS )
+    target_include_directories ( CHOLMOD_static PRIVATE
         ${CUDAToolkit_INCLUDE_DIRS}
         ${CHOLMOD_CUDA_INCLUDES} )
-set_target_properties ( cholmod_cuda_static PROPERTIES CUDA_SEPARABLE_COMPILATION on )
-set_target_properties ( cholmod_cuda_static PROPERTIES POSITION_INDEPENDENT_CODE on )
-
-target_link_libraries ( cholmod_cuda CUDA::nvrtc CUDA::cudart_static
-    CUDA::nvToolsExt CUDA::cublas )
-
-target_link_libraries ( cholmod_cuda_static CUDA::nvrtc CUDA::cudart_static
-    CUDA::nvToolsExt CUDA::cublas )
-
-#-------------------------------------------------------------------------------
-# installation location
-#-------------------------------------------------------------------------------
-
-if ( GLOBAL_INSTALL )
-    # install in /usr/local/lib and /usr/local/include.
-    # requires "sudo make install"
-    message ( STATUS "Installation will be system-wide (requires 'sudo make install')" )
-    install ( TARGETS cholmod_cuda
-        LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} )
-    install ( TARGETS cholmod_cuda_static
-        ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+    set_target_properties ( CHOLMOD_static PROPERTIES CUDA_SEPARABLE_COMPILATION on )
+    set_target_properties ( CHOLMOD_static PROPERTIES POSITION_INDEPENDENT_CODE on )
+#   target_compile_definitions ( CHOLMOD_static PUBLIC "CHOLMOD_HAS_CUDA" )
 endif ( )
 
-if ( INSIDE_SUITESPARSE )
-    # also install in SuiteSparse/lib and SuiteSparse/include;
-    # does not require "sudo make install", just "make install"
-    message ( STATUS "Installation in ../../lib and ../../include," )
-    message ( STATUS "  with 'make local ; make install'. No 'sudo' required." )
-    install ( TARGETS cholmod_cuda
-        LIBRARY       DESTINATION ${SUITESPARSE_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
-    install ( TARGETS cholmod_cuda_static
-        ARCHIVE       DESTINATION ${SUITESPARSE_LIBDIR} )
+if ( BUILD_SHARED_LIBS )
+    target_link_libraries ( CHOLMOD PRIVATE
+        CUDA::nvrtc CUDA::cudart_static CUDA::cublas )
 endif ( )
-
+if ( BUILD_STATIC_LIBS )
+    target_link_libraries ( CHOLMOD_static PRIVATE
+        CUDA::nvrtc CUDA::cudart_static CUDA::cublas )
+endif ( )

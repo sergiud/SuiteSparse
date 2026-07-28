@@ -1,0 +1,106 @@
+#!/bin/sh
+#SBATCH --job-name=slu_401_v2
+#SBATCH --time=08:00:00
+#SBATCH --nodes=1
+#SBATCH --partition=bigmem
+#SBATCH --mem=2900G
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=80
+
+#   module load GCCcore/13.3.0
+#   module load intel/2024a
+#   module load imkl/2024.2.0
+#   module load intel-compilers/2024.2.0
+#   module load GMP/6.3.0
+#   module load MPFR/4.2.1
+#   module load CMake/3.29.3
+#   module load Matlab/R2024a
+#   module list
+
+export OMP_MAX_ACTIVE_LEVELS=4
+export OMP_NUM_THREADS=24,24
+export OMP_DISPLAY_ENV=true
+printenv | grep OMP
+
+echo "Matrix: rim,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/rim.rb
+
+echo "Matrix: TSOPF_RS_b39_c30,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/TSOPF_RS_b39_c30.rb
+
+echo "Matrix: twotone,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/twotone.rb
+
+echo "Matrix: std1_Jac2,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/std1_Jac2.rb
+
+echo "Matrix: mac_econ_fwd500,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/mac_econ_fwd500.rb
+
+echo "Matrix: std1_Jac3,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/std1_Jac3.rb
+
+echo "Matrix: TSOPF_RS_b300_c1,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/TSOPF_RS_b300_c1.rb
+
+echo "Matrix: lhr71,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/lhr71.rb
+
+echo "Matrix: Zd_Jac2,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/Zd_Jac2.rb
+
+echo "Matrix: av41092,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/av41092.rb
+
+echo "Matrix: Zd_Jac6,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/Zd_Jac6.rb
+
+echo "Matrix: crashbasis,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/crashbasis.rb
+
+echo "Matrix: bbmat,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/bbmat.rb
+
+echo "Matrix: Zd_Jac3,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/Zd_Jac3.rb
+
+echo "Matrix: mc2depi,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/mc2depi.rb
+
+echo "Matrix: TSOPF_RS_b300_c2,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/TSOPF_RS_b300_c2.rb
+
+echo "Matrix: TSOPF_RS_b678_c1,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/TSOPF_RS_b678_c1.rb
+
+echo "Matrix: TSOPF_RS_b300_c3,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/TSOPF_RS_b300_c3.rb
+
+echo "Matrix: Chebyshev4,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/Chebyshev4.rb
+
+echo "Matrix: Hamrle3,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/Hamrle3.rb
+
+echo "Matrix: pre2,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/pre2.rb
+
+echo "Matrix: TSOPF_RS_b2052_c1,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/TSOPF_RS_b2052_c1.rb
+
+echo "Matrix: torso1,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/torso1.rb
+
+echo "Matrix: TSOPF_RS_b678_c2,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/TSOPF_RS_b678_c2.rb
+
+echo "Matrix: TSOPF_RS_b2383,"
+/home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/TSOPF_RS_b2383.rb
+
+# too big:
+# echo "Matrix: vas_stokes_4M,"
+# /home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/vas_stokes_4M.rb
+
+# echo "Matrix: stokes,"
+# /home/davis/dev2/superlu_mt_401_our/build/EXAMPLE/pdlinsolx_paru < /home/davis/matrices/RB/stokes.rb
+

@@ -2,100 +2,176 @@
 # GraphBLAS/CMakeLists.txt:  cmake script for GraphBLAS
 #-------------------------------------------------------------------------------
 
-# SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+# SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2026, All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 # See the User Guide for details on how to compile SuiteSparse:GraphBLAS.
 
+cmake_minimum_required ( VERSION 3.23 )
+
 #-------------------------------------------------------------------------------
-# get the version
+# define the project
 #-------------------------------------------------------------------------------
 
-cmake_minimum_required ( VERSION 3.19 )
-
-# version of SuiteSparse:GraphBLAS
-set ( GraphBLAS_DATE "Nov 12, 2022" )
-set ( GraphBLAS_VERSION_MAJOR 7 )
-set ( GraphBLAS_VERSION_MINOR 3 )
-set ( GraphBLAS_VERSION_SUB   2 )
-
-# GraphBLAS C API Specification version, at graphblas.org
-set ( GraphBLAS_API_DATE "Nov 15, 2021" )
-set ( GraphBLAS_API_VERSION_MAJOR 2 )
-set ( GraphBLAS_API_VERSION_MINOR 0 )
-set ( GraphBLAS_API_VERSION_SUB   0 )
-
-message ( STATUS "Building SuiteSparse:GraphBLAS version: v"
-    ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}
-    ", date: " ${GraphBLAS_DATE} )
-
-message ( STATUS "GraphBLAS C API: v"
-    ${GraphBLAS_API_VERSION_MAJOR}.${GraphBLAS_API_VERSION_MINOR}
-    ", date: ${GraphBLAS_API_DATE}" )
+project ( GraphBLAS LANGUAGES C )
 
 #-------------------------------------------------------------------------------
 # SuiteSparse policies
 #-------------------------------------------------------------------------------
 
 set ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-    ${CMAKE_SOURCE_DIR}/cmake_modules
-    ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/cmake_modules )
+    ${PROJECT_SOURCE_DIR}/cmake_modules )
 
-# CUDA is under development for now, and not deployed in production:
-# option ( ENABLE_CUDA "Enable CUDA acceleration" off )
-  set ( ENABLE_CUDA false )
-# set ( ENABLE_CUDA true )
+#-------------------------------------------------------------------------------
+# get the version
+#-------------------------------------------------------------------------------
+
+include ( GraphBLAS_version )
+
+set ( PROJECT_VERSION "${GraphBLAS_VER_MAJOR}.${GraphBLAS_VER_MINOR}.${GraphBLAS_VER_SUB}" )
+
+#-------------------------------------------------------------------------------
+# SuiteSparse policies
+#-------------------------------------------------------------------------------
 
 # GraphBLAS takes a long time to build, so do not build the static library
 # by default
-set ( NSTATIC_DEFAULT_ON true )
+if ( NOT BUILD_SHARED_LIBS )
+    set ( BUILD_STATIC_LIBS_DEFAULT_OFF ON )
+endif ( )
+
+# CUDA is under development for now, and not deployed in production:
+  set ( GRAPHBLAS_USE_CUDA OFF )    # turn CUDA off in production
+# set ( GRAPHBLAS_USE_CUDA ON )     # use this for CUDA development only
 
 include ( SuiteSparsePolicy )
 
-#-------------------------------------------------------------------------------
-# define the project
-#-------------------------------------------------------------------------------
-
-if ( SUITESPARSE_CUDA )
-    # for CUDA development only; not for production use
-    set ( CMAKE_CUDA_DEV off )
-    project ( graphblas
-            VERSION "${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}"
-            LANGUAGES CUDA C )
-else ( )
-    set ( CMAKE_CUDA_DEV off )
-    project ( graphblas
-            VERSION "${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}"
-            LANGUAGES C )
+if ( NOT GRAPHBLAS_BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS )
+    # ignore current value of BUILD_STATIC_LIBS and set it to OFF
+    set ( BUILD_STATIC_LIBS OFF )
 endif ( )
 
 #-------------------------------------------------------------------------------
-# find OpenMP, CUDA, RMM, and cpu_features
+# find CUDA
 #-------------------------------------------------------------------------------
 
-option ( NOPENMP "ON: do not use OpenMP.  OFF (default): use OpenMP" off )
-if ( NOPENMP )
-    # OpenMP has been disabled.
-    set ( OPENMP_FOUND false )
+# in the future, when GraphBLAS can use CUDA in production:
+# option ( GRAPHBLAS_USE_CUDA "ON (default): enable CUDA acceleration for GraphBLAS, OFF: do not use CUDA" ${SUITESPARSE_USE_CUDA} )
+
+if ( SUITESPARSE_HAS_CUDA AND GRAPHBLAS_USE_CUDA )
+    # FOR NOW: do not compile FactoryKernels when developing the CUDA kernels
+    set ( GRAPHBLAS_COMPACT ON )
+    message ( STATUS "GraphBLAS CUDA JIT: enabled")
+    set ( CMAKE_CXX_STANDARD 17 )
+    enable_language ( CXX CUDA )
+    set ( GRAPHBLAS_HAS_CUDA ON )
 else ( )
-    find_package ( OpenMP )
+    message ( STATUS "GraphBLAS CUDA JIT: disabled")
+    set ( GRAPHBLAS_HAS_CUDA OFF )
 endif ( )
 
-if ( SUITESPARSE_CUDA )
-    # with CUDA and RMM
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBCUDA" )
-    add_subdirectory ( CUDA )
-    set ( GB_CUDA graphblascuda  ${CUDA_LIBRARIES} )
-    set ( GB_RMM rmm_wrap ${CUDA_LIBRARIES} )
-    add_subdirectory ( rmm_wrap )
-    include_directories ( "rmm_wrap" ${CUDA_INCLUDE_DIRS} )
-    link_directories ( "CUDA" "${CUDA_LIBRARIES}" "/usr/local/cuda/lib64/stubs" "rmm_wrap" "/usr/local/cuda/lib64" )
+# check for strict usage
+if ( SUITESPARSE_USE_STRICT AND GRAPHBLAS_USE_CUDA AND NOT GRAPHBLAS_HAS_CUDA )
+    message ( FATAL_ERROR "CUDA required for GraphBLAS but not found" )
+endif ( )
+
+include ( GraphBLAS_JIT_paths )
+
+#-------------------------------------------------------------------------------
+# CUDA
+#-------------------------------------------------------------------------------
+
+if ( GRAPHBLAS_HAS_CUDA )
+
+    # with CUDA, and supporting libraries: Rapids Memory Manager (rmm), and spdlog
+    cmake_policy ( SET CMP0135 NEW )    # URL download timestamp policy
+    find_package ( CUDAToolkit REQUIRED )
+    set ( CMAKE_CUDA_FLAGS "-cudart=static -lineinfo -Wno-deprecated-gpu-targets " )
+    set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++17 -fPIC " )
+    message ( STATUS "C++ flags for CUDA: ${CMAKE_CXX_FLAGS}" )
+    message ( STATUS "CUDA include dirs:  ${CUDA_INCLUDE_DIRS}" )
+    message ( STATUS "CUDA libraries:     ${CUDA_LIBRARIES}" )
+    set ( GB_CUDA ${CUDA_LIBRARIES} )
+
+    include_directories ( "rmm_wrap" "CUDA/include" "CUDA" ${CUDA_INCLUDE_DIRS} )
+
+    set ( EXTERNAL_INCLUDES_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/external_includes )
+
+    if ( NOT EXISTS ${EXTERNAL_INCLUDES_DIRECTORY} )
+        file ( MAKE_DIRECTORY ${EXTERNAL_INCLUDES_DIRECTORY} )
+    endif ( )
+
+    if ( NOT EXISTS ${EXTERNAL_INCLUDES_DIRECTORY}/spdlog )
+        message ( STATUS "cloning spdlog v1.10.0" )
+        execute_process (
+            COMMAND git clone "https://github.com/gabime/spdlog" --branch v1.10.0 --recursive spdlog
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/external_includes )
+    endif ( )
+
+    if ( NOT EXISTS ${EXTERNAL_INCLUDES_DIRECTORY}/rmm )
+        message ( STATUS "cloning rmm branch-21.10" )
+        execute_process (
+            COMMAND git clone "https://github.com/rapidsai/rmm" --branch branch-21.10 --recursive rmm
+#           COMMAND git clone "https://github.com/rapidsai/rmm" --branch branch-25.10 --recursive rmm
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/external_includes )
+    endif()
+
+    set ( RMM_WRAP_INCLUDES ${PROJECT_BINARY_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}/external_includes/spdlog/include
+# for v21.10:
+        ${CMAKE_CURRENT_BINARY_DIR}/external_includes/rmm/include
+# for v25.10:
+#       ${CMAKE_CURRENT_BINARY_DIR}/external_includes/rmm/cpp/include
+        ${CUDA_INCLUDE_DIRS} )
+
 else ( )
-    # without CUDA and RMM
-    set ( CMAKE_RMM_FLAG " " )
+
+    # without CUDA
     set ( GB_CUDA )
-    set ( GB_RMM )
+    set ( RMM_WRAP_INCLUDES )
+
 endif ( )
+
+#-------------------------------------------------------------------------------
+# OpenMP
+#-------------------------------------------------------------------------------
+
+option ( GRAPHBLAS_USE_OPENMP "ON: Use OpenMP in GraphBLAS if available.  OFF: Do not use OpenMP.  (Default: SUITESPARSE_USE_OPENMP)" ${SUITESPARSE_USE_OPENMP} )
+if ( GRAPHBLAS_USE_OPENMP )
+    if ( CMAKE_VERSION VERSION_LESS 3.24 )
+        if ( GRAPHBLAS_HAS_CUDA )
+            find_package ( OpenMP COMPONENTS C CXX )
+        else ( )
+            find_package ( OpenMP COMPONENTS C )
+        endif ( )
+    else ( )
+        if ( GRAPHBLAS_HAS_CUDA )
+            find_package ( OpenMP COMPONENTS C CXX GLOBAL )
+        else ( )
+            find_package ( OpenMP COMPONENTS C GLOBAL )
+        endif ( )
+    endif ( )
+else ( )
+    # OpenMP has been disabled.
+    set ( OpenMP_C_FOUND OFF )
+    set ( OpenMP_CXX_FOUND OFF )
+endif ( )
+
+if ( GRAPHBLAS_USE_OPENMP AND OpenMP_C_FOUND )
+    set ( GRAPHBLAS_HAS_OPENMP ON )
+else ( )
+    set ( GRAPHBLAS_HAS_OPENMP OFF )
+endif ( )
+message ( STATUS "GraphBLAS has OpenMP: ${GRAPHBLAS_HAS_OPENMP}" )
+
+# check for strict usage
+if ( SUITESPARSE_USE_STRICT AND GRAPHBLAS_USE_OPENMP AND NOT GRAPHBLAS_HAS_OPENMP )
+    message ( FATAL_ERROR "OpenMP required for GraphBLAS but not found" )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# cpu_features
+#-------------------------------------------------------------------------------
 
 if ( NOT GBNCPUFEAT )
     # default: enable Google's cpu_features package
@@ -135,197 +211,297 @@ if ( DEFINED GBAVX512F )
 endif ( )
 
 #-------------------------------------------------------------------------------
+# RISC-V
+#-------------------------------------------------------------------------------
+
+if ( DEFINED GBRISCV64 )
+    if ( GBRISCV64 )
+    # default: this is detected automatically, but can be set here also
+        set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRISCV64=1 " )
+    else ( )
+        set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRISCV64=0 " )
+    endif ( )
+endif ( )
+
+if ( DEFINED GBRVV )
+    if ( GBRVV )
+    # default: this is detected automatically, but can be set here also
+        set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRVV=1 " )
+    else ( )
+        set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBRVV=0 " )
+    endif ( )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# check compiler support for the complex data types
+#-------------------------------------------------------------------------------
+
+include ( GraphBLAS_complex )
+
+#-------------------------------------------------------------------------------
 # determine build type
 #-------------------------------------------------------------------------------
 
-# select "true" to build both dynamic and static libraries:
-# set ( NOT NSTATIC true )
-# set ( NOT NSTATIC false )
-# or use cmake with -DNSTATIC=1
+# select "ON" to build both dynamic and static libraries:
+# set ( BUILD_STATIC_LIBS ON )
+# set ( BUILD_STATIC_LIBS OFF )
+# or use cmake with -DGRAPHBLAS_BUILD_STATIC_LIBS=ON
 
-if ( NOT NSTATIC )
+if ( BUILD_STATIC_LIBS AND BUILD_SHARED_LIBS )
     message ( STATUS "Building all GraphBLAS libraries (static and dynamic)" )
+elseif ( BUILD_SHARED_LIBS )
+    message ( STATUS "Building dynamic GraphBLAS library (no static)" )
 else ( )
-    message ( STATUS "Building dynamic GraphBLAS library" )
-endif ( )
-
-if ( CMAKE_CUDA_DEV )
-    # for CUDA development only; not for production use
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGBCUDA_DEV=1 " )
+    message ( STATUS "Building static GraphBLAS library (no shared)" )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # Configure Include/GraphBLAS.h and documentation with version number
 #-------------------------------------------------------------------------------
 
-configure_file ( "Config/GraphBLAS.h.in" "${PROJECT_SOURCE_DIR}/Include/GraphBLAS.h" )
-configure_file ( "Config/GraphBLAS_version.tex.in" "${PROJECT_SOURCE_DIR}/Doc/GraphBLAS_version.tex" )
+configure_file ( "Config/GraphBLAS.h.in"
+    "${PROJECT_SOURCE_DIR}/Include/GraphBLAS.h"
+    NEWLINE_STYLE LF )
+configure_file ( "Config/GraphBLAS_version.tex.in"
+    "${PROJECT_SOURCE_DIR}/Doc/GraphBLAS_version.tex"
+    NEWLINE_STYLE LF )
 configure_file ( "Config/GraphBLAS_API_version.tex.in"
-    "${PROJECT_SOURCE_DIR}/Doc/GraphBLAS_API_version.tex" )
-configure_file ( "Config/README.md.in" "${PROJECT_SOURCE_DIR}/README.md" )
+    "${PROJECT_SOURCE_DIR}/Doc/GraphBLAS_API_version.tex"
+    NEWLINE_STYLE LF )
+configure_file ( "Config/README.md.in"
+    "${PROJECT_SOURCE_DIR}/README.md"
+    NEWLINE_STYLE LF )
 
 #-------------------------------------------------------------------------------
-# include directories for both graphblas and graphblasdemo libraries
+# include directories for both GraphBLAS and the demos
 #-------------------------------------------------------------------------------
 
-if ( CMAKE_CUDA_DEV )
-    # for CUDA development only; not for production use
-    include_directories ( Source/Template Source Include Source/Generated1
-        lz4 zstd zstd/zstd_subset Demo/Include rmm_wrap )
-else ( )
-    include_directories ( Source/Template Source Include Source/Generated1
-        lz4 zstd zstd/zstd_subset Source/Generated2 Demo/Include rmm_wrap )
-endif ( )
+include_directories ( ${PROJECT_SOURCE_DIR} Source Include Config
+    xxHash lz4 zstd zstd/zstd_subset JITpackage Demo/Include rmm_wrap
+    # include all Source/* folders that have include/ or template/ subfolders:
+    Source/add
+    Source/apply
+    Source/assign
+    Source/builder
+    Source/builtin
+    Source/callback
+    Source/concat
+    Source/convert
+    Source/cumsum
+    Source/emult
+    Source/ewise
+    Source/extract
+    Source/hyper
+    Source/ij
+    Source/jit_kernels
+    Source/kronecker
+    Source/mask
+    Source/math
+    Source/matrix
+    Source/memory
+    Source/monoid
+    Source/mxm
+    Source/ok
+    Source/omp
+    Source/print
+    Source/reduce
+    Source/select
+    Source/split
+    Source/slice
+    Source/sort
+    Source/transpose
+    Source/type
+    Source/wait
+    Source/werk
+    # include all CUDA/* folders that have include/ or template/ subfolders:
+    CUDA
+    CUDA/apply
+    CUDA/cumsum
+    CUDA/device
+    CUDA/include
+    CUDA/init
+    CUDA/matrix
+    CUDA/monoid
+    CUDA/mxm
+    CUDA/reduce
+    CUDA/select
+    CUDA/slice
+    CUDA/type
+    )
 
 #-------------------------------------------------------------------------------
 # compiler options
 #-------------------------------------------------------------------------------
 
-# check which compiler is being used.  If you need to make
-# compiler-specific modifications, here is the place to do it.
-if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" )
-    # The -g option is useful for the Intel VTune tool, but it should be
-    # removed in production.  Comment this line out if not in use:
-    # set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -g" )
-    # cmake 2.8 workaround: gcc needs to be told to do ANSI C11.
-    # cmake 3.0 doesn't have this problem.
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -std=c11 -lm -Wno-pragmas " )
-    # operations may be carried out in higher precision
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fexcess-precision=fast " )
-    # faster single complex multiplication and division
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fcx-limited-range " )
-    # math functions do not need to report errno
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fno-math-errno " )
-    # integer operations wrap
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fwrapv " )
-    # check all warnings (uncomment for development only)
-#   set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic " )
-    if ( CMAKE_C_COMPILER_VERSION VERSION_LESS 4.9 )
-        message ( FATAL_ERROR "gcc version must be at least 4.9" )
-    endif ( )
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "Intel" )
-    # options for icc: also needs -std=c11
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -diag-disable 10397,15552 " )
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -qopt-report=5 -qopt-report-phase=vec" )
-    # the -mp1 option is important for predictable floating-point results with
-    # the icc compiler.  Without, ((float) 1.)/((float) 0.) produces NaN,
-    # instead of the correct result, Inf.
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -std=c11 -mp1" )
-    # The -g option is useful for the Intel VTune tool, but it should be
-    # removed in production.  Comment this line out if not in use:
-    # set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -g" )
-#   set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -qopt-malloc-options=3" )
-    # check all warnings and remarks (uncomment for development only):
-#   set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -w3 -Wremarks -Werror " )
-    if ( CMAKE_C_COMPILER_VERSION VERSION_LESS 19.0 )
-        message ( FATAL_ERROR "icc version must be at least 19.0" )
-    endif ( )
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM" )
-    # options for icx
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" )
-    # options for clang
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wno-pointer-sign " )
-    if ( CMAKE_C_COMPILER_VERSION VERSION_LESS 3.3 )
-        message ( FATAL_ERROR "clang version must be at least 3.3" )
-    endif ( )
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
-    # options for MicroSoft Visual Studio
-    set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /O2 -wd\"4244\" -wd\"4146\" -wd\"4018\" -wd\"4996\" -wd\"4047\" -wd\"4554\"" )
-elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "PGI" )
-    # options for PGI pgcc compiler.  The compiler has a bug, and the
-    # -DPGI_COMPILER_BUG causes GraphBLAS to use a workaround.
-    set ( CMAKE_C_FLAGS    "${CMAKE_C_FLAGS} -Mnoopenmp -noswitcherror -c11 -lm -DPGI_COMPILER_BUG" )
-    set ( CMAKE_CXX_FLAGS  "${CMAKE_C_FLAGS} -Mnoopenmp -D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1 -noswitcherror --c++11 -lm -DPGI_COMPILER_BUG" )
-endif ( )
+include ( GraphBLAS_compiler_options )
 
-if ( ${CMAKE_BUILD_TYPE} STREQUAL "Debug" )
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}" )
+#-------------------------------------------------------------------------------
+# GraphBLAS source code
+#-------------------------------------------------------------------------------
+
+if ( GRAPHBLAS_HAS_CUDA )
+    file ( GLOB GRAPHBLAS_SOURCES
+        "rmm_wrap/rmm_wrap.cpp"
+        "CUDA/*/*.cu" "CUDA/*/*.c" "CUDA/*/*.cpp"
+        "PreJIT/*.c" "Config/*.c" "Source/*/*.c" )
 else ( )
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}" )
+    file ( GLOB GRAPHBLAS_SOURCES "PreJIT/*.c" "Config/*.c" "Source/*/*.c" )
+endif ( )
+
+if ( NOT GRAPHBLAS_COMPACT )
+    # compile the FactoryKernels
+    file ( GLOB GRAPHBLAS_FACTORYKERNELS "FactoryKernels/*.c" )
+    list ( APPEND GRAPHBLAS_SOURCES ${GRAPHBLAS_FACTORYKERNELS} )
 endif ( )
 
 #-------------------------------------------------------------------------------
-# dynamic graphblas library properties
+# GraphBLAS JITpackage
 #-------------------------------------------------------------------------------
 
-# Notes from Sebastien Villemot (sebastien@debian.org):
-# SOVERSION policy: if a binary compiled against the old version of the shared
-# library needs recompiling in order to work with the new version, then a
-# SO_VERSION increase # is needed. Otherwise not.  Examples of the changes that
-# require a SO_VERSION increase:
-#
-#   - a public function or static variable is removed
-#   - the prototype of a public function changes
-#   - the integer value attached to a public #define or enum changes
-#   - the fields of a public structure are modified
-#
-# Examples of changes that do not require a SO_VERSION increase:
-#
-#   - a new public function or static variable is added
-#   - a private function or static variable is removed or modified
-#   - changes in the internals of a structure that is opaque to the calling
-#       program (i.e. is only a pointer manipulated through public functions of
-#       the library)
-#   - a public enum is extended (by adding a new item at the end, but without
-#       changing the already existing items)
-
-if ( CMAKE_CUDA_DEV )
-    # for CUDA development only; not for production use
-    file ( GLOB GRAPHBLAS_SOURCES "Source/*.c" "Source/Generated1/*.c" )
+if ( GRAPHBLAS_USE_JIT )
+    # generate compressed JIT sources to create GB_JITpackage.c
+    message ( STATUS "Creating the GraphBLAS/JITpackage:" )
+    add_subdirectory ( JITpackage )
+    # GLOB does not include files that do not yet exist, so prepend
+    # the GB_JITpackage.c file here:
+    list ( PREPEND GRAPHBLAS_SOURCES
+        $<TARGET_PROPERTY:GB_JITpackage,GENERATED_FILE> )
 else ( )
-    file ( GLOB GRAPHBLAS_SOURCES "Source/*.c" "Source/Generated1/*.c" "Source/Generated2/*.c" )
-endif ( )
-
-add_library ( graphblas SHARED ${GRAPHBLAS_SOURCES} )
-
-set_target_properties ( graphblas PROPERTIES
-    VERSION ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}
-    SOVERSION ${GraphBLAS_VERSION_MAJOR}
-    C_STANDARD_REQUIRED 11
-    PUBLIC_HEADER "Include/GraphBLAS.h" )
-set_property ( TARGET graphblas PROPERTY C_STANDARD 11 )
-
-if ( SUITESPARSE_CUDA )
-    add_dependencies ( graphblas graphblascuda )
-    add_dependencies ( graphblas rmm_wrap )
+    # create an empty GB_JITpackage.c file:
+    message ( STATUS "Creating an empty GraphBLAS/JITpackage (JIT disabled):" )
+    configure_file ( "Config/GB_JITpackage_NJIT.c.in"
+        "${PROJECT_SOURCE_DIR}/JITpackage/GB_JITpackage.c"
+        NEWLINE_STYLE LF )
+    list ( PREPEND GRAPHBLAS_SOURCES "JITpackage/GB_JITpackage.c")
 endif ( )
 
 #-------------------------------------------------------------------------------
-# static graphblas library properties
+# dynamic GraphBLAS library properties
 #-------------------------------------------------------------------------------
 
-if ( NOT NSTATIC )
+if ( BUILD_SHARED_LIBS )
 
-    add_library ( graphblas_static STATIC ${GRAPHBLAS_SOURCES} )
+    # create the dynamic GraphBLAS library and set its properties
+    add_library ( GraphBLAS SHARED ${GRAPHBLAS_SOURCES} )
 
-    set_target_properties ( graphblas_static PROPERTIES
-       VERSION ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}
-       OUTPUT_NAME graphblas
-       SOVERSION ${GraphBLAS_VERSION_MAJOR}
-       C_STANDARD_REQUIRED 11 )
-    set_property ( TARGET graphblas_static PROPERTY C_STANDARD 11 )
+    set_target_properties ( GraphBLAS PROPERTIES
+        VERSION ${GraphBLAS_VER_MAJOR}.${GraphBLAS_VER_MINOR}.${GraphBLAS_VER_SUB}
+        OUTPUT_NAME graphblas
+        SOVERSION ${GraphBLAS_VER_MAJOR}
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        PUBLIC_HEADER "Include/GraphBLAS.h"
+        WINDOWS_EXPORT_ALL_SYMBOLS ON )
 
-    if ( SUITESPARSE_CUDA )
-        add_dependencies ( graphblas_static graphblascuda )
-        add_dependencies ( graphblas_static rmm_wrap )
+    if ( GRAPHBLAS_HAS_CUDA )
+        set_target_properties ( GraphBLAS PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON )
+        set_target_properties ( GraphBLAS PROPERTIES CUDA_SEPARABLE_COMPILATION ON )
     endif ( )
+
+    if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.25" )
+        set_target_properties ( GraphBLAS PROPERTIES EXPORT_NO_SYSTEM ON )
+    endif ( )
+
+    target_include_directories ( GraphBLAS
+        INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+                  $<INSTALL_INTERFACE:${SUITESPARSE_INCLUDEDIR}> )
+
+    if ( GRAPHBLAS_HAS_CUDA )
+        target_compile_definitions ( GraphBLAS PRIVATE "GRAPHBLAS_HAS_CUDA" )
+        target_include_directories ( GraphBLAS PRIVATE "${RMM_WRAP_INCLUDES}" )
+# required for rmm 25.10:
+#       target_compile_definitions ( GraphBLAS PRIVATE "LIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE" )
+    endif ( )
+
+    if ( WIN32 )
+        # Compiling the GraphBLAS dll on Windows: export the dll symbols
+        target_compile_definitions ( GraphBLAS PRIVATE GB_DLL_EXPORT )
+    endif ( )
+
+    if ( GRAPHBLAS_USE_JIT )
+        # Make sure compressed sources are built before library
+        add_dependencies ( GraphBLAS GB_JITpackage )
+    endif ( )
+
+    get_target_property ( CSTD GraphBLAS C_STANDARD )
+    message ( STATUS "GraphBLAS C standard: ${CSTD}" )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# static GraphBLAS library properties
+#-------------------------------------------------------------------------------
+
+if ( BUILD_STATIC_LIBS )
+
+    # create the static GraphBLAS library and set its properties
+    add_library ( GraphBLAS_static STATIC ${GRAPHBLAS_SOURCES} )
+
+    set_target_properties ( GraphBLAS_static PROPERTIES
+        OUTPUT_NAME graphblas
+        C_STANDARD 11
+        C_STANDARD_REQUIRED ON
+        PUBLIC_HEADER "Include/GraphBLAS.h" )
+
+    if ( GRAPHBLAS_HAS_CUDA )
+        set_target_properties ( GraphBLAS_static PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON )
+        set_target_properties ( GraphBLAS_static PROPERTIES CUDA_SEPARABLE_COMPILATION ON )
+    endif ( )
+
+    if ( MSVC OR ("${CMAKE_C_SIMULATE_ID}" STREQUAL "MSVC") )
+        set_target_properties ( GraphBLAS_static PROPERTIES
+            OUTPUT_NAME graphblas_static )
+    endif ( )
+
+    if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.25" )
+        set_target_properties ( GraphBLAS_static PROPERTIES EXPORT_NO_SYSTEM ON )
+    endif ( )
+
+    target_include_directories ( GraphBLAS_static
+        INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+                  $<INSTALL_INTERFACE:${SUITESPARSE_INCLUDEDIR}> )
+
+    if ( GRAPHBLAS_HAS_CUDA )
+        target_compile_definitions ( GraphBLAS_static PRIVATE "GRAPHBLAS_HAS_CUDA" )
+# required for rmm 25.10:
+#       target_compile_definitions ( GraphBLAS_static PRIVATE "LIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE" )
+        target_include_directories ( GraphBLAS_static PRIVATE "${RMM_WRAP_INCLUDES}" )
+    endif ( )
+
+    if ( WIN32 )
+        # On Windows, don't use __declspec ( dllimport ) for static library.
+        target_compile_definitions ( GraphBLAS_static PUBLIC GB_STATIC )
+    endif ( )
+
+    if ( GRAPHBLAS_USE_JIT )
+        # Make sure compressed sources are built before library
+        add_dependencies ( GraphBLAS_static GB_JITpackage )
+    endif ( )
+
+    get_target_property ( CSTD GraphBLAS_static C_STANDARD )
+    message ( STATUS "GraphBLAS C standard: ${CSTD}" )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # cpu_features settings
 #-------------------------------------------------------------------------------
 
+include ( CheckSymbolExists )
 if ( NOT GBNCPUFEAT )
     if ( UNIX )
         # look for requirements for cpu_features/src/hwcaps.c
         include ( CheckIncludeFile )
-        include ( CheckSymbolExists )
         check_include_file ( dlfcn.h HAVE_DLFCN_H )
         if ( HAVE_DLFCN_H )
             message ( STATUS "cpu_feautures has dlfcn.h" )
-            target_compile_definitions ( graphblas PRIVATE HAVE_DLFCN_H )
-            if ( NOT NSTATIC )
-                target_compile_definitions ( graphblas_static PRIVATE HAVE_DLFCN_H )
+            if ( BUILD_SHARED_LIBS )
+                target_compile_definitions ( GraphBLAS PRIVATE HAVE_DLFCN_H )
+            endif ( )
+            if ( BUILD_STATIC_LIBS )
+                target_compile_definitions ( GraphBLAS_static PRIVATE HAVE_DLFCN_H )
             endif ( )
         else ( )
             message ( STATUS "cpu_feautures without dlfcn.h" )
@@ -333,9 +509,11 @@ if ( NOT GBNCPUFEAT )
         check_symbol_exists ( getauxval "sys/auxv.h" HAVE_STRONG_GETAUXVAL )
         if ( HAVE_STRONG_GETAUXVAL )
             message ( STATUS "cpu_feautures has getauxval from sys/auxv.h" )
-            target_compile_definitions ( graphblas PRIVATE HAVE_STRONG_GETAUXVAL )
-            if ( NOT NSTATIC )
-                target_compile_definitions ( graphblas_static PRIVATE HAVE_STRONG_GETAUXVAL )
+            if ( BUILD_SHARED_LIBS )
+                target_compile_definitions ( GraphBLAS PRIVATE HAVE_STRONG_GETAUXVAL )
+            endif ( )
+            if ( BUILD_STATIC_LIBS )
+                target_compile_definitions ( GraphBLAS_static PRIVATE HAVE_STRONG_GETAUXVAL )
             endif ( )
         else ( )
             message ( STATUS "cpu_feautures doesn't have getauxval from sys/auxv.h" )
@@ -344,51 +522,130 @@ if ( NOT GBNCPUFEAT )
 endif ( )
 
 #-------------------------------------------------------------------------------
-# select the math library (not required for Microsoft Visual Studio)
+# determine which basic libraries are needed (m, dl, and atomic)
 #-------------------------------------------------------------------------------
 
-if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC" )
-    set ( M_LIB "" )
-else ( )
-    set ( M_LIB "m" )
+# libm:
+check_symbol_exists ( fmax "math.h" NO_LIBM )
+if ( NOT NO_LIBM )
+    set ( GB_M "m" )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( GraphBLAS PRIVATE m )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        list ( APPEND GRAPHBLAS_STATIC_LIBS "m" )
+        target_link_libraries ( GraphBLAS_static PUBLIC m )
+    endif ( )
 endif ( )
 
-target_link_libraries ( graphblas PUBLIC ${M_LIB} )
-if ( NOT NSTATIC )
-    target_link_libraries ( graphblas_static PUBLIC ${M_LIB} )
+# libdl
+if ( NOT "${CMAKE_DL_LIBS}" STREQUAL "" )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( GraphBLAS PRIVATE ${CMAKE_DL_LIBS} )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        list ( APPEND GRAPHBLAS_STATIC_LIBS ${CMAKE_DL_LIBS} )
+        target_link_libraries ( GraphBLAS_static PUBLIC ${CMAKE_DL_LIBS} )
+    endif ( )
+endif ( )
+
+# atomic
+include ( SuiteSparseAtomic )
+if ( LIBATOMIC_REQUIRED )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( GraphBLAS PRIVATE atomic )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        list ( APPEND GRAPHBLAS_STATIC_LIBS "atomic" )
+        target_link_libraries ( GraphBLAS_static PUBLIC atomic )
+    endif ( )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# get the current library list, before linking with OpenMP, CUDA and rmm
+#-------------------------------------------------------------------------------
+
+if ( BUILD_SHARED_LIBS )
+    get_target_property ( GB_CMAKE_LIBRARIES GraphBLAS LINK_LIBRARIES )
+else ( )
+    get_target_property ( GB_CMAKE_LIBRARIES GraphBLAS_static LINK_LIBRARIES )
+endif ( )
+if ( NOT GB_CMAKE_LIBRARIES )
+    set ( GB_CMAKE_LIBRARIES "" )
 endif ( )
 
 #-------------------------------------------------------------------------------
 # add the OpenMP, IPP, CUDA, BLAS, etc libraries
 #-------------------------------------------------------------------------------
 
-if ( OPENMP_FOUND )
-    message ( STATUS "CMAKE OpenMP libraries:    " ${OpenMP_C_LIBRARIES} )
-    message ( STATUS "CMAKE OpenMP include:      " ${OpenMP_C_INCLUDE_DIRS} )
-    target_link_libraries ( graphblas PUBLIC ${OpenMP_C_LIBRARIES} )
-    if ( NOT NSTATIC )
-        target_link_libraries ( graphblas_static PUBLIC ${OpenMP_C_LIBRARIES} )
+if ( GRAPHBLAS_HAS_OPENMP )
+    message ( STATUS "CMAKE OpenMP libraries:    ${OpenMP_C_LIBRARIES}" )
+    message ( STATUS "CMAKE OpenMP include:      ${OpenMP_C_INCLUDE_DIRS}" )
+    list ( APPEND GB_CMAKE_LIBRARIES ${OpenMP_C_LIBRARIES} )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( GraphBLAS PRIVATE OpenMP::OpenMP_C )
+        if ( GRAPHBLAS_HAS_CUDA )
+            target_link_libraries ( GraphBLAS PRIVATE OpenMP::OpenMP_CXX )
+        endif ( )
     endif ( )
-    message ( STATUS "CMAKE OpenMP C flags:      " ${OpenMP_C_FLAGS} )
-    set ( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} " )
-    include_directories ( ${OpenMP_C_INCLUDE_DIRS} )
+    if ( BUILD_STATIC_LIBS )
+        list ( APPEND GRAPHBLAS_STATIC_LIBS ${OpenMP_C_LIBRARIES} )
+        target_link_libraries ( GraphBLAS_static PRIVATE OpenMP::OpenMP_C )
+        if ( GRAPHBLAS_HAS_CUDA )
+            target_link_libraries ( GraphBLAS_static PRIVATE OpenMP::OpenMP_CXX )
+        endif ( )
+    endif ( )
+    message ( STATUS "CMAKE OpenMP C flags:      ${OpenMP_C_FLAGS}" )
+    set ( GB_OPENMP_C_FLAGS "${OpenMP_C_FLAGS}" )
 else ( )
-    message  ( WARNING
-    "WARNING:  OpenMP was not found (or was disabled with NOPENMP).  See the "
-    "GrapBLAS user guide on the consequences of compiling GraphBLAS without "
-    "OpenMP. GraphBLAS will work but may not be thread-safe, since it relies "
-    "on '#pragma omp flush' to ensure the work performed by one user thread is "
-    "available to another, in GrB_wait.  If OpenMP is not in use, the "
-    "thread-safety of GrB_wait becomes the responsibilty of the user "
-    "application (perhaps through a pthreads construct).  Compiling GraphBLAS "
-    "without OpenMP is not recommended for installation in a package manager "
-    "(Linux, conda-forge, spack, brew, vcpkg, etc). " )
+    message ( WARNING
+    "WARNING:  OpenMP was not found (or was disabled with "
+    "GRAPHBLAS_USE_OPENMP).  See the GraphBLAS user guide on the consequences "
+    "of compiling GraphBLAS without OpenMP. GraphBLAS will work but may not be "
+    "thread-safe, since it relies on '#pragma omp flush' to ensure the work "
+    "performed by one user thread is available to another, in GrB_wait.  If "
+    "OpenMP is not in use, the thread-safety of GrB_wait becomes the "
+    "responsibilty of the user application (perhaps through a pthreads "
+    "construct).  Compiling GraphBLAS without OpenMP is not recommended for "
+    "installation in a package manager (Linux, conda-forge, spack, brew, "
+    "vcpkg, etc). " )
+    # check for __thread, __declspec(thread), and _Thread_local keywords
+    include ( SuiteSparse__thread )
+    if ( NOT HAVE_KEYWORD__DECLSPEC_THREAD AND NOT HAVE_KEYWORD__THREAD
+        AND NOT HAVE_KEYWORD__THREAD_LOCAL )
+        message ( WARNING
+        "The C compiler does not support thread-local-storage; "
+        "GxB_Context_engage will return GrB_NOT_IMPLEMENTED." )
+    endif ( )
+    set ( GB_OPENMP_C_FLAGS "" )
 endif ( )
 
-if ( SUITESPARSE_CUDA )
-    target_link_libraries ( graphblas PUBLIC ${GB_CUDA} ${GB_RMM} )
-    if ( NOT NSTATIC )
-        target_link_libraries ( graphblas_static PUBLIC ${GB_CUDA} ${GB_RMM} )
+#-------------------------------------------------------------------------------
+# link CUDA libraries
+#-------------------------------------------------------------------------------
+
+if ( GRAPHBLAS_HAS_CUDA )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( GraphBLAS PRIVATE ${GB_CUDA} )
+        target_link_libraries ( GraphBLAS PRIVATE CUDA::nvrtc CUDA::cudart_static CUDA::cuda_driver )
+        if ( TARGET CUDA::nvToolsExt )
+            target_link_libraries ( GraphBLAS PRIVATE CUDA::nvToolsExt )
+        endif ( )
+        if ( TARGET CUDA::nvtx3 )
+            target_link_libraries ( GraphBLAS PRIVATE CUDA::nvtx3 )
+            target_compile_definitions ( GraphBLAS PRIVATE GBNVTX )
+        endif ( )
+    endif ( )
+    if ( BUILD_STATIC_LIBS )
+        target_link_libraries ( GraphBLAS_static PUBLIC ${GB_CUDA} )
+        target_link_libraries ( GraphBLAS_static PRIVATE CUDA::nvrtc CUDA::cudart_static CUDA::cuda_driver )
+        if ( TARGET CUDA::nvToolsExt )
+            target_link_libraries ( GraphBLAS_static PRIVATE CUDA::nvToolsExt )
+        endif ( )
+        if ( TARGET CUDA::nvtx3 )
+            target_link_libraries ( GraphBLAS_static PRIVATE CUDA::nvtx3 )
+            target_compile_definitions ( GraphBLAS_static PRIVATE GBNVTX )
+        endif ( )
     endif ( )
 endif ( )
 
@@ -396,62 +653,65 @@ endif ( )
 # print final C flags
 #-------------------------------------------------------------------------------
 
-message ( STATUS "CMAKE C flags: " ${CMAKE_C_FLAGS} )
+message ( STATUS "CMAKE C flags: ${CMAKE_C_FLAGS} " )
 
 #-------------------------------------------------------------------------------
-# Demo library and programs
+# Demo programs
 #-------------------------------------------------------------------------------
 
-option ( DEMO "ON: Build the demo programs.  OFF (default): do not build the demo programs." off )
-if ( DEMO )
-
-    #---------------------------------------------------------------------------
-    # demo library
-    #---------------------------------------------------------------------------
+if ( SUITESPARSE_DEMOS )
 
     message ( STATUS "Also compiling the demos in GraphBLAS/Demo" )
-
-    file ( GLOB DEMO_SOURCES "Demo/Source/*.c" )
-    add_library ( graphblasdemo SHARED ${DEMO_SOURCES} )
-
-    set_target_properties ( graphblasdemo PROPERTIES
-        VERSION ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}
-        SOVERSION ${GraphBLAS_VERSION_MAJOR}
-        C_STANDARD_REQUIRED 11 )
-    set_property ( TARGET graphblasdemo PROPERTY C_STANDARD 11 )
-    target_link_libraries ( graphblasdemo PUBLIC ${M_LIB} graphblas  ${GB_CUDA} ${GB_RMM} )
-
-    if ( NOT NSTATIC )
-        add_library ( graphblasdemo_static STATIC ${DEMO_SOURCES} )
-        set_target_properties ( graphblasdemo_static PROPERTIES
-            VERSION ${GraphBLAS_VERSION_MAJOR}.${GraphBLAS_VERSION_MINOR}.${GraphBLAS_VERSION_SUB}
-            C_STANDARD_REQUIRED 11 )
-        set_property ( TARGET graphblasdemo_static PROPERTY C_STANDARD 11 )
-        target_link_libraries ( graphblasdemo_static PUBLIC  graphblas_static  ${GB_CUDA} ${GB_RMM} )
-    endif ( )
 
     #---------------------------------------------------------------------------
     # Demo programs
     #---------------------------------------------------------------------------
 
-    add_executable ( openmp_demo   "Demo/Program/openmp_demo.c" )
     add_executable ( complex_demo  "Demo/Program/complex_demo.c" )
-    add_executable ( kron_demo     "Demo/Program/kron_demo.c" )
     add_executable ( simple_demo   "Demo/Program/simple_demo.c" )
     add_executable ( wildtype_demo "Demo/Program/wildtype_demo.c" )
-    add_executable ( reduce_demo   "Demo/Program/reduce_demo.c" )
-    add_executable ( import_demo   "Demo/Program/import_demo.c" )
     add_executable ( wathen_demo   "Demo/Program/wathen_demo.c" )
+    add_executable ( context_demo  "Demo/Program/context_demo.c" )
+    add_executable ( gauss_demo    "Demo/Program/gauss_demo.c" )
+    add_executable ( grow_demo     "Demo/Program/grow_demo.c" )
 
     # Libraries required for Demo programs
-    target_link_libraries ( openmp_demo   PUBLIC graphblas graphblasdemo ${GB_CUDA} ${GB_RMM} )
-    target_link_libraries ( complex_demo  PUBLIC graphblas graphblasdemo ${GB_CUDA} ${GB_RMM} )
-    target_link_libraries ( kron_demo     PUBLIC graphblas graphblasdemo ${GB_CUDA} ${GB_RMM} )
-    target_link_libraries ( simple_demo   PUBLIC graphblasdemo ${GB_CUDA} ${GB_RMM} )
-    target_link_libraries ( wildtype_demo PUBLIC graphblas ${GB_CUDA} ${GB_RMM} )
-    target_link_libraries ( reduce_demo   PUBLIC graphblas ${GB_CUDA} ${GB_RMM} )
-    target_link_libraries ( import_demo   PUBLIC graphblas graphblasdemo ${GB_CUDA} ${GB_RMM} )
-    target_link_libraries ( wathen_demo   PUBLIC graphblas graphblasdemo ${GB_CUDA} ${GB_RMM} )
+    if ( BUILD_SHARED_LIBS )
+        target_link_libraries ( complex_demo PUBLIC GraphBLAS )
+        target_link_libraries ( simple_demo PUBLIC GraphBLAS )
+        target_link_libraries ( wildtype_demo PUBLIC GraphBLAS )
+        target_link_libraries ( wathen_demo PUBLIC GraphBLAS )
+        target_link_libraries ( context_demo PUBLIC GraphBLAS )
+        target_link_libraries ( gauss_demo PUBLIC GraphBLAS )
+        target_link_libraries ( grow_demo PUBLIC GraphBLAS )
+    else ( )
+        target_link_libraries ( complex_demo PUBLIC GraphBLAS_static )
+        target_link_libraries ( simple_demo PUBLIC GraphBLAS_static )
+        target_link_libraries ( wildtype_demo PUBLIC GraphBLAS_static )
+        target_link_libraries ( wathen_demo PUBLIC GraphBLAS_static )
+        target_link_libraries ( context_demo PUBLIC GraphBLAS_static )
+        target_link_libraries ( gauss_demo PUBLIC GraphBLAS_static )
+        target_link_libraries ( grow_demo PUBLIC GraphBLAS_static )
+    endif ( )
+
+    target_link_libraries ( complex_demo PUBLIC ${GB_M} ${GB_CUDA} )
+    target_link_libraries ( simple_demo PUBLIC ${GB_M} ${GB_CUDA} )
+    target_link_libraries ( wildtype_demo PUBLIC ${GB_M} ${GB_CUDA} )
+    target_link_libraries ( wathen_demo PUBLIC ${GB_M} ${GB_CUDA} )
+    target_link_libraries ( context_demo PUBLIC ${GB_M} ${GB_CUDA} )
+    target_link_libraries ( gauss_demo PUBLIC ${GB_M} ${GB_CUDA} )
+    target_link_libraries ( grow_demo PUBLIC ${GB_M} ${GB_CUDA} )
+
+    if ( GRAPHBLAS_HAS_OPENMP )
+        target_link_libraries ( wathen_demo PUBLIC OpenMP::OpenMP_C )
+        target_link_libraries ( context_demo PUBLIC OpenMP::OpenMP_C )
+        target_link_libraries ( grow_demo PUBLIC OpenMP::OpenMP_C )
+        if ( GRAPHBLAS_HAS_CUDA )
+            target_link_libraries ( wathen_demo PUBLIC OpenMP::OpenMP_CXX )
+            target_link_libraries ( context_demo PUBLIC OpenMP::OpenMP_CXX )
+            target_link_libraries ( grow_demo PUBLIC OpenMP::OpenMP_CXX )
+        endif ( )
+    endif ( )
 
 else ( )
 
@@ -463,38 +723,143 @@ endif ( )
 # installation location
 #-------------------------------------------------------------------------------
 
-if ( GLOBAL_INSTALL )
-    # install in /usr/local/lib and /usr/local/include.
-    # requires "sudo make install"
-    message ( STATUS "Installation will be system-wide (requires 'sudo make install')" )
-    install ( TARGETS graphblas
-        LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} )
-    install ( FILES ${CMAKE_SOURCE_DIR}/cmake_modules/FindGraphBLAS.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SuiteSparse 
-        COMPONENT Development )
-    if ( NOT NSTATIC )
-        install ( TARGETS graphblas_static
-            ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR} )
-    endif ( )
+include ( CMakePackageConfigHelpers )
+
+if ( BUILD_SHARED_LIBS )
+    install ( TARGETS GraphBLAS
+        EXPORT GraphBLASTargets
+        LIBRARY DESTINATION ${SUITESPARSE_LIBDIR}
+        ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
+        RUNTIME DESTINATION ${SUITESPARSE_BINDIR}
+        PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT GraphBLASTargets
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/GraphBLASTargets.cmake )
+
+    # install export target and config for find_package
+    install ( EXPORT GraphBLASTargets
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/GraphBLAS )
 endif ( )
 
-if ( INSIDE_SUITESPARSE )
-    # also install in SuiteSparse/lib and SuiteSparse/include;
-    # does not require "sudo make install", just "make install"
-    message ( STATUS "Installation in ../../lib and ../../include," )
-    message ( STATUS "  with 'make local ; make install'. No 'sudo' required." )
-    install ( TARGETS graphblas
-        LIBRARY       DESTINATION ${SUITESPARSE_LIBDIR}
+if ( BUILD_STATIC_LIBS )
+    install ( TARGETS GraphBLAS_static
+        EXPORT GraphBLASTargets_static
+        ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
         PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
-    install ( FILES ${CMAKE_SOURCE_DIR}/cmake_modules/FindGraphBLAS.cmake
-        DESTINATION ${SUITESPARSE_LIBDIR}/cmake/SuiteSparse 
-        COMPONENT Development )
-    if ( NOT NSTATIC )
-        install ( TARGETS graphblas_static
-            ARCHIVE       DESTINATION ${SUITESPARSE_LIBDIR} )
-    endif ( )
+
+    # create (temporary) export target file during build
+    export ( EXPORT GraphBLASTargets_static
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/GraphBLASTargets_static.cmake )
+
+    # install export target and config for find_package
+    install ( EXPORT GraphBLASTargets_static
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/GraphBLAS )
 endif ( )
+
+# generate config file to be used in common build tree
+set ( SUITESPARSE_IN_BUILD_TREE ON )
+configure_package_config_file (
+    Config/GraphBLASConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/GraphBLASConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/GraphBLASConfig.cmake )
+
+# generate config file to be installed
+set ( SUITESPARSE_IN_BUILD_TREE OFF )
+configure_package_config_file (
+    Config/GraphBLASConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/target/GraphBLASConfig.cmake
+    INSTALL_DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/GraphBLAS )
+
+write_basic_package_version_file (
+    ${CMAKE_CURRENT_BINARY_DIR}/GraphBLASConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion )
+
+install ( FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/target/GraphBLASConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/GraphBLASConfigVersion.cmake
+    DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/GraphBLAS )
+
+#-------------------------------------------------------------------------------
+# create pkg-config file
+#-------------------------------------------------------------------------------
+
+if ( NOT MSVC )
+    # This might be something like:
+    #   /usr/lib/libgomp.so;/usr/lib/libpthread.a;m
+    # convert to -l flags for pkg-config, i.e.: "-lgomp -lpthread -lm"
+    set ( GRAPHBLAS_STATIC_LIBS_LIST ${GRAPHBLAS_STATIC_LIBS} )
+    set ( GRAPHBLAS_STATIC_LIBS "" )
+    foreach ( _lib ${GRAPHBLAS_STATIC_LIBS_LIST} )
+        string ( FIND ${_lib} "." _pos REVERSE )
+        if ( ${_pos} EQUAL "-1" )
+            set ( GRAPHBLAS_STATIC_LIBS "${GRAPHBLAS_STATIC_LIBS} -l${_lib}" )
+            continue ()
+        endif ( )
+        set ( _kinds "SHARED" "STATIC" )
+        if ( WIN32 )
+            list ( PREPEND _kinds "IMPORT" )
+        endif ( )
+        foreach ( _kind IN LISTS _kinds )
+            set ( _regex ".*\\/(lib)?([^\\.]*)(${CMAKE_${_kind}_LIBRARY_SUFFIX})" )
+            if ( ${_lib} MATCHES ${_regex} )
+                string ( REGEX REPLACE ${_regex} "\\2" _libname ${_lib} )
+                if ( NOT "${_libname}" STREQUAL "" )
+                    set ( GRAPHBLAS_STATIC_LIBS "${GRAPHBLAS_STATIC_LIBS} -l${_libname}" )
+                    break ()
+                endif ( )
+            endif ( )
+        endforeach ( )
+    endforeach ( )
+
+    set ( prefix "${CMAKE_INSTALL_PREFIX}" )
+    set ( exec_prefix "\${prefix}" )
+    cmake_path ( IS_ABSOLUTE SUITESPARSE_LIBDIR SUITESPARSE_LIBDIR_IS_ABSOLUTE )
+    if (SUITESPARSE_LIBDIR_IS_ABSOLUTE)
+        set ( libdir "${SUITESPARSE_LIBDIR}")
+    else ( )
+        set ( libdir "\${exec_prefix}/${SUITESPARSE_LIBDIR}")
+    endif ( )
+    cmake_path ( IS_ABSOLUTE SUITESPARSE_INCLUDEDIR SUITESPARSE_INCLUDEDIR_IS_ABSOLUTE )
+    if (SUITESPARSE_INCLUDEDIR_IS_ABSOLUTE)
+        set ( includedir "${SUITESPARSE_INCLUDEDIR}")
+    else ( )
+        set ( includedir "\${prefix}/${SUITESPARSE_INCLUDEDIR}")
+    endif ( )
+    if ( BUILD_SHARED_LIBS )
+        set ( SUITESPARSE_LIB_BASE_NAME $<TARGET_FILE_BASE_NAME:GraphBLAS> )
+    else ( )
+        set ( SUITESPARSE_LIB_BASE_NAME $<TARGET_FILE_BASE_NAME:GraphBLAS_static> )
+    endif ( )
+    configure_file (
+        Config/GraphBLAS.pc.in
+        GraphBLAS.pc.out
+        @ONLY
+        NEWLINE_STYLE LF )
+    file ( GENERATE
+        OUTPUT GraphBLAS.pc
+        INPUT ${CMAKE_CURRENT_BINARY_DIR}/GraphBLAS.pc.out
+        NEWLINE_STYLE LF )
+    install ( FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/GraphBLAS.pc
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/pkgconfig )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# configure the JIT
+#-------------------------------------------------------------------------------
+
+include ( GraphBLAS_JIT_configure )
+
+configure_file ( "Config/GB_config.h.in"
+    "${PROJECT_SOURCE_DIR}/Config/GB_config.h"
+    NEWLINE_STYLE LF )
+
+include ( GraphBLAS_PreJIT )
 
 #-------------------------------------------------------------------------------
 # dump all variables, for debugging only
@@ -521,5 +886,4 @@ endif ( )
 # report status
 #-------------------------------------------------------------------------------
 
-include ( SuiteSparseReport )
-
+include ( GraphBLASReport )

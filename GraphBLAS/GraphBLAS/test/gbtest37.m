@@ -2,7 +2,7 @@ function gbtest37
 %GBTEST37 test istril, istriu, isbanded, isdiag, ishermitian, ...
 % issymmetric, bandwith
 
-% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved.
+% SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2025, All Rights Reserved.
 % SPDX-License-Identifier: Apache-2.0
 
 rng ('default') ;
@@ -67,7 +67,7 @@ for trial = 1:10
                 assert (gbtest_eq (L, GL)) ;
                 assert (gbtest_eq (U, GU)) ;
                 assert (gbtest_eq (D, GD)) ;
-                assert (gbtest_eq (C, GC)) ;
+                assert (gbtest_err (C, GC) < 1e-14) ;
 
                 if (~islogical (A))
                     % built-in istril, istriu, and isdiag

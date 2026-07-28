@@ -70,7 +70,7 @@ void mexFunction
     cholmod_common Common, *cc ;
     char msg [LEN+1] ;
 
-    double t0 = (nargout > 1) ? SuiteSparse_time ( ) : 0 ;
+    double t0 = (nargout > 1) ? SUITESPARSE_TIME : 0 ;
 
     // -------------------------------------------------------------------------
     // start CHOLMOD and set parameters
@@ -272,7 +272,7 @@ void mexFunction
     if (nargout > 1)
     {
         double flops = cc->SPQR_flopcount ;
-        double t = SuiteSparse_time ( ) - t0 ;
+        double t = SUITESPARSE_TIME - t0 ;
         pargout [1] = spqr_mx_info (cc, t, flops) ;
     }
 
@@ -283,9 +283,7 @@ void mexFunction
     rank = cc->SPQR_istat [4] ;
     if (rank < MIN (m,n))
     {
-        // snprintf would be safer, but Windows is oblivious to safety ...
-        // (Visual Studio C++ 2008 does not recognize snprintf!)
-        sprintf (msg, "rank deficient. rank = %" PRId64 " tol = %g\n",
+        snprintf (msg, LEN, "rank deficient. rank = %" PRId64 " tol = %g\n",
             rank, cc->SPQR_tol_used) ;
         mexWarnMsgIdAndTxt ("MATLAB:rankDeficientMatrix", msg) ;
     }

@@ -1,3 +1,33 @@
+July 31, 2026: version 4.4.2
+
+    * minor updates to build system
+    * version: sync'd with CXSparse
+
+Mar 22, 2024: version 4.3.2
+
+    * minor updates to build system
+
+Jan 20, 2024: version 4.3.1
+
+    * minor updates to build system
+
+Dec 30, 2023: version 4.3.0
+
+    * major change to build system: by Markus Mützel
+    * csparse_version: added to return CSparse version
+
+Sept 8, 2023: version 4.2.0
+
+    * cmake updates: SuiteSparse:: namespace by Markus Muetzel
+
+June 16, 2023: version 4.0.4
+
+    * cmake build system updates: update by Markus Muetzel
+
+Jan 17, 2023: version 4.0.1
+
+    * minor revision to cmake: for Windows DLL
+
 Nov 12, 2022: version 4.0.0
 
     * using CMake build system

@@ -875,7 +875,7 @@ if (WITH_CHOLMOD)
       SuiteSparse::CAMD
       SuiteSparse::CCOLAMD
       SuiteSparse::COLAMD
-    PUBLIC
+    PRIVATE
       SuiteSparse::Config
   )
 endif (WITH_CHOLMOD)
@@ -1256,7 +1256,7 @@ if (WITH_LICENSE MATCHES "GPL")
   )
   add_library (SuiteSparse::KLU ALIAS klu)
 
-  target_link_libraries (klu PUBLIC
+  target_link_libraries (klu PRIVATE
     SuiteSparse::AMD
     SuiteSparse::BTF
     SuiteSparse::COLAMD
@@ -1283,9 +1283,21 @@ if (WITH_LICENSE MATCHES "GPL")
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/Include>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/User>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_KLU_INCLUDE_DIR}>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/COLAMD/Include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_BTF_INCLUDE_DIR}>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
+      $<INSTALL_INTERFACE:${SuiteSparse_AMD_INCLUDE_DIR}>
+      $<INSTALL_INTERFACE:${SuiteSparse_BTF_INCLUDE_DIR}>
+      $<INSTALL_INTERFACE:${SuiteSparse_COLAMD_INCLUDE_DIR}>
+      $<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/KLU>
     )
-    target_link_libraries (klu_cholmod PUBLIC
+    target_link_libraries (klu_cholmod PRIVATE
       SuiteSparse::CHOLMOD
       SuiteSparse::KLU
     )
@@ -1310,7 +1322,6 @@ if (WITH_LICENSE MATCHES "GPL")
   )
   add_library (SuiteSparse::LDL ALIAS ldl)
 
-  target_link_libraries (ldl PRIVATE SuiteSparse::AMD)
 endif (WITH_LICENSE MATCHES "GPL")
 
 set (SuiteSparse_AMD_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/AMD)
@@ -1326,10 +1337,13 @@ set (SuiteSparse_UMFPACK_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/UMF
 set (SuiteSparse_GPURuntime_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/GPURuntime)
 set (SuiteSparse_GPUQREngine_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse/GPUQREngine)
 
-target_include_directories (suitesparseconfig PUBLIC
+set (_SuiteSparse_CONFIG_INCLUDE_DIRS
   "$<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>")
+
+target_include_directories (suitesparseconfig PUBLIC
+  ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
 )
 
 if (HAVE_BLAS_UNDERSCORE)
@@ -1339,28 +1353,33 @@ elseif (HAVE_BLAS_NO_UNDERSCORE)
 endif (HAVE_BLAS_UNDERSCORE)
 
 if (HAVE_M)
-  target_link_libraries (suitesparseconfig INTERFACE m)
+  target_link_libraries (suitesparseconfig PRIVATE m)
 endif (HAVE_M)
 
 target_include_directories (amd PUBLIC
+  ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
   $<INSTALL_INTERFACE:${SuiteSparse_AMD_INCLUDE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>)
 target_include_directories (camd PUBLIC
+  ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
   $<INSTALL_INTERFACE:${SuiteSparse_CAMD_INCLUDE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CAMD/Include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CAMD_INCLUDE_DIR}>)
 target_include_directories (ccolamd PUBLIC
+  ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
   $<INSTALL_INTERFACE:${SuiteSparse_CCOLAMD_INCLUDE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CCOLAMD/Include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_CCOLAMD_INCLUDE_DIR}>)
 target_include_directories (colamd PUBLIC
+  ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
   $<INSTALL_INTERFACE:${SuiteSparse_COLAMD_INCLUDE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/COLAMD/Include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>)
 
 if (WITH_LICENSE MATCHES "GPL")
   target_include_directories (btf PUBLIC
+    ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
     $<INSTALL_INTERFACE:${SuiteSparse_BTF_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_BTF_INCLUDE_DIR}>)
@@ -1368,7 +1387,10 @@ endif (WITH_LICENSE MATCHES "GPL")
 
 if (TARGET cholmod)
   target_include_directories (cholmod PUBLIC
+    $<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Cholesky>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/MatrixOps>
@@ -1381,8 +1403,11 @@ endif (TARGET cholmod)
 
 if (WITH_LICENSE STREQUAL "GPL")
   target_include_directories (umfpack PUBLIC
+    ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
+    $<INSTALL_INTERFACE:${SuiteSparse_AMD_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_UMFPACK_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/UMFPACK/Source>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_UMFPACK_INCLUDE_DIR}>
@@ -1392,27 +1417,38 @@ endif (WITH_LICENSE STREQUAL "GPL")
 if (WITH_LICENSE MATCHES "GPL")
   target_include_directories (klu PUBLIC
     $<INSTALL_INTERFACE:${SuiteSparse_KLU_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${SuiteSparse_AMD_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${SuiteSparse_BTF_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${SuiteSparse_COLAMD_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/KLU/Include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_KLU_INCLUDE_DIR}>)
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_KLU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AMD/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/BTF/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/COLAMD/Include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_BTF_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>)
   target_include_directories (ldl PUBLIC
+    ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
     $<INSTALL_INTERFACE:${SuiteSparse_LDL_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/LDL/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_LDL_INCLUDE_DIR}>)
 endif (WITH_LICENSE MATCHES "GPL")
 
-target_link_libraries (amd PUBLIC SuiteSparse::Config)
-target_link_libraries (camd PUBLIC SuiteSparse::Config)
-target_link_libraries (ccolamd PUBLIC SuiteSparse::Config)
-target_link_libraries (colamd PUBLIC SuiteSparse::Config)
+target_link_libraries (amd PRIVATE SuiteSparse::Config)
+target_link_libraries (camd PRIVATE SuiteSparse::Config)
+target_link_libraries (ccolamd PRIVATE SuiteSparse::Config)
+target_link_libraries (colamd PRIVATE SuiteSparse::Config)
 
 if (WITH_LICENSE MATCHES "GPL")
-  target_link_libraries (btf PUBLIC SuiteSparse::Config)
-  target_link_libraries (klu PUBLIC SuiteSparse::Config)
-  target_link_libraries (ldl PUBLIC SuiteSparse::Config)
+  target_link_libraries (klu PRIVATE SuiteSparse::Config)
 endif (WITH_LICENSE MATCHES "GPL")
 
 if (WITH_LICENSE STREQUAL "GPL")
-  target_link_libraries (umfpack PUBLIC
+  target_link_libraries (umfpack PRIVATE
     SuiteSparse::Config
     amd
   )
@@ -1420,6 +1456,7 @@ endif (WITH_LICENSE STREQUAL "GPL")
 
 if (TARGET spqr)
   target_include_directories (spqr PUBLIC
+    ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
     $<INSTALL_INTERFACE:${SuiteSparse_SPQR_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SPQR_INCLUDE_DIR}>
@@ -1428,10 +1465,10 @@ if (TARGET spqr)
   target_link_libraries (spqr
     PUBLIC
       SuiteSparse::CHOLMOD
-      SuiteSparse::Config
     PRIVATE
       BLAS::BLAS
       LAPACK::LAPACK
+      SuiteSparse::Config
   )
 endif (TARGET spqr)
 
@@ -1446,14 +1483,15 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
   add_library (SuiteSparse::GPURuntime ALIAS gpuruntime)
 
   target_include_directories (gpuruntime PUBLIC
+    ${_SuiteSparse_CONFIG_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SPQR/GPURuntime/Include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_GPURuntime_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_GPURuntime_INCLUDE_DIR}>
   )
 
   target_link_libraries (gpuruntime
-    PUBLIC SuiteSparse::Config
     PRIVATE
+      SuiteSparse::Config
       CUDA::cudart
   )
 
@@ -1506,9 +1544,8 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
   target_compile_definitions (gpuqrengine PUBLIC SPQR_HAS_CUDA)
 
   target_link_libraries (gpuqrengine
-    PUBLIC
-      CUDA::cublas
     PRIVATE
+      CUDA::cublas
       gpuruntime
   )
 
@@ -1538,11 +1575,13 @@ if (WITH_CUDA AND CMAKE_CUDA_COMPILER_LOADED)
     target_compile_definitions (cholmod PUBLIC
       CHOLMOD_HAS_CUDA
       GPU_BLAS)
+    target_include_directories (cholmod PUBLIC
+      $<TARGET_PROPERTY:CUDA::cublas,INTERFACE_INCLUDE_DIRECTORIES>
+    )
     target_link_libraries (cholmod
       PRIVATE
         CUDA::cudart
         gpuruntime
-      PUBLIC
         CUDA::cublas
     )
   endif (WITH_CHOLMOD)
@@ -1929,42 +1968,26 @@ if (WITH_DEMOS)
 
     add_executable (cholmod_di_simple CHOLMOD/Demo/cholmod_di_simple.c)
     target_link_libraries (cholmod_di_simple PRIVATE
-      SuiteSparse::AMD
-      SuiteSparse::CAMD
-      SuiteSparse::CCOLAMD
-      SuiteSparse::CHOLMOD
-      SuiteSparse::COLAMD
       SuiteSparse::Config
+      SuiteSparse::CHOLMOD
     )
 
     add_executable (cholmod_dl_simple CHOLMOD/Demo/cholmod_dl_simple.c)
     target_link_libraries (cholmod_dl_simple PRIVATE
-      SuiteSparse::AMD
-      SuiteSparse::CAMD
-      SuiteSparse::CCOLAMD
-      SuiteSparse::CHOLMOD
-      SuiteSparse::COLAMD
       SuiteSparse::Config
+      SuiteSparse::CHOLMOD
     )
 
     add_executable (cholmod_si_simple CHOLMOD/Demo/cholmod_si_simple.c)
     target_link_libraries (cholmod_si_simple PRIVATE
-      SuiteSparse::AMD
-      SuiteSparse::CAMD
-      SuiteSparse::CCOLAMD
-      SuiteSparse::CHOLMOD
-      SuiteSparse::COLAMD
       SuiteSparse::Config
+      SuiteSparse::CHOLMOD
     )
 
     add_executable (cholmod_sl_simple CHOLMOD/Demo/cholmod_sl_simple.c)
     target_link_libraries (cholmod_sl_simple PRIVATE
-      SuiteSparse::AMD
-      SuiteSparse::CAMD
-      SuiteSparse::CCOLAMD
-      SuiteSparse::CHOLMOD
-      SuiteSparse::COLAMD
       SuiteSparse::Config
+      SuiteSparse::CHOLMOD
     )
   endif (WITH_CHOLESKY AND WITH_CHECK)
 
@@ -2013,6 +2036,11 @@ if (WITH_DEMOS)
       SuiteSparse::KLU_CHOLMOD
     )
 
+    if (HAVE_M)
+      target_link_libraries (kludemo PRIVATE m)
+      target_link_libraries (kluldemo PRIVATE m)
+    endif (HAVE_M)
+
     install (TARGETS
       kludemo
       kluldemo
@@ -2053,18 +2081,27 @@ if (WITH_DEMOS)
     add_executable (ldlsimple
       LDL/Demo/ldlsimple.c
     )
-    target_link_libraries (ldlsimple PRIVATE SuiteSparse::LDL)
+    target_link_libraries (ldlsimple PRIVATE
+      SuiteSparse::Config
+      SuiteSparse::LDL
+    )
 
     add_executable (ldllsimple
       LDL/Demo/ldlsimple.c
     )
     target_compile_definitions (ldllsimple PRIVATE LDL_LONG)
-    target_link_libraries (ldllsimple PRIVATE SuiteSparse::LDL)
+    target_link_libraries (ldllsimple PRIVATE
+      SuiteSparse::Config
+      SuiteSparse::LDL
+    )
   endif (TARGET ldl)
 
   if (TARGET umfpack)
     add_executable (umf4 UMFPACK/Demo/umf4.c)
-    target_link_libraries (umf4 PRIVATE SuiteSparse::UMFPACK)
+    target_link_libraries (umf4 PRIVATE
+      SuiteSparse::AMD
+      SuiteSparse::UMFPACK
+    )
 
     add_executable (umfpack_di_demo UMFPACK/Demo/umfpack_di_demo.c)
     target_link_libraries (umfpack_di_demo PRIVATE SuiteSparse::UMFPACK)
@@ -2079,7 +2116,10 @@ if (WITH_DEMOS)
     target_link_libraries (umfpack_zl_demo PRIVATE SuiteSparse::UMFPACK)
 
     add_executable (umfpack_simple UMFPACK/Demo/umfpack_simple.c)
-    target_link_libraries (umfpack_simple PRIVATE SuiteSparse::UMFPACK)
+    target_link_libraries (umfpack_simple PRIVATE
+      SuiteSparse::Config
+      SuiteSparse::UMFPACK
+    )
   endif (TARGET umfpack)
 
   set (SuiteSparse_BIN_TARGETS
@@ -2241,18 +2281,18 @@ if (WITH_DEMOS)
       set_property (TARGET gpuqrengine_demo PROPERTY LINK_WHAT_YOU_USE OFF)
 
       target_link_libraries (qrdemo_gpu PRIVATE
+        SuiteSparse::Config
         SuiteSparse::CHOLMOD
-        SuiteSparse::GPURuntime
         SuiteSparse::SPQR
       )
       target_link_libraries (qrdemo_gpu2 PRIVATE
+        SuiteSparse::Config
         SuiteSparse::CHOLMOD
-        SuiteSparse::GPURuntime
         SuiteSparse::SPQR
       )
       target_link_libraries (qrdemo_gpu3 PRIVATE
+        SuiteSparse::Config
         SuiteSparse::CHOLMOD
-        SuiteSparse::GPURuntime
         SuiteSparse::SPQR
       )
       list (APPEND SuiteSparse_BIN_TARGETS
@@ -2263,6 +2303,26 @@ if (WITH_DEMOS)
       )
     endif (TARGET gpuqrengine)
   endif (TARGET spqr)
+
+  if (TARGET cholmod_di_demo)
+    foreach (_SuiteSparse_CHOLMOD_DEMO_TARGET IN ITEMS
+      cholmod_di_demo
+      cholmod_dl_demo
+      cholmod_si_demo
+      cholmod_sl_demo
+      cholmod_di_simple
+      cholmod_dl_simple
+      cholmod_si_simple
+      cholmod_sl_simple
+    )
+      target_include_directories (${_SuiteSparse_CHOLMOD_DEMO_TARGET} PRIVATE
+        $<TARGET_PROPERTY:amd,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:camd,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:ccolamd,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:colamd,INTERFACE_INCLUDE_DIRECTORIES>
+      )
+    endforeach (_SuiteSparse_CHOLMOD_DEMO_TARGET)
+  endif (TARGET cholmod_di_demo)
 endif (WITH_DEMOS)
 
 if (BUILD_TESTING)

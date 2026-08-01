@@ -200,6 +200,7 @@ target_include_directories (cxsparse PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
   $<BUILD_INTERFACE:${SuiteSparse_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
   $<BUILD_INTERFACE:${SuiteSparse_SOURCE_DIR}/SuiteSparse_config>
+  $<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
   $<INSTALL_INTERFACE:${_CXSparse_CMake_INCLUDEDIR}>
 )
 
@@ -207,7 +208,7 @@ if (HAVE_M)
   target_link_libraries (cxsparse PRIVATE m)
 endif (HAVE_M)
 
-target_link_libraries (cxsparse PUBLIC SuiteSparse::Config)
+target_link_libraries (cxsparse PRIVATE SuiteSparse::Config)
 
 if (NOT HAVE_C99_COMPLEX STREQUAL "")
   target_compile_definitions (cxsparse PUBLIC CXSPARSE_C99_COMPLEX)

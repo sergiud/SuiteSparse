@@ -180,7 +180,7 @@ find_package (BLAS REQUIRED)
 find_package (CUDAToolkit)
 find_package (LAPACK REQUIRED)
 find_package (METIS 5.0)
-find_package (OpenMP)
+find_package (OpenMP COMPONENTS C)
 find_package (TBB 2021.4 NO_MODULE)
 
 function (check_options)
@@ -850,7 +850,7 @@ if (WITH_CHOLMOD)
       OpenMP::OpenMP_C
     )
 
-    set (OpenMP_DEPENDENCY "find_dependency (OpenMP ${OpenMP_C_VERSION})")
+    set (OpenMP_DEPENDENCY "find_dependency (OpenMP ${OpenMP_C_VERSION} COMPONENTS C)")
   endif (OpenMP_FOUND)
 
   if (HAVE_FEENABLEEXCEPT)

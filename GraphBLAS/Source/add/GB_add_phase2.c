@@ -52,7 +52,7 @@
 
 GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
 (
-    GrB_Matrix C,           // output matrix, static header
+    GrB_Matrix C,           // output matrix, existing header
     const GrB_Type ctype,   // type of output matrix C
     const bool C_is_csc,    // format of output matrix C
     const GrB_BinaryOp op,  // op to perform C = op (A,B)
@@ -60,7 +60,7 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
     const bool A_and_B_are_disjoint,    // if true, then A and B are disjoint
     // from phase1:
     void **Cp_handle,       // vector pointers for C
-    size_t Cp_size,
+    uint64_t Cp_mem,
     const int64_t Cnvec_nonempty,   // # of non-empty vectors in C
     // tasks from phase1a:
     const GB_task_struct *restrict TaskList,    // array of structs
@@ -69,7 +69,7 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
     // analysis from phase0:
     const int64_t Cnvec,
     void **Ch_handle,
-    size_t Ch_size,
+    uint64_t Ch_mem,
     const int64_t *restrict C_to_M,
     const int64_t *restrict C_to_A,
     const int64_t *restrict C_to_B,
@@ -95,7 +95,7 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
     // check inputs
     //--------------------------------------------------------------------------
 
-    ASSERT (C != NULL && (C->header_size == 0 || GBNSTATIC)) ;
+    ASSERT (C != NULL) ;
     ASSERT_BINARYOP_OK (op, "op for add phase2", GB0) ;
     ASSERT_MATRIX_OK (A, "A for add phase2", GB0) ;
     ASSERT_MATRIX_OK (B, "B for add phase2", GB0) ;
@@ -106,9 +106,13 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
     ASSERT (!GB_JUMBLED (A)) ;
     ASSERT (!GB_JUMBLED (B)) ;
 
-    GB_WERK_DECLARE (M_ek_slicing, int64_t) ;
-    GB_WERK_DECLARE (A_ek_slicing, int64_t) ;
-    GB_WERK_DECLARE (B_ek_slicing, int64_t) ;
+    int header_arena = GB_arena (C->header_mem) ;
+    int data_arena = C->data_arena ;
+    uint64_t mem = GB_mem (data_arena, 0) ;
+
+    GB_WERK_DECLARE (M_ek_slicing, int64_t, mem) ;
+    GB_WERK_DECLARE (A_ek_slicing, int64_t, mem) ;
+    GB_WERK_DECLARE (B_ek_slicing, int64_t, mem) ;
 
     ASSERT (Cp_handle != NULL) ;
     ASSERT (Ch_handle != NULL) ;
@@ -169,6 +173,9 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
     const size_t csize = ctype->size ;
     GB_Type_code ccode = ctype->code ;
 
+    ASSERT (op->xtype != NULL) ;
+    ASSERT (op->ytype != NULL) ;
+
     if (A_and_B_are_disjoint)
     { 
         // GB_wait: GB_SECOND_[type] operator with no typecasting
@@ -189,28 +196,26 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
         // normal case, with optional typecasting
         asize = A->type->size ;
         bsize = B->type->size ;
+        xsize = op->xtype->size ;
+        ysize = op->ytype->size ;
 
         if (op_is_second || op_is_pair || op_is_builtin_positional)
         { 
             // the op does not depend on the value of A(i,j)
-            xsize = 1 ;
             cast_A_to_X = NULL ;
         }
         else
         { 
-            xsize = op->xtype->size ;
             cast_A_to_X = GB_cast_factory (op->xtype->code, A->type->code) ;
         }
 
         if (op_is_first || op_is_pair || op_is_builtin_positional)
         { 
             // the op does not depend on the value of B(i,j)
-            ysize = 1 ;
             cast_B_to_Y = NULL ;
         }
         else
         { 
-            ysize = op->ytype->size ;
             cast_B_to_Y = GB_cast_factory (op->ytype->code, B->type->code) ;
         }
 
@@ -230,16 +235,25 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
 
     GB_void alpha_scalar [GB_VLA(xsize)] ;
     GB_void beta_scalar  [GB_VLA(ysize)] ;
+    memset (alpha_scalar, 0, GB_VLA(xsize)) ;
+    memset (beta_scalar , 0, GB_VLA(ysize)) ;
+
     if (is_eWiseUnion)
     { 
         // alpha_scalar = (xtype) alpha
         ASSERT (alpha != NULL) ;
-        GB_cast_scalar (alpha_scalar, op->xtype->code, alpha->x, 
-            alpha->type->code, alpha->type->size) ;
+        if (cast_A_to_X != NULL)
+        { 
+            GB_cast_scalar (alpha_scalar, op->xtype->code, alpha->x,
+                alpha->type->code, alpha->type->size) ;
+        }
         // beta_scalar = (ytype) beta
         ASSERT (beta != NULL) ;
-        GB_cast_scalar (beta_scalar, op->ytype->code, beta->x,
-            beta->type->code, beta->type->size) ;
+        if (cast_B_to_Y != NULL)
+        { 
+            GB_cast_scalar (beta_scalar, op->ytype->code, beta->x,
+                beta->type->code, beta->type->size) ;
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -265,22 +279,21 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
     GrB_Info info = GB_new_bix (&C, // any sparsity, existing header
         ctype, A->vlen, A->vdim, GB_ph_null, C_is_csc,
         C_sparsity, true, A->hyper_switch, Cnvec, cnz, true, C_iso,
-        Cp_is_32, Cj_is_32, Ci_is_32) ;
+        Cp_is_32, Cj_is_32, Ci_is_32, header_arena, data_arena) ;
     if (info != GrB_SUCCESS)
     { 
         // out of memory; caller must free C_to_M, C_to_A, C_to_B
         GB_FREE_ALL ;
-        GB_FREE_MEMORY (Cp_handle, Cp_size) ;
-        GB_FREE_MEMORY (Ch_handle, Ch_size) ;
+        GB_FREE_MEMORY (Cp_handle, Cp_mem) ;
+        GB_FREE_MEMORY (Ch_handle, Ch_mem) ;
         return (info) ;
     }
 
     // add Cp as the vector pointers for C, from GB_add_phase1
     if (C_is_sparse_or_hyper)
     { 
-//      C->nvec_nonempty = Cnvec_nonempty ;
         GB_nvec_nonempty_set (C, Cnvec_nonempty) ;
-        C->p = Cp ; C->p_size = Cp_size ;
+        C->p = Cp ; C->p_mem = Cp_mem ;
         (*Cp_handle) = NULL ;
         C->nvals = cnz ;
     }
@@ -288,7 +301,7 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
     // add Ch as the hypersparse list for C, from GB_add_phase0
     if (C_is_hyper)
     { 
-        C->h = Ch ; C->h_size = Ch_size ;
+        C->h = Ch ; C->h_mem = Ch_mem ;
         C->nvec = Cnvec ;
         (*Ch_handle) = NULL ;
     }
@@ -447,7 +460,7 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
         { 
             info = GB_union_jit (C, C_sparsity, M, Mask_struct,
                 Mask_comp, op, flipij, A, B, alpha_scalar, beta_scalar,
-                Ch_is_Mh, C_to_M, C_to_A, C_to_B, 
+                Ch_is_Mh, C_to_M, C_to_A, C_to_B,
                 TaskList, C_ntasks, C_nthreads,
                 M_ek_slicing, M_nthreads, M_ntasks,
                 A_ek_slicing, A_nthreads, A_ntasks,
@@ -457,7 +470,7 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
         { 
             info = GB_add_jit (C, C_sparsity, M, Mask_struct,
                 Mask_comp, op, flipij, A, B,
-                Ch_is_Mh, C_to_M, C_to_A, C_to_B, 
+                Ch_is_Mh, C_to_M, C_to_A, C_to_B,
                 TaskList, C_ntasks, C_nthreads,
                 M_ek_slicing, M_nthreads, M_ntasks,
                 A_ek_slicing, A_nthreads, A_ntasks,
@@ -479,7 +492,7 @@ GrB_Info GB_add_phase2      // C=A+B, C<M>=A+B, or C<!M>=A+B
         GB_BURBLE_MATRIX (C, "(generic add: %s) ", op->name) ;
 
         // C(i,j) = (ctype) A(i,j), located in Ax [pA]
-        #undef  GB_COPY_A_to_C 
+        #undef  GB_COPY_A_to_C
         #define GB_COPY_A_to_C(Cx,pC,Ax,pA,A_iso)                             \
         cast_A_to_C (Cx +((pC)*csize), Ax +((A_iso) ? 0: (pA)*asize), asize) ;
 

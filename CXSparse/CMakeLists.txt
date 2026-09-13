@@ -152,16 +152,19 @@ set (CXSparse_SRCS
 add_library (cxsparse_int OBJECT ${CXSparse_SRCS})
 target_compile_definitions (cxsparse_int PRIVATE $<TARGET_PROPERTY:cxsparse,COMPILE_DEFINITIONS>)
 target_compile_definitions (cxsparse_int PRIVATE cxsparse_EXPORTS)
+target_compile_definitions (cxsparse_int PRIVATE suitesparseconfig_EXPORTS)
 target_include_directories (cxsparse_int PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
 
 add_library (cxsparse_long OBJECT ${CXSparse_SRCS})
 target_compile_definitions (cxsparse_long PRIVATE CS_LONG $<TARGET_PROPERTY:cxsparse,COMPILE_DEFINITIONS>)
 target_compile_definitions (cxsparse_long PRIVATE cxsparse_EXPORTS)
+target_compile_definitions (cxsparse_long PRIVATE suitesparseconfig_EXPORTS)
 target_include_directories (cxsparse_long PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
 
 add_library (cxsparse
   $<TARGET_OBJECTS:cxsparse_int>
   $<TARGET_OBJECTS:cxsparse_long>
+  $<TARGET_OBJECTS:suitesparsebase>
   Source/cxsparse_version.c
   ${CXSparse_HDRS}
 )
@@ -174,11 +177,13 @@ if (NOT HAVE_C99_COMPLEX STREQUAL "" OR HAVE_C99_COMPLEX_SUBSET)
   add_library (cxsparse_complex_int OBJECT ${CXSparse_SRCS})
   target_compile_definitions (cxsparse_complex_int PRIVATE CS_COMPLEX $<TARGET_PROPERTY:cxsparse,COMPILE_DEFINITIONS>)
   target_compile_definitions (cxsparse_complex_int PRIVATE cxsparse_EXPORTS)
+  target_compile_definitions (cxsparse_complex_int PRIVATE suitesparseconfig_EXPORTS)
   target_include_directories (cxsparse_complex_int PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
 
   add_library (cxsparse_complex_long OBJECT ${CXSparse_SRCS})
   target_compile_definitions (cxsparse_complex_long PRIVATE CS_LONG CS_COMPLEX $<TARGET_PROPERTY:cxsparse,COMPILE_DEFINITIONS>)
   target_compile_definitions (cxsparse_complex_long PRIVATE cxsparse_EXPORTS)
+  target_compile_definitions (cxsparse_complex_long PRIVATE suitesparseconfig_EXPORTS)
   target_include_directories (cxsparse_complex_long PRIVATE $<TARGET_PROPERTY:cxsparse,INCLUDE_DIRECTORIES>)
 
   target_sources (cxsparse PRIVATE
@@ -207,8 +212,6 @@ target_include_directories (cxsparse PUBLIC
 if (HAVE_M)
   target_link_libraries (cxsparse PRIVATE m)
 endif (HAVE_M)
-
-target_link_libraries (cxsparse PRIVATE SuiteSparse::Config)
 
 if (NOT HAVE_C99_COMPLEX STREQUAL "")
   target_compile_definitions (cxsparse PUBLIC CXSPARSE_C99_COMPLEX)

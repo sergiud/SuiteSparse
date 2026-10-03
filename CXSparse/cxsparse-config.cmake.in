@@ -1,7 +1,17 @@
-if (CMAKE_VERSION VERSION_LESS 2.8.11)
-  message (FATAL_ERROR "CMake >= 2.8.11 required")
-endif (CMAKE_VERSION VERSION_LESS 2.8.11)
+if (CMAKE_VERSION VERSION_LESS 3.22)
+  message (FATAL_ERROR "CMake >= 3.22 required")
+endif (CMAKE_VERSION VERSION_LESS 3.22)
 
 @PACKAGE_INIT@
+
+# The integer size must match the embedded configuration and installed header.
+if (DEFINED BLA_SIZEOF_INTEGER AND
+    NOT BLA_SIZEOF_INTEGER EQUAL @BLA_SIZEOF_INTEGER@)
+  set (${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+  set (${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
+    "BLAS integer size mismatch: actual ${BLA_SIZEOF_INTEGER}, expected @BLA_SIZEOF_INTEGER@")
+  return ()
+endif (DEFINED BLA_SIZEOF_INTEGER AND
+    NOT BLA_SIZEOF_INTEGER EQUAL @BLA_SIZEOF_INTEGER@)
 
 include ("${CMAKE_CURRENT_LIST_DIR}/cxsparse-targets.cmake")

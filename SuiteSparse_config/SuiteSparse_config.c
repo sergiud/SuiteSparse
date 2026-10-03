@@ -11,7 +11,7 @@
 /* SuiteSparse configuration : memory manager and printf functions.
  */
 
-#include "SuiteSparse_config.h"
+#include <SuiteSparse_config.h>
 
 #if defined ( MATLAB_MEX_FILE )
 #include "mex.h"

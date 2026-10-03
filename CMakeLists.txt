@@ -176,9 +176,44 @@ if (NOT WITH_TBB)
   set (CMAKE_DISABLE_FIND_PACKAGE_TBB ON)
 endif (NOT WITH_TBB)
 
+include (SuiteSparseBLAS)
+# Validate the requested integer size before dependency discovery.
+if (DEFINED BLA_SIZEOF_INTEGER)
+  if (BLA_SIZEOF_INTEGER EQUAL 4)
+    set (BLA_SIZEOF_INTEGER 4)
+  elseif (BLA_SIZEOF_INTEGER EQUAL 8)
+    set (BLA_SIZEOF_INTEGER 8)
+  else (BLA_SIZEOF_INTEGER EQUAL 4)
+    message (FATAL_ERROR "Unsupported BLAS integer size: "
+      "actual ${BLA_SIZEOF_INTEGER}, expected 4 or 8")
+  endif (BLA_SIZEOF_INTEGER EQUAL 4)
+elseif (CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
+  message (FATAL_ERROR "Cross-compilation without CMAKE_CROSSCOMPILING_EMULATOR "
+    "requires you to set BLA_SIZEOF_INTEGER explicitly: actual unset, expected 4 or 8")
+endif (DEFINED BLA_SIZEOF_INTEGER)
+
 find_package (BLAS REQUIRED)
 find_package (CUDAToolkit)
 find_package (LAPACK REQUIRED)
+suitesparse_detect_blas_integer_size ()
+
+if (BLA_SIZEOF_INTEGER EQUAL 8)
+  set (SuiteSparse_BLAS_integer int64_t)
+elseif (BLA_SIZEOF_INTEGER EQUAL 4)
+  set (SuiteSparse_BLAS_integer int32_t)
+else (BLA_SIZEOF_INTEGER EQUAL 8)
+  message (FATAL_ERROR "Unsupported BLAS integer size: "
+    "actual ${BLA_SIZEOF_INTEGER}, expected 4 or 8")
+endif (BLA_SIZEOF_INTEGER EQUAL 8)
+
+message (VERBOSE "BLAS integer size: ${BLA_SIZEOF_INTEGER}")
+
+# Export and install the BLAS integer type used by this build.
+set (_SuiteSparse_CONFIG_HEADER
+  ${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}/SuiteSparse_config.h)
+configure_file (SuiteSparse_config/SuiteSparse_config.h.in
+  ${_SuiteSparse_CONFIG_HEADER} @ONLY)
+
 find_package (METIS 5.0)
 find_package (OpenMP COMPONENTS C)
 find_package (TBB 2021.4 NO_MODULE)
@@ -1289,7 +1324,6 @@ if (WITH_LICENSE MATCHES "GPL")
       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_BTF_INCLUDE_DIR}>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
       $<INSTALL_INTERFACE:${SuiteSparse_AMD_INCLUDE_DIR}>
       $<INSTALL_INTERFACE:${SuiteSparse_BTF_INCLUDE_DIR}>
@@ -1339,7 +1373,6 @@ set (SuiteSparse_GPUQREngine_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse
 
 set (_SuiteSparse_CONFIG_INCLUDE_DIRS
   "$<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>"
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>")
 
 target_include_directories (suitesparseconfig PUBLIC
@@ -1389,7 +1422,6 @@ if (TARGET cholmod)
   target_include_directories (cholmod PUBLIC
     $<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_CHOLMOD_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Cholesky>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/CHOLMOD/Include>
@@ -1428,7 +1460,6 @@ if (WITH_LICENSE MATCHES "GPL")
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_AMD_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_BTF_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_COLAMD_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/SuiteSparse_config>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}>)
   target_include_directories (ldl PUBLIC

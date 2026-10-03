@@ -20,8 +20,10 @@ if (TARGET suitesparsebase)
   return ()
 endif (TARGET suitesparsebase)
 
+set (SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse)
+
 set (SUITESPARSECONFIG_HDRS
-  ${SuiteSparse_SOURCE_DIR}/SuiteSparse_config/SuiteSparse_config.h
+  ${SuiteSparse_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}/SuiteSparse_config.h
 )
 
 add_library (suitesparsebase OBJECT
@@ -29,13 +31,10 @@ add_library (suitesparsebase OBJECT
   ${SUITESPARSECONFIG_HDRS}
 )
 
-set (SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/SuiteSparse)
-
 target_compile_definitions (suitesparsebase PRIVATE
   suitesparseconfig_EXPORTS
 )
 
 target_include_directories (suitesparsebase PRIVATE
-  ${SuiteSparse_SOURCE_DIR}/SuiteSparse_config
   ${SuiteSparse_BINARY_DIR}/${SuiteSparse_SUITESPARSECONFIG_INCLUDE_DIR}
 )

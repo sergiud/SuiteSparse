@@ -36,9 +36,9 @@ message ( STATUS "Building SuiteSparse:GraphBLAS version: v" ${GraphBLAS_VERSION
 # GraphBLAS C API Specification version, at graphblas.org
 if ( GraphBLAS_VERSION_MAJOR GREATER_EQUAL 6 )
     # SuiteSparse:GraphBLAS v6.0.0 and later fully implement the v2 spec
-    set ( GraphBLAS_API_DATE "Nov 15, 2021" )
+    set ( GraphBLAS_API_DATE "Dec 22, 2023" )
     set ( GraphBLAS_API_VERSION_MAJOR 2 )
-    set ( GraphBLAS_API_VERSION_MINOR 0 )
+    set ( GraphBLAS_API_VERSION_MINOR 1 )
     set ( GraphBLAS_API_VERSION_SUB   0 )
 else ( )
     # SuiteSparse:GraphBLAS v5.2.0 has much of the v2 spec but not all.

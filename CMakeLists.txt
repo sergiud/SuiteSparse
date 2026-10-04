@@ -1848,11 +1848,11 @@ if (TARGET spqr)
 endif (TARGET spqr)
 
 if (TARGET gpuruntime)
-  set_component_version (gpuruntime 1.0.5)
+  set_component_version (gpuruntime 4.3.6)
 endif (TARGET gpuruntime)
 
 if (TARGET gpuqrengine)
-  set_component_version (gpuqrengine 1.0.5)
+  set_component_version (gpuqrengine 4.3.6)
 endif (TARGET gpuqrengine)
 
 if (HAVE_QSTD_C99)

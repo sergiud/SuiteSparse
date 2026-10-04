@@ -27,7 +27,7 @@ project (SuiteSparse
   DESCRIPTION "A suite of sparse matrix packages"
   HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
   LANGUAGES C
-  VERSION 7.12.3
+  VERSION 7.14.1
 )
 
 set (CMAKE_DEBUG_POSTFIX _debug)

@@ -9,7 +9,10 @@ cmake_minimum_required (VERSION 3.22)
 
 cmake_policy (SET CMP0069 NEW)
 
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3)
+# CMake 4.3 and 4.4 generate an SBOM only if the experimental gate variable
+# holds the UUID of the respective release. CMake 4.5 needs no gate.
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
+  AND CMAKE_VERSION VERSION_LESS 4.5)
   if (CMAKE_VERSION VERSION_LESS 4.4)
     set (CMAKE_EXPERIMENTAL_GENERATE_SBOM
       ca494ed3-b261-4205-a01f-603c95e4cae0)
@@ -17,7 +20,8 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3)
     set (CMAKE_EXPERIMENTAL_GENERATE_SBOM
       2d856d6d-53e8-488b-a17f-d486d2cac317)
   endif (CMAKE_VERSION VERSION_LESS 4.4)
-endif (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3)
+endif (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
+  AND CMAKE_VERSION VERSION_LESS 4.5)
 
 if (NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   set (CMAKE_CUDA_ARCHITECTURES 75)
@@ -2555,20 +2559,10 @@ if (BUILD_CXSPARSE)
   add_subdirectory (CXSparse)
 endif (BUILD_CXSPARSE)
 
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
-  AND CMAKE_EXPERIMENTAL_GENERATE_SBOM)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.5
+  OR (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
+    AND CMAKE_EXPERIMENTAL_GENERATE_SBOM))
   set (_SuiteSparse_SBOM_EXPORTS suitesparse-targets)
-  set (_SuiteSparse_SPDX_LICENSE "Apache-2.0 AND BSD-3-Clause")
-
-  if (WITH_LICENSE MATCHES "GPL")
-    string (APPEND _SuiteSparse_SPDX_LICENSE
-      " AND LGPL-2.1-or-later")
-  endif (WITH_LICENSE MATCHES "GPL")
-
-  if (WITH_LICENSE STREQUAL "GPL")
-    string (APPEND _SuiteSparse_SPDX_LICENSE
-      " AND GPL-2.0-or-later")
-  endif (WITH_LICENSE STREQUAL "GPL")
 
   if (BUILD_CXSPARSE AND CMAKE_VERSION VERSION_GREATER_EQUAL 4.4)
     list (APPEND _SuiteSparse_SBOM_EXPORTS cxsparse-targets)
@@ -2585,7 +2579,6 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
     PROJECT SuiteSparse
     DESTINATION ${CMAKE_INSTALL_DATADIR}/sbom
     VERSION ${SuiteSparse_VERSION}
-    LICENSE ${_SuiteSparse_SPDX_LICENSE}
     DESCRIPTION "A suite of sparse matrix packages"
     HOMEPAGE_URL http://faculty.cse.tamu.edu/davis/suitesparse.html
     FORMAT spdx-3.0+json
@@ -2596,12 +2589,32 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
       PACKAGE_URL https://github.com/sergiud/SuiteSparse)
   endif (CMAKE_VERSION VERSION_GREATER_EQUAL 4.4)
 
+  # CMake 4.5 rejects the LICENSE argument and takes the license of each
+  # component from its SPDX_LICENSE property instead.
+  if (CMAKE_VERSION VERSION_LESS 4.5)
+    set (_SuiteSparse_SPDX_LICENSE "Apache-2.0 AND BSD-3-Clause")
+
+    if (WITH_LICENSE MATCHES "GPL")
+      string (APPEND _SuiteSparse_SPDX_LICENSE
+        " AND LGPL-2.1-or-later")
+    endif (WITH_LICENSE MATCHES "GPL")
+
+    if (WITH_LICENSE STREQUAL "GPL")
+      string (APPEND _SuiteSparse_SPDX_LICENSE
+        " AND GPL-2.0-or-later")
+    endif (WITH_LICENSE STREQUAL "GPL")
+
+    list (APPEND _SuiteSparse_SBOM_ARGUMENTS
+      LICENSE ${_SuiteSparse_SPDX_LICENSE})
+  endif (CMAKE_VERSION VERSION_LESS 4.5)
+
   install (SBOM SuiteSparse
     ${_SuiteSparse_SBOM_EXPORT_ARGUMENTS}
     ${_SuiteSparse_SBOM_ARGUMENTS}
   )
-endif (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
-  AND CMAKE_EXPERIMENTAL_GENERATE_SBOM)
+endif (CMAKE_VERSION VERSION_GREATER_EQUAL 4.5
+  OR (CMAKE_VERSION VERSION_GREATER_EQUAL 4.3
+    AND CMAKE_EXPERIMENTAL_GENERATE_SBOM))
 
 if (MSVC)
   foreach (bin IN LISTS SuiteSparse_BIN_TARGETS)

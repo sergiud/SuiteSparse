@@ -11,9 +11,10 @@
 // The GPU is not used.
 
 #ifdef HAVE_TBB
-#include "spqr.hpp"
 #include <oneapi/tbb/task_arena.h>
 #include <oneapi/tbb/task_group.h>
+
+#include "spqr.hpp"
 
 // =============================================================================
 // === spqr_zippy ==============================================================
